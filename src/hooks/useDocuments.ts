@@ -1,9 +1,21 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, DocumentMetadata, getDocumentContent, saveDocument, createNewDocument, deleteDocument, togglePinDocument, getStorageStats } from '../db';
+import { 
+  db, 
+  DocumentMetadata, 
+  getDocumentContent, 
+  saveDocument, 
+  createNewDocument, 
+  deleteDocument, 
+  restoreDocument,
+  emptyTrash,
+  duplicateDocument,
+  togglePinDocument, 
+  getStorageStats 
+} from '../db';
 import { pullCloudDocuments } from '../lib/supabase';
 
-export function useDocuments(searchQuery = '', activeTag = 'All') {
+export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = false) {
   const queryClient = useQueryClient();
 
   // Background cloud pull to synchronize latest cloud documents into Dexie
@@ -13,15 +25,24 @@ export function useDocuments(searchQuery = '', activeTag = 'All') {
       if (isMounted && pulled > 0) {
         queryClient.invalidateQueries({ queryKey: ['documents'] });
         queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+        queryClient.invalidateQueries({ queryKey: ['trash-count'] });
       }
     }).catch(console.warn);
     return () => { isMounted = false; };
   }, [queryClient]);
 
   return useQuery({
-    queryKey: ['documents', searchQuery, activeTag],
+    queryKey: ['documents', searchQuery, activeTag, showTrash],
     queryFn: async (): Promise<DocumentMetadata[]> => {
       let docs = await db.documents.toArray();
+
+      if (showTrash) {
+        docs = docs.filter(doc => Boolean(doc.isDeleted));
+        return docs.sort((a, b) => (b.deletedAt || b.updatedAt) - (a.deletedAt || a.updatedAt));
+      }
+
+      // Hide soft-deleted documents from normal library view
+      docs = docs.filter(doc => !doc.isDeleted);
 
       if (activeTag && activeTag !== 'All') {
         docs = docs.filter(doc => doc.tags.includes(activeTag));
@@ -44,6 +65,15 @@ export function useDocuments(searchQuery = '', activeTag = 'All') {
         }
         return a.isPinned ? -1 : 1;
       });
+    }
+  });
+}
+
+export function useTrashCount() {
+  return useQuery({
+    queryKey: ['trash-count'],
+    queryFn: async () => {
+      return await db.documents.filter(d => Boolean(d.isDeleted)).count();
     }
   });
 }
@@ -101,8 +131,50 @@ export function useSaveDocument() {
 export function useDeleteDocument() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
+      await deleteDocument(id, permanent);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['trash-count'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    }
+  });
+}
+
+export function useRestoreDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDocument(id);
+      await restoreDocument(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['trash-count'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    }
+  });
+}
+
+export function useEmptyTrash() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      return await emptyTrash();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['trash-count'] });
+      queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    }
+  });
+}
+
+export function useDuplicateDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return await duplicateDocument(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });

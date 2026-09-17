@@ -124,6 +124,9 @@ export default defineConfig({
             if (id.includes('framer-motion')) {
               return 'vendor-animation';
             }
+            if (id.includes('docx')) {
+              return 'vendor-docx';
+            }
             if (id.includes('lucide-react') || id.includes('zustand') || id.includes('clsx') || id.includes('tailwind-merge')) {
               return 'vendor-ui';
             }

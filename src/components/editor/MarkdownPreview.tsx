@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
+import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import 'katex/dist/katex.min.css';
 import { resolveImageSrc, getCachedImageSrc } from '../../services/imageStorageService';
+import { sanitizeMarkdownForPreview } from '../../utils/markdownSanitizer';
 import { 
   Copy, 
   Check, 
@@ -15,7 +17,7 @@ import {
   AlertTriangle, 
   Sparkles, 
   ShieldAlert, 
-  ChevronRight,
+  ChevronRight, 
   X 
 } from 'lucide-react';
 import { MermaidBlock } from './MermaidBlock';
@@ -278,7 +280,12 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onTog
   // Parse opening YAML front matter if present
   const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   const rawFrontmatter = frontmatterMatch ? frontmatterMatch[1] : null;
-  const markdownBody = frontmatterMatch ? content.slice(frontmatterMatch[0].length) : content;
+  const rawMarkdownBody = frontmatterMatch ? content.slice(frontmatterMatch[0].length) : content;
+
+  // Sanitize math comparisons & unescaped tokens for rehype-raw
+  const sanitizedMarkdownBody = useMemo(() => {
+    return sanitizeMarkdownForPreview(rawMarkdownBody);
+  }, [rawMarkdownBody]);
 
   const handleCopyCode = (codeText: string, id: string) => {
     navigator.clipboard.writeText(codeText);
@@ -290,7 +297,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onTog
     <div data-markdown-preview="true" className="w-full text-neutral-800 dark:text-neutral-200 leading-relaxed text-sm select-text">
       {rawFrontmatter && <FrontmatterCard rawYaml={rawFrontmatter} />}
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
+        remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
         rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
         components={{
           // Headings
@@ -542,7 +549,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onTog
           )
         }}
       >
-        {markdownBody}
+        {sanitizedMarkdownBody}
       </ReactMarkdown>
 
       {/* Lightbox Zoom Modal */}

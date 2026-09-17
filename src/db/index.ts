@@ -13,6 +13,8 @@ export interface DocumentMetadata {
   isFavorite: boolean;
   sizeBytes: number;
   wordCount: number;
+  isDeleted?: boolean;
+  deletedAt?: number;
 }
 
 export interface CachedContent {
@@ -61,6 +63,12 @@ export class MdWriterDB extends Dexie {
     });
     this.version(3).stores({
       documents: 'id, title, updatedAt, createdAt, isPinned, isFavorite, openCount, *tags',
+      document_cache: 'id, cachedAt',
+      revisions: '++id, documentId, timestamp',
+      images: 'id, name, createdAt'
+    });
+    this.version(4).stores({
+      documents: 'id, title, updatedAt, createdAt, isPinned, isFavorite, openCount, isDeleted, deletedAt, *tags',
       document_cache: 'id, cachedAt',
       revisions: '++id, documentId, timestamp',
       images: 'id, name, createdAt'
@@ -173,14 +181,69 @@ export async function createNewDocument(title = 'Untitled Document', initialCont
 }
 
 /**
- * Deletes a document and evicts its cached content and revisions from IndexedDB.
+ * Deletes a document:
+ * By default (permanent = false), performs a soft-delete moving it to Trash.
+ * If permanent = true, permanently removes document metadata, cached content, and revisions.
  */
-export async function deleteDocument(id: string): Promise<void> {
-  await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
-    await db.documents.delete(id);
-    await db.document_cache.delete(id);
-    await db.revisions.where('documentId').equals(id).delete();
+export async function deleteDocument(id: string, permanent = false): Promise<void> {
+  if (permanent) {
+    await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
+      await db.documents.delete(id);
+      await db.document_cache.delete(id);
+      await db.revisions.where('documentId').equals(id).delete();
+    });
+  } else {
+    await db.documents.update(id, {
+      isDeleted: true,
+      deletedAt: Date.now()
+    });
+  }
+}
+
+/**
+ * Restores a soft-deleted document back to active library.
+ */
+export async function restoreDocument(id: string): Promise<void> {
+  await db.documents.update(id, {
+    isDeleted: false,
+    deletedAt: undefined
   });
+}
+
+/**
+ * Permanently purges all documents currently in the Trash.
+ */
+export async function emptyTrash(): Promise<number> {
+  const trashedDocs = await db.documents.filter(d => Boolean(d.isDeleted)).toArray();
+  const ids = trashedDocs.map(d => d.id);
+  if (ids.length === 0) return 0;
+
+  await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
+    for (const id of ids) {
+      await db.documents.delete(id);
+      await db.document_cache.delete(id);
+      await db.revisions.where('documentId').equals(id).delete();
+    }
+  });
+
+  return ids.length;
+}
+
+/**
+ * Duplicates an existing document with all its content and tags.
+ */
+export async function duplicateDocument(id: string): Promise<string> {
+  const originalDoc = await db.documents.get(id);
+  const originalContent = await getDocumentContent(id);
+
+  const baseTitle = originalDoc?.title ? originalDoc.title.replace(/\.md$/i, '') : 'Document';
+  const newTitle = `${baseTitle} (Copy).md`;
+  const newId = `doc_${Date.now()}_copy`;
+
+  const tags = originalDoc?.tags ? [...originalDoc.tags] : ['General'];
+  await saveDocument(newId, newTitle, originalContent, tags);
+
+  return newId;
 }
 
 /**

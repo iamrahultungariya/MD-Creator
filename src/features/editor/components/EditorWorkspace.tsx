@@ -1,11 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { Columns, Sparkles, Minimize2, UploadCloud, PenTool, Eye } from 'lucide-react';
+import React, { useState, useCallback, useRef } from 'react';
+import { Columns, Sparkles, Minimize2, UploadCloud, PenTool, Eye, Search, ArrowUpDown } from 'lucide-react';
 import { ViewMode } from '../types';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
 import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
 import { EditorWritingFx } from '../../../components/editor/EditorWritingFx';
 import { MobileEditorToolbar } from './MobileEditorToolbar';
 import { storeOptimizedImage } from '../../../services/imageStorageService';
+import { FindReplaceBar } from './FindReplaceBar';
 
 interface EditorWorkspaceProps {
   viewMode: ViewMode;
@@ -32,6 +33,13 @@ interface EditorWorkspaceProps {
   onCopyMarkdown?: () => void;
   onOpenRevisions?: () => void;
   onClearContent?: () => void;
+  // Find & Replace + Document Save props
+  isFindOpen?: boolean;
+  setIsFindOpen?: (open: boolean) => void;
+  findMode?: 'find' | 'replace';
+  title?: string;
+  setContent?: (val: string) => void;
+  executeSave?: (content: string, title: string) => void;
 }
 
 export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
@@ -58,9 +66,57 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   onCopyMarkdown,
   onOpenRevisions,
   onClearContent,
+  isFindOpen = false,
+  setIsFindOpen,
+  findMode = 'find',
+  title = 'Untitled Document.md',
+  setContent,
+  executeSave,
 }) => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+  const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
+
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const isSyncingScrollRef = useRef(false);
+
+  // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
+  const handleTextareaScroll = useCallback(() => {
+    if (!isSyncScrollEnabled || viewMode !== 'split' || isSyncingScrollRef.current) return;
+    const ta = textareaRef.current;
+    const prev = previewContainerRef.current;
+    if (!ta || !prev) return;
+
+    isSyncingScrollRef.current = true;
+    const maxTa = ta.scrollHeight - ta.clientHeight;
+    if (maxTa > 0) {
+      const ratio = ta.scrollTop / maxTa;
+      const maxPrev = prev.scrollHeight - prev.clientHeight;
+      prev.scrollTop = ratio * maxPrev;
+    }
+    requestAnimationFrame(() => {
+      isSyncingScrollRef.current = false;
+    });
+  }, [isSyncScrollEnabled, viewMode, textareaRef]);
+
+  // Synchronized Split-Pane Proportional Scrolling (Preview -> Editor)
+  const handlePreviewScroll = useCallback(() => {
+    if (!isSyncScrollEnabled || viewMode !== 'split' || isSyncingScrollRef.current) return;
+    const ta = textareaRef.current;
+    const prev = previewContainerRef.current;
+    if (!ta || !prev) return;
+
+    isSyncingScrollRef.current = true;
+    const maxPrev = prev.scrollHeight - prev.clientHeight;
+    if (maxPrev > 0) {
+      const ratio = prev.scrollTop / maxPrev;
+      const maxTa = ta.scrollHeight - ta.clientHeight;
+      ta.scrollTop = ratio * maxTa;
+    }
+    requestAnimationFrame(() => {
+      isSyncingScrollRef.current = false;
+    });
+  }, [isSyncScrollEnabled, viewMode, textareaRef]);
 
   // Dedicated formatting helper that preserves scroll position and prevents mobile focus jumping
   const insertFormatting = useCallback(
@@ -262,6 +318,34 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setIsFindOpen?.(!isFindOpen)}
+                  className={`px-2 py-0.5 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-2xs ${
+                    isFindOpen
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800'
+                      : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 border-neutral-200 dark:border-neutral-700'
+                  }`}
+                  title="Find & Replace (Ctrl+F)"
+                >
+                  <Search className="w-3 h-3" />
+                  <span className="hidden lg:inline">Find (Ctrl+F)</span>
+                </button>
+
+                {viewMode === 'split' && (
+                  <button
+                    onClick={() => setIsSyncScrollEnabled((prev) => !prev)}
+                    className={`px-2 py-0.5 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-2xs ${
+                      isSyncScrollEnabled
+                        ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                        : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-400 border-neutral-200 dark:border-neutral-700 opacity-60'
+                    }`}
+                    title={isSyncScrollEnabled ? 'Synchronized Scrolling: ON' : 'Synchronized Scrolling: OFF'}
+                  >
+                    <ArrowUpDown className="w-3 h-3" />
+                    <span className="hidden xl:inline">Sync Scroll</span>
+                  </button>
+                )}
+
+                <button
                   onClick={() => setIsSlashMenuOpen((prev) => !prev)}
                   className="px-2 py-0.5 rounded bg-amber-50 dark:bg-neutral-800 hover:bg-amber-100 dark:hover:bg-neutral-700 text-amber-800 dark:text-amber-300 border border-amber-200/70 dark:border-transparent font-mono text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                 >
@@ -294,6 +378,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 onKeyDown={onTextareaKeyDown}
                 onKeyUp={onCursorEvent}
                 onClick={onCursorEvent}
+                onScroll={handleTextareaScroll}
                 onPaste={handlePaste}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -302,6 +387,20 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 className="flex-1 w-full p-6 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 font-mono-code text-sm resize-none focus:outline-none leading-relaxed overflow-y-auto"
                 autoFocus
               />
+
+              {/* Floating Find & Replace Palette */}
+              {isFindOpen && (
+                <FindReplaceBar
+                  isOpen={isFindOpen}
+                  onClose={() => setIsFindOpen?.(false)}
+                  textareaRef={textareaRef}
+                  content={content}
+                  setContent={setContent || (() => {})}
+                  executeSave={executeSave || (() => {})}
+                  title={title}
+                  initialMode={findMode}
+                />
+              )}
 
               {/* Drag & Drop Visual Overlay */}
               {isDraggingOver && (
@@ -329,9 +428,11 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           </div>
         )}
 
-        {/* Right Pane: Live Rendered Preview */}
+        {/* Right Pane: Live Rendered Preview with Proportional Synchronized Scroll */}
         {(viewMode === 'split' || viewMode === 'read') && (
           <div
+            ref={previewContainerRef}
+            onScroll={handlePreviewScroll}
             className={`preview-pane-container flex flex-col h-full bg-white dark:bg-neutral-950 overflow-y-auto transition-all ${
               viewMode === 'split'
                 ? `w-full md:w-1/2 ${isPreviewVisibleOnMobile ? 'flex' : 'hidden md:flex'}`

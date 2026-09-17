@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Check, 
-  Minus, 
   Sparkles, 
   ArrowRight, 
-  ChevronDown, 
   Zap, 
   Cloud, 
   Users,
@@ -20,6 +18,8 @@ import { CtaBanner } from '../components/home/CtaBanner';
 import { useAuthStore } from '../stores/useAuthStore';
 import { WaitlistSuccessModal } from '../components/common/WaitlistSuccessModal';
 import { WaitlistAdminPanel } from '../components/pricing/WaitlistAdminPanel';
+import { PricingComparisonTable } from '../components/pricing/PricingComparisonTable';
+import { PricingFaqSection } from '../components/pricing/PricingFaqSection';
 import { 
   detectUserRegion, 
   RegionalPricing, 
@@ -30,50 +30,6 @@ import {
   WaitlistStatus 
 } from '../services/couponService';
 
-const COMPARISON_ROWS = [
-  { feature: 'Local Offline Storage (IndexedDB)', free: true, pro: true, team: true },
-  { feature: 'Markdown & KaTeX Math Rendering', free: true, pro: true, team: true },
-  { feature: 'Basic PDF & Clean Markdown Export', free: true, pro: true, team: true },
-  { feature: 'Native Slash Commands (/) & Fast Formatting', free: true, pro: true, team: true },
-  { feature: 'Curated Starter Blueprint Templates (8)', free: true, pro: true, team: true },
-  { feature: 'Client-Side WebP Image Compression', free: true, pro: true, team: true },
-  { feature: 'Supabase Multi-Device Cloud Sync', free: false, pro: true, team: true },
-  { feature: 'Publication-Grade PDF (Custom Cover & TOC)', free: false, pro: true, team: true },
-  { feature: 'Full & Unlimited Template Library', free: false, pro: true, team: true },
-  { feature: 'Local Checkpoints & Version History', free: false, pro: true, team: true },
-  { feature: '1-Click Web Publishing & Passwords', free: false, pro: true, team: true },
-  { feature: 'Real-Time Multiplayer Collaboration', free: false, pro: false, team: true },
-  { feature: 'Shared Team Workspace & Tags', free: false, pro: false, team: true },
-  { feature: 'Support Level', free: 'Community', pro: 'Priority Email', team: 'Dedicated 24/7' }
-];
-
-const FAQS = [
-  {
-    q: 'Can I use MD Writer completely offline without an account?',
-    a: 'Yes! The Starter plan is 100% free and offline-first. Your documents are stored safely inside your browser using IndexedDB (Dexie.js). You do not need to register, log in, or install anything.'
-  },
-  {
-    q: 'How does the Earlybird 1-time coupon reward work?',
-    a: 'When you claim one of our 100 limited Earlybird spots, you receive a unique one-time coupon (e.g. EARLYBIRD-XXXXX) bound to your account. Redeeming it on the Monthly plan grants 1 month of Pro completely free. Redeeming it on the Annual plan stacks an extra 2 months of free Pro on top of our 20% annual discount.'
-  },
-  {
-    q: 'How does Supabase multi-device cloud synchronization work?',
-    a: 'When you upgrade to Pro and connect your account, every edit is debounced and synchronized securely to your personal PostgreSQL database on Supabase. This delivers instant multi-device backup with last-write-wins resolution.'
-  },
-  {
-    q: 'How is Regional / PPP pricing validated?',
-    a: 'We show display currencies based on Geo-IP detection (with fallback to US $8). At checkout, payment processors (such as Stripe Adaptive Pricing / Paddle) validate your card billing country to prevent currency arbitrage while granting equitable access across India, SEA, and Latin America.'
-  },
-  {
-    q: 'What happens to my documents if I cancel my subscription?',
-    a: 'You never lose access to your data. All documents are stored in open Markdown format and remain accessible in your local browser storage. You can export all your files anytime with one click.'
-  },
-  {
-    q: 'Can I export to PDF without any watermark or ads?',
-    a: 'Absolutely. Starter gives clean print PDF export. Pro upgrades you to our publication studio with custom cover designs, dynamic table of contents, and custom branding.'
-  }
-];
-
 export const PricingPage: React.FC = () => {
   const { user, refreshProfile } = useAuthStore();
   const navigate = useNavigate();
@@ -81,7 +37,6 @@ export const PricingPage: React.FC = () => {
   // Regional & Currency State
   const [region] = useState<RegionalPricing>(detectUserRegion);
   const [isAnnual, setIsAnnual] = useState(true);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // Earlybird Waitlist & Coupon State
   const [waitlistStatus, setWaitlistStatus] = useState<WaitlistStatus>({ hasJoined: false });
@@ -544,71 +499,7 @@ export const PricingPage: React.FC = () => {
         </section>
 
         {/* Feature Comparison Matrix Table */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-neutral-100 dark:border-neutral-800/80">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-neutral-950 dark:text-white tracking-tight mb-2">
-              Compare Plan Features
-            </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Detailed breakdown of features across all MD Writer tiers.
-            </p>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-2xs">
-            <table className="w-full text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
-              <thead className="bg-neutral-50 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 font-bold uppercase text-[11px]">
-                <tr>
-                  <th className="p-4 sm:px-6">Feature</th>
-                  <th className="p-4 text-center w-28">Starter</th>
-                  <th className="p-4 text-center w-28 bg-neutral-100/50 dark:bg-neutral-800/50">Pro Writer</th>
-                  <th className="p-4 text-center w-28">Team</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60 bg-white dark:bg-neutral-950">
-                {COMPARISON_ROWS.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30 transition-colors">
-                    <td className="p-4 sm:px-6 font-medium text-neutral-800 dark:text-neutral-200">
-                      {row.feature}
-                    </td>
-                    <td className="p-4 text-center text-neutral-600 dark:text-neutral-400">
-                      {typeof row.free === 'boolean' ? (
-                        row.free ? (
-                          <Check className="w-4 h-4 text-emerald-500 mx-auto" />
-                        ) : (
-                          <Minus className="w-4 h-4 text-neutral-300 dark:text-neutral-600 mx-auto" />
-                        )
-                      ) : (
-                        <span className="font-semibold">{row.free}</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-center bg-neutral-100/30 dark:bg-neutral-800/30 text-neutral-800 dark:text-neutral-200">
-                      {typeof row.pro === 'boolean' ? (
-                        row.pro ? (
-                          <Check className="w-4 h-4 text-emerald-500 mx-auto stroke-[2.5]" />
-                        ) : (
-                          <Minus className="w-4 h-4 text-neutral-300 dark:text-neutral-600 mx-auto" />
-                        )
-                      ) : (
-                        <span className="font-bold text-neutral-900 dark:text-white">{row.pro}</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-center text-neutral-600 dark:text-neutral-400">
-                      {typeof row.team === 'boolean' ? (
-                        row.team ? (
-                          <Check className="w-4 h-4 text-emerald-500 mx-auto" />
-                        ) : (
-                          <Minus className="w-4 h-4 text-neutral-300 dark:text-neutral-600 mx-auto" />
-                        )
-                      ) : (
-                        <span className="font-semibold">{row.team}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <PricingComparisonTable />
 
         {/* Admin Hub for tungariyarahul08@gmail.com */}
         {isAdmin && (
@@ -618,42 +509,7 @@ export const PricingPage: React.FC = () => {
         )}
 
         {/* FAQ Accordion Section */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-neutral-100 dark:border-neutral-800/80">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-black text-neutral-950 dark:text-white tracking-tight mb-2">
-              Frequently Asked Questions
-            </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Got questions? We have answers to help you get writing smoothly.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {FAQS.map((faq, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div
-                  key={idx}
-                  className="rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden bg-white dark:bg-neutral-900/40 transition-colors"
-                >
-                  <button
-                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-neutral-900 dark:text-white cursor-pointer select-none"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-5 pb-5 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60 pt-3 animate-in fade-in duration-150">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <PricingFaqSection />
 
         {/* CTA Banner */}
         <CtaBanner onOpenTemplates={() => navigate('/editor')} />

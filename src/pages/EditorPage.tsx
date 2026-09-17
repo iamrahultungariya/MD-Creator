@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { ViewMode, CursorPosition } from '../features/editor/types';
 import { useEditorModals } from '../features/editor/hooks/useEditorModals';
@@ -11,15 +11,22 @@ import { EditorWorkspace } from '../features/editor/components/EditorWorkspace';
 import { EditorStatusBar } from '../features/editor/components/EditorStatusBar';
 import { EditorModalsContainer } from '../features/editor/components/EditorModalsContainer';
 import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
+import { exportToDocx } from '../features/docx-export/services/docxExportService';
+import { cleanAndNormalizeMarkdown } from '../utils/markdownSanitizer';
+import { useDuplicateDocument } from '../hooks/useDocuments';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const duplicateDocMutation = useDuplicateDocument();
 
   // View mode and feedback toasts
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [cursorPos, setCursorPos] = useState<CursorPosition>({ line: 1, col: 1 });
   const [copyToast, setCopyToast] = useState<string | null>(null);
+  const [isFindOpen, setIsFindOpen] = useState(false);
+  const [findMode, setFindMode] = useState<'find' | 'replace'>('find');
 
   const showToast = useCallback((msg: string, durationMs = 2500) => {
     setCopyToast(msg);
@@ -77,7 +84,56 @@ export const EditorPage: React.FC = () => {
     onOpenImageModal: () => modals.setIsImageModalOpen(true),
     onExportMd: doc.handleExportMd,
     onOpenPdfStudio: () => modals.setIsPdfStudioOpen(true),
+    onOpenFind: () => {
+      setFindMode('find');
+      setIsFindOpen(true);
+    },
+    onOpenReplace: () => {
+      setFindMode('replace');
+      setIsFindOpen(true);
+    },
   });
+
+  const handleExportDocx = useCallback(async () => {
+    try {
+      showToast('Exporting to Word (.docx)...', 2000);
+      await exportToDocx(doc.title || 'Untitled', doc.content);
+      showToast('Word document (.docx) exported successfully!');
+    } catch (err) {
+      console.error('Failed to export docx', err);
+      showToast('Export failed. Please try again.');
+    }
+  }, [doc.title, doc.content, showToast]);
+
+  const handleDuplicateDoc = useCallback(async () => {
+    try {
+      const docId = doc.docMetadata?.id || id;
+      if (!docId) {
+        showToast('Please save the document first before duplicating.');
+        return;
+      }
+      await doc.executeSave(doc.content, doc.title);
+      const newId = await duplicateDocMutation.mutateAsync(docId);
+      if (newId) {
+        showToast('Document duplicated! Redirecting...');
+        navigate(`/editor/${newId}`);
+      }
+    } catch (err) {
+      console.error('Failed to duplicate document', err);
+      showToast('Duplication failed.');
+    }
+  }, [doc, id, duplicateDocMutation, navigate, showToast]);
+
+  const handleCleanFormat = useCallback(() => {
+    const cleaned = cleanAndNormalizeMarkdown(doc.content);
+    if (cleaned !== doc.content) {
+      doc.setContent(cleaned);
+      doc.executeSave(cleaned, doc.title);
+      showToast('Markdown cleaned & normalized!');
+    } else {
+      showToast('Markdown is already clean.');
+    }
+  }, [doc, showToast]);
 
   // Insert formula snippet from KaTeX Studio at cursor
   const handleInsertFormulaAtCursor = useCallback(
@@ -175,6 +231,16 @@ export const EditorPage: React.FC = () => {
         e.preventDefault();
         doc.executeSave(doc.content, doc.title);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setFindMode('find');
+        setIsFindOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setFindMode('replace');
+        setIsFindOpen(true);
+      }
       if (
         e.key === 'Escape' &&
         viewMode === 'zen' &&
@@ -235,6 +301,9 @@ export const EditorPage: React.FC = () => {
         onOpenRevisions={() => modals.setIsRevisionsOpen(true)}
         onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
         onExportMd={doc.handleExportMd}
+        onExportDocx={handleExportDocx}
+        onDuplicateDoc={handleDuplicateDoc}
+        onCleanFormat={handleCleanFormat}
         onCopyMarkdown={doc.handleCopyMarkdown}
         onClearContent={doc.handleClearContent}
         onDeleteCurrentDoc={doc.handleDeleteCurrentDoc}
@@ -269,6 +338,12 @@ export const EditorPage: React.FC = () => {
         onCopyMarkdown={doc.handleCopyMarkdown}
         onOpenRevisions={() => modals.setIsRevisionsOpen(true)}
         onClearContent={doc.handleClearContent}
+        isFindOpen={isFindOpen}
+        setIsFindOpen={setIsFindOpen}
+        findMode={findMode}
+        title={doc.title}
+        setContent={doc.setContent}
+        executeSave={doc.executeSave}
       />
 
       {/* Telemetry Status Bar - Hidden on mobile (< md) to maximize writing area */}

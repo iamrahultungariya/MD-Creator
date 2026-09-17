@@ -24,7 +24,8 @@ import {
   Bookmark,
   FileDown,
   Printer,
-  Sliders
+  Sliders,
+  Sparkles
 } from 'lucide-react';
 
 export interface CommandItem {
@@ -37,6 +38,14 @@ export interface CommandItem {
 }
 
 export const COMMANDS: CommandItem[] = [
+  {
+    id: 'clean-markdown',
+    title: 'Clean & Format Markdown',
+    description: 'Repair fragmented lines, clean metrics & normalize spacing',
+    icon: Sparkles,
+    shortcut: '/clean',
+    insertSnippet: '__ACTION_CLEAN_FORMAT__'
+  },
   {
     id: 'h1',
     title: 'Heading 1',

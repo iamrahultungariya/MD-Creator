@@ -20,6 +20,15 @@
 body {
   font-family: var(--font-sans);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Universal thin scrollbar for Firefox and standard engines */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 163, 163, 0.35) transparent;
 }
 
 /* GitHub/Obsidian Callout Alerts - Specific Left Accent Borders */
@@ -71,10 +80,10 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Custom scrollbar */
+/* Custom subtle scrollbar (5-6px pill) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -82,12 +91,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(163, 163, 163, 0.3);
+  background: rgba(163, 163, 163, 0.35);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(163, 163, 163, 0.5);
+  background: rgba(163, 163, 163, 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(115, 115, 115, 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(163, 163, 163, 0.7);
 }
 
 /* Wavy gradient background for CTA */

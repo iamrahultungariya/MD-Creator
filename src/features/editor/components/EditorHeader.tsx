@@ -52,6 +52,9 @@ interface EditorHeaderProps {
   onOpenRevisions: () => void;
   onOpenSprintPopover: () => void;
   onExportMd: () => void;
+  onExportDocx?: () => void;
+  onDuplicateDoc?: () => void;
+  onCleanFormat?: () => void;
   onCopyMarkdown: () => void;
   onClearContent: () => void;
   onDeleteCurrentDoc: () => void;
@@ -82,6 +85,9 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   onOpenRevisions,
   onOpenSprintPopover,
   onExportMd,
+  onExportDocx,
+  onDuplicateDoc,
+  onCleanFormat,
   onCopyMarkdown,
   onClearContent,
   onDeleteCurrentDoc,
@@ -331,6 +337,36 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 </div>
                 <span className="text-[10px] font-mono text-neutral-400">25m</span>
               </button>
+
+              <div className="border-t border-neutral-100 dark:border-neutral-800 my-1" />
+
+              <button
+                onClick={onDuplicateDoc}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Copy className="w-4 h-4 text-sky-500" />
+                  <div>
+                    <div className="font-semibold text-neutral-900 dark:text-white">Duplicate Document</div>
+                    <div className="text-[10px] text-neutral-500">Clone into a new document</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-neutral-400">Clone</span>
+              </button>
+
+              <button
+                onClick={onCleanFormat}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <div>
+                    <div className="font-semibold text-neutral-900 dark:text-white">Clean & Format Markdown</div>
+                    <div className="text-[10px] text-neutral-500">Repair fragmented lines & badges</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-neutral-400">/clean</span>
+              </button>
             </div>
           )}
         </div>
@@ -373,6 +409,19 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               >
                 <Download className="w-3.5 h-3.5 text-neutral-500" />
                 <span>Download .md</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsExportMenuOpen(false);
+                  onExportDocx?.();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2 text-neutral-700 dark:text-neutral-300 cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <div className="flex-1 flex items-center justify-between">
+                  <span>Word Document (.docx)</span>
+                  <span className="text-[9px] bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 px-1.5 py-0.2 rounded font-bold uppercase">DOCX</span>
+                </div>
               </button>
               <button
                 onClick={onCopyMarkdown}
