@@ -37,6 +37,9 @@ const KatexFormulaModal = React.lazy(() =>
 const ImageEmbedModal = React.lazy(() =>
   import('../../../components/editor/ImageEmbedModal').then((m) => ({ default: m.ImageEmbedModal }))
 );
+const ExportModal = React.lazy(() =>
+  import('../../../components/editor/ExportModal').then((m) => ({ default: m.ExportModal }))
+);
 
 interface EditorModalsContainerProps {
   docId: string;
@@ -77,6 +80,12 @@ interface EditorModalsContainerProps {
   isImageModalOpen?: boolean;
   onCloseImageModal?: () => void;
   onInsertImage?: (markdownSnippet: string) => void;
+  isExportModalOpen?: boolean;
+  onCloseExportModal?: () => void;
+  onOpenPdfStudioFromExport?: () => void;
+  onExportMd?: () => void;
+  onExportDocx?: () => void;
+  onCopyMarkdown?: () => void;
 }
 
 export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React.memo(({
@@ -118,6 +127,12 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   isImageModalOpen = false,
   onCloseImageModal,
   onInsertImage,
+  isExportModalOpen = false,
+  onCloseExportModal,
+  onOpenPdfStudioFromExport,
+  onExportMd,
+  onExportDocx,
+  onCopyMarkdown,
 }) => {
   return (
     <Suspense fallback={null}>
@@ -149,6 +164,21 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           onClose={onClosePdfStudio}
           documentTitle={title}
           documentContent={content}
+        />
+      )}
+
+      {isExportModalOpen && (
+        <ExportModal
+          isOpen={isExportModalOpen}
+          onClose={onCloseExportModal || (() => {})}
+          onOpenPdfStudio={() => {
+            onCloseExportModal?.();
+            onOpenPdfStudioFromExport?.();
+          }}
+          onExportMd={onExportMd || (() => {})}
+          onExportDocx={onExportDocx || (() => {})}
+          onCopyMarkdown={onCopyMarkdown || (() => {})}
+          docTitle={title}
         />
       )}
 

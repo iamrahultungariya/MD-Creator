@@ -4,6 +4,7 @@ export function useEditorModals() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isPdfStudioOpen, setIsPdfStudioOpen] = useState(false);
   const [isTableBuilderOpen, setIsTableBuilderOpen] = useState(false);
   const [isTypewriterMode, setIsTypewriterMode] = useState(false);
@@ -24,6 +25,8 @@ export function useEditorModals() {
     setIsSwitcherOpen,
     isExportMenuOpen,
     setIsExportMenuOpen,
+    isExportModalOpen,
+    setIsExportModalOpen,
     isPdfStudioOpen,
     setIsPdfStudioOpen,
     isTableBuilderOpen,

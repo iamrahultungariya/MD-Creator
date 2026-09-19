@@ -25,7 +25,8 @@ import {
   useTrashCount,
   useRestoreDocument,
   useEmptyTrash,
-  useDuplicateDocument
+  useDuplicateDocument,
+  useAllDocumentTags
 } from '../hooks/useDocuments';
 import { saveDocument } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
@@ -52,9 +53,7 @@ export const DocumentsPage: React.FC = () => {
   const emptyTrashMutation = useEmptyTrash();
   const duplicateDocMutation = useDuplicateDocument();
   const togglePinMutation = useTogglePin();
-
-  // Extract all unique tags
-  const allTags = ['All', ...Array.from(new Set(documents.flatMap(d => d.tags || [])))];
+  const { data: allTags = ['All'] } = useAllDocumentTags();
 
   const handleCreateNew = async () => {
     const id = await createDocMutation.mutateAsync({
@@ -293,14 +292,14 @@ export const DocumentsPage: React.FC = () => {
           </div>
 
           {/* Tag Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-            {allTags.slice(0, 6).map((tag) => (
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+            {allTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                   activeTag === tag
-                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-2xs'
                     : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
                 }`}
               >

@@ -4,7 +4,6 @@ import {
   ArrowLeft, 
   Sun, 
   Moon, 
-  Download, 
   Columns, 
   PenTool, 
   Eye, 
@@ -60,8 +59,8 @@ interface EditorHeaderProps {
   onDeleteCurrentDoc: () => void;
   isToolsMenuOpen: boolean;
   setIsToolsMenuOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
-  isExportMenuOpen: boolean;
-  setIsExportMenuOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
+  isExportMenuOpen?: boolean;
+  setIsExportMenuOpen?: (open: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
@@ -76,7 +75,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   docMetadata,
   onOpenSwitcher,
   onOpenDrawer,
-  onOpenPdfStudio,
+  onOpenPdfStudio: _onOpenPdfStudio,
   onOpenTableBuilder,
   onOpenImageModal,
   onOpenFxPopover,
@@ -84,17 +83,17 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   onOpenTemplates,
   onOpenRevisions,
   onOpenSprintPopover,
-  onExportMd,
-  onExportDocx,
+  onExportMd: _onExportMd,
+  onExportDocx: _onExportDocx,
   onDuplicateDoc,
   onCleanFormat,
-  onCopyMarkdown,
+  onCopyMarkdown: _onCopyMarkdown,
   onClearContent,
   onDeleteCurrentDoc,
   isToolsMenuOpen,
   setIsToolsMenuOpen,
-  isExportMenuOpen,
-  setIsExportMenuOpen,
+  isExportMenuOpen: _isExportMenuOpen,
+  setIsExportMenuOpen: _setIsExportMenuOpen,
 }) => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useThemeStore();
@@ -367,86 +366,35 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 </div>
                 <span className="text-[10px] font-mono text-neutral-400">/clean</span>
               </button>
-            </div>
-          )}
-        </div>
-
-        {/* Export Dropdown Menu - Hidden on mobile (< md), accessible via mobile toolbar */}
-        <div className="hidden md:block relative">
-          <button
-            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-            className="px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Export</span>
-            <ChevronDown className="w-3 h-3 text-neutral-400" />
-          </button>
-
-          {isExportMenuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-100 space-y-0.5">
-              <button
-                onClick={() => {
-                  setIsExportMenuOpen(false);
-                  onOpenPdfStudio();
-                }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 text-neutral-700 dark:text-neutral-300 cursor-pointer bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-100/60 dark:border-indigo-900/30"
-              >
-                <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                <div>
-                  <div className="font-bold text-neutral-950 dark:text-white flex items-center gap-1.5">
-                    <span>PDF Export Studio</span>
-                    <span className="text-[9px] bg-indigo-600 text-white dark:bg-indigo-500 px-1.5 py-0.2 rounded font-bold uppercase tracking-wider">v2.4</span>
-                  </div>
-                  <div className="text-[10px] text-neutral-500 dark:text-neutral-400">Custom themes, cover & TOC</div>
-                </div>
-              </button>
-
-              <div className="border-t border-neutral-100 dark:border-neutral-800 my-1" />
-
-              <button
-                onClick={onExportMd}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2 text-neutral-700 dark:text-neutral-300 cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-neutral-500" />
-                <span>Download .md</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsExportMenuOpen(false);
-                  onExportDocx?.();
-                }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2 text-neutral-700 dark:text-neutral-300 cursor-pointer"
-              >
-                <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <div className="flex-1 flex items-center justify-between">
-                  <span>Word Document (.docx)</span>
-                  <span className="text-[9px] bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 px-1.5 py-0.2 rounded font-bold uppercase">DOCX</span>
-                </div>
-              </button>
-              <button
-                onClick={onCopyMarkdown}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2 text-neutral-700 dark:text-neutral-300 cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5 text-neutral-500" />
-                <span>Copy Markdown</span>
-              </button>
 
               <div className="border-t border-neutral-100 dark:border-neutral-800 my-1" />
 
               <button
                 onClick={onClearContent}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center gap-2 text-amber-600 dark:text-amber-400 cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center justify-between text-amber-600 dark:text-amber-400 cursor-pointer group"
               >
-                <FileX className="w-3.5 h-3.5" />
-                <span>Clear Content...</span>
+                <div className="flex items-center gap-2.5">
+                  <FileX className="w-4 h-4 text-amber-500" />
+                  <div>
+                    <div className="font-semibold text-amber-700 dark:text-amber-400">Clear Content...</div>
+                    <div className="text-[10px] text-neutral-500">Wipe current markdown text</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-neutral-400">Clear</span>
               </button>
 
               <button
                 onClick={onDeleteCurrentDoc}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 text-red-600 dark:text-red-400 cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-between text-red-600 dark:text-red-400 cursor-pointer group"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete Document...</span>
+                <div className="flex items-center gap-2.5">
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                  <div>
+                    <div className="font-semibold text-red-700 dark:text-red-400">Delete Document...</div>
+                    <div className="text-[10px] text-neutral-500">Move to Recycle Bin</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-neutral-400">Del</span>
               </button>
             </div>
           )}

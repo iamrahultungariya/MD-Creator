@@ -291,3 +291,26 @@ body {
     color: #0369a1 !important;
   }
 }
+
+/* Document Outline Heading Smooth Transfer Glow Flash */
+@keyframes headingFlashHighlight {
+  0% {
+    background-color: rgba(59, 130, 246, 0.28);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22);
+    border-radius: 8px;
+  }
+  60% {
+    background-color: rgba(59, 130, 246, 0.12);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    border-radius: 8px;
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+    border-radius: 8px;
+  }
+}
+
+.heading-flash-highlight {
+  animation: headingFlashHighlight 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

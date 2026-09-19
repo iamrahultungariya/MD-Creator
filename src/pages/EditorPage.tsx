@@ -46,12 +46,12 @@ export const EditorPage: React.FC = () => {
   // Focus sprint timer hook
   const sprint = useFocusSprint({
     content: doc.content,
-    onSprintComplete: (wordsWritten) => {
-      showToast(`🎉 Focus Sprint Completed! You wrote ${wordsWritten} words!`, 4000);
+    onSprintComplete: (wordsWritten, elapsedMin, wpm) => {
+      showToast(`🎉 Focus Sprint Completed! ${wordsWritten} words in ${elapsedMin}m (${wpm} WPM)`, 4500);
     },
   });
 
-  // Track cursor position and perform Typewriter vertical centering
+  // Track cursor position telemetry
   const updateCursorPosition = useCallback(() => {
     if (!textareaRef.current) return;
     const text = textareaRef.current.value.substring(0, textareaRef.current.selectionStart);
@@ -61,13 +61,22 @@ export const EditorPage: React.FC = () => {
       line: currentLine,
       col: lines[lines.length - 1].length + 1,
     });
+  }, []);
 
-    if (modals.isTypewriterMode) {
-      const lineHeight = 24;
-      const targetScroll =
-        (currentLine - 1) * lineHeight - textareaRef.current.clientHeight / 2 + lineHeight;
-      textareaRef.current.scrollTop = Math.max(0, targetScroll);
-    }
+  // Smooth vertical centering for Typewriter mode (only triggered when typing / editing)
+  const performTypewriterCentering = useCallback(() => {
+    if (!modals.isTypewriterMode || !textareaRef.current) return;
+    const text = textareaRef.current.value.substring(0, textareaRef.current.selectionStart);
+    const lines = text.split('\n');
+    const currentLine = lines.length;
+    const totalLines = Math.max(1, textareaRef.current.value.split('\n').length);
+    const scrollRatio = (currentLine - 1) / totalLines;
+    const targetScroll = scrollRatio * textareaRef.current.scrollHeight - textareaRef.current.clientHeight / 2 + 30;
+
+    textareaRef.current.scrollTo({
+      top: Math.max(0, targetScroll),
+      behavior: 'smooth'
+    });
   }, [modals.isTypewriterMode]);
 
   // Slash commands palette and shortcut injection hook
@@ -193,39 +202,68 @@ export const EditorPage: React.FC = () => {
       const val = e.target.value;
       doc.setContent(val);
       updateCursorPosition();
+      performTypewriterCentering();
       slash.checkSlashTrigger(val, e.target.selectionStart);
       doc.queueAutoSave(val, doc.title);
     },
-    [doc, updateCursorPosition, slash]
+    [doc, updateCursorPosition, performTypewriterCentering, slash]
   );
 
-  // Jump to heading from Document Outline
+  // Jump to heading from Document Outline with smooth transfer & glow highlight
   const handleSelectHeading = useCallback(
     (heading: HeadingItem) => {
       if (!textareaRef.current) return;
-      const lineHeight = 24;
-      textareaRef.current.scrollTop = Math.max(0, heading.lineIndex * lineHeight - 60);
       const lines = doc.content.split('\n');
       let charOffset = 0;
-      for (let i = 0; i < heading.lineIndex; i++) {
+      for (let i = 0; i < heading.lineIndex && i < lines.length; i++) {
         charOffset += lines[i].length + 1;
       }
+      const lineText = lines[heading.lineIndex] || '';
+
+      // 1. Textarea alignment: Smooth scroll to target line position
+      const totalLines = Math.max(1, lines.length);
+      const scrollRatio = heading.lineIndex / totalLines;
+      const targetScroll = scrollRatio * textareaRef.current.scrollHeight - 80;
+      textareaRef.current.scrollTo({
+        top: Math.max(0, targetScroll),
+        behavior: 'smooth'
+      });
+
+      // 2. Select heading in textarea
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(
-        charOffset,
-        charOffset + (lines[heading.lineIndex]?.length || 0)
-      );
+      textareaRef.current.setSelectionRange(charOffset, charOffset + lineText.length);
       updateCursorPosition();
+
+      // 3. Preview pane alignment: Smooth scroll & visual glow
+      const slug = heading.text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-');
+      const targetHeadingEl = 
+        document.querySelector(`[data-markdown-preview="true"] #${slug}`) ||
+        document.querySelector(`[data-heading-text="${heading.text}"]`);
+      
+      if (targetHeadingEl) {
+        targetHeadingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        targetHeadingEl.classList.remove('heading-flash-highlight');
+        void (targetHeadingEl as HTMLElement).offsetWidth; // trigger reflow
+        targetHeadingEl.classList.add('heading-flash-highlight');
+      }
     },
     [doc.content, updateCursorPosition]
   );
 
-  // Global Keyboard Shortcuts (Ctrl+O, Ctrl+S, Esc)
+  // Global Keyboard Shortcuts (Ctrl+O, Ctrl+E, Ctrl+S, Ctrl+F, Esc)
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
         e.preventDefault();
         modals.setIsSwitcherOpen(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        modals.setIsExportModalOpen((prev) => !prev);
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -247,7 +285,7 @@ export const EditorPage: React.FC = () => {
         !slash.isSlashMenuOpen &&
         !modals.isSwitcherOpen &&
         !modals.isDrawerOpen &&
-        !modals.isExportMenuOpen
+        !modals.isExportModalOpen
       ) {
         setViewMode('split');
       }
@@ -344,6 +382,7 @@ export const EditorPage: React.FC = () => {
         title={doc.title}
         setContent={doc.setContent}
         executeSave={doc.executeSave}
+        isTypewriterMode={modals.isTypewriterMode}
       />
 
       {/* Telemetry Status Bar - Hidden on mobile (< md) to maximize writing area */}
@@ -365,17 +404,22 @@ export const EditorPage: React.FC = () => {
           sprintDuration={sprint.sprintDuration}
           sprintSecondsRemaining={sprint.sprintSecondsRemaining}
           sprintStartWordCount={sprint.sprintStartWordCount}
+          wordsWritten={sprint.wordsWritten}
+          wpm={sprint.wpm}
+          progressPercent={sprint.progressPercent}
+          sprintMode={sprint.sprintMode}
+          targetWords={sprint.targetWords}
+          soundEnabled={sprint.soundEnabled}
+          onToggleSound={() => sprint.setSoundEnabled(!sprint.soundEnabled)}
           formatSprintTime={sprint.formatSprintTime}
           isSprintPopoverOpen={modals.isSprintPopoverOpen}
           setIsSprintPopoverOpen={modals.setIsSprintPopoverOpen}
-          onStartSprint={(mins) => {
-            sprint.handleStartSprint(mins);
+          onStartSprint={(mins, mode, goal) => {
+            sprint.handleStartSprint(mins, mode, goal);
             modals.setIsSprintPopoverOpen(false);
           }}
           onPauseSprint={sprint.handlePauseSprint}
           onResetSprint={sprint.handleResetSprint}
-          onOpenUpdates={() => modals.setIsUpdatesOpen(true)}
-          onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
         />
       </div>
 
@@ -397,6 +441,12 @@ export const EditorPage: React.FC = () => {
         onCloseSwitcher={() => modals.setIsSwitcherOpen(false)}
         isPdfStudioOpen={modals.isPdfStudioOpen}
         onClosePdfStudio={() => modals.setIsPdfStudioOpen(false)}
+        isExportModalOpen={modals.isExportModalOpen}
+        onCloseExportModal={() => modals.setIsExportModalOpen(false)}
+        onOpenPdfStudioFromExport={() => modals.setIsPdfStudioOpen(true)}
+        onExportMd={doc.handleExportMd}
+        onExportDocx={handleExportDocx}
+        onCopyMarkdown={doc.handleCopyMarkdown}
         isTableBuilderOpen={modals.isTableBuilderOpen}
         onCloseTableBuilder={() => modals.setIsTableBuilderOpen(false)}
         onInsertTable={doc.handleInsertTableFromModal}

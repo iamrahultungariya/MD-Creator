@@ -44,6 +44,15 @@ const extractTextFromReactNode = (node: React.ReactNode): string => {
   return '';
 };
 
+// Convert heading plain text to slug for outline jump synchronization
+const toHeadingSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-');
+};
+
 interface AlertCalloutConfig {
   type: 'note' | 'tip' | 'warning' | 'important' | 'caution';
   title: string;
@@ -300,27 +309,61 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onTog
         remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
         rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
         components={{
-          // Headings
-          h1: ({ children }) => (
-            <h1 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white mt-6 mb-3 tracking-tight pb-1.5 border-b border-neutral-100 dark:border-neutral-800">
-              {replaceEmojisInReactNode(children)}
-            </h1>
-          ),
-          h2: ({ children }) => (
-            <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-5 mb-2.5 tracking-tight">
-              {replaceEmojisInReactNode(children)}
-            </h2>
-          ),
-          h3: ({ children }) => (
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-4 mb-2">
-              {replaceEmojisInReactNode(children)}
-            </h3>
-          ),
-          h4: ({ children }) => (
-            <h4 className="text-base font-semibold text-neutral-900 dark:text-neutral-200 mt-3 mb-1.5">
-              {replaceEmojisInReactNode(children)}
-            </h4>
-          ),
+          // Headings with stable IDs and scroll-margin for outline synchronization
+          h1: ({ children }) => {
+            const plainText = extractTextFromReactNode(children);
+            const id = toHeadingSlug(plainText);
+            return (
+              <h1 id={id} data-heading="true" data-heading-text={plainText} className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white mt-6 mb-3 tracking-tight pb-1.5 border-b border-neutral-100 dark:border-neutral-800 scroll-mt-6 transition-all duration-300">
+                {replaceEmojisInReactNode(children)}
+              </h1>
+            );
+          },
+          h2: ({ children }) => {
+            const plainText = extractTextFromReactNode(children);
+            const id = toHeadingSlug(plainText);
+            return (
+              <h2 id={id} data-heading="true" data-heading-text={plainText} className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-5 mb-2.5 tracking-tight scroll-mt-6 transition-all duration-300">
+                {replaceEmojisInReactNode(children)}
+              </h2>
+            );
+          },
+          h3: ({ children }) => {
+            const plainText = extractTextFromReactNode(children);
+            const id = toHeadingSlug(plainText);
+            return (
+              <h3 id={id} data-heading="true" data-heading-text={plainText} className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mt-4 mb-2 scroll-mt-6 transition-all duration-300">
+                {replaceEmojisInReactNode(children)}
+              </h3>
+            );
+          },
+          h4: ({ children }) => {
+            const plainText = extractTextFromReactNode(children);
+            const id = toHeadingSlug(plainText);
+            return (
+              <h4 id={id} data-heading="true" data-heading-text={plainText} className="text-base font-semibold text-neutral-900 dark:text-neutral-200 mt-3 mb-1.5 scroll-mt-6 transition-all duration-300">
+                {replaceEmojisInReactNode(children)}
+              </h4>
+            );
+          },
+          h5: ({ children }) => {
+            const plainText = extractTextFromReactNode(children);
+            const id = toHeadingSlug(plainText);
+            return (
+              <h5 id={id} data-heading="true" data-heading-text={plainText} className="text-sm font-semibold text-neutral-800 dark:text-neutral-300 mt-2.5 mb-1 scroll-mt-6 transition-all duration-300">
+                {replaceEmojisInReactNode(children)}
+              </h5>
+            );
+          },
+          h6: ({ children }) => {
+            const plainText = extractTextFromReactNode(children);
+            const id = toHeadingSlug(plainText);
+            return (
+              <h6 id={id} data-heading="true" data-heading-text={plainText} className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider mt-2 mb-1 scroll-mt-6 transition-all duration-300">
+                {replaceEmojisInReactNode(children)}
+              </h6>
+            );
+          },
 
           // Paragraphs
           p: ({ children }) => (

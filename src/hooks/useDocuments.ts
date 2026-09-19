@@ -26,6 +26,7 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
         queryClient.invalidateQueries({ queryKey: ['documents'] });
         queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
         queryClient.invalidateQueries({ queryKey: ['trash-count'] });
+        queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
       }
     }).catch(console.warn);
     return () => { isMounted = false; };
@@ -78,6 +79,17 @@ export function useTrashCount() {
   });
 }
 
+export function useAllDocumentTags() {
+  return useQuery({
+    queryKey: ['all-document-tags'],
+    queryFn: async () => {
+      const docs = await db.documents.filter(d => !d.isDeleted).toArray();
+      const tags = Array.from(new Set(docs.flatMap(d => d.tags || []))).filter(Boolean);
+      return ['All', ...tags];
+    }
+  });
+}
+
 /**
  * Lazy content fetcher: only called when opening the document in editor or preview modal.
  */
@@ -110,6 +122,7 @@ export function useCreateDocument() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     }
   });
 }
@@ -124,6 +137,7 @@ export function useSaveDocument() {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['document-content', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     }
   });
 }
@@ -138,6 +152,7 @@ export function useDeleteDocument() {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['trash-count'] });
       queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     }
   });
 }
@@ -152,6 +167,7 @@ export function useRestoreDocument() {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['trash-count'] });
       queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     }
   });
 }
@@ -166,6 +182,7 @@ export function useEmptyTrash() {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['trash-count'] });
       queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     }
   });
 }
@@ -179,6 +196,7 @@ export function useDuplicateDocument() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     }
   });
 }

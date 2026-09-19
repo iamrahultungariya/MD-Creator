@@ -269,13 +269,15 @@ interface SlashCommandMenuProps {
   selectedIndex: number;
   searchQuery: string;
   onSelect: (snippet: string) => void;
+  onClose?: () => void;
 }
 
 export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
   isOpen,
   selectedIndex,
   searchQuery,
-  onSelect
+  onSelect,
+  onClose
 }) => {
   const activeItemRef = useRef<HTMLDivElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
@@ -298,27 +300,62 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 
   if (!isOpen) return null;
 
+  const currentSelected = filteredCommands[selectedIndex % (filteredCommands.length || 1)];
+
   return (
     <div 
       data-slash-menu="true" 
-      className="fixed md:absolute bottom-0 md:bottom-12 left-0 md:left-6 right-0 md:right-auto z-50 md:z-40 w-full md:w-80 bg-white dark:bg-neutral-900 border-t md:border border-neutral-200 dark:border-neutral-800 rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-150 select-none max-h-[70vh]"
+      className="fixed md:absolute bottom-0 md:bottom-12 left-0 md:left-6 right-0 md:right-auto z-50 md:z-40 w-full md:w-[380px] bg-white dark:bg-[#141415] border-t md:border border-neutral-200/80 dark:border-neutral-800/80 rounded-t-[32px] md:rounded-[28px] shadow-2xl shadow-neutral-950/20 overflow-hidden animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-150 select-none max-h-[80vh] flex flex-col p-4 sm:p-5"
     >
-      
-      {/* Menu Header with Query Indicator */}
-      <div className="px-3.5 py-2 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50 dark:bg-neutral-950/40 text-xs">
-        <span className="font-semibold text-neutral-600 dark:text-neutral-300">
-          Markdown Blocks {searchQuery ? `("${searchQuery}")` : ''}
-        </span>
-        <span className="text-[10px] text-neutral-400 bg-neutral-200/60 dark:bg-neutral-800 px-1.5 py-0.5 rounded font-mono">
-          ESC to cancel
-        </span>
+      {/* Top Identity Header (Styled like the reference card avatar + identity) */}
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200 shadow-inner">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-neutral-950 dark:text-white leading-tight">
+              Insert Block
+            </h3>
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
+              Format, media & components
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <span className="hidden sm:inline-flex text-[10px] font-mono text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2 py-0.5 rounded-full">
+            ESC
+          </span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            >
+              <span className="text-sm font-semibold">✕</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Query / Search Filter Row (Clean minimal prompt line) */}
+      <div className="pb-3 pt-1 border-b border-neutral-100 dark:border-neutral-800/80">
+        <div className="text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-between font-medium">
+          <span>{searchQuery ? `Searching for "${searchQuery}"` : 'Type to search blocks...'}</span>
+          <span className="text-[10px] text-neutral-400 dark:text-neutral-600 font-mono">
+            {filteredCommands.length} blocks
+          </span>
+        </div>
       </div>
 
       {/* Commands List */}
-      <div ref={listContainerRef} className="max-h-64 overflow-y-auto p-1.5 space-y-0.5 scroll-smooth">
+      <div 
+        ref={listContainerRef} 
+        className="max-h-64 overflow-y-auto py-2.5 space-y-1 scroll-smooth pr-1 my-1"
+      >
         {filteredCommands.length === 0 ? (
-          <div className="p-4 text-center text-xs text-neutral-400">
-            No matching blocks for "{searchQuery}"
+          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-500">
+            No matching blocks found for "{searchQuery}"
           </div>
         ) : (
           filteredCommands.map((cmd, idx) => {
@@ -331,31 +368,35 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
                 data-selected={isSelected ? 'true' : 'false'}
                 ref={isSelected ? activeItemRef : undefined}
                 onClick={() => onSelect(cmd.insertSnippet)}
-                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between transition-colors cursor-pointer ${
+                className={`w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-semibold'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-md font-semibold scale-[1.01]'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                     isSelected 
-                      ? 'bg-white/20 text-white dark:bg-neutral-950/20 dark:text-neutral-950' 
-                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
+                      ? 'bg-white/15 text-white dark:bg-neutral-950/15 dark:text-neutral-950' 
+                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                   }`}>
                     <Icon className="w-4 h-4" />
                   </div>
-                  <div>
-                    <div className="text-xs">{cmd.title}</div>
-                    <div className={`text-[10px] ${isSelected ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-400'}`}>
+                  <div className="min-w-0">
+                    <div className="text-xs truncate">{cmd.title}</div>
+                    <div className={`text-[10px] truncate ${
+                      isSelected 
+                        ? 'text-neutral-300 dark:text-neutral-600' 
+                        : 'text-neutral-400 dark:text-neutral-500'
+                    }`}>
                       {cmd.description}
                     </div>
                   </div>
                 </div>
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full shrink-0 transition-colors ${
                   isSelected 
-                    ? 'bg-white/20 text-white dark:bg-neutral-950/20 dark:text-neutral-900' 
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
+                    ? 'bg-white/20 text-white dark:bg-neutral-950/20 dark:text-neutral-900 font-bold' 
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500'
                 }`}>
                   {cmd.shortcut}
                 </span>
@@ -365,10 +406,25 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
         )}
       </div>
 
-      {/* Footer Navigation Tip */}
-      <div className="px-3.5 py-1.5 bg-neutral-50 dark:bg-neutral-950/60 border-t border-neutral-100 dark:border-neutral-800 text-[10px] text-neutral-400 flex items-center justify-between">
-        <span>Press <strong className="text-neutral-600 dark:text-neutral-300">↑ ↓</strong> to choose</span>
-        <span><strong className="text-neutral-600 dark:text-neutral-300">↵ Enter</strong> to insert</span>
+      {/* Bottom Footer Bar with Navigation Tip & High-Contrast Pill Action Button */}
+      <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between">
+        <div className="text-[11px] text-neutral-400 dark:text-neutral-500 flex items-center gap-2">
+          <span><strong className="text-neutral-700 dark:text-neutral-300 font-semibold">↑ ↓</strong> Navigate</span>
+        </div>
+
+        {/* High Contrast Pill Action Button (Inspired by "Publish" pill in design reference) */}
+        <button
+          type="button"
+          onClick={() => {
+            if (currentSelected) {
+              onSelect(currentSelected.insertSnippet);
+            }
+          }}
+          className="px-4 py-1.5 rounded-full text-xs font-bold tracking-tight shadow-sm transition-all active:scale-95 cursor-pointer bg-neutral-950 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 flex items-center gap-1.5"
+        >
+          <span>Insert</span>
+          <span className="text-[10px] opacity-70 font-mono">↵</span>
+        </button>
       </div>
     </div>
   );

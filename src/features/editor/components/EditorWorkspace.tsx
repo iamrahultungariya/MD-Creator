@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Columns, Sparkles, Minimize2, UploadCloud, PenTool, Eye, Search, ArrowUpDown } from 'lucide-react';
+import { Columns, Minimize2, UploadCloud, PenTool, Eye, ArrowUpDown } from 'lucide-react';
 import { ViewMode } from '../types';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
 import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
@@ -40,6 +40,7 @@ interface EditorWorkspaceProps {
   title?: string;
   setContent?: (val: string) => void;
   executeSave?: (content: string, title: string) => void;
+  isTypewriterMode?: boolean;
 }
 
 export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
@@ -72,6 +73,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   title = 'Untitled Document.md',
   setContent,
   executeSave,
+  isTypewriterMode = false,
 }) => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
@@ -317,19 +319,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               </span>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsFindOpen?.(!isFindOpen)}
-                  className={`px-2 py-0.5 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-2xs ${
-                    isFindOpen
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-800'
-                      : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 border-neutral-200 dark:border-neutral-700'
-                  }`}
-                  title="Find & Replace (Ctrl+F)"
-                >
-                  <Search className="w-3 h-3" />
-                  <span className="hidden lg:inline">Find (Ctrl+F)</span>
-                </button>
-
                 {viewMode === 'split' && (
                   <button
                     onClick={() => setIsSyncScrollEnabled((prev) => !prev)}
@@ -344,14 +333,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                     <span className="hidden xl:inline">Sync Scroll</span>
                   </button>
                 )}
-
-                <button
-                  onClick={() => setIsSlashMenuOpen((prev) => !prev)}
-                  className="px-2 py-0.5 rounded bg-amber-50 dark:bg-neutral-800 hover:bg-amber-100 dark:hover:bg-neutral-700 text-amber-800 dark:text-amber-300 border border-amber-200/70 dark:border-transparent font-mono text-[11px] flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                >
-                  <Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-300" />
-                  <span>Type / for Blocks</span>
-                </button>
               </div>
             </div>
 
@@ -384,7 +365,9 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 placeholder="Start writing here... (Type / for shortcuts, drag & drop or paste images)"
-                className="flex-1 w-full p-6 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 font-mono-code text-sm resize-none focus:outline-none leading-relaxed overflow-y-auto"
+                className={`flex-1 w-full p-6 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 font-mono-code text-sm resize-none focus:outline-none leading-relaxed overflow-y-auto transition-all ${
+                  isTypewriterMode ? 'pt-[25vh] pb-[50vh]' : ''
+                }`}
                 autoFocus
               />
 
@@ -423,6 +406,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 selectedIndex={slashSelectedIndex}
                 searchQuery={slashQuery}
                 onSelect={onInsertSnippet}
+                onClose={() => setIsSlashMenuOpen(false)}
               />
             </div>
           </div>
