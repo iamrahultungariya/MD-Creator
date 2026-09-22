@@ -438,7 +438,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               placeholder="Start writing here... (Type / for shortcuts, drag & drop or paste images)"
-              style={{ lineHeight: `${LINE_HEIGHT}px` }}
+              style={{ lineHeight: `${LINE_HEIGHT}px`, tabSize: 2 }}
               className={`flex-1 w-full p-6 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 font-mono-code text-sm resize-none focus:outline-none overflow-y-auto transition-all ${
                 isTypewriterMode ? 'pt-[25vh] pb-[50vh]' : ''
               }`}

@@ -226,10 +226,13 @@ export function useSlashCommands({
       // 3. Tab & Shift+Tab Indentation
       if (e.key === 'Tab') {
         e.preventDefault();
+        const lineStart = content.lastIndexOf('\n', selectionStart - 1) + 1;
+        const lineEnd = content.indexOf('\n', selectionEnd) === -1 ? content.length : content.indexOf('\n', selectionEnd);
+        const currentLine = content.substring(lineStart, lineEnd);
+        const isListItem = /^(\s*)([-*+]|\d+\.|[-*+]\s+\[[ xX]\])\s+/.test(currentLine);
+
         if (e.shiftKey) {
           // Outdent (remove up to 2 leading spaces)
-          const lineStart = content.lastIndexOf('\n', selectionStart - 1) + 1;
-          const lineEnd = content.indexOf('\n', selectionEnd) === -1 ? content.length : content.indexOf('\n', selectionEnd);
           const block = content.substring(lineStart, lineEnd);
           const lines = block.split('\n');
           let firstLineRemoved = 0;
@@ -259,10 +262,8 @@ export function useSlashCommands({
           }, 10);
           return;
         } else {
-          // Indent with 2 spaces
-          if (isMultiLineSelection) {
-            const lineStart = content.lastIndexOf('\n', selectionStart - 1) + 1;
-            const lineEnd = content.indexOf('\n', selectionEnd) === -1 ? content.length : content.indexOf('\n', selectionEnd);
+          // Indent: if multi-line OR on any list item, indent the line at lineStart
+          if (isMultiLineSelection || isListItem) {
             const block = content.substring(lineStart, lineEnd);
             const lines = block.split('\n');
             const indented = lines.map((line) => '  ' + line).join('\n');
@@ -276,7 +277,7 @@ export function useSlashCommands({
             }, 10);
             return;
           } else {
-            // Single cursor: insert 2 spaces
+            // Plain text single cursor: insert 2 spaces
             const next = content.substring(0, selectionStart) + '  ' + content.substring(selectionEnd);
             setContent(next);
             executeSave(next, title);
@@ -290,7 +291,7 @@ export function useSlashCommands({
         }
       }
 
-      // 4. Smart List & Task Continuation on Enter
+      // 4. Smart List & Task Continuation on Enter with Progressive Outdent
       if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
         const textBefore = content.substring(0, selectionStart);
         const lineStart = textBefore.lastIndexOf('\n') + 1;
@@ -303,19 +304,34 @@ export function useSlashCommands({
         if (taskMatch) {
           e.preventDefault();
           const indent = taskMatch[1];
+          const marker = taskMatch[2];
           const text = taskMatch[3];
           if (!text.trim()) {
-            // Empty task item: break list by stripping prefix
-            const next = content.substring(0, lineStart) + content.substring(selectionStart);
-            setContent(next);
-            executeSave(next, title);
-            setTimeout(() => {
-              ta.focus({ preventScroll: true });
-              ta.setSelectionRange(lineStart, lineStart);
-              updateCursorPosition();
-            }, 10);
+            if (indent.length >= 2) {
+              // Outdent nested task item by 2 spaces
+              const outdentedPrefix = indent.substring(2) + marker;
+              const next = content.substring(0, lineStart) + outdentedPrefix + content.substring(selectionStart);
+              setContent(next);
+              executeSave(next, title);
+              setTimeout(() => {
+                ta.focus({ preventScroll: true });
+                const newPos = lineStart + outdentedPrefix.length;
+                ta.setSelectionRange(newPos, newPos);
+                updateCursorPosition();
+              }, 10);
+            } else {
+              // Empty root task item: break list
+              const next = content.substring(0, lineStart) + content.substring(selectionStart);
+              setContent(next);
+              executeSave(next, title);
+              setTimeout(() => {
+                ta.focus({ preventScroll: true });
+                ta.setSelectionRange(lineStart, lineStart);
+                updateCursorPosition();
+              }, 10);
+            }
           } else {
-            // Continue task
+            // Continue task with current indent
             const prefix = `\n${indent}- [ ] `;
             const next = content.substring(0, selectionStart) + prefix + content.substring(selectionEnd);
             setContent(next);
@@ -334,17 +350,31 @@ export function useSlashCommands({
           const bullet = bulletMatch[2].trim();
           const text = bulletMatch[3];
           if (!text.trim()) {
-            // Empty bullet: break list
-            const next = content.substring(0, lineStart) + content.substring(selectionStart);
-            setContent(next);
-            executeSave(next, title);
-            setTimeout(() => {
-              ta.focus({ preventScroll: true });
-              ta.setSelectionRange(lineStart, lineStart);
-              updateCursorPosition();
-            }, 10);
+            if (indent.length >= 2) {
+              // Outdent nested bullet item by 2 spaces
+              const outdentedPrefix = indent.substring(2) + `${bullet} `;
+              const next = content.substring(0, lineStart) + outdentedPrefix + content.substring(selectionStart);
+              setContent(next);
+              executeSave(next, title);
+              setTimeout(() => {
+                ta.focus({ preventScroll: true });
+                const newPos = lineStart + outdentedPrefix.length;
+                ta.setSelectionRange(newPos, newPos);
+                updateCursorPosition();
+              }, 10);
+            } else {
+              // Empty root bullet: break list
+              const next = content.substring(0, lineStart) + content.substring(selectionStart);
+              setContent(next);
+              executeSave(next, title);
+              setTimeout(() => {
+                ta.focus({ preventScroll: true });
+                ta.setSelectionRange(lineStart, lineStart);
+                updateCursorPosition();
+              }, 10);
+            }
           } else {
-            // Continue bullet
+            // Continue bullet with current indent
             const prefix = `\n${indent}${bullet} `;
             const next = content.substring(0, selectionStart) + prefix + content.substring(selectionEnd);
             setContent(next);
@@ -363,17 +393,31 @@ export function useSlashCommands({
           const num = parseInt(orderedMatch[2], 10);
           const text = orderedMatch[3];
           if (!text.trim()) {
-            // Empty numbered item: break list
-            const next = content.substring(0, lineStart) + content.substring(selectionStart);
-            setContent(next);
-            executeSave(next, title);
-            setTimeout(() => {
-              ta.focus({ preventScroll: true });
-              ta.setSelectionRange(lineStart, lineStart);
-              updateCursorPosition();
-            }, 10);
+            if (indent.length >= 2) {
+              // Outdent nested numbered item by 2 spaces
+              const outdentedPrefix = indent.substring(2) + '1. ';
+              const next = content.substring(0, lineStart) + outdentedPrefix + content.substring(selectionStart);
+              setContent(next);
+              executeSave(next, title);
+              setTimeout(() => {
+                ta.focus({ preventScroll: true });
+                const newPos = lineStart + outdentedPrefix.length;
+                ta.setSelectionRange(newPos, newPos);
+                updateCursorPosition();
+              }, 10);
+            } else {
+              // Empty root numbered item: break list
+              const next = content.substring(0, lineStart) + content.substring(selectionStart);
+              setContent(next);
+              executeSave(next, title);
+              setTimeout(() => {
+                ta.focus({ preventScroll: true });
+                ta.setSelectionRange(lineStart, lineStart);
+                updateCursorPosition();
+              }, 10);
+            }
           } else {
-            // Continue with incremented number
+            // Continue numbered list with incremented number
             const prefix = `\n${indent}${num + 1}. `;
             const next = content.substring(0, selectionStart) + prefix + content.substring(selectionEnd);
             setContent(next);
