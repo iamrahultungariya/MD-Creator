@@ -14,6 +14,7 @@ import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
 import { exportToDocx } from '../features/docx-export/services/docxExportService';
 import { cleanAndNormalizeMarkdown } from '../utils/markdownSanitizer';
 import { useDuplicateDocument } from '../hooks/useDocuments';
+import { fastCountWords, fastCountLines, fastCalculateReadingTime } from '../utils/textCounters';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,26 +52,34 @@ export const EditorPage: React.FC = () => {
     },
   });
 
-  // Track cursor position telemetry
+  // Track cursor position telemetry with single-pass character scan (zero string allocation)
   const updateCursorPosition = useCallback(() => {
     if (!textareaRef.current) return;
-    const text = textareaRef.current.value.substring(0, textareaRef.current.selectionStart);
-    const lines = text.split('\n');
-    const currentLine = lines.length;
-    setCursorPos({
-      line: currentLine,
-      col: lines[lines.length - 1].length + 1,
-    });
+    const pos = textareaRef.current.selectionStart;
+    const text = textareaRef.current.value;
+    let line = 1;
+    let lastNewline = -1;
+    for (let i = 0; i < pos; i++) {
+      if (text.charCodeAt(i) === 10) {
+        line++;
+        lastNewline = i;
+      }
+    }
+    const col = pos - lastNewline;
+    setCursorPos({ line, col });
   }, []);
 
   // Smooth vertical centering for Typewriter mode (only triggered when typing / editing)
   const performTypewriterCentering = useCallback(() => {
     if (!modals.isTypewriterMode || !textareaRef.current) return;
-    const text = textareaRef.current.value.substring(0, textareaRef.current.selectionStart);
-    const lines = text.split('\n');
-    const currentLine = lines.length;
-    const totalLines = Math.max(1, textareaRef.current.value.split('\n').length);
-    const scrollRatio = (currentLine - 1) / totalLines;
+    const text = textareaRef.current.value;
+    const pos = textareaRef.current.selectionStart;
+    let currentLine = 1;
+    for (let i = 0; i < pos; i++) {
+      if (text.charCodeAt(i) === 10) currentLine++;
+    }
+    const totalLines = fastCountLines(text);
+    const scrollRatio = (currentLine - 1) / Math.max(1, totalLines);
     const targetScroll = scrollRatio * textareaRef.current.scrollHeight - textareaRef.current.clientHeight / 2 + 30;
 
     textareaRef.current.scrollTo({
@@ -294,12 +303,12 @@ export const EditorPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [doc, viewMode, slash.isSlashMenuOpen, modals]);
 
-  // Telemetry computations
+  // Telemetry computations with zero-allocation counters
   const stats = useMemo(() => {
-    const lines = doc.content.split('\n').length;
-    const words = doc.content.trim() ? doc.content.trim().split(/\s+/).length : 0;
+    const lines = fastCountLines(doc.content);
+    const words = fastCountWords(doc.content);
     const chars = doc.content.length;
-    const reading = Math.max(1, Math.ceil(words / 200));
+    const reading = fastCalculateReadingTime(words);
     return { lines, words, chars, reading };
   }, [doc.content]);
 

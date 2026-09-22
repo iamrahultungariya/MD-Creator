@@ -282,7 +282,7 @@ const MarkdownImage: React.FC<{
   );
 };
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onToggleTask }) => {
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ content, onToggleTask }) => {
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [activeLightboxImage, setActiveLightboxImage] = useState<{ src: string; alt?: string; title?: string } | null>(null);
 
@@ -365,26 +365,30 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onTog
             );
           },
 
-          // Paragraphs
+          // Paragraphs: Balanced vertical rhythm with first/last constraints
           p: ({ children }) => (
-            <p className="mb-3 text-neutral-700 dark:text-neutral-300 leading-relaxed">
+            <p className="my-2.5 text-neutral-700 dark:text-neutral-300 leading-relaxed first:mt-0 last:mb-0">
               {replaceEmojisInReactNode(children)}
             </p>
           ),
 
-          // Lists
+          // Unordered Lists: Clean marker alignment, proportional nesting
           ul: ({ children }) => (
-            <ul className="list-disc pl-5 mb-3 space-y-1 marker:text-neutral-400 dark:marker:text-neutral-600">
+            <ul className="my-2.5 pl-6 space-y-1.5 list-disc marker:text-neutral-400 dark:marker:text-neutral-500 [&_ul]:my-1 [&_ul]:pl-5 [&_ol]:my-1 [&_ol]:pl-5">
               {children}
             </ul>
           ),
+
+          // Ordered Lists: Precise tabular mono numbers, aligned baseline
           ol: ({ children }) => (
-            <ol className="list-decimal pl-5 mb-3 space-y-1 marker:text-neutral-400 dark:marker:text-neutral-600">
+            <ol className="my-2.5 pl-6 space-y-1.5 list-decimal marker:text-neutral-500 dark:marker:text-neutral-400 marker:font-mono marker:text-xs marker:font-semibold [&_ol]:my-1 [&_ol]:pl-5 [&_ul]:my-1 [&_ul]:pl-5">
               {children}
             </ol>
           ),
+
+          // List Items: Prevents awkward paragraph margins inside <li>, clean hierarchy
           li: ({ children }) => (
-            <li className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+            <li className="text-neutral-700 dark:text-neutral-300 leading-relaxed pl-1 marker:leading-relaxed [&>p]:inline [&>p]:m-0 [&>p+p]:block [&>p+p]:mt-1.5 [&>ul]:mt-1.5 [&>ol]:mt-1.5">
               {replaceEmojisInReactNode(children)}
             </li>
           ),
@@ -625,4 +629,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content, onTog
       )}
     </div>
   );
-};
+});
+
+MarkdownPreview.displayName = 'MarkdownPreview';
+

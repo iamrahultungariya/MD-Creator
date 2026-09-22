@@ -284,3 +284,45 @@ export async function fetchDocumentFromSupabase(id: string): Promise<{ meta: Doc
     return null;
   }
 }
+
+/**
+ * Permanently deletes a document and its content from Supabase Cloud.
+ */
+export async function deleteDocumentFromSupabase(id: string): Promise<boolean> {
+  if (!supabase) return false;
+
+  try {
+    const isPro = await isUserProForSync();
+    if (!isPro) return false;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    // 1. Delete content from document_contents
+    const { error: contentError } = await supabase
+      .from('document_contents')
+      .delete()
+      .eq('id', id);
+
+    if (contentError) {
+      console.warn('[Supabase Delete] Content deletion warning:', contentError.message);
+    }
+
+    // 2. Delete metadata from documents (RLS checks user_id)
+    const { error: metaError } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (metaError) {
+      console.warn('[Supabase Delete] Metadata deletion error:', metaError.message);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('[Supabase Delete] Failed to delete document:', err);
+    return false;
+  }
+}

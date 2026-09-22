@@ -104,14 +104,34 @@ function measureCaret(textarea: HTMLTextAreaElement): { x: number; y: number; he
   const { mirror, span } = getOrCreateMirror();
   const pos = textarea.selectionStart || 0;
   const val = textarea.value;
-
-  mirror.textContent = val.substring(0, pos);
-  mirror.appendChild(span);
-
   const rect = textarea.getBoundingClientRect();
-  const x = rect.left + span.offsetLeft + cachedMetrics.borderLeft - textarea.scrollLeft;
-  const y = rect.top + span.offsetTop + cachedMetrics.borderTop - textarea.scrollTop;
   const height = cachedMetrics.lineHeight;
+
+  let x: number;
+  let y: number;
+
+  if (val.length > 5000) {
+    // Ultra-fast line-sliced caret measurement for large documents (avoids massive DOM reflow)
+    let lineIndex = 0;
+    let lastNewline = -1;
+    for (let i = 0; i < pos; i++) {
+      if (val.charCodeAt(i) === 10) {
+        lineIndex++;
+        lastNewline = i;
+      }
+    }
+    const currentLineText = val.substring(lastNewline + 1, pos);
+    mirror.textContent = currentLineText;
+    mirror.appendChild(span);
+
+    x = rect.left + span.offsetLeft + cachedMetrics.borderLeft - textarea.scrollLeft;
+    y = rect.top + lineIndex * height + cachedMetrics.borderTop - textarea.scrollTop;
+  } else {
+    mirror.textContent = val.substring(0, pos);
+    mirror.appendChild(span);
+    x = rect.left + span.offsetLeft + cachedMetrics.borderLeft - textarea.scrollLeft;
+    y = rect.top + span.offsetTop + cachedMetrics.borderTop - textarea.scrollTop;
+  }
 
   const isInside = (
     y >= rect.top - 5 &&

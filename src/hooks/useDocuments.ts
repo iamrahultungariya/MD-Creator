@@ -13,7 +13,7 @@ import {
   togglePinDocument, 
   getStorageStats 
 } from '../db';
-import { pullCloudDocuments } from '../lib/supabase';
+import { pullCloudDocuments, deleteDocumentFromSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = false) {
   const queryClient = useQueryClient();
@@ -147,6 +147,9 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
       await deleteDocument(id, permanent);
+      if (permanent && isSupabaseConfigured()) {
+        deleteDocumentFromSupabase(id).catch(console.warn);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
@@ -176,7 +179,19 @@ export function useEmptyTrash() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      return await emptyTrash();
+      // Get all trashed doc IDs to sync deletion with Supabase Cloud
+      const trashedDocs = await db.documents.filter(d => Boolean(d.isDeleted)).toArray();
+      const ids = trashedDocs.map(d => d.id);
+      
+      const count = await emptyTrash();
+
+      if (isSupabaseConfigured()) {
+        for (const id of ids) {
+          deleteDocumentFromSupabase(id).catch(console.warn);
+        }
+      }
+
+      return count;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
