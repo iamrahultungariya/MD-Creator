@@ -42,14 +42,51 @@ export async function checkEmailExists(email: string): Promise<boolean> {
 }
 
 /**
+ * Helper to check if authenticated user has Pro privileges for cloud sync
+ */
+export async function isUserProForSync(): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    // Free Pro campaign for everyone through December 31, 2026:
+    // All authenticated users get real-time cloud sync enabled!
+    if (new Date() <= new Date('2026-12-31T23:59:59.999Z')) {
+      return true;
+    }
+
+    const userEmail = session.user.email?.toLowerCase();
+    if (userEmail === 'tungariyarahul08@gmail.com' || userEmail === 'tungariyarahul08@gamil.com') {
+      return true;
+    }
+
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    return prof?.subscription_tier === 'pro' || prof?.subscription_tier === 'team';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Pushes document metadata and full content to Supabase in the background.
+ * Cloud sync is strictly restricted to Pro users.
  */
 export async function syncDocumentToSupabase(doc: DocumentMetadata, content: string): Promise<boolean> {
   if (!supabase) return false;
 
   try {
+    const isPro = await isUserProForSync();
+    if (!isPro) return false;
+
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id || null;
+    if (!userId) return false;
 
     // 1. Upsert document metadata with user_id
     const { error: metaError } = await supabase.from('documents').upsert({
@@ -96,6 +133,9 @@ export async function pullCloudDocuments(): Promise<number> {
   if (!supabase) return 0;
 
   try {
+    const isPro = await isUserProForSync();
+    if (!isPro) return 0;
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return 0;
 
@@ -167,6 +207,9 @@ export async function syncAllDocuments(): Promise<{ pulled: number; pushed: numb
   if (!supabase) return { pulled: 0, pushed: 0 };
 
   try {
+    const isPro = await isUserProForSync();
+    if (!isPro) return { pulled: 0, pushed: 0 };
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return { pulled: 0, pushed: 0 };
 

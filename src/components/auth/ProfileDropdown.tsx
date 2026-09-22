@@ -8,9 +8,10 @@ import {
   Cloud, 
   ChevronDown, 
   ShieldCheck,
-  FolderOpen
+  FolderOpen,
+  Sparkles
 } from 'lucide-react';
-import { useAuthStore } from '../../stores/useAuthStore';
+import { useAuthStore, isUserPro, isLifetimeProEmail } from '../../stores/useAuthStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { createNewDocument } from '../../db';
 import { useConfirm } from '../../stores/useConfirmStore';
@@ -101,10 +102,17 @@ export const ProfileDropdown: React.FC = () => {
 
             {/* Plan / Status Badge */}
             <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-800 text-[11px]">
-              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                {user.isDemoUser ? 'Demo Account' : 'Verified Writer'}
-              </span>
+              {isUserPro(user) ? (
+                <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  {isLifetimeProEmail(user.email) ? 'Pro Lifetime' : 'Pro (Free 2026 Pass)'}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {user.isDemoUser ? 'Demo Account' : 'Free Writer'}
+                </span>
+              )}
               <span className="text-[10px] text-neutral-400">
                 {hasSupabase ? 'Cloud Synced' : 'Offline Cache'}
               </span>

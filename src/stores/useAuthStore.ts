@@ -11,6 +11,26 @@ export interface UserProfile {
   proExpiresAt?: string | null;
 }
 
+export const PROMO_FREE_PRO_UNTIL = '2026-12-31T23:59:59.999Z';
+
+export const isHolidayFreeProActive = (): boolean => {
+  return new Date() <= new Date(PROMO_FREE_PRO_UNTIL);
+};
+
+export const isLifetimeProEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const clean = email.trim().toLowerCase();
+  return clean === 'tungariyarahul08@gmail.com' || clean === 'tungariyarahul08@gamil.com';
+};
+
+export const isUserPro = (user?: UserProfile | null): boolean => {
+  // Free Pro campaign for everyone through December 31, 2026!
+  if (isHolidayFreeProActive()) return true;
+  if (!user) return false;
+  if (isLifetimeProEmail(user.email)) return true;
+  return user.subscriptionTier === 'pro' || user.subscriptionTier === 'team';
+};
+
 interface AuthState {
   user: UserProfile | null;
   isLoading: boolean;
@@ -35,17 +55,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const currentUser = get().user;
     if (!currentUser || currentUser.isDemoUser || !isSupabaseConfigured() || !supabase) return;
     try {
+      const isFounder = isLifetimeProEmail(currentUser.email);
+      const isPromo = isHolidayFreeProActive();
       const { data: prof } = await supabase
         .from('profiles')
         .select('subscription_tier, pro_expires_at')
         .eq('id', currentUser.id)
         .maybeSingle();
-      if (prof) {
+      if (prof || isFounder || isPromo) {
         set({
           user: {
             ...currentUser,
-            subscriptionTier: prof.subscription_tier || 'free',
-            proExpiresAt: prof.pro_expires_at || null,
+            subscriptionTier: (isFounder || isPromo) ? 'pro' : (prof?.subscription_tier || 'free'),
+            proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : (prof?.pro_expires_at || null),
           }
         });
       }
@@ -60,6 +82,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (savedDemo) {
       try {
         const parsed = JSON.parse(savedDemo);
+        if (isLifetimeProEmail(parsed.email) || isHolidayFreeProActive()) {
+          parsed.subscriptionTier = 'pro';
+          parsed.proExpiresAt = isLifetimeProEmail(parsed.email) ? null : PROMO_FREE_PRO_UNTIL;
+        }
         set({ user: parsed, isLoading: false });
         return;
       } catch (e) {
@@ -73,15 +99,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const u = session.user;
-          let tier: 'free' | 'pro' | 'team' = 'free';
-          let proExpiresAt: string | null = null;
+          const isFounder = isLifetimeProEmail(u.email);
+          const isPromo = isHolidayFreeProActive();
+          let tier: 'free' | 'pro' | 'team' = (isFounder || isPromo) ? 'pro' : 'free';
+          let proExpiresAt: string | null = isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null;
           try {
             const { data: prof } = await supabase
               .from('profiles')
               .select('subscription_tier, pro_expires_at')
               .eq('id', u.id)
               .maybeSingle();
-            if (prof) {
+            if (prof && !isFounder && !isPromo) {
               tier = prof.subscription_tier || 'free';
               proExpiresAt = prof.pro_expires_at || null;
             }
@@ -117,6 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     const cleanEmail = email.trim().toLowerCase();
+    const isFounder = isLifetimeProEmail(cleanEmail);
 
     // If Supabase is configured
     if (isSupabaseConfigured() && supabase) {
@@ -130,12 +159,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       if (data.user) {
+        const isPromo = isHolidayFreeProActive();
+        let tier: 'free' | 'pro' | 'team' = (isFounder || isPromo) ? 'pro' : 'free';
+        let proExpiresAt: string | null = isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null;
+        try {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('subscription_tier, pro_expires_at')
+            .eq('id', data.user.id)
+            .maybeSingle();
+          if (prof && !isFounder && !isPromo) {
+            tier = prof.subscription_tier || 'free';
+            proExpiresAt = prof.pro_expires_at || null;
+          }
+        } catch {
+          // ignore
+        }
+
         const profile: UserProfile = {
           id: data.user.id,
           email: data.user.email || cleanEmail,
           displayName: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
           avatarUrl: data.user.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          isDemoUser: false
+          isDemoUser: false,
+          subscriptionTier: tier,
+          proExpiresAt: proExpiresAt
         };
         set({ user: profile, isLoading: false });
 
@@ -149,13 +197,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const rawAccounts = localStorage.getItem(LOCAL_USERS_STORAGE_KEY);
     const localAccounts: Array<{ email: string; name: string }> = rawAccounts ? JSON.parse(rawAccounts) : [];
     const found = localAccounts.find(acc => acc.email === cleanEmail);
+    const isPromo = isHolidayFreeProActive();
 
     const demoUser: UserProfile = {
       id: `usr_${Date.now()}`,
       email: cleanEmail,
       displayName: found ? found.name : cleanEmail.split('@')[0] || 'Rahul Mehta',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      isDemoUser: true
+      isDemoUser: true,
+      subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
+      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
     };
     localStorage.setItem(DEMO_USER_STORAGE_KEY, JSON.stringify(demoUser));
     set({ user: demoUser, isLoading: false });
@@ -165,6 +216,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (email: string, password: string, name?: string) => {
     set({ isLoading: true, error: null });
     const cleanEmail = email.trim().toLowerCase();
+    const isFounder = isLifetimeProEmail(cleanEmail);
+    const isPromo = isHolidayFreeProActive();
 
     if (isSupabaseConfigured() && supabase) {
       // 1. Explicit check if email already exists in profiles
@@ -208,7 +261,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: data.user.email || cleanEmail,
           displayName: name || cleanEmail.split('@')[0],
           avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-          isDemoUser: false
+          isDemoUser: false,
+          subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
+          proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
         };
         set({ user: profile, isLoading: false });
 
@@ -235,7 +290,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       email: cleanEmail,
       displayName: name || cleanEmail.split('@')[0] || 'Rahul Mehta',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      isDemoUser: true
+      isDemoUser: true,
+      subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
+      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
     };
     localStorage.setItem(DEMO_USER_STORAGE_KEY, JSON.stringify(demoUser));
     set({ user: demoUser, isLoading: false });
@@ -243,12 +300,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   demoSignIn: (name = 'Rahul Mehta', email = 'rahul.mehta@example.com') => {
+    const isFounder = isLifetimeProEmail(email);
+    const isPromo = isHolidayFreeProActive();
     const demoUser: UserProfile = {
       id: 'usr_rahul_mehta_demo',
       email,
       displayName: name,
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      isDemoUser: true
+      isDemoUser: true,
+      subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
+      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
     };
     localStorage.setItem(DEMO_USER_STORAGE_KEY, JSON.stringify(demoUser));
     set({ user: demoUser, isLoading: false, error: null });

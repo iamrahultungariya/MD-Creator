@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Download, 
   FileDown, 
   FileText, 
   Copy, 
   X, 
-  Printer
+  Printer,
+  Sparkles
 } from 'lucide-react';
+import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
+import { ProUpgradeModal } from '../common/ProUpgradeModal';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -27,6 +30,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   onCopyMarkdown,
   docTitle
 }) => {
+  const { user } = useAuthStore();
+  const isPro = isUserPro(user);
+  const [isProUpgradeOpen, setIsProUpgradeOpen] = useState(false);
   // Handle Escape key and number shortcuts 1-4
   useEffect(() => {
     if (!isOpen) return;
@@ -45,8 +51,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         onExportMd();
       } else if (e.key === '3') {
         e.preventDefault();
-        onClose();
-        onExportDocx();
+        if (!isPro) {
+          setIsProUpgradeOpen(true);
+        } else {
+          onClose();
+          onExportDocx();
+        }
       } else if (e.key === '4') {
         e.preventDefault();
         onClose();
@@ -178,6 +188,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           <button
             type="button"
             onClick={() => {
+              if (!isPro) {
+                setIsProUpgradeOpen(true);
+                return;
+              }
               onClose();
               onExportDocx();
             }}
@@ -195,9 +209,15 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   <span className="text-[9px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.2 rounded font-mono font-bold">
                     DOCX
                   </span>
+                  {!isPro && (
+                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider flex items-center gap-0.5">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                      PRO
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 truncate">
-                  Formatted document compatible with Microsoft Word & Google Docs
+                  Formatted document compatible with Microsoft Word &amp; Google Docs
                 </p>
               </div>
             </div>
@@ -254,6 +274,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Pro Upgrade Interstitial Modal */}
+      <ProUpgradeModal
+        isOpen={isProUpgradeOpen}
+        onClose={() => setIsProUpgradeOpen(false)}
+        featureTitle="Microsoft Word (.docx) Export"
+        featureDescription="Exporting formatted Microsoft Word (.docx) documents with clean typography, styled headings, code snippets, and table structures is a Pro feature. Claim one of our Earlybird VIP spots to unlock free Pro access!"
+      />
     </div>
   );
 };

@@ -6,10 +6,12 @@ import {
   Pause, 
   RotateCcw,
   Volume2,
-  VolumeX
+  VolumeX,
+  Sparkles
 } from 'lucide-react';
 import { CursorPosition, ViewMode } from '../types';
-import { isSupabaseConfigured } from '../../../lib/supabase';
+import { useAuthStore, isUserPro } from '../../../stores/useAuthStore';
+import { ProUpgradeModal } from '../../../components/common/ProUpgradeModal';
 
 interface EditorStatusBarProps {
   viewMode: ViewMode;
@@ -68,6 +70,9 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
   onPauseSprint,
   onResetSprint,
 }) => {
+  const { user } = useAuthStore();
+  const isPro = isUserPro(user);
+  const [isProModalOpen, setIsProModalOpen] = React.useState(false);
   const [selectedSprintMode, setSelectedSprintMode] = React.useState<'time' | 'words'>(sprintMode);
   const [selectedMins, setSelectedMins] = React.useState<number>(sprintDuration || 25);
   const [selectedGoal, setSelectedGoal] = React.useState<number>(targetWords || 250);
@@ -296,15 +301,61 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
         </div>
       </div>
 
-      {/* Right Status: Clean Local & Cloud Storage Telemetry Only (Clutter removed) */}
+      {/* Right Status: Clean Local & Cloud Storage Telemetry with Pro Tiering */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="font-medium text-neutral-700 dark:text-neutral-300">
-            {isSupabaseConfigured() ? '⚡ Dexie + ☁️ Supabase' : '⚡ Dexie Offline Cache'}
-          </span>
-        </div>
+        {isPro ? (
+          <div className="flex items-center gap-1.5" title="Real-time multi-device cloud sync active">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+              ⚡ Dexie + ☁️ Cloud Sync (Pro)
+            </span>
+          </div>
+        ) : user ? (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5" title="Offline-first browser storage (IndexedDB)">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                ⚡ Dexie Local
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsProModalOpen(true)}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 text-[10px] font-bold hover:bg-amber-200/70 transition-all cursor-pointer"
+              title="Enable multi-device cloud sync with Pro"
+            >
+              <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+              <span>Cloud Sync (Pro)</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5" title="Guest mode: documents stored in local browser cache">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                ⚡ Dexie Local (Guest)
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsProModalOpen(true)}
+              className="inline-flex items-center gap-1 text-[10px] text-neutral-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+              title="Explore Pro features"
+            >
+              <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+              <span>Pro</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Pro Upgrade Modal for Status Bar */}
+      <ProUpgradeModal
+        isOpen={isProModalOpen}
+        onClose={() => setIsProModalOpen(false)}
+        featureTitle="Multi-Device Cloud Sync"
+        featureDescription="Real-time multi-device cloud synchronization automatically syncs and backs up your documents to Supabase PostgreSQL. Available in MD Creator Pro."
+      />
     </footer>
   );
 });

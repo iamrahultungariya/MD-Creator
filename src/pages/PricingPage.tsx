@@ -15,7 +15,7 @@ import {
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
 import { CtaBanner } from '../components/home/CtaBanner';
-import { useAuthStore } from '../stores/useAuthStore';
+import { useAuthStore, isHolidayFreeProActive } from '../stores/useAuthStore';
 import { WaitlistSuccessModal } from '../components/common/WaitlistSuccessModal';
 import { WaitlistAdminPanel } from '../components/pricing/WaitlistAdminPanel';
 import { PricingComparisonTable } from '../components/pricing/PricingComparisonTable';
@@ -167,6 +167,19 @@ export const PricingPage: React.FC = () => {
           <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-8">
             No locked basic markdown features. Enjoy a fast offline-first editor with optional multi-device cloud superpowers.
           </p>
+
+          {/* 2026 Celebration Banner */}
+          {isHolidayFreeProActive() && (
+            <div className="mb-8 mx-auto max-w-2xl p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 dark:border-amber-500/20 text-center shadow-sm animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-bold text-amber-700 dark:text-amber-300 mb-1">
+                <Sparkles className="w-4 h-4 text-amber-500 animate-pulse shrink-0" />
+                <span>2026 Launch Celebration: Pro Is 100% Free For All Users!</span>
+              </div>
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                Enjoy unlimited multi-device cloud sync, Word (.docx) export, and publication-grade PDF tooling with zero payment required through <strong>December 31, 2026</strong>.
+              </p>
+            </div>
+          )}
 
           {/* Billing Cycle Toggle */}
           <div className="flex flex-col items-center justify-center gap-2 mb-10">
