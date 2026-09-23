@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type ReaderTheme = 'default' | 'sepia' | 'slate' | 'midnight';
-export type ReaderFontFamily = 'serif' | 'sans' | 'mono';
+export type ReaderFontFamily = 'lexend' | 'arial' | 'lato';
 export type ReaderFontSize = 'sm' | 'base' | 'lg' | 'xl';
 export type ReaderColumnWidth = 'focused' | 'standard' | 'wide';
 
@@ -38,20 +38,30 @@ const getStoredSettings = (): StoredSettings => {
   if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    // Sanitize and migrate legacy font keys
+    if (parsed.fontFamily && !['lexend', 'arial', 'lato'].includes(parsed.fontFamily)) {
+      parsed.fontFamily = 'lexend';
+    }
+    return parsed;
   } catch {
     return {};
   }
 };
 
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
 const saveSettings = (settings: StoredSettings) => {
   if (typeof window === 'undefined') return;
-  try {
-    const current = getStoredSettings();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...settings }));
-  } catch {
-    // Ignore storage quota errors
-  }
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    try {
+      const current = getStoredSettings();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...settings }));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, 100);
 };
 
 export const useReaderSettingsStore = create<ReaderSettingsState>((set) => {
@@ -59,7 +69,7 @@ export const useReaderSettingsStore = create<ReaderSettingsState>((set) => {
 
   return {
     theme: initial.theme || 'default',
-    fontFamily: initial.fontFamily || 'serif',
+    fontFamily: (initial.fontFamily as ReaderFontFamily) || 'lexend',
     fontSize: initial.fontSize || 'base',
     columnWidth: initial.columnWidth || 'standard',
     readingProgress: 0,

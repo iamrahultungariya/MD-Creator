@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Columns, Minimize2, UploadCloud, PenTool, Eye, ArrowUpDown } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Columns, Minimize2, PenTool, Eye, ArrowUpDown } from 'lucide-react';
 import { ViewMode } from '../types';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
 import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
@@ -8,10 +8,9 @@ import { MobileEditorToolbar } from './MobileEditorToolbar';
 import { storeOptimizedImage } from '../../../services/imageStorageService';
 import { FindReplaceBar } from './FindReplaceBar';
 import { useReaderAppearance } from '../hooks/useReaderAppearance';
-import { EditorGutter } from './EditorGutter';
 import { ReaderArticleHeader } from './ReaderArticleHeader';
-
-const LINE_HEIGHT = 24; // Standardized pixel line-height for exact 1:1 gutter-to-text alignment
+import { WritingModeCanvas } from './WritingModeCanvas';
+import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
 
 interface EditorWorkspaceProps {
   viewMode: ViewMode;
@@ -20,7 +19,7 @@ interface EditorWorkspaceProps {
   lineCount: number;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   onContentChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onTextareaKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  onTextareaKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onCursorEvent: () => void;
   isSlashMenuOpen: boolean;
   setIsSlashMenuOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
@@ -43,19 +42,33 @@ interface EditorWorkspaceProps {
   setIsFindOpen?: (open: boolean) => void;
   findMode?: 'find' | 'replace';
   title?: string;
+  setTitle?: (title: string) => void;
   setContent?: (val: string) => void;
   executeSave?: (content: string, title: string) => void;
+  queueAutoSave?: (content: string, title: string) => void;
+  isSaved?: boolean;
+  isSaving?: boolean;
+  isOffline?: boolean;
+  wordCount?: number;
+  readingTime?: number | string;
   isTypewriterMode?: boolean;
+  onToggleTypewriter?: () => void;
+  isSprintActive?: boolean;
+  wordsWrittenInSprint?: number;
+  onOpenSprintPopover?: () => void;
+  editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
+  onKeyDown?: (e: KeyboardEvent) => boolean | void;
 }
 
 export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   viewMode,
   setViewMode,
   content,
-  lineCount,
+  lineCount: _lineCount,
   textareaRef,
   onContentChange,
-  onTextareaKeyDown,
+  onTextareaKeyDown: _onTextareaKeyDown,
+  onKeyDown,
   onCursorEvent,
   isSlashMenuOpen,
   setIsSlashMenuOpen,
@@ -76,20 +89,27 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   setIsFindOpen,
   findMode = 'find',
   title = 'Untitled Document.md',
+  setTitle,
   setContent,
   executeSave,
+  queueAutoSave,
+  isSaved = true,
+  isSaving = false,
+  isOffline = false,
+  wordCount = 0,
+  readingTime = 1,
   isTypewriterMode = false,
+  onToggleTypewriter,
+  isSprintActive = false,
+  wordsWrittenInSprint = 0,
+  onOpenSprintPopover,
+  editorRef,
 }) => {
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
-  const gutterRef = useRef<HTMLDivElement>(null);
   const activeScrollSourceRef = useRef<'editor' | 'preview' | null>(null);
-  const isSyncingScrollRef = useRef(false);
-  const rafGutterIdRef = useRef<number | null>(null);
-  const [scrollTop, setScrollTop] = useState(0);
 
   // Reader Mode Eye-Comfort Appearance
   const {
@@ -99,25 +119,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     readerWidthClass,
     setReadingProgress,
   } = useReaderAppearance();
-
-  const readingStats = useMemo(() => {
-    const words = content.trim().split(/\s+/).filter(Boolean).length;
-    const minutes = Math.max(1, Math.ceil(words / 200));
-    return { words, readingTime: `${minutes} min read` };
-  }, [content]);
-
-  // Exit Read Mode on Esc key
-  useEffect(() => {
-    if (viewMode !== 'read') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        setViewMode('split');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [viewMode, setViewMode]);
 
   // Debounce content passed to MarkdownPreview to decouple heavy AST parsing from 60FPS typing
   const [debouncedContent, setDebouncedContent] = useState(content);
@@ -132,72 +133,35 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
     const timer = setTimeout(() => {
       setDebouncedContent(content);
-    }, 200);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [content]);
 
-  // Synchronized Scrolling: Textarea -> Gutter & Preview (with hover guard & RAF throttle)
-  const handleTextareaScroll = useCallback(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
+  // Prevent scroll echo loop between editor and preview
+  const isSyncingRef = useRef(false);
 
-    // 1. Direct compositor-level Gutter scroll sync (instant, zero delay)
-    if (gutterRef.current) {
-      gutterRef.current.scrollTop = ta.scrollTop;
-    }
+  // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
+  const handleEditorScroll = useCallback((_e: Event, scrollDOM: HTMLElement) => {
+    if (!isSyncScrollEnabled || viewMode !== 'split') return;
+    if (isSyncingRef.current) return;
+    if (activeScrollSourceRef.current === 'preview') return;
 
-    // 2. Throttle virtual line slice state via RAF (prevents 120Hz React rerenders on every scroll tick)
-    if (rafGutterIdRef.current === null) {
-      rafGutterIdRef.current = requestAnimationFrame(() => {
-        rafGutterIdRef.current = null;
-        if (textareaRef.current) {
-          setScrollTop(textareaRef.current.scrollTop);
-        }
-      });
-    }
+    const preview = previewContainerRef.current;
+    if (!preview) return;
 
-    // 3. Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
-    // Guard against ping-pong feedback loop: only sync if preview is not actively driving the scroll
-    if (
-      isSyncScrollEnabled && 
-      viewMode === 'split' && 
-      activeScrollSourceRef.current !== 'preview' && 
-      !isSyncingScrollRef.current
-    ) {
-      const prev = previewContainerRef.current;
-      if (prev) {
-        isSyncingScrollRef.current = true;
-        const maxTa = ta.scrollHeight - ta.clientHeight;
-        if (maxTa > 0) {
-          const ratio = ta.scrollTop / maxTa;
-          const maxPrev = prev.scrollHeight - prev.clientHeight;
-          prev.scrollTop = ratio * maxPrev;
-        }
-        requestAnimationFrame(() => {
-          isSyncingScrollRef.current = false;
-        });
-      }
-    }
-  }, [isSyncScrollEnabled, viewMode, textareaRef]);
+    const maxEditor = scrollDOM.scrollHeight - scrollDOM.clientHeight;
+    if (maxEditor <= 0) return;
 
-  // Virtualized line numbers calculation (renders ~50 DOM elements max, regardless of line count)
-  const visibleLineSlice = useMemo(() => {
-    const clientHeight = textareaRef.current?.clientHeight || 800;
-    const startIndex = Math.max(0, Math.floor(scrollTop / LINE_HEIGHT) - 10);
-    const endIndex = Math.min(lineCount, Math.ceil((scrollTop + clientHeight) / LINE_HEIGHT) + 10);
-    const lines: number[] = [];
-    for (let i = startIndex; i < endIndex; i++) {
-      lines.push(i + 1);
-    }
-    return {
-      startIndex,
-      endIndex,
-      lines,
-      topOffset: startIndex * LINE_HEIGHT,
-      totalHeight: Math.max(lineCount * LINE_HEIGHT, clientHeight),
-    };
-  }, [scrollTop, lineCount, textareaRef]);
+    const ratio = scrollDOM.scrollTop / maxEditor;
+    const maxPreview = preview.scrollHeight - preview.clientHeight;
+
+    isSyncingRef.current = true;
+    preview.scrollTop = ratio * maxPreview;
+    requestAnimationFrame(() => {
+      isSyncingRef.current = false;
+    });
+  }, [isSyncScrollEnabled, viewMode]);
 
   // Synchronized Split-Pane Proportional Scrolling (Preview -> Editor) & Read Mode Progress
   const handlePreviewScroll = useCallback(() => {
@@ -212,34 +176,37 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       return;
     }
 
-    if (
-      !isSyncScrollEnabled || 
-      viewMode !== 'split' || 
-      activeScrollSourceRef.current === 'editor' || 
-      isSyncingScrollRef.current
-    ) return;
+    // In Split Mode: sync preview -> editor
+    if (viewMode === 'split' && isSyncScrollEnabled) {
+      if (isSyncingRef.current) return;
+      if (activeScrollSourceRef.current === 'editor') return;
 
-    const ta = textareaRef.current;
-    if (!ta) return;
+      const maxPrev = prev.scrollHeight - prev.clientHeight;
+      if (maxPrev <= 0) return;
 
-    isSyncingScrollRef.current = true;
-    const maxPrev = prev.scrollHeight - prev.clientHeight;
-    if (maxPrev > 0) {
       const ratio = prev.scrollTop / maxPrev;
-      const maxTa = ta.scrollHeight - ta.clientHeight;
-      ta.scrollTop = ratio * maxTa;
-      if (gutterRef.current) {
-        gutterRef.current.scrollTop = ta.scrollTop;
-      }
-    }
-    requestAnimationFrame(() => {
-      isSyncingScrollRef.current = false;
-    });
-  }, [isSyncScrollEnabled, viewMode, textareaRef, setReadingProgress]);
 
-  // Dedicated formatting helper that preserves scroll position and prevents mobile focus jumping
+      isSyncingRef.current = true;
+      editorRef?.current?.scrollToRatio(ratio);
+      requestAnimationFrame(() => {
+        isSyncingRef.current = false;
+      });
+    }
+  }, [viewMode, isSyncScrollEnabled, setReadingProgress, editorRef]);
+
+  // Dedicated formatting helper that works directly with CodeMirror
   const insertFormatting = useCallback(
     (formatFn: (selected: string) => { text: string; selectOffset: number; selectLength: number }) => {
+      if (editorRef?.current) {
+        const selected = editorRef.current.getSelection();
+        const { text, selectOffset, selectLength } = formatFn(selected);
+        const start = editorRef.current.getSelectionStart();
+        editorRef.current.replaceSelection(text);
+        editorRef.current.setSelectionRange(start + selectOffset, start + selectOffset + selectLength);
+        editorRef.current.focus();
+        return;
+      }
+
       const ta = textareaRef.current;
       if (!ta) return;
 
@@ -274,7 +241,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         }
       });
     },
-    [content, textareaRef]
+    [content, textareaRef, editorRef]
   );
 
   // Insert bold syntax at cursor without scroll jumping
@@ -313,61 +280,57 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     });
   }, [insertFormatting]);
 
-  // Handle direct clipboard paste (Ctrl+V) of screenshots or image files
-  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
+  // Determine visibility of editor and preview panes on mobile (< 768px) vs desktop (>= 768px)
+  const isEditorVisibleOnMobile = viewMode === 'zen' || (viewMode === 'split' && mobileTab === 'edit');
+  const isPreviewVisibleOnMobile = viewMode === 'read' || (viewMode === 'split' && mobileTab === 'preview');
 
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.startsWith('image/')) {
-        const file = items[i].getAsFile();
-        if (file) {
-          e.preventDefault();
+  // Dedicated focused Writing Mode canvas (Bug 1 Fix & Writing Mode Redesign)
+  if (viewMode === 'write') {
+    return (
+      <WritingModeCanvas
+        title={title}
+        setTitle={setTitle || (() => {})}
+        content={content}
+        setContent={setContent || (() => {})}
+        executeSave={executeSave || (() => {})}
+        queueAutoSave={queueAutoSave || (() => {})}
+        isSaved={isSaved}
+        isSaving={isSaving}
+        isOffline={isOffline}
+        wordCount={wordCount}
+        readingTime={readingTime}
+        isTypewriterMode={isTypewriterMode}
+        onToggleTypewriter={onToggleTypewriter || (() => {})}
+        isSprintActive={isSprintActive}
+        wordsWrittenInSprint={wordsWrittenInSprint}
+        onOpenSprintPopover={onOpenSprintPopover}
+        onOpenOutline={onOpenOutline}
+        onPasteImage={async (file) => {
           try {
-            const stored = await storeOptimizedImage(file, 'pasted-image.png');
+            const stored = await storeOptimizedImage(file, file.name);
             onInsertSnippet(`\n${stored.markdownTag}\n`);
           } catch (err) {
             console.error('Failed to optimize pasted image:', err);
           }
-          return;
-        }
-      }
-    }
-  };
-
-  // Handle direct file drag & drop onto the editor
-  const handleDragOver = (e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes('Files')) {
-      e.preventDefault();
-      setIsDraggingOver(true);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setIsDraggingOver(false);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('image/')) {
-        e.preventDefault();
-        setIsDraggingOver(false);
-        try {
-          const stored = await storeOptimizedImage(file, file.name);
-          onInsertSnippet(`\n${stored.markdownTag}\n`);
-        } catch (err) {
-          console.error('Failed to optimize dropped image:', err);
-        }
-        return;
-      }
-    }
-    setIsDraggingOver(false);
-  };
-
-  // Determine visibility of editor and preview panes on mobile (< 768px) vs desktop (>= 768px)
-  const isEditorVisibleOnMobile = viewMode === 'write' || viewMode === 'zen' || (viewMode === 'split' && mobileTab === 'edit');
-  const isPreviewVisibleOnMobile = viewMode === 'read' || (viewMode === 'split' && mobileTab === 'preview');
+        }}
+        onDropImage={async (file) => {
+          try {
+            const stored = await storeOptimizedImage(file, file.name);
+            onInsertSnippet(`\n${stored.markdownTag}\n`);
+          } catch (err) {
+            console.error('Failed to optimize dropped image:', err);
+          }
+        }}
+        editorRef={editorRef}
+        onKeyDown={onKeyDown}
+        isSlashMenuOpen={isSlashMenuOpen}
+        setIsSlashMenuOpen={setIsSlashMenuOpen}
+        slashSelectedIndex={slashSelectedIndex}
+        slashQuery={slashQuery}
+        onInsertSnippet={onInsertSnippet}
+      />
+    );
+  }
 
   return (
     <>
@@ -442,7 +405,20 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
             <div className="flex items-center gap-2">
               {viewMode === 'split' && (
                 <button
-                  onClick={() => setIsSyncScrollEnabled((prev) => !prev)}
+                  onClick={() => {
+                    setIsSyncScrollEnabled((prev) => {
+                      const next = !prev;
+                      if (next && editorRef?.current && previewContainerRef.current) {
+                        const ratio = editorRef.current.getScrollRatio();
+                        const prevEl = previewContainerRef.current;
+                        const maxPrev = prevEl.scrollHeight - prevEl.clientHeight;
+                        if (maxPrev > 0) {
+                          prevEl.scrollTop = ratio * maxPrev;
+                        }
+                      }
+                      return next;
+                    });
+                  }}
                   className={`px-2 py-0.5 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-2xs ${
                     isSyncScrollEnabled
                       ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
@@ -457,40 +433,57 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
             </div>
           </div>
 
-          {/* Textarea Area with Virtualized Gutter Line Numbers */}
+          {/* Virtualized Document Editor (Bug 1: 5500 LOC Fix) */}
           <div
             className={`flex-1 flex overflow-hidden relative ${
-              viewMode === 'write' || viewMode === 'zen' ? 'max-w-4xl mx-auto w-full' : ''
+              viewMode === 'zen' ? 'max-w-4xl mx-auto w-full' : ''
             }`}
           >
-            {/* Virtualized Line Numbers Gutter */}
-            <EditorGutter
-              gutterRef={gutterRef}
-              lineCount={lineCount}
+            <CodeMirrorEditor
+              value={content}
+              onChange={(newVal) => {
+                setContent?.(newVal);
+                queueAutoSave?.(newVal, title);
+              }}
+              onCursorChange={() => {
+                onCursorEvent();
+              }}
+              onSlashTrigger={() => {
+                setIsSlashMenuOpen(true);
+              }}
+              onScroll={handleEditorScroll}
               isTypewriterMode={isTypewriterMode}
-              visibleLineSlice={visibleLineSlice}
-              lineHeight={LINE_HEIGHT}
+              showLineNumbers={true}
+              placeholder="Start writing here... (Type / for shortcuts, drag & drop or paste images)"
+              onPasteImage={async (file) => {
+                try {
+                  const stored = await storeOptimizedImage(file, file.name);
+                  onInsertSnippet(`\n${stored.markdownTag}\n`);
+                } catch (err) {
+                  console.error('Failed to optimize pasted image:', err);
+                }
+              }}
+              onDropImage={async (file) => {
+                try {
+                  const stored = await storeOptimizedImage(file, file.name);
+                  onInsertSnippet(`\n${stored.markdownTag}\n`);
+                } catch (err) {
+                  console.error('Failed to optimize dropped image:', err);
+                }
+              }}
+              editorRef={editorRef}
+              onKeyDown={onKeyDown}
+              className="flex-1 w-full"
             />
 
-            {/* Markdown Input Area */}
+            {/* Hidden fallback for any legacy refs */}
             <textarea
               ref={textareaRef}
               value={content}
               onChange={onContentChange}
-              onKeyDown={onTextareaKeyDown}
-              onKeyUp={onCursorEvent}
-              onClick={onCursorEvent}
-              onScroll={handleTextareaScroll}
-              onPaste={handlePaste}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              placeholder="Start writing here... (Type / for shortcuts, drag & drop or paste images)"
-              style={{ lineHeight: `${LINE_HEIGHT}px`, tabSize: 2 }}
-              className={`flex-1 w-full p-6 bg-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 font-mono-code text-sm resize-none focus:outline-none overflow-y-auto transition-all ${
-                isTypewriterMode ? 'pt-[25vh] pb-[50vh]' : ''
-              }`}
-              autoFocus
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
             />
 
             {/* Floating Find & Replace Palette */}
@@ -499,27 +492,13 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 isOpen={isFindOpen}
                 onClose={() => setIsFindOpen?.(false)}
                 textareaRef={textareaRef}
+                editorRef={editorRef}
                 content={content}
                 setContent={setContent || (() => {})}
                 executeSave={executeSave || (() => {})}
                 title={title}
                 initialMode={findMode}
               />
-            )}
-
-            {/* Drag & Drop Visual Overlay */}
-            {isDraggingOver && (
-              <div className="absolute inset-0 z-40 bg-blue-600/10 dark:bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-xl backdrop-blur-xs flex flex-col items-center justify-center pointer-events-none p-6 text-center animate-in fade-in duration-150">
-                <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 shadow-md">
-                  <UploadCloud className="w-7 h-7 animate-bounce" />
-                </div>
-                <p className="text-sm font-bold text-neutral-900 dark:text-white">
-                  Drop image to optimize & embed
-                </p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs">
-                  Automatically compressed to WebP with bicubic smoothing for 100% offline persistence.
-                </p>
-              </div>
             )}
 
             {/* Slash Command Palette */}
@@ -540,10 +519,10 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           onMouseEnter={() => { activeScrollSourceRef.current = 'preview'; }}
           onTouchStart={() => { activeScrollSourceRef.current = 'preview'; }}
           onWheel={() => { activeScrollSourceRef.current = 'preview'; }}
-          className={`preview-pane-container flex-col h-full overflow-y-auto transition-colors duration-200 ${
+          className={`preview-pane-container flex-col h-full overflow-y-auto overflow-x-hidden transition-colors duration-200 ${
             viewMode === 'read'
               ? `w-full flex ${readerThemeClasses}`
-              : `bg-white dark:bg-neutral-950 ${viewMode === 'write' || viewMode === 'zen' ? 'hidden' : 'flex'} ${
+              : `bg-white dark:bg-neutral-950 ${viewMode === 'zen' ? 'hidden' : 'flex'} ${
                   viewMode === 'split'
                     ? `w-full md:w-1/2 ${isPreviewVisibleOnMobile ? 'flex' : 'hidden md:flex'}`
                     : 'w-full'
@@ -571,7 +550,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
           {/* Rendered Document Canvas */}
           <div
-            className={`flex-1 transition-all duration-150 ${
+            className={`flex-1 transition-all duration-150 break-words whitespace-pre-wrap overflow-hidden max-w-full ${
               viewMode === 'read'
                 ? `px-6 sm:px-10 pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
                 : 'p-8 sm:p-10'
@@ -581,7 +560,10 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
             {viewMode === 'read' && (
               <ReaderArticleHeader
                 title={title}
-                readingStats={readingStats}
+                readingStats={{
+                  words: wordCount,
+                  readingTime: typeof readingTime === 'number' ? `${readingTime} min read` : String(readingTime),
+                }}
               />
             )}
 

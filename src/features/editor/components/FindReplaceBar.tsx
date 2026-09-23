@@ -7,10 +7,13 @@ import {
   ChevronRight 
 } from 'lucide-react';
 
+import { CodeMirrorEditorHandle } from './CodeMirrorEditor';
+
 interface FindReplaceBarProps {
   isOpen: boolean;
   onClose: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
   content: string;
   setContent: (val: string) => void;
   executeSave: (content: string, title: string) => void;
@@ -27,6 +30,7 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
   isOpen,
   onClose,
   textareaRef,
+  editorRef,
   content,
   setContent,
   executeSave,
@@ -94,10 +98,17 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
   // Select and scroll to active match
   const highlightMatch = useCallback(
     (index: number) => {
-      if (matches.length === 0 || !textareaRef.current) return;
+      if (matches.length === 0) return;
       const target = matches[index];
       if (!target) return;
 
+      if (editorRef?.current) {
+        editorRef.current.focus();
+        editorRef.current.setSelectionRange(target.start, target.end);
+        return;
+      }
+
+      if (!textareaRef.current) return;
       const ta = textareaRef.current;
       ta.focus({ preventScroll: true });
       ta.setSelectionRange(target.start, target.end);
@@ -109,7 +120,7 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
       const targetScroll = Math.max(0, (lineNumber - 1) * lineHeight - ta.clientHeight / 2);
       ta.scrollTop = targetScroll;
     },
-    [matches, textareaRef, content]
+    [matches, editorRef, textareaRef, content]
   );
 
   const handleNext = useCallback(() => {
@@ -127,10 +138,20 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
   }, [matches, currentMatchIndex, highlightMatch]);
 
   const handleReplaceCurrent = useCallback(() => {
-    if (matches.length === 0 || !textareaRef.current) return;
+    if (matches.length === 0) return;
     const target = matches[currentMatchIndex];
     if (!target) return;
 
+    if (editorRef?.current) {
+      editorRef.current.setSelectionRange(target.start, target.end);
+      editorRef.current.replaceSelection(replaceQuery);
+      const nextContent = editorRef.current.getValue();
+      setContent(nextContent);
+      executeSave(nextContent, title);
+      return;
+    }
+
+    if (!textareaRef.current) return;
     const before = content.substring(0, target.start);
     const after = content.substring(target.end);
     const nextContent = before + replaceQuery + after;
@@ -145,7 +166,7 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
         textareaRef.current.setSelectionRange(newCaret, newCaret);
       }
     }, 20);
-  }, [matches, currentMatchIndex, content, replaceQuery, setContent, executeSave, title, textareaRef]);
+  }, [matches, currentMatchIndex, editorRef, content, replaceQuery, setContent, executeSave, title, textareaRef]);
 
   const handleReplaceAll = useCallback(() => {
     if (matches.length === 0) return;
@@ -158,10 +179,13 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
     const regex = new RegExp(pattern, caseSensitive ? 'g' : 'gi');
     const nextContent = content.replace(regex, replaceQuery);
 
+    if (editorRef?.current) {
+      editorRef.current.setValue(nextContent);
+    }
     setContent(nextContent);
     executeSave(nextContent, title);
     setCurrentMatchIndex(0);
-  }, [findQuery, replaceQuery, content, caseSensitive, wholeWord, setContent, executeSave, title, matches.length]);
+  }, [findQuery, replaceQuery, content, caseSensitive, wholeWord, editorRef, setContent, executeSave, title, matches.length]);
 
   // Keydown shortcuts inside find input
   const handleKeyDown = (e: React.KeyboardEvent) => {

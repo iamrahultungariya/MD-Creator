@@ -8,17 +8,48 @@ import {
   createRevisionSnapshot, 
   DocumentMetadata 
 } from '../../../db';
-import { syncDocumentToSupabase, isSupabaseConfigured } from '../../../lib/supabase';
+import { syncDocumentToSupabase, isSupabaseConfigured, supabase } from '../../../lib/supabase';
 import { useConfirm } from '../../../stores/useConfirmStore';
 import { MarkdownTemplate } from '../../../data/templates';
+import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
+
+const OFFLINE_QUEUE_KEY = 'md-writer-offline-sync-queue';
+
+function getOfflineSyncQueue(): string[] {
+  try {
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOfflineSyncQueue(queue: string[]): void {
+  try {
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(Array.from(new Set(queue))));
+  } catch {}
+}
+
+function addDocToOfflineQueue(id: string): void {
+  const q = getOfflineSyncQueue();
+  if (!q.includes(id)) {
+    saveOfflineSyncQueue([...q, id]);
+  }
+}
+
+function removeDocFromOfflineQueue(id: string): void {
+  const q = getOfflineSyncQueue().filter((item) => item !== id);
+  saveOfflineSyncQueue(q);
+}
 
 interface UseEditorDocumentOptions {
   routeDocId?: string;
   onToast?: (message: string) => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
+  editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
 }
 
-export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEditorDocumentOptions) {
+export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef }: UseEditorDocumentOptions) {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
@@ -28,12 +59,16 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
   const [content, setContent] = useState('');
   const [isSaved, setIsSaved] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  const contentRef = useRef<string>(content);
+  contentRef.current = content;
 
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSnapshotContentRef = useRef<string>('');
 
-  // Load document from Dexie on mount or ID change
+  // 1. Load document from Dexie on mount or ID change
   useEffect(() => {
     let isMounted = true;
     async function load() {
@@ -55,6 +90,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
         setDocMetadata(meta || null);
         setTitle(meta?.title || 'Untitled.md');
         setContent(text);
+        contentRef.current = text;
         lastSnapshotContentRef.current = text;
         setIsSaved(true);
       }
@@ -65,25 +101,128 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
     };
   }, [routeDocId]);
 
-  // Execute Save to Dexie and Supabase
+  // 2. Offline Detection & Background Sync Listener (Bug 6 Fix)
+  useEffect(() => {
+    const handleOnline = async () => {
+      setIsOffline(false);
+      const pendingQueue = getOfflineSyncQueue();
+      if (pendingQueue.length > 0 && isSupabaseConfigured()) {
+        onToast?.('🔄 Online: syncing offline drafts...');
+        for (const id of pendingQueue) {
+          try {
+            const meta = await db.documents.get(id);
+            const cached = await db.document_cache.get(id);
+            if (meta && cached) {
+              await syncDocumentToSupabase(meta, cached.content);
+              removeDocFromOfflineQueue(id);
+            }
+          } catch (err) {
+            console.warn('[SyncQueue] Failed to sync doc:', id, err);
+          }
+        }
+        onToast?.('🟢 All offline drafts successfully synced!');
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+      onToast?.('⚠️ You are offline. Changes will save locally & sync when reconnected.');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [onToast]);
+
+  // 3. Supabase Realtime WebSocket Channel (Bug 7 Fix)
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase || !docId) return;
+
+    const channel = supabase
+      .channel(`realtime-doc-${docId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'document_contents',
+          filter: `id=eq.${docId}`,
+        },
+        (payload: any) => {
+          const remoteContent = payload.new?.content;
+          if (typeof remoteContent === 'string' && remoteContent !== contentRef.current) {
+            setContent(remoteContent);
+            contentRef.current = remoteContent;
+            lastSnapshotContentRef.current = remoteContent;
+            db.document_cache.put({ id: docId, content: remoteContent, cachedAt: Date.now() });
+            onToast?.('⚡ Synced live from another device');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase?.removeChannel(channel);
+    };
+  }, [docId, onToast]);
+
+  // 4. Save Execution: Multi-tier fallback (Dexie + localStorage + Supabase Cloud)
   const executeSave = useCallback(
     async (newContent: string, newTitle: string) => {
       setIsSaving(true);
+
+      // A. Save immediately to primary local source (Dexie IndexedDB)
       await saveDocument(docId, newTitle, newContent, docMetadata?.tags);
+
+      // B. Emergency snapshot in localStorage
+      try {
+        localStorage.setItem(
+          `md-writer-offline-backup-${docId}`,
+          JSON.stringify({
+            title: newTitle,
+            content: newContent,
+            savedAt: Date.now(),
+          })
+        );
+      } catch {}
+
       const updatedMeta = await db.documents.get(docId);
       if (updatedMeta) {
         setDocMetadata(updatedMeta);
-        if (isSupabaseConfigured()) {
-          syncDocumentToSupabase(updatedMeta, newContent).catch(console.warn);
+
+        // C. Sync to Supabase or queue for offline background sync
+        if (!navigator.onLine || !isSupabaseConfigured()) {
+          addDocToOfflineQueue(docId);
+          setIsOffline(true);
+        } else {
+          try {
+            const synced = await syncDocumentToSupabase(updatedMeta, newContent);
+            if (synced) {
+              removeDocFromOfflineQueue(docId);
+              setIsOffline(false);
+            } else {
+              addDocToOfflineQueue(docId);
+              setIsOffline(true);
+            }
+          } catch (err) {
+            console.warn('[Offline Fallback] Cloud sync deferred:', err);
+            addDocToOfflineQueue(docId);
+            setIsOffline(true);
+          }
         }
       }
+
       setIsSaving(false);
       setIsSaved(true);
     },
     [docId, docMetadata?.tags]
   );
 
-  // Trigger auto-save debounce (1.5s) and snapshot debounce (30s)
+  // 5. Auto-save debounce (1.5s) and snapshot debounce (30s)
   const queueAutoSave = useCallback(
     (newContent: string, currentTitle: string) => {
       setIsSaved(false);
@@ -150,6 +289,10 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
     });
 
     if (ok) {
+      removeDocFromOfflineQueue(docId);
+      try {
+        localStorage.removeItem(`md-writer-offline-backup-${docId}`);
+      } catch {}
       await db.documents.delete(docId);
       await db.document_cache.delete(docId);
       navigate('/documents');
@@ -202,7 +345,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
         executeSave(template.content, title);
         onToast?.(`✨ Loaded "${template.title}" template`);
       } else {
-        const cursor = textareaRef.current?.selectionStart ?? content.length;
+        const cursor = editorRef?.current?.getSelectionStart() ?? textareaRef?.current?.selectionStart ?? content.length;
         const before = content.substring(0, cursor);
         const after = content.substring(cursor);
         const sep = before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
@@ -213,13 +356,22 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
         onToast?.(`✨ Inserted "${template.title}" snippet at cursor`);
       }
     },
-    [docId, title, content, textareaRef, executeSave, onToast]
+    [docId, title, content, textareaRef, editorRef, executeSave, onToast]
   );
 
   // Insert Table
   const handleInsertTableFromModal = useCallback(
     (tableMarkdown: string) => {
-      if (!textareaRef.current) {
+      if (editorRef?.current) {
+        editorRef.current.replaceSelection('\n\n' + tableMarkdown + '\n\n');
+        const next = editorRef.current.getValue();
+        setContent(next);
+        setIsSaved(false);
+        executeSave(next, title);
+        return;
+      }
+
+      if (!textareaRef?.current) {
         const next = content + '\n\n' + tableMarkdown;
         setContent(next);
         executeSave(next, title);
@@ -233,12 +385,12 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
       setIsSaved(false);
       executeSave(next, title);
       setTimeout(() => {
-        if (textareaRef.current) {
+        if (textareaRef?.current) {
           textareaRef.current.focus();
         }
       }, 50);
     },
-    [content, title, textareaRef, executeSave]
+    [content, title, textareaRef, editorRef, executeSave]
   );
 
   // Export & Copy Helpers
@@ -266,6 +418,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef }: UseEdito
     setContent,
     isSaved,
     isSaving,
+    isOffline,
     executeSave,
     queueAutoSave,
     handleToggleTask,

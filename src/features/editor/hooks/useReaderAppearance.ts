@@ -26,13 +26,13 @@ export function useReaderAppearance() {
 
   const readerFontClass = useMemo(() => {
     switch (readerFontFamily) {
-      case 'serif':
-        return 'font-serif-reading';
-      case 'mono':
-        return 'font-mono-reading';
-      case 'sans':
+      case 'arial':
+        return 'font-arial';
+      case 'lato':
+        return 'font-lato';
+      case 'lexend':
       default:
-        return 'font-sans-reading';
+        return 'font-lexend';
     }
   }, [readerFontFamily]);
 

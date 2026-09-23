@@ -15,12 +15,15 @@ import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
 import { exportToDocx } from '../features/docx-export/services/docxExportService';
 import { cleanAndNormalizeMarkdown } from '../utils/markdownSanitizer';
 import { useDuplicateDocument } from '../hooks/useDocuments';
-import { fastCountWords, fastCountLines, fastCalculateReadingTime } from '../utils/textCounters';
+import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
+import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
+import { fastCountLines } from '../utils/textCounters';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<CodeMirrorEditorHandle>(null);
   const duplicateDocMutation = useDuplicateDocument();
 
   // View mode and feedback toasts
@@ -43,6 +46,7 @@ export const EditorPage: React.FC = () => {
     routeDocId: id,
     onToast: showToast,
     textareaRef,
+    editorRef,
   });
 
   // Focus sprint timer hook
@@ -96,6 +100,7 @@ export const EditorPage: React.FC = () => {
     executeSave: doc.executeSave,
     title: doc.title,
     textareaRef,
+    editorRef,
     updateCursorPosition,
     onOpenTableBuilder: () => modals.setIsTableBuilderOpen(true),
     onOpenTemplates: () => modals.setIsTemplatesOpen(true),
@@ -157,6 +162,14 @@ export const EditorPage: React.FC = () => {
   // Insert formula snippet from KaTeX Studio at cursor
   const handleInsertFormulaAtCursor = useCallback(
     (latexSnippet: string) => {
+      if (editorRef.current) {
+        editorRef.current.replaceSelection('\n\n' + latexSnippet + '\n\n');
+        const next = editorRef.current.getValue();
+        doc.setContent(next);
+        doc.executeSave(next, doc.title);
+        showToast('✨ Inserted KaTeX formula');
+        return;
+      }
       if (!textareaRef.current) {
         const next = doc.content + '\n\n' + latexSnippet + '\n';
         doc.setContent(next);
@@ -183,6 +196,14 @@ export const EditorPage: React.FC = () => {
   // Insert image markdown snippet from Image Embed Studio at cursor
   const handleInsertImageAtCursor = useCallback(
     (imageSnippet: string) => {
+      if (editorRef.current) {
+        editorRef.current.replaceSelection('\n\n' + imageSnippet.trim() + '\n\n');
+        const next = editorRef.current.getValue();
+        doc.setContent(next);
+        doc.executeSave(next, doc.title);
+        showToast('🖼️ Embedded image');
+        return;
+      }
       if (!textareaRef.current) {
         const next = doc.content + '\n\n' + imageSnippet.trim() + '\n';
         doc.setContent(next);
@@ -222,27 +243,31 @@ export const EditorPage: React.FC = () => {
   // Jump to heading from Document Outline with smooth transfer & glow highlight
   const handleSelectHeading = useCallback(
     (heading: HeadingItem) => {
-      if (!textareaRef.current) return;
-      const lines = doc.content.split('\n');
-      let charOffset = 0;
-      for (let i = 0; i < heading.lineIndex && i < lines.length; i++) {
-        charOffset += lines[i].length + 1;
+      if (editorRef.current) {
+        editorRef.current.scrollToLine(heading.lineIndex);
+        editorRef.current.focus();
+      } else if (textareaRef.current) {
+        const lines = doc.content.split('\n');
+        let charOffset = 0;
+        for (let i = 0; i < heading.lineIndex && i < lines.length; i++) {
+          charOffset += lines[i].length + 1;
+        }
+        const lineText = lines[heading.lineIndex] || '';
+
+        // 1. Textarea alignment: Smooth scroll to target line position
+        const totalLines = Math.max(1, lines.length);
+        const scrollRatio = heading.lineIndex / totalLines;
+        const targetScroll = scrollRatio * textareaRef.current.scrollHeight - 80;
+        textareaRef.current.scrollTo({
+          top: Math.max(0, targetScroll),
+          behavior: 'smooth'
+        });
+
+        // 2. Select heading in textarea
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(charOffset, charOffset + lineText.length);
+        updateCursorPosition();
       }
-      const lineText = lines[heading.lineIndex] || '';
-
-      // 1. Textarea alignment: Smooth scroll to target line position
-      const totalLines = Math.max(1, lines.length);
-      const scrollRatio = heading.lineIndex / totalLines;
-      const targetScroll = scrollRatio * textareaRef.current.scrollHeight - 80;
-      textareaRef.current.scrollTo({
-        top: Math.max(0, targetScroll),
-        behavior: 'smooth'
-      });
-
-      // 2. Select heading in textarea
-      textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(charOffset, charOffset + lineText.length);
-      updateCursorPosition();
 
       // 3. Preview pane alignment: Smooth scroll & visual glow
       const slug = heading.text
@@ -304,19 +329,16 @@ export const EditorPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [doc, viewMode, slash.isSlashMenuOpen, modals]);
 
-  // Telemetry computations with zero-allocation counters
+  // Telemetry computations offloaded to background Web Worker (Bug 1: 5500 LOC crash fix)
+  const workerStats = useMarkdownWorker(doc.content);
   const stats = useMemo(() => {
-    const lines = fastCountLines(doc.content);
-    const words = fastCountWords(doc.content);
-    const chars = doc.content.length;
-    const reading = fastCalculateReadingTime(words);
-    return { lines, words, chars, reading };
-  }, [doc.content]);
-
-  // Headings count for reader navigation
-  const headingsCount = useMemo(() => {
-    return (doc.content.match(/^#{1,6}\s+/gm) || []).length;
-  }, [doc.content]);
+    return {
+      lines: workerStats.lines,
+      words: workerStats.words,
+      chars: workerStats.chars,
+      reading: workerStats.reading,
+    };
+  }, [workerStats]);
 
   return (
     <div
@@ -338,7 +360,7 @@ export const EditorPage: React.FC = () => {
           title={doc.title}
           wordCount={stats.words}
           readingTime={stats.reading}
-          headingsCount={headingsCount}
+          headingsCount={workerStats.headings.length}
           onOpenOutline={() => modals.setIsOutlineOpen(true)}
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
           setViewMode={setViewMode}
@@ -352,6 +374,7 @@ export const EditorPage: React.FC = () => {
           content={doc.content}
           isSaved={doc.isSaved}
           isSaving={doc.isSaving}
+          isOffline={doc.isOffline}
           executeSave={doc.executeSave}
           docMetadata={doc.docMetadata}
           onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
@@ -387,6 +410,7 @@ export const EditorPage: React.FC = () => {
         textareaRef={textareaRef}
         onContentChange={handleContentChange}
         onTextareaKeyDown={slash.handleTextareaKeyDown}
+        onKeyDown={slash.handleSlashKeyDown}
         onCursorEvent={updateCursorPosition}
         isSlashMenuOpen={slash.isSlashMenuOpen}
         setIsSlashMenuOpen={slash.setIsSlashMenuOpen}
@@ -407,8 +431,20 @@ export const EditorPage: React.FC = () => {
         setIsFindOpen={setIsFindOpen}
         findMode={findMode}
         title={doc.title}
+        setTitle={doc.setTitle}
         setContent={doc.setContent}
         executeSave={doc.executeSave}
+        queueAutoSave={doc.queueAutoSave}
+        isSaved={doc.isSaved}
+        isSaving={doc.isSaving}
+        isOffline={doc.isOffline}
+        wordCount={stats.words}
+        readingTime={stats.reading}
+        onToggleTypewriter={() => modals.setIsTypewriterMode(!modals.isTypewriterMode)}
+        isSprintActive={sprint.isSprintActive}
+        wordsWrittenInSprint={sprint.wordsWritten}
+        onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
+        editorRef={editorRef}
         isTypewriterMode={modals.isTypewriterMode}
       />
 

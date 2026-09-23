@@ -7,6 +7,9 @@
     --font-serif: 'Charter', 'Merriweather', 'Georgia', Cambria, 'Times New Roman', serif;
     --font-handwriting: 'Caveat', cursive;
     --font-mono: 'JetBrains Mono', monospace;
+    --font-lexend: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-arial: Arial, Helvetica, -apple-system, sans-serif;
+    --font-lato: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   *, ::after, ::before {
@@ -68,16 +71,102 @@ body {
   font-family: var(--font-mono);
 }
 
+.font-lexend {
+  font-family: var(--font-lexend);
+}
+
+.font-arial {
+  font-family: var(--font-arial);
+}
+
+.font-lato {
+  font-family: var(--font-lato);
+}
+
+/* Backward compatibility aliases */
 .font-serif-reading {
-  font-family: var(--font-serif);
+  font-family: var(--font-lexend);
 }
 
 .font-sans-reading {
-  font-family: var(--font-sans);
+  font-family: var(--font-arial);
 }
 
 .font-mono-reading {
+  font-family: var(--font-lato);
+}
+
+/* Document Writer Styling for CodeMirror 6 (Prose Writing feel, not Code IDE) */
+.cm-editor {
+  height: 100%;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+
+.cm-scroller {
+  font-family: inherit;
+  overflow: auto;
+  line-height: 1.75;
+}
+
+.cm-content {
+  font-family: inherit;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  padding: 0 !important;
+  caret-color: #2563eb;
+}
+
+.dark .cm-content {
+  caret-color: #60a5fa;
+}
+
+.cm-line {
+  padding: 0 4px;
+}
+
+/* Subtle, discreet line numbers for document writers */
+.cm-gutters {
+  background-color: transparent !important;
+  border-right: none !important;
+  color: #a3a3a3;
   font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.45;
+  transition: opacity 0.2s ease;
+  user-select: none;
+}
+
+.cm-gutters:hover {
+  opacity: 0.9;
+}
+
+.cm-activeLineGutter {
+  background-color: transparent !important;
+  color: #2563eb !important;
+  font-weight: 600;
+}
+
+.dark .cm-activeLineGutter {
+  color: #60a5fa !important;
+}
+
+.cm-activeLine {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.dark .cm-activeLine {
+  background-color: rgba(255, 255, 255, 0.025) !important;
+}
+
+/* Scoped layout isolation to prevent styling bleed */
+.prose-container {
+  contain: layout style;
 }
 
 /* Subtle glassmorphism */

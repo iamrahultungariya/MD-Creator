@@ -89,9 +89,9 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
   ];
 
   const FONT_FAMILIES: { id: ReaderFontFamily; label: string; fontClass: string; example: string }[] = [
-    { id: 'serif', label: 'Serif', fontClass: 'font-serif-reading', example: 'Editorial / Books' },
-    { id: 'sans', label: 'Sans', fontClass: 'font-sans-reading', example: 'Clean / Modern' },
-    { id: 'mono', label: 'Mono', fontClass: 'font-mono-reading', example: 'Technical / Specs' },
+    { id: 'lexend', label: 'Lexend', fontClass: 'font-lexend', example: 'Reading Fluency' },
+    { id: 'arial', label: 'Arial', fontClass: 'font-arial', example: 'Clean & Crisp' },
+    { id: 'lato', label: 'Lato', fontClass: 'font-lato', example: 'Warm & Legible' },
   ];
 
   const FONT_SIZES: { id: ReaderFontSize; label: string; px: string }[] = [
@@ -117,7 +117,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
   return (
     <div
       ref={popoverRef}
-      className="absolute top-14 right-4 sm:right-6 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white/95 dark:bg-[#1a1b20]/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xl p-4.5 z-50 text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in zoom-in-95 duration-150"
+      className="absolute top-14 right-4 sm:right-6 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-[#1a1b20] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-4.5 z-50 text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in duration-100 will-change-transform"
     >
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-100 dark:border-neutral-800/80">
         <div className="flex items-center gap-2">

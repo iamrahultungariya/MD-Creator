@@ -38,6 +38,7 @@ interface EditorHeaderProps {
   content: string;
   isSaved: boolean;
   isSaving: boolean;
+  isOffline?: boolean;
   executeSave: (content: string, title: string) => void;
   docMetadata: DocumentMetadata | null;
   onOpenSwitcher: () => void;
@@ -71,6 +72,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   content,
   isSaved,
   isSaving,
+  isOffline = false,
   executeSave,
   docMetadata,
   onOpenSwitcher,
@@ -138,7 +140,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
 
           {/* Subtle Breathable Save Dot */}
           <div className="flex items-center gap-1.5 text-xs font-mono shrink-0 pl-1">
-            {isSaving ? (
+            {isOffline ? (
+              <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium" title="Saved locally in offline storage">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span className="hidden lg:inline text-[11px]">Saved (Offline)</span>
+              </span>
+            ) : isSaving ? (
               <span className="text-amber-500 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
                 <span className="hidden lg:inline text-[11px]">Saving...</span>

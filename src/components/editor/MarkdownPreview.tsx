@@ -306,7 +306,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
   return (
     <div 
       data-markdown-preview="true" 
-      className={`w-full leading-relaxed select-text ${className || 'text-neutral-800 dark:text-neutral-200 text-sm'}`}
+      className={`w-full max-w-full leading-relaxed select-text break-words break-all whitespace-pre-wrap overflow-hidden prose-container ${className || 'text-neutral-800 dark:text-neutral-200 text-sm'}`}
     >
       {rawFrontmatter && <FrontmatterCard rawYaml={rawFrontmatter} />}
       <ReactMarkdown
@@ -568,7 +568,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                   </button>
                 </div>
                 {/* Code Body */}
-                <pre className="p-4 overflow-x-auto text-[12px] font-mono-code leading-relaxed text-neutral-800 dark:text-neutral-200">
+                <pre className="p-4 overflow-x-auto whitespace-pre max-w-full text-[12px] font-mono-code leading-relaxed text-neutral-800 dark:text-neutral-200">
                   <code className={className} {...props}>
                     {children}
                   </code>

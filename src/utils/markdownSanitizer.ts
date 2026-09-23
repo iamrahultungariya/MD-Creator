@@ -1,7 +1,4 @@
-/**
- * Markdown Sanitizer & Smart Normalizer
- * Specially tuned for technical logs, test outputs, benchmark results, and fragmented clipboard pastes.
- */
+import DOMPurify from 'dompurify';
 
 /**
  * Valid HTML tags allowed in MD Writer markdown documents
@@ -10,10 +7,23 @@ const ALLOWED_HTML_TAGS = new Set([
   'details', 'summary', 'kbd', 'br', 'hr', 'span', 'div', 'p', 'b', 'i', 'strong', 'em', 'sub', 'sup', 'mark', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'ul', 'ol', 'li', 'blockquote', 'a', 'img'
 ]);
 
+// Hook DOMPurify to strip dangerous styles and full-screen hijacks
+DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+  if (data.attrName === 'style') {
+    data.attrValue = data.attrValue
+      .replace(/position\s*:\s*(fixed|absolute|sticky)\s*;?/gi, '')
+      .replace(/z-index\s*:\s*[^;]+;?/gi, '')
+      .replace(/top\s*:\s*0\s*;?\s*left\s*:\s*0\s*;?/gi, '')
+      .replace(/width\s*:\s*(100vw|100%)\s*;?\s*height\s*:\s*(100vh|100%)\s*;?/gi, '');
+  }
+});
+
 /**
  * Sanitizes raw markdown before feeding into ReactMarkdown AST.
- * Prevents rehype-raw from choking on mathematical comparison operators (<20, < 1GB, <=, etc.)
- * which are not valid HTML tags but would otherwise swallow subsequent text.
+ * 1. Blocks active XSS and phishing forms (<form>, <input>, scripts, event handlers).
+ * 2. Neutralizes malicious CSS bleeding (position: fixed, z-index 9999 UI hijacks).
+ * 3. Repairs unclosed tags to prevent markdown bleed into parent DOM.
+ * 4. Preserves legitimate code fences and mathematical operators (<20, < 1GB).
  */
 export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   if (!rawMarkdown) return '';
@@ -36,11 +46,39 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
     return `&lt;${tagName}${after}`;
   });
 
-  // 3. Fix isolated '>' on its own line when immediately inside or adjacent to parentheses
-  // e.g. "(\n>\n21.7ms)" -> "(&gt; 21.7ms)" to avoid accidental blockquote trigger
+  // 3. Immediately neutralize phishing tags and active XSS vectors
+  sanitized = sanitized.replace(/<\/?(form|input|button|script|iframe|frame|object|embed|applet|style|link|base|textarea|select)\b[^>]*>/gi, '');
+
+  // 4. Sanitize dangerous inline CSS (position: fixed, z-index 9999, etc.) from tag style attributes
+  sanitized = sanitized.replace(/style\s*=\s*(["'])([\s\S]*?)\1/gi, (_, quote, styleContent) => {
+    const cleanStyle = styleContent
+      .replace(/position\s*:\s*(fixed|absolute|sticky)\s*;?/gi, '')
+      .replace(/z-index\s*:\s*[^;]+;?/gi, '')
+      .replace(/top\s*:\s*0\s*;?\s*left\s*:\s*0\s*;?/gi, '')
+      .replace(/width\s*:\s*(100vw|100%)\s*;?\s*height\s*:\s*(100vh|100%)\s*;?/gi, '');
+    return `style=${quote}${cleanStyle}${quote}`;
+  });
+
+  // 5. Sanitize with DOMPurify to guarantee unclosed tags are balanced & event handlers removed
+  sanitized = DOMPurify.sanitize(sanitized, {
+    FORBID_TAGS: [
+      'form', 'input', 'button', 'script', 'iframe', 'frame', 'object',
+      'embed', 'applet', 'meta', 'link', 'base', 'textarea', 'select', 'style'
+    ],
+    FORBID_ATTR: [
+      'action', 'formaction', 'method', 'target',
+      'onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur',
+      'onchange', 'onsubmit', 'onkeydown', 'onkeypress', 'onkeyup'
+    ],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|image):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    ALLOW_DATA_ATTR: false,
+    KEEP_CONTENT: true,
+  });
+
+  // 6. Fix isolated '>' on its own line when immediately inside or adjacent to parentheses
   sanitized = sanitized.replace(/\(\s*\n>\s*\n/g, '(&gt; ');
 
-  // 4. Restore code blocks untouched
+  // 7. Restore code blocks untouched
   sanitized = sanitized.replace(/%%CODE_BLOCK_(\d+)%%/g, (_, index) => {
     return codeBlocks[Number(index)] || '';
   });
