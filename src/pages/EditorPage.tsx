@@ -7,6 +7,7 @@ import { useEditorDocument } from '../features/editor/hooks/useEditorDocument';
 import { useFocusSprint } from '../features/editor/hooks/useFocusSprint';
 import { useSlashCommands } from '../features/editor/hooks/useSlashCommands';
 import { EditorHeader } from '../features/editor/components/EditorHeader';
+import { ReaderHeader } from '../features/editor/components/ReaderHeader';
 import { EditorWorkspace } from '../features/editor/components/EditorWorkspace';
 import { EditorStatusBar } from '../features/editor/components/EditorStatusBar';
 import { EditorModalsContainer } from '../features/editor/components/EditorModalsContainer';
@@ -312,6 +313,11 @@ export const EditorPage: React.FC = () => {
     return { lines, words, chars, reading };
   }, [doc.content]);
 
+  // Headings count for reader navigation
+  const headingsCount = useMemo(() => {
+    return (doc.content.match(/^#{1,6}\s+/gm) || []).length;
+  }, [doc.content]);
+
   return (
     <div
       className={`h-[100dvh] min-h-[100dvh] flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors overflow-hidden ${
@@ -326,39 +332,51 @@ export const EditorPage: React.FC = () => {
         </div>
       )}
 
-      {/* Top Header */}
-      <EditorHeader
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        title={doc.title}
-        setTitle={doc.setTitle}
-        content={doc.content}
-        isSaved={doc.isSaved}
-        isSaving={doc.isSaving}
-        executeSave={doc.executeSave}
-        docMetadata={doc.docMetadata}
-        onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
-        onOpenDrawer={() => modals.setIsDrawerOpen(true)}
-        onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
-        onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
-        onOpenImageModal={() => modals.setIsImageModalOpen(true)}
-        onOpenFxPopover={() => modals.setIsFxPopoverOpen(true)}
-        onOpenOutline={() => modals.setIsOutlineOpen(true)}
-        onOpenTemplates={() => modals.setIsTemplatesOpen(true)}
-        onOpenRevisions={() => modals.setIsRevisionsOpen(true)}
-        onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
-        onExportMd={doc.handleExportMd}
-        onExportDocx={handleExportDocx}
-        onDuplicateDoc={handleDuplicateDoc}
-        onCleanFormat={handleCleanFormat}
-        onCopyMarkdown={doc.handleCopyMarkdown}
-        onClearContent={doc.handleClearContent}
-        onDeleteCurrentDoc={doc.handleDeleteCurrentDoc}
-        isToolsMenuOpen={modals.isToolsMenuOpen}
-        setIsToolsMenuOpen={modals.setIsToolsMenuOpen}
-        isExportMenuOpen={modals.isExportMenuOpen}
-        setIsExportMenuOpen={modals.setIsExportMenuOpen}
-      />
+      {/* Top Header: Dedicated ReaderHeader in Read Mode, EditorHeader otherwise */}
+      {viewMode === 'read' ? (
+        <ReaderHeader
+          title={doc.title}
+          wordCount={stats.words}
+          readingTime={stats.reading}
+          headingsCount={headingsCount}
+          onOpenOutline={() => modals.setIsOutlineOpen(true)}
+          onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
+          setViewMode={setViewMode}
+        />
+      ) : (
+        <EditorHeader
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          title={doc.title}
+          setTitle={doc.setTitle}
+          content={doc.content}
+          isSaved={doc.isSaved}
+          isSaving={doc.isSaving}
+          executeSave={doc.executeSave}
+          docMetadata={doc.docMetadata}
+          onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
+          onOpenDrawer={() => modals.setIsDrawerOpen(true)}
+          onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
+          onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
+          onOpenImageModal={() => modals.setIsImageModalOpen(true)}
+          onOpenFxPopover={() => modals.setIsFxPopoverOpen(true)}
+          onOpenOutline={() => modals.setIsOutlineOpen(true)}
+          onOpenTemplates={() => modals.setIsTemplatesOpen(true)}
+          onOpenRevisions={() => modals.setIsRevisionsOpen(true)}
+          onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
+          onExportMd={doc.handleExportMd}
+          onExportDocx={handleExportDocx}
+          onDuplicateDoc={handleDuplicateDoc}
+          onCleanFormat={handleCleanFormat}
+          onCopyMarkdown={doc.handleCopyMarkdown}
+          onClearContent={doc.handleClearContent}
+          onDeleteCurrentDoc={doc.handleDeleteCurrentDoc}
+          isToolsMenuOpen={modals.isToolsMenuOpen}
+          setIsToolsMenuOpen={modals.setIsToolsMenuOpen}
+          isExportMenuOpen={modals.isExportMenuOpen}
+          setIsExportMenuOpen={modals.setIsExportMenuOpen}
+        />
+      )}
 
       {/* Main Workspace (Split View, Textarea, Markdown Preview, FX) */}
       <EditorWorkspace
@@ -394,43 +412,45 @@ export const EditorPage: React.FC = () => {
         isTypewriterMode={modals.isTypewriterMode}
       />
 
-      {/* Telemetry Status Bar - Hidden on mobile (< md) to maximize writing area */}
-      <div className="hidden md:block">
-        <EditorStatusBar
-          viewMode={viewMode}
-          cursorPos={cursorPos}
-          lineCount={stats.lines}
-          wordCount={stats.words}
-          charCount={stats.chars}
-          readingTime={stats.reading}
-          isTypewriterMode={modals.isTypewriterMode}
-          onToggleTypewriter={() => {
-            const next = !modals.isTypewriterMode;
-            modals.setIsTypewriterMode(next);
-            showToast(next ? 'Typewriter Mode Activated' : 'Typewriter Mode Off', 1500);
-          }}
-          isSprintActive={sprint.isSprintActive}
-          sprintDuration={sprint.sprintDuration}
-          sprintSecondsRemaining={sprint.sprintSecondsRemaining}
-          sprintStartWordCount={sprint.sprintStartWordCount}
-          wordsWritten={sprint.wordsWritten}
-          wpm={sprint.wpm}
-          progressPercent={sprint.progressPercent}
-          sprintMode={sprint.sprintMode}
-          targetWords={sprint.targetWords}
-          soundEnabled={sprint.soundEnabled}
-          onToggleSound={() => sprint.setSoundEnabled(!sprint.soundEnabled)}
-          formatSprintTime={sprint.formatSprintTime}
-          isSprintPopoverOpen={modals.isSprintPopoverOpen}
-          setIsSprintPopoverOpen={modals.setIsSprintPopoverOpen}
-          onStartSprint={(mins, mode, goal) => {
-            sprint.handleStartSprint(mins, mode, goal);
-            modals.setIsSprintPopoverOpen(false);
-          }}
-          onPauseSprint={sprint.handlePauseSprint}
-          onResetSprint={sprint.handleResetSprint}
-        />
-      </div>
+      {/* Telemetry Status Bar - Hidden in Read mode and on mobile (< md) to maximize reading area */}
+      {viewMode !== 'read' && (
+        <div className="hidden md:block">
+          <EditorStatusBar
+            viewMode={viewMode}
+            cursorPos={cursorPos}
+            lineCount={stats.lines}
+            wordCount={stats.words}
+            charCount={stats.chars}
+            readingTime={stats.reading}
+            isTypewriterMode={modals.isTypewriterMode}
+            onToggleTypewriter={() => {
+              const next = !modals.isTypewriterMode;
+              modals.setIsTypewriterMode(next);
+              showToast(next ? 'Typewriter Mode Activated' : 'Typewriter Mode Off', 1500);
+            }}
+            isSprintActive={sprint.isSprintActive}
+            sprintDuration={sprint.sprintDuration}
+            sprintSecondsRemaining={sprint.sprintSecondsRemaining}
+            sprintStartWordCount={sprint.sprintStartWordCount}
+            wordsWritten={sprint.wordsWritten}
+            wpm={sprint.wpm}
+            progressPercent={sprint.progressPercent}
+            sprintMode={sprint.sprintMode}
+            targetWords={sprint.targetWords}
+            soundEnabled={sprint.soundEnabled}
+            onToggleSound={() => sprint.setSoundEnabled(!sprint.soundEnabled)}
+            formatSprintTime={sprint.formatSprintTime}
+            isSprintPopoverOpen={modals.isSprintPopoverOpen}
+            setIsSprintPopoverOpen={modals.setIsSprintPopoverOpen}
+            onStartSprint={(mins, mode, goal) => {
+              sprint.handleStartSprint(mins, mode, goal);
+              modals.setIsSprintPopoverOpen(false);
+            }}
+            onPauseSprint={sprint.handlePauseSprint}
+            onResetSprint={sprint.handleResetSprint}
+          />
+        </div>
+      )}
 
       {/* Lazily Mounted Heavy Modals & Drawers */}
       <EditorModalsContainer

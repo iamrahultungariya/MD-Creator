@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
-import { renderWithAppleEmojis } from '../utils/appleEmoji';
+import { renderWithRichIcons } from '../utils/richIcons';
 import { supabase } from '../lib/supabase';
 
 type FeedbackCategory = 'bug' | 'feature' | 'praise' | 'question';
@@ -33,23 +33,23 @@ interface CategoryOption {
 
 const CATEGORIES: CategoryOption[] = [
   {
-    id: 'feature',
-    title: 'Feature Request',
-    desc: 'Propose a tool or workflow to level up writing',
-    icon: Lightbulb,
-    badgeColor: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800'
-  },
-  {
     id: 'bug',
     title: 'Bug Report',
-    desc: 'Something is broken, sluggish, or misaligned',
+    desc: 'Found an unexpected error, crash, or rendering glitch',
     icon: Bug,
-    badgeColor: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    badgeColor: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-800'
+  },
+  {
+    id: 'feature',
+    title: 'Feature Request',
+    desc: 'Propose an idea, shortcut, or workflow improvement',
+    icon: Lightbulb,
+    badgeColor: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800'
   },
   {
     id: 'praise',
-    title: 'General Feedback',
-    desc: 'Share your thoughts, praise, or UX impressions',
+    title: 'Praise & Love',
+    desc: 'Share what you enjoy most about using MD Writer',
     icon: Heart,
     badgeColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
   },
@@ -62,12 +62,12 @@ const CATEGORIES: CategoryOption[] = [
   }
 ];
 
-const SENTIMENTS: { id: Sentiment; emoji: string; label: string }[] = [
-  { id: 'terrible', emoji: '😡', label: 'Terrible' },
-  { id: 'bad', emoji: '😕', label: 'Needs Work' },
-  { id: 'okay', emoji: '😐', label: 'Okay' },
-  { id: 'good', emoji: '😊', label: 'Good' },
-  { id: 'amazing', emoji: '🤩', label: 'Loving It' }
+const SENTIMENTS: { id: Sentiment; icon: string; label: string }[] = [
+  { id: 'terrible', icon: '😡', label: 'Terrible' },
+  { id: 'bad', icon: '😕', label: 'Needs Work' },
+  { id: 'okay', icon: '😐', label: 'Okay' },
+  { id: 'good', icon: '😊', label: 'Good' },
+  { id: 'amazing', icon: '🤩', label: 'Loving It' }
 ];
 
 export const FeedbackPage: React.FC = () => {
@@ -233,7 +233,7 @@ export const FeedbackPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sentiment Reaction Bar (Apple Emojis) */}
+              {/* Sentiment Reaction Bar */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                   2. How are you feeling about MD Writer right now?
@@ -253,7 +253,7 @@ export const FeedbackPage: React.FC = () => {
                         }`}
                       >
                         <span className="text-xl">
-                          {renderWithAppleEmojis(s.emoji)}
+                          {renderWithRichIcons(s.icon)}
                         </span>
                         <span className="text-[10px] font-bold">
                           {s.label}
@@ -448,7 +448,7 @@ export const FeedbackPage: React.FC = () => {
 
               <div>
                 <h2 className="text-2xl font-black text-neutral-900 dark:text-white">
-                  Thank You for Your Feedback! {renderWithAppleEmojis('🙌✨')}
+                  Thank You for Your Feedback! {renderWithRichIcons('🙌✨')}
                 </h2>
                 <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
                   Your thoughts have been logged directly into our product triage queue. We iterate daily to keep MD Writer the fastest markdown editor on the web.

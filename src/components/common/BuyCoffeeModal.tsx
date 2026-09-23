@@ -8,7 +8,7 @@ import {
   Sparkles,
   Zap
 } from 'lucide-react';
-import { FluentEmoji } from '../../utils/appleEmoji';
+import { RichIcon } from '../../utils/richIcons';
 import { BmcCoffeeCupIcon, BMC_URL } from './BuyMeCoffeeButton';
 
 export { openBuyCoffeeModal } from '../../utils/coffeeModalEvents';
@@ -134,7 +134,7 @@ export const BuyCoffeeModal: React.FC<BuyCoffeeModalProps> = ({
             <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0 relative z-10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/25 shadow-xs">
-                  <FluentEmoji emoji="☕" size="1.6em" />
+                  <RichIcon icon="☕" size="1.6em" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

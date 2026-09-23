@@ -7,6 +7,9 @@ import { EditorWritingFx } from '../../../components/editor/EditorWritingFx';
 import { MobileEditorToolbar } from './MobileEditorToolbar';
 import { storeOptimizedImage } from '../../../services/imageStorageService';
 import { FindReplaceBar } from './FindReplaceBar';
+import { useReaderAppearance } from '../hooks/useReaderAppearance';
+import { EditorGutter } from './EditorGutter';
+import { ReaderArticleHeader } from './ReaderArticleHeader';
 
 const LINE_HEIGHT = 24; // Standardized pixel line-height for exact 1:1 gutter-to-text alignment
 
@@ -83,8 +86,38 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
+  const activeScrollSourceRef = useRef<'editor' | 'preview' | null>(null);
   const isSyncingScrollRef = useRef(false);
+  const rafGutterIdRef = useRef<number | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
+
+  // Reader Mode Eye-Comfort Appearance
+  const {
+    readerThemeClasses,
+    readerFontClass,
+    readerSizeClass,
+    readerWidthClass,
+    setReadingProgress,
+  } = useReaderAppearance();
+
+  const readingStats = useMemo(() => {
+    const words = content.trim().split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    return { words, readingTime: `${minutes} min read` };
+  }, [content]);
+
+  // Exit Read Mode on Esc key
+  useEffect(() => {
+    if (viewMode !== 'read') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setViewMode('split');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewMode, setViewMode]);
 
   // Debounce content passed to MarkdownPreview to decouple heavy AST parsing from 60FPS typing
   const [debouncedContent, setDebouncedContent] = useState(content);
@@ -104,19 +137,34 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     return () => clearTimeout(timer);
   }, [content]);
 
-  // Synchronized Scrolling: Textarea -> Gutter & Preview
+  // Synchronized Scrolling: Textarea -> Gutter & Preview (with hover guard & RAF throttle)
   const handleTextareaScroll = useCallback(() => {
     const ta = textareaRef.current;
     if (!ta) return;
 
-    // 1. Sync line number gutter scroll & virtual window
+    // 1. Direct compositor-level Gutter scroll sync (instant, zero delay)
     if (gutterRef.current) {
       gutterRef.current.scrollTop = ta.scrollTop;
     }
-    setScrollTop(ta.scrollTop);
 
-    // 2. Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
-    if (isSyncScrollEnabled && viewMode === 'split' && !isSyncingScrollRef.current) {
+    // 2. Throttle virtual line slice state via RAF (prevents 120Hz React rerenders on every scroll tick)
+    if (rafGutterIdRef.current === null) {
+      rafGutterIdRef.current = requestAnimationFrame(() => {
+        rafGutterIdRef.current = null;
+        if (textareaRef.current) {
+          setScrollTop(textareaRef.current.scrollTop);
+        }
+      });
+    }
+
+    // 3. Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
+    // Guard against ping-pong feedback loop: only sync if preview is not actively driving the scroll
+    if (
+      isSyncScrollEnabled && 
+      viewMode === 'split' && 
+      activeScrollSourceRef.current !== 'preview' && 
+      !isSyncingScrollRef.current
+    ) {
       const prev = previewContainerRef.current;
       if (prev) {
         isSyncingScrollRef.current = true;
@@ -151,12 +199,28 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     };
   }, [scrollTop, lineCount, textareaRef]);
 
-  // Synchronized Split-Pane Proportional Scrolling (Preview -> Editor)
+  // Synchronized Split-Pane Proportional Scrolling (Preview -> Editor) & Read Mode Progress
   const handlePreviewScroll = useCallback(() => {
-    if (!isSyncScrollEnabled || viewMode !== 'split' || isSyncingScrollRef.current) return;
-    const ta = textareaRef.current;
     const prev = previewContainerRef.current;
-    if (!ta || !prev) return;
+    if (!prev) return;
+
+    // In Read Mode, calculate and track reading progress percentage
+    if (viewMode === 'read') {
+      const maxPrev = prev.scrollHeight - prev.clientHeight;
+      const progress = maxPrev > 0 ? (prev.scrollTop / maxPrev) * 100 : 0;
+      setReadingProgress(progress);
+      return;
+    }
+
+    if (
+      !isSyncScrollEnabled || 
+      viewMode !== 'split' || 
+      activeScrollSourceRef.current === 'editor' || 
+      isSyncingScrollRef.current
+    ) return;
+
+    const ta = textareaRef.current;
+    if (!ta) return;
 
     isSyncingScrollRef.current = true;
     const maxPrev = prev.scrollHeight - prev.clientHeight;
@@ -164,11 +228,14 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       const ratio = prev.scrollTop / maxPrev;
       const maxTa = ta.scrollHeight - ta.clientHeight;
       ta.scrollTop = ratio * maxTa;
+      if (gutterRef.current) {
+        gutterRef.current.scrollTop = ta.scrollTop;
+      }
     }
     requestAnimationFrame(() => {
       isSyncingScrollRef.current = false;
     });
-  }, [isSyncScrollEnabled, viewMode, textareaRef]);
+  }, [isSyncScrollEnabled, viewMode, textareaRef, setReadingProgress]);
 
   // Dedicated formatting helper that preserves scroll position and prevents mobile focus jumping
   const insertFormatting = useCallback(
@@ -351,9 +418,12 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       )}
 
       {/* Main Split / Single Pane Viewport */}
-      <div className="flex-1 flex overflow-hidden relative pb-14 md:pb-0">
+      <div className={`flex-1 flex overflow-hidden relative ${viewMode === 'read' ? 'pb-0' : 'pb-14 md:pb-0'}`}>
         {/* Left Pane: Editor */}
         <div
+          onMouseEnter={() => { activeScrollSourceRef.current = 'editor'; }}
+          onTouchStart={() => { activeScrollSourceRef.current = 'editor'; }}
+          onWheel={() => { activeScrollSourceRef.current = 'editor'; }}
           className={`editor-pane-container flex-col h-full bg-neutral-50/70 dark:bg-[#18181c] text-neutral-800 dark:text-neutral-200 transition-colors ${
             viewMode === 'read' ? 'hidden' : 'flex'
           } ${
@@ -393,36 +463,14 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               viewMode === 'write' || viewMode === 'zen' ? 'max-w-4xl mx-auto w-full' : ''
             }`}
           >
-            {/* Virtualized Line Numbers Gutter: Renders only visible ~50 DOM nodes, zero lag past line 28 */}
-            <div
-              ref={gutterRef}
-              className={`hidden sm:block select-none overflow-hidden text-right font-mono-code text-xs text-neutral-400 dark:text-neutral-600 transition-all ${
-                lineCount >= 10000 ? 'w-16 pr-3 pl-2' : lineCount >= 1000 ? 'w-14 pr-3 pl-2' : 'w-12 pr-3 pl-2'
-              } ${isTypewriterMode ? 'pt-[25vh] pb-[50vh]' : 'py-6'}`}
-              style={{ scrollbarWidth: 'none' }}
-              aria-hidden="true"
-            >
-              <div style={{ height: `${visibleLineSlice.totalHeight}px`, position: 'relative' }}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: `${visibleLineSlice.topOffset}px`,
-                    left: 0,
-                    right: 0,
-                  }}
-                >
-                  {visibleLineSlice.lines.map((num) => (
-                    <div
-                      key={num}
-                      style={{ height: `${LINE_HEIGHT}px`, lineHeight: `${LINE_HEIGHT}px` }}
-                      className="tabular-nums"
-                    >
-                      {num}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Virtualized Line Numbers Gutter */}
+            <EditorGutter
+              gutterRef={gutterRef}
+              lineCount={lineCount}
+              isTypewriterMode={isTypewriterMode}
+              visibleLineSlice={visibleLineSlice}
+              lineHeight={LINE_HEIGHT}
+            />
 
             {/* Markdown Input Area */}
             <textarea
@@ -485,64 +533,84 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           </div>
         </div>
 
-        {/* Right Pane: Live Rendered Preview with Proportional Synchronized Scroll */}
+        {/* Right Pane: Live Rendered Preview or Dedicated Reader Canvas */}
         <div
           ref={previewContainerRef}
           onScroll={handlePreviewScroll}
-          className={`preview-pane-container flex-col h-full bg-white dark:bg-neutral-950 overflow-y-auto transition-all ${
-            viewMode === 'write' || viewMode === 'zen' ? 'hidden' : 'flex'
-          } ${
-            viewMode === 'split'
-              ? `w-full md:w-1/2 ${isPreviewVisibleOnMobile ? 'flex' : 'hidden md:flex'}`
-              : 'w-full'
+          onMouseEnter={() => { activeScrollSourceRef.current = 'preview'; }}
+          onTouchStart={() => { activeScrollSourceRef.current = 'preview'; }}
+          onWheel={() => { activeScrollSourceRef.current = 'preview'; }}
+          className={`preview-pane-container flex-col h-full overflow-y-auto transition-colors duration-200 ${
+            viewMode === 'read'
+              ? `w-full flex ${readerThemeClasses}`
+              : `bg-white dark:bg-neutral-950 ${viewMode === 'write' || viewMode === 'zen' ? 'hidden' : 'flex'} ${
+                  viewMode === 'split'
+                    ? `w-full md:w-1/2 ${isPreviewVisibleOnMobile ? 'flex' : 'hidden md:flex'}`
+                    : 'w-full'
+                }`
           }`}
         >
-          {/* Preview Sub-header - Hidden on mobile (< md) to maximize preview height */}
-          <div className="hidden md:flex px-5 py-2 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 items-center justify-between text-xs text-neutral-500 select-none no-print">
-            <span className="flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
-              <Columns className="w-3.5 h-3.5" />
-              <span>Live Rendered Preview</span>
-              {content !== debouncedContent && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-mono font-medium ml-2 animate-in fade-in duration-150">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                  updating...
-                </span>
-              )}
-            </span>
-            <span className="text-[11px] text-neutral-400 font-mono">
-              GFM + KaTeX Math + Highlights
-            </span>
-          </div>
+          {/* Preview Sub-header - Only displayed in Split mode (hidden in Read mode) */}
+          {viewMode === 'split' && (
+            <div className="hidden md:flex px-5 py-2 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 items-center justify-between text-xs text-neutral-500 select-none no-print">
+              <span className="flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
+                <Columns className="w-3.5 h-3.5" />
+                <span>Live Rendered Preview</span>
+                {content !== debouncedContent && (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-mono font-medium ml-2 animate-in fade-in duration-150">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    updating...
+                  </span>
+                )}
+              </span>
+              <span className="text-[11px] text-neutral-400 font-mono">
+                GFM + KaTeX Math + Highlights
+              </span>
+            </div>
+          )}
 
-          {/* Rendered Preview Document */}
+          {/* Rendered Document Canvas */}
           <div
-            className={`flex-1 p-8 sm:p-10 ${
-              viewMode === 'read' ? 'max-w-3xl mx-auto w-full' : ''
+            className={`flex-1 transition-all duration-150 ${
+              viewMode === 'read'
+                ? `px-6 sm:px-10 pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
+                : 'p-8 sm:p-10'
             }`}
           >
+            {/* Elegant Editorial Article Header in Read Mode */}
+            {viewMode === 'read' && (
+              <ReaderArticleHeader
+                title={title}
+                readingStats={readingStats}
+              />
+            )}
+
             <MarkdownPreview 
               content={debouncedContent} 
-              onToggleTask={onToggleTask} 
+              onToggleTask={onToggleTask}
+              className={viewMode === 'read' ? `${readerFontClass} ${readerSizeClass}` : undefined}
             />
           </div>
         </div>
       </div>
 
-      {/* Mobile Sticky Bottom Accessory Toolbar */}
-      <MobileEditorToolbar
-        onInsertBold={handleInsertBold}
-        onInsertLink={handleInsertLink}
-        onOpenImageModal={onOpenImageModal || (() => {})}
-        onTriggerSlash={() => setIsSlashMenuOpen((prev) => !prev)}
-        onOpenOutline={onOpenOutline || (() => {})}
-        onOpenTableBuilder={onOpenTableBuilder || (() => {})}
-        onOpenTemplates={onOpenTemplates || (() => {})}
-        onOpenPdfStudio={onOpenPdfStudio || (() => {})}
-        onExportMd={onExportMd || (() => {})}
-        onCopyMarkdown={onCopyMarkdown || (() => {})}
-        onOpenRevisions={onOpenRevisions || (() => {})}
-        onClearContent={onClearContent || (() => {})}
-      />
+      {/* Mobile Sticky Bottom Accessory Toolbar - Hidden in Read mode */}
+      {viewMode !== 'read' && (
+        <MobileEditorToolbar
+          onInsertBold={handleInsertBold}
+          onInsertLink={handleInsertLink}
+          onOpenImageModal={onOpenImageModal || (() => {})}
+          onTriggerSlash={() => setIsSlashMenuOpen((prev) => !prev)}
+          onOpenOutline={onOpenOutline || (() => {})}
+          onOpenTableBuilder={onOpenTableBuilder || (() => {})}
+          onOpenTemplates={onOpenTemplates || (() => {})}
+          onOpenPdfStudio={onOpenPdfStudio || (() => {})}
+          onExportMd={onExportMd || (() => {})}
+          onCopyMarkdown={onCopyMarkdown || (() => {})}
+          onOpenRevisions={onOpenRevisions || (() => {})}
+          onClearContent={onClearContent || (() => {})}
+        />
+      )}
 
       {/* 60FPS Hardware-Accelerated Editor Typing FX Overlay */}
       <EditorWritingFx textareaRef={textareaRef} />

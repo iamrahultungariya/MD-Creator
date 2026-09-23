@@ -297,9 +297,9 @@ export const DocumentsPage: React.FC = () => {
               <button
                 key={tag}
                 onClick={() => setActiveTag(tag)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   activeTag === tag
-                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-2xs'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
                     : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
                 }`}
               >
@@ -329,9 +329,10 @@ export const DocumentsPage: React.FC = () => {
         </div>
 
         {/* Documents Content */}
-        {isLoading ? (
-          <div className="py-20 text-center text-xs text-neutral-400">Loading documents...</div>
-        ) : documents.length === 0 ? (
+        <div className="min-h-[420px]">
+          {isLoading && !documents.length ? (
+            <div className="py-20 text-center text-xs text-neutral-400">Loading documents...</div>
+          ) : documents.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-3xl p-8">
             <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 mb-4">
               {currentTab === 'trash' ? <Trash2 className="w-6 h-6 text-neutral-400" /> : <FileText className="w-6 h-6" />}
@@ -565,6 +566,7 @@ export const DocumentsPage: React.FC = () => {
             ))}
           </div>
         )}
+        </div>
 
       </main>
 

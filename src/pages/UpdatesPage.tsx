@@ -9,7 +9,7 @@ import {
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
 import { MILESTONES, UpdateCategory } from '../data/productUpdates';
-import { renderWithAppleEmojis, AppleEmoji } from '../utils/appleEmoji';
+import { renderWithRichIcons, RichIcon } from '../utils/richIcons';
 import { usePwaInstall } from '../hooks/usePwaInstall';
 import { PwaInstallModal } from '../components/common/PwaInstallModal';
 
@@ -102,8 +102,8 @@ export const UpdatesPage: React.FC = () => {
             <div className="p-3">
               <div className="text-xs text-neutral-400 font-medium">Universal Style</div>
               <div className="text-lg font-black text-neutral-950 dark:text-white mt-0.5 flex items-center gap-1.5">
-                <span>Apple Emojis</span>
-                <AppleEmoji emoji="🚀" size={18} />
+                <span>Rich Icons</span>
+                <RichIcon icon="🚀" size={18} />
               </div>
               <div className="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">All operating systems</div>
             </div>
@@ -123,13 +123,13 @@ export const UpdatesPage: React.FC = () => {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id as UpdateCategory)}
-                className={`px-3.5 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                   activeCategory === cat.id
-                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
+                    ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                 }`}
               >
-                {renderWithAppleEmojis(cat.label)}
+                {renderWithRichIcons(cat.label)}
               </button>
             ))}
           </div>
@@ -183,10 +183,10 @@ export const UpdatesPage: React.FC = () => {
 
                   {/* Title & Summary */}
                   <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 dark:text-white mb-2.5 leading-snug tracking-tight">
-                    {renderWithAppleEmojis(milestone.title)}
+                    {renderWithRichIcons(milestone.title)}
                   </h2>
                   <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed mb-6">
-                    {renderWithAppleEmojis(milestone.summary)}
+                    {renderWithRichIcons(milestone.summary)}
                   </p>
 
                   {/* Highlights Grid */}
@@ -196,7 +196,7 @@ export const UpdatesPage: React.FC = () => {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider shrink-0 border mt-0.5 ${getBadgeStyle(h.type)}`}>
                           {getBadgeLabel(h.type)}
                         </span>
-                        <span className="leading-relaxed">{renderWithAppleEmojis(h.text)}</span>
+                        <span className="leading-relaxed">{renderWithRichIcons(h.text)}</span>
                       </div>
                     ))}
                   </div>

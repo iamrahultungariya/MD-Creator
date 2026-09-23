@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MILESTONES, UpdateCategory } from '../../data/productUpdates';
-import { renderWithAppleEmojis } from '../../utils/appleEmoji';
+import { renderWithRichIcons } from '../../utils/richIcons';
 
 interface ProductUpdatesModalProps {
   isOpen: boolean;
@@ -118,11 +118,11 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
                   onClick={() => setActiveCategory(cat.id as UpdateCategory)}
                   className={`px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer whitespace-nowrap ${
                     activeCategory === cat.id
-                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                   }`}
                 >
-                  {renderWithAppleEmojis(cat.label)}
+                  {renderWithRichIcons(cat.label)}
                 </button>
               ))}
             </div>
@@ -198,10 +198,10 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
 
                         {/* Title & Summary */}
                         <h3 className="text-base sm:text-lg font-bold text-neutral-950 dark:text-white mb-2 leading-snug">
-                          {renderWithAppleEmojis(milestone.title)}
+                          {renderWithRichIcons(milestone.title)}
                         </h3>
                         <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed mb-4">
-                          {renderWithAppleEmojis(milestone.summary)}
+                          {renderWithRichIcons(milestone.summary)}
                         </p>
 
                         {/* Highlights List */}
@@ -211,7 +211,7 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
                               <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 border mt-0.5 ${getBadgeStyle(h.type)}`}>
                                 {getBadgeLabel(h.type)}
                               </span>
-                              <span className="leading-relaxed">{renderWithAppleEmojis(h.text)}</span>
+                              <span className="leading-relaxed">{renderWithRichIcons(h.text)}</span>
                             </div>
                           ))}
                         </div>

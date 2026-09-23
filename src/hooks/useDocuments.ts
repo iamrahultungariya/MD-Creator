@@ -34,6 +34,7 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
 
   return useQuery({
     queryKey: ['documents', searchQuery, activeTag, showTrash],
+    placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<DocumentMetadata[]> => {
       let docs = await db.documents.toArray();
 

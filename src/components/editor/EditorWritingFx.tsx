@@ -409,28 +409,40 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
       }
     };
 
-    const onSelectionOrScroll = () => {
+    const onSelection = () => {
       updateCursorDirect();
+    };
+
+    let scrollRafId: number | null = null;
+    const onScrollThrottled = () => {
+      if (scrollRafId !== null) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = null;
+        updateCursorDirect();
+      });
     };
 
     textarea.addEventListener('focus', onFocus, { passive: true });
     textarea.addEventListener('blur', onBlur, { passive: true });
     textarea.addEventListener('keydown', onKeyDown, { passive: true });
-    textarea.addEventListener('input', onSelectionOrScroll, { passive: true });
-    textarea.addEventListener('click', onSelectionOrScroll, { passive: true });
-    textarea.addEventListener('keyup', onSelectionOrScroll, { passive: true });
-    textarea.addEventListener('scroll', onSelectionOrScroll, { passive: true });
+    textarea.addEventListener('input', onSelection, { passive: true });
+    textarea.addEventListener('click', onSelection, { passive: true });
+    textarea.addEventListener('keyup', onSelection, { passive: true });
+    textarea.addEventListener('scroll', onScrollThrottled, { passive: true });
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       ro.disconnect();
+      if (scrollRafId !== null) {
+        cancelAnimationFrame(scrollRafId);
+      }
       textarea.removeEventListener('focus', onFocus);
       textarea.removeEventListener('blur', onBlur);
       textarea.removeEventListener('keydown', onKeyDown);
-      textarea.removeEventListener('input', onSelectionOrScroll);
-      textarea.removeEventListener('click', onSelectionOrScroll);
-      textarea.removeEventListener('keyup', onSelectionOrScroll);
-      textarea.removeEventListener('scroll', onSelectionOrScroll);
+      textarea.removeEventListener('input', onSelection);
+      textarea.removeEventListener('click', onSelection);
+      textarea.removeEventListener('keyup', onSelection);
+      textarea.removeEventListener('scroll', onScrollThrottled);
 
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);

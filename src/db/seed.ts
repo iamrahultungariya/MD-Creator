@@ -86,7 +86,7 @@ Quarterly product strategy focused on writer workflow acceleration and team dist
 ## 📝 Action Items & Ownership
 
 - [x] Audit all typography presets for high-resolution PDF rendering (@sarah)
-- [x] Replace generic system emojis with open-source modern design assets (@alex)
+- [x] Replace generic system icons with open-source modern design assets (@alex)
 - [ ] Prototype cover page template variations for corporate reports (@designer)
 - [ ] Measure First Contentful Paint benchmarks on 3G network simulation (@dev)
 
