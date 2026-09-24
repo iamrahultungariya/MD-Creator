@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useReaderSettingsStore } from '../../../stores/useReaderSettingsStore';
+import { useThemeStore } from '../../../stores/useThemeStore';
 
 export function useReaderAppearance() {
   const {
@@ -9,20 +10,27 @@ export function useReaderAppearance() {
     columnWidth: readerColumnWidth,
     setReadingProgress,
   } = useReaderSettingsStore();
+  const { isDark } = useThemeStore();
 
   const readerThemeClasses = useMemo(() => {
     switch (readerTheme) {
       case 'sepia':
-        return 'bg-[#FBF0D9] text-[#382E25] dark:bg-[#27211C] dark:text-[#E2CBB7]';
+        return isDark
+          ? 'bg-[#27211C] text-[#E2CBB7]'
+          : 'bg-[#FBF0D9] text-[#382E25]';
       case 'slate':
-        return 'bg-[#F1F5F9] text-[#1E293B] dark:bg-[#1E2530] dark:text-[#CBD5E1]';
+        return isDark
+          ? 'bg-[#1E2530] text-[#CBD5E1]'
+          : 'bg-[#F1F5F9] text-[#1E293B]';
       case 'midnight':
         return 'bg-[#0B0C0E] text-neutral-300';
       case 'default':
       default:
-        return 'bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200';
+        return isDark
+          ? 'bg-[#111114] text-neutral-100'
+          : 'bg-white text-neutral-900';
     }
-  }, [readerTheme]);
+  }, [readerTheme, isDark]);
 
   const readerFontClass = useMemo(() => {
     switch (readerFontFamily) {
@@ -39,14 +47,14 @@ export function useReaderAppearance() {
   const readerSizeClass = useMemo(() => {
     switch (readerFontSize) {
       case 'sm':
-        return 'text-[15px] leading-[1.8]';
+        return 'reader-size-sm';
       case 'lg':
-        return 'text-[19px] leading-[1.9]';
+        return 'reader-size-lg';
       case 'xl':
-        return 'text-[21px] leading-[1.95]';
+        return 'reader-size-xl';
       case 'base':
       default:
-        return 'text-[17px] leading-[1.85]';
+        return 'reader-size-base';
     }
   }, [readerFontSize]);
 
@@ -55,10 +63,10 @@ export function useReaderAppearance() {
       case 'focused':
         return 'max-w-xl mx-auto w-full';
       case 'wide':
-        return 'max-w-4xl mx-auto w-full';
+        return 'max-w-6xl mx-auto w-full';
       case 'standard':
       default:
-        return 'max-w-2xl mx-auto w-full';
+        return 'max-w-4xl mx-auto w-full';
     }
   }, [readerColumnWidth]);
 
@@ -72,5 +80,6 @@ export function useReaderAppearance() {
     readerFontClass,
     readerSizeClass,
     readerWidthClass,
+    isDark,
   };
 }

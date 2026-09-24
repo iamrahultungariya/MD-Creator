@@ -186,7 +186,9 @@ export async function saveDocument(id: string, title: string, content: string, t
  * Creates a brand new document draft.
  */
 export async function createNewDocument(title = 'Untitled Document', initialContent = '# Untitled\n\nStart writing with Markdown...'): Promise<string> {
-  const id = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const id = typeof crypto !== 'undefined' && crypto.randomUUID 
+    ? `doc_${crypto.randomUUID()}` 
+    : `doc_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
   await saveDocument(id, title, initialContent, ['General']);
   return id;
 }

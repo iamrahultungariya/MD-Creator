@@ -53,8 +53,8 @@ ALTER TABLE IF EXISTS public.document_revisions
 ALTER TABLE IF EXISTS public.published_documents 
     DROP CONSTRAINT IF EXISTS published_documents_document_id_fkey;
 
--- 0c. Clean up any partial published_documents table if it failed on previous run
-DROP TABLE IF EXISTS public.published_documents CASCADE;
+-- 0c. Keep published_documents intact without dropping existing data
+-- Table creation below uses CREATE TABLE IF NOT EXISTS
 
 -- 0d. Perform column type conversion from UUID to TEXT
 DO $$
@@ -126,8 +126,7 @@ BEGIN
     END IF;
 END $$;
 
--- Clean up any partial published_documents table if it failed on previous run
-DROP TABLE IF EXISTS public.published_documents CASCADE;
+-- Retain published_documents data cleanly
 
 -- ------------------------------------------------------------------------------
 -- 1. PROFILES TABLE (Linked to Supabase auth.users)

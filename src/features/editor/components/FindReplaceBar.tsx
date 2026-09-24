@@ -12,7 +12,7 @@ import { CodeMirrorEditorHandle } from './CodeMirrorEditor';
 interface FindReplaceBarProps {
   isOpen: boolean;
   onClose: () => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
   editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
   content: string;
   setContent: (val: string) => void;
@@ -108,7 +108,7 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
         return;
       }
 
-      if (!textareaRef.current) return;
+      if (!textareaRef?.current) return;
       const ta = textareaRef.current;
       ta.focus({ preventScroll: true });
       ta.setSelectionRange(target.start, target.end);
@@ -151,7 +151,7 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
       return;
     }
 
-    if (!textareaRef.current) return;
+    if (!textareaRef?.current) return;
     const before = content.substring(0, target.start);
     const after = content.substring(target.end);
     const nextContent = before + replaceQuery + after;
@@ -160,7 +160,7 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
     executeSave(nextContent, title);
 
     setTimeout(() => {
-      if (textareaRef.current) {
+      if (textareaRef?.current) {
         textareaRef.current.focus({ preventScroll: true });
         const newCaret = target.start + replaceQuery.length;
         textareaRef.current.setSelectionRange(newCaret, newCaret);
@@ -199,7 +199,11 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
     } else if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
-      textareaRef.current?.focus();
+      if (editorRef?.current) {
+        editorRef.current.focus();
+      } else {
+        textareaRef?.current?.focus();
+      }
     }
   };
 
@@ -287,7 +291,11 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
         <button
           onClick={() => {
             onClose();
-            textareaRef.current?.focus();
+            if (editorRef?.current) {
+              editorRef.current.focus();
+            } else {
+              textareaRef?.current?.focus();
+            }
           }}
           className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
           title="Close (Esc)"
@@ -311,7 +319,11 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
                   handleReplaceCurrent();
                 } else if (e.key === 'Escape') {
                   onClose();
-                  textareaRef.current?.focus();
+                  if (editorRef?.current) {
+                    editorRef.current.focus();
+                  } else {
+                    textareaRef?.current?.focus();
+                  }
                 }
               }}
               placeholder="Replace (Ctrl+H)..."

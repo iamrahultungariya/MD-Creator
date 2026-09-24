@@ -4,10 +4,9 @@ import {
   Timer, 
   Play, 
   Pause, 
-  RotateCcw,
-  Volume2,
-  VolumeX,
-  Sparkles
+  RotateCcw, 
+  Volume2, 
+  VolumeX 
 } from 'lucide-react';
 import { CursorPosition, ViewMode } from '../types';
 import { useAuthStore, isUserPro } from '../../../stores/useAuthStore';
@@ -321,10 +320,9 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
             <button
               type="button"
               onClick={() => setIsProModalOpen(true)}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 text-[10px] font-bold hover:bg-amber-200/70 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700 text-[10px] font-medium hover:bg-neutral-300/70 dark:hover:bg-neutral-700 transition-all cursor-pointer"
               title="Enable multi-device cloud sync with Pro"
             >
-              <Sparkles className="w-2.5 h-2.5 text-amber-500" />
               <span>Cloud Sync (Pro)</span>
             </button>
           </div>
@@ -339,10 +337,9 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
             <button
               type="button"
               onClick={() => setIsProModalOpen(true)}
-              className="inline-flex items-center gap-1 text-[10px] text-neutral-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-[10px] text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
               title="Explore Pro features"
             >
-              <Sparkles className="w-2.5 h-2.5 text-amber-500" />
               <span>Pro</span>
             </button>
           </div>

@@ -31,25 +31,25 @@ export interface UpdateMilestone {
 
 export const MILESTONES: UpdateMilestone[] = [
   {
-    version: 'v0.8.0',
+    version: 'v0.8.0 Beta',
     isLatest: true,
     date: 'September 2026',
-    title: 'Embed Image Studio, Decluttered Minimalist Navbar, Feedback Hub & Supporter Coffee',
+    title: 'Writing Mode Redesign, Floating Formatting Dock, Slash Menu Polish, Eye-Comfort Reader & Minimalist Aesthetics',
     category: 'ux',
-    categoryLabel: 'Media & UI Architecture',
-    summary: 'A major design and performance evolution: senior-developer loading optimizations, client-side WebP image compression with offline persistence, native screenshot paste (Ctrl+V) and drag-and-drop, decluttered minimalist navbar with elegant Resources dropdown, dedicated Feedback & Feature Request channel, and a creator Buy Me a Coffee supporter modal.',
+    categoryLabel: 'Editor & Reader Architecture',
+    summary: 'A transformative design and usability evolution: centered paper writing canvas with dimmed line numbers, floating formatting dock [B, I, S, </>, 🔗, ☰, 1., "], completely overhauled slash command engine with zero accidental triggers on enter/backspace, contrast-balanced eye-comfort reader themes (Warm Sepia & Nordic Slate), verified typography scaling (sm, base, lg, xl), genuinely differentiated reading column widths (576px, 896px, 1152px), and a unified minimalist palette free of distracting AI-slop colors and badges.',
     icon: ImageIcon,
-    iconColor: 'text-purple-500 dark:text-purple-400',
-    iconBg: 'bg-purple-50 dark:bg-purple-950/50 border-purple-200/60 dark:border-purple-900/50',
+    iconColor: 'text-neutral-700 dark:text-neutral-300',
+    iconBg: 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
     highlights: [
-      { type: 'perf', text: 'Zero-Blocking Initial Render: Code-split GlobalConfirmDialog, CommandPaletteModal, and BuyCoffeeModal, isolating 120KB of animation libraries from critical first paint.' },
-      { type: 'perf', text: 'Fine-Grained Database Splitting: Decoupled Rollup chunks into vendor-query, vendor-dexie, and vendor-supabase, and deferred non-critical session sync with requestIdleCallback.' },
+      { type: 'new', text: 'Writing Mode Redesign & Floating Formatting Dock: Centered paper canvas with dimmed line numbers (1, 2, 3...) and a sleek floating formatting pill [B, I, S, </>, 🔗, ☰, 1., "] for instant text styling without focus loss.' },
+      { type: 'fix', text: 'Slash Menu Interaction Overhaul: Fixed accidental triggers on Enter and Backspace; deleting / now dismisses the palette immediately, and natural newlines proceed cleanly without hijacking.' },
+      { type: 'improved', text: 'Eye-Comfort Reader Themes & Table Contrast: Harmonized table borders and cell backgrounds for Warm Sepia and Nordic Slate, and synchronized Default mode with app light/dark theme.' },
+      { type: 'improved', text: 'Proportional Reader Font Scaling: Explicit typography sizing system (.reader-size-sm through xl) guaranteeing instant font scaling across all markdown prose elements.' },
+      { type: 'improved', text: 'Differentiated Reader Column Widths: Truly distinct layout profiles for Focused (576px editorial), Standard (896px article), and Wide (1152px expansive specs and tables).' },
+      { type: 'improved', text: 'Purged "AI Slop" Visual Distractions: Stripped disparate carnival rainbow colors and sparkle star icons across headers, toolbars, and menus in favor of a timeless monochrome aesthetic.' },
       { type: 'new', text: 'Embed Image Studio (Offline + Web): Dual-tab image insertion dialog with client-side HTML5 Canvas bicubic downscaling, WebP conversion, and live size savings telemetry.' },
-      { type: 'new', text: 'Direct Clipboard & Drag-and-Drop Images: Paste screenshots directly via Ctrl+V or drag files onto the editor with animated dropzone feedback.' },
-      { type: 'new', text: 'Dedicated Feedback Hub (/feedback): 4 category channels (Bug, Feature, Praise, Question), visual sentiment rating, system telemetry diagnostics, and Supabase queue sync.' },
-      { type: 'new', text: 'Buy Me a Coffee Supporter Modal: Multi-tier coffee boost ($3 Espresso, $5 Latte, $10 Roaster, Custom), personal note, and direct links to BMC, Ko-fi, and GitHub Sponsors.' },
-      { type: 'improved', text: 'Decluttered Navbar with Breathing Room: Streamlined top navigation into core destinations (Home, Documents, Features) with an elegant grouped Resources dropdown and responsive mobile drawer.' },
-      { type: 'improved', text: 'Rich Image Markdown Preview & Lightbox: Rounded borders, captions from markdown titles, broken link fallbacks, and 1-click full-screen zoom modal.' }
+      { type: 'perf', text: 'Zero-Blocking Initial Render: Code-split non-critical dialogs and decoupled Rollup chunks into vendor-query, vendor-dexie, and vendor-supabase.' }
     ]
   },
   {

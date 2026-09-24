@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { COMMANDS } from '../../../components/editor/SlashCommandMenu';
 import { cleanAndNormalizeMarkdown } from '../../../utils/markdownSanitizer';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
@@ -10,9 +10,9 @@ interface UseSlashCommandsOptions {
   setContent: (val: string) => void;
   executeSave: (content: string, title: string) => void;
   title: string;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
   editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
-  updateCursorPosition: () => void;
+  updateCursorPosition?: () => void;
   onOpenTableBuilder: () => void;
   onOpenTemplates: () => void;
   onOpenMathStudio: () => void;
@@ -43,10 +43,28 @@ export function useSlashCommands({
   const [isSlashMenuOpen, setIsSlashMenuOpen] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
   const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
+  const slashTriggerPosRef = useRef<number>(-1);
+  const hasNavigatedRef = useRef<boolean>(false);
+
+  // Handle slash trigger event from editor
+  const handleSlashTrigger = useCallback((query: string, pos: number) => {
+    if (pos === -1 || (!query && pos < 0)) {
+      setIsSlashMenuOpen(false);
+      setSlashQuery('');
+      hasNavigatedRef.current = false;
+      slashTriggerPosRef.current = -1;
+      return;
+    }
+    slashTriggerPosRef.current = Math.max(0, pos - query.length - 1);
+    setSlashQuery(query);
+    hasNavigatedRef.current = false;
+    setIsSlashMenuOpen(true);
+  }, []);
 
   // Reset slash selection when query changes
   useEffect(() => {
     setSlashSelectedIndex(0);
+    hasNavigatedRef.current = false;
   }, [slashQuery]);
 
   // Filtered commands list
@@ -68,7 +86,10 @@ export function useSlashCommands({
         const fullText = ed.getValue();
         const textBeforeCursor = fullText.substring(0, cursor);
         const lastSlashIndex = textBeforeCursor.lastIndexOf('/');
-        const from = lastSlashIndex !== -1 ? lastSlashIndex : cursor;
+        const from = slashTriggerPosRef.current >= 0 
+          ? slashTriggerPosRef.current 
+          : (lastSlashIndex !== -1 ? lastSlashIndex : cursor);
+        slashTriggerPosRef.current = -1;
 
         if (snippet === '__ACTION_OPEN_TABLE_BUILDER__') {
           ed.setSelectionRange(from, cursor);
@@ -183,7 +204,7 @@ export function useSlashCommands({
         return;
       }
 
-      if (!textareaRef.current) return;
+      if (!textareaRef?.current) return;
       const cursor = textareaRef.current.selectionStart;
       const textBeforeCursor = content.substring(0, cursor);
       const afterCursor = content.substring(cursor);
@@ -265,13 +286,13 @@ export function useSlashCommands({
         setSlashQuery('');
         executeSave(nextContent, title);
         setTimeout(() => {
-          if (textareaRef.current) {
+          if (textareaRef?.current) {
             const prevScroll = textareaRef.current.scrollTop;
             textareaRef.current.focus({ preventScroll: true });
             const newPos = yamlBlock.length;
             textareaRef.current.setSelectionRange(newPos, newPos);
             textareaRef.current.scrollTop = prevScroll;
-            updateCursorPosition();
+            updateCursorPosition?.();
           }
         }, 20);
         return;
@@ -284,13 +305,13 @@ export function useSlashCommands({
       setSlashSelectedIndex(0);
 
       setTimeout(() => {
-        if (textareaRef.current) {
+        if (textareaRef?.current) {
           const prevScroll = textareaRef.current.scrollTop;
           textareaRef.current.focus({ preventScroll: true });
           const newPos = cleanBefore.length + snippet.length;
           textareaRef.current.setSelectionRange(newPos, newPos);
           textareaRef.current.scrollTop = prevScroll;
-          updateCursorPosition();
+          updateCursorPosition?.();
         }
       }, 20);
 
@@ -306,20 +327,35 @@ export function useSlashCommands({
       if (isSlashMenuOpen && filteredCommands.length > 0) {
         if (e.key === 'ArrowDown') {
           e.preventDefault();
+          hasNavigatedRef.current = true;
           setSlashSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
           return;
         }
         if (e.key === 'ArrowUp') {
           e.preventDefault();
+          hasNavigatedRef.current = true;
           setSlashSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
           return;
         }
-        if (e.key === 'Enter' || e.key === 'Tab') {
+        if (e.key === 'Tab') {
           e.preventDefault();
           const selected = filteredCommands[slashSelectedIndex % filteredCommands.length];
           if (selected) {
             handleInsertSnippet(selected.insertSnippet);
           }
+          return;
+        }
+        if (e.key === 'Enter') {
+          if (hasNavigatedRef.current || slashQuery.trim().length > 0) {
+            e.preventDefault();
+            const selected = filteredCommands[slashSelectedIndex % filteredCommands.length];
+            if (selected) {
+              handleInsertSnippet(selected.insertSnippet);
+            }
+            return;
+          }
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
           return;
         }
         if (e.key === 'Escape') {
@@ -330,7 +366,7 @@ export function useSlashCommands({
         }
       }
 
-      const ta = textareaRef.current;
+      const ta = textareaRef?.current;
       if (!ta) return;
 
       // 2. Find & Replace Shortcuts (Ctrl+F, Ctrl+H)
@@ -346,12 +382,12 @@ export function useSlashCommands({
       }
 
       // 3. Tab Indentation & Smart List Continuation on Enter
-      if (handleEditorListShortcuts(e, content, setContent, executeSave, title, ta, updateCursorPosition)) {
+      if (handleEditorListShortcuts(e, content, setContent, executeSave, title, ta, updateCursorPosition || (() => {}))) {
         return;
       }
 
       // 4. Auto-pairing & Selection Wrapping
-      if (handleEditorAutoPair(e, content, setContent, executeSave, title, ta, updateCursorPosition)) {
+      if (handleEditorAutoPair(e, content, setContent, executeSave, title, ta, updateCursorPosition || (() => {}))) {
         return;
       }
     },
@@ -402,21 +438,38 @@ export function useSlashCommands({
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
+        hasNavigatedRef.current = true;
         setSlashSelectedIndex((prev) => (prev + 1) % filteredCommands.length);
         return true;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
+        hasNavigatedRef.current = true;
         setSlashSelectedIndex((prev) => (prev - 1 + filteredCommands.length) % filteredCommands.length);
         return true;
       }
-      if (e.key === 'Enter' || e.key === 'Tab') {
+      if (e.key === 'Tab') {
         e.preventDefault();
         const selected = filteredCommands[slashSelectedIndex % filteredCommands.length];
         if (selected) {
           handleInsertSnippet(selected.insertSnippet);
         }
         return true;
+      }
+      if (e.key === 'Enter') {
+        // Only consume Enter if user actively typed a search query or navigated with arrow keys
+        if (hasNavigatedRef.current || slashQuery.trim().length > 0) {
+          e.preventDefault();
+          const selected = filteredCommands[slashSelectedIndex % filteredCommands.length];
+          if (selected) {
+            handleInsertSnippet(selected.insertSnippet);
+          }
+          return true;
+        }
+        // User typed / and immediately pressed Enter without navigating -> close menu and allow natural newline
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        return false;
       }
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -427,7 +480,7 @@ export function useSlashCommands({
 
       return false;
     },
-    [isSlashMenuOpen, filteredCommands, slashSelectedIndex, handleInsertSnippet]
+    [isSlashMenuOpen, filteredCommands, slashSelectedIndex, slashQuery, handleInsertSnippet]
   );
 
   return {
@@ -441,5 +494,6 @@ export function useSlashCommands({
     handleTextareaKeyDown,
     handleSlashKeyDown,
     checkSlashTrigger,
+    handleSlashTrigger,
   };
 }

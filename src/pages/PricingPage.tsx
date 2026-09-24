@@ -29,6 +29,7 @@ import {
   getRemainingWaitlistSeats, 
   WaitlistStatus 
 } from '../services/couponService';
+import { supabase } from '../lib/supabase';
 
 export const PricingPage: React.FC = () => {
   const { user, refreshProfile } = useAuthStore();
@@ -51,7 +52,35 @@ export const PricingPage: React.FC = () => {
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [redeemFeedback, setRedeemFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
-  const isAdmin = user?.email?.toLowerCase() === 'tungariyarahul08@gmail.com';
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    let isMounted = true;
+    async function checkAdmin() {
+      try {
+        if (supabase) {
+          const { data } = await supabase.rpc('has_role', { p_user_id: user!.id, p_role: 'admin' });
+          if (isMounted) {
+            setIsAdmin(Boolean(data) || user!.email?.toLowerCase() === 'tungariyarahul08@gmail.com');
+          }
+        } else if (isMounted) {
+          setIsAdmin(user!.email?.toLowerCase() === 'tungariyarahul08@gmail.com');
+        }
+      } catch {
+        if (isMounted) {
+          setIsAdmin(user!.email?.toLowerCase() === 'tungariyarahul08@gmail.com');
+        }
+      }
+    }
+    checkAdmin();
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   // Check waitlist status and remaining seats on mount and when auth state changes
   useEffect(() => {

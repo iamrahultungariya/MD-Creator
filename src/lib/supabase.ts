@@ -19,26 +19,11 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured()
   : null;
 
 /**
- * Checks if an email is already registered in Supabase public.profiles table.
+ * Checks if an email is registered.
+ * Deprecated to prevent email enumeration attacks; Supabase Auth validates duplicates securely during signUp.
  */
-export async function checkEmailExists(email: string): Promise<boolean> {
-  if (!supabase) return false;
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('email')
-      .ilike('email', email.trim().toLowerCase())
-      .maybeSingle();
-
-    if (error) {
-      console.warn('[Supabase Auth] Email check warning:', error.message);
-      return false;
-    }
-    return Boolean(data);
-  } catch (err) {
-    console.warn('[Supabase Auth] Failed to check email existence:', err);
-    return false;
-  }
+export async function checkEmailExists(_email: string): Promise<boolean> {
+  return false;
 }
 
 /**
@@ -57,7 +42,7 @@ export async function isUserProForSync(): Promise<boolean> {
     }
 
     const userEmail = session.user.email?.toLowerCase();
-    if (userEmail === 'tungariyarahul08@gmail.com' || userEmail === 'tungariyarahul08@gamil.com') {
+    if (userEmail === 'tungariyarahul08@gmail.com') {
       return true;
     }
 

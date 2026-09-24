@@ -181,6 +181,8 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
         html: katex.renderToString(latex.trim() || 'f(x)', {
           displayMode,
           throwOnError: false,
+          trust: false,
+          strict: 'warn',
         }),
         error: null,
       };

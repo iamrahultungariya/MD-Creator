@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { useWritingFxStore, TypingEffect } from '../../stores/useWritingFxStore';
+import { CodeMirrorEditorHandle } from '../../features/editor/components/CodeMirrorEditor';
 
 interface EditorWritingFxProps {
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
+  editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
 }
 
 // Fixed-capacity Particle Pool (Zero GC Pressure, Zero Allocation during typing)
@@ -143,7 +145,7 @@ function measureCaret(textarea: HTMLTextAreaElement): { x: number; y: number; he
   return { x, y, height, isInside };
 }
 
-export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef }) => {
+export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef, editorRef }) => {
   const { cursorStyle, typingEffect, lowPowerMode } = useWritingFxStore();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cursorRef = useRef<HTMLDivElement | null>(null);
@@ -177,11 +179,28 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
 
   // Direct DOM cursor positioning (Bypasses React rerenders completely)
   const updateCursorDirect = () => {
-    const textarea = textareaRef.current;
     const cursor = cursorRef.current;
-    if (!textarea || !cursor) return;
+    if (!cursor) return;
 
     if (cursorStyle === 'default' || !isFocusedRef.current) {
+      cursor.style.display = 'none';
+      return;
+    }
+
+    if (editorRef?.current) {
+      const coords = editorRef.current.getCaretCoords();
+      if (!coords) {
+        cursor.style.display = 'none';
+        return;
+      }
+      cursor.style.display = 'block';
+      cursor.style.transform = `translate3d(${Math.round(coords.left)}px, ${Math.round(coords.top)}px, 0)`;
+      cursor.style.height = `${Math.round(Math.max(16, coords.bottom - coords.top))}px`;
+      return;
+    }
+
+    const textarea = textareaRef?.current;
+    if (!textarea) {
       cursor.style.display = 'none';
       return;
     }
@@ -350,14 +369,16 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
 
   // Setup listeners and sync
   useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+    const cmDom = editorRef?.current?.getDOMNode() || (document.querySelector('.cm-editor') as HTMLElement | null);
+    const textarea = textareaRef?.current;
+    const targetEl = cmDom || textarea;
 
-    // Set caretColor based on custom cursor style
-    textarea.style.caretColor = cursorStyle === 'default' ? 'auto' : 'transparent';
+    if (!targetEl) return;
 
-    // Sync mirror metrics once
-    syncMirrorStyles(textarea);
+    if (textarea) {
+      textarea.style.caretColor = cursorStyle === 'default' ? 'auto' : 'transparent';
+      syncMirrorStyles(textarea);
+    }
 
     // High-DPI Canvas sizing
     const resizeCanvas = () => {
@@ -372,19 +393,19 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
       if (ctx) {
         ctx.scale(dpr, dpr);
       }
-      syncMirrorStyles(textarea);
+      if (textarea) syncMirrorStyles(textarea);
       updateCursorDirect();
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, { passive: true });
 
-    // ResizeObserver for textarea dimension changes
+    // ResizeObserver for dimension changes
     const ro = new ResizeObserver(() => {
-      syncMirrorStyles(textarea);
+      if (textarea) syncMirrorStyles(textarea);
       updateCursorDirect();
     });
-    ro.observe(textarea);
+    ro.observe(targetEl);
 
     const onFocus = () => {
       isFocusedRef.current = true;
@@ -397,15 +418,25 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      updateCursorDirect();
-
       if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        updateCursorDirect();
         return;
       }
 
-      const { x, y, height, isInside } = measureCaret(textarea);
-      if (isInside) {
-        emitParticlesAt(x, y + height / 2);
+      if (editorRef?.current) {
+        requestAnimationFrame(() => {
+          updateCursorDirect();
+          const coords = editorRef.current?.getCaretCoords();
+          if (coords) {
+            emitParticlesAt(coords.left, (coords.top + coords.bottom) / 2);
+          }
+        });
+      } else if (textarea) {
+        updateCursorDirect();
+        const { x, y, height, isInside } = measureCaret(textarea);
+        if (isInside) {
+          emitParticlesAt(x, y + height / 2);
+        }
       }
     };
 
@@ -422,13 +453,13 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
       });
     };
 
-    textarea.addEventListener('focus', onFocus, { passive: true });
-    textarea.addEventListener('blur', onBlur, { passive: true });
-    textarea.addEventListener('keydown', onKeyDown, { passive: true });
-    textarea.addEventListener('input', onSelection, { passive: true });
-    textarea.addEventListener('click', onSelection, { passive: true });
-    textarea.addEventListener('keyup', onSelection, { passive: true });
-    textarea.addEventListener('scroll', onScrollThrottled, { passive: true });
+    targetEl.addEventListener('focus', onFocus, { passive: true, capture: true });
+    targetEl.addEventListener('blur', onBlur, { passive: true, capture: true });
+    targetEl.addEventListener('keydown', onKeyDown as EventListener, { passive: true });
+    targetEl.addEventListener('input', onSelection, { passive: true });
+    targetEl.addEventListener('click', onSelection, { passive: true });
+    targetEl.addEventListener('keyup', onSelection, { passive: true });
+    targetEl.addEventListener('scroll', onScrollThrottled, { passive: true });
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
@@ -436,20 +467,20 @@ export const EditorWritingFx: React.FC<EditorWritingFxProps> = ({ textareaRef })
       if (scrollRafId !== null) {
         cancelAnimationFrame(scrollRafId);
       }
-      textarea.removeEventListener('focus', onFocus);
-      textarea.removeEventListener('blur', onBlur);
-      textarea.removeEventListener('keydown', onKeyDown);
-      textarea.removeEventListener('input', onSelection);
-      textarea.removeEventListener('click', onSelection);
-      textarea.removeEventListener('keyup', onSelection);
-      textarea.removeEventListener('scroll', onScrollThrottled);
+      targetEl.removeEventListener('focus', onFocus, { capture: true });
+      targetEl.removeEventListener('blur', onBlur, { capture: true });
+      targetEl.removeEventListener('keydown', onKeyDown as EventListener);
+      targetEl.removeEventListener('input', onSelection);
+      targetEl.removeEventListener('click', onSelection);
+      targetEl.removeEventListener('keyup', onSelection);
+      targetEl.removeEventListener('scroll', onScrollThrottled);
 
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
       }
     };
-  }, [textareaRef, cursorStyle, typingEffect, lowPowerMode]);
+  }, [textareaRef, editorRef, cursorStyle, typingEffect, lowPowerMode]);
 
   const getCursorClass = () => {
     switch (cursorStyle) {

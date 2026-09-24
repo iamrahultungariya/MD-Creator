@@ -25,7 +25,8 @@ import {
   FileDown,
   Printer,
   Sliders,
-  Sparkles
+  CheckCheck,
+  Command
 } from 'lucide-react';
 
 export interface CommandItem {
@@ -42,7 +43,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'clean-markdown',
     title: 'Clean & Format Markdown',
     description: 'Repair fragmented lines, clean metrics & normalize spacing',
-    icon: Sparkles,
+    icon: CheckCheck,
     shortcut: '/clean',
     insertSnippet: '__ACTION_CLEAN_FORMAT__'
   },
@@ -310,8 +311,8 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
       {/* Top Identity Header (Styled like the reference card avatar + identity) */}
       <div className="flex items-center justify-between pb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200 shadow-inner">
-            <Sparkles className="w-5 h-5 text-amber-500" />
+          <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60">
+            <Command className="w-4 h-4" />
           </div>
           <div>
             <h3 className="font-bold text-sm text-neutral-950 dark:text-white leading-tight">

@@ -5,15 +5,21 @@ import { optimizeImage, CompressionOptions } from '../utils/imageCompressor';
 const inMemoryImageCache = new Map<string, string>();
 
 /**
- * Generates a short, collision-resistant image ID strictly under 10 characters.
- * Format: "img_" + 5 alphanumeric characters (total length = 9 chars).
- * Example: "img_a8f2q"
+ * Generates a collision-resistant image ID using cryptographic randomness.
+ * Format: "img_" + 12 alphanumeric characters.
+ * Example: "img_k9x2m4p8w1q7"
  */
 export function generateShortImageId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const array = new Uint8Array(12);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(array);
+  } else {
+    for (let i = 0; i < 12; i++) array[i] = Math.floor(Math.random() * 256);
+  }
   let rand = '';
-  for (let i = 0; i < 5; i++) {
-    rand += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 12; i++) {
+    rand += chars[array[i] % chars.length];
   }
   return `img_${rand}`;
 }
@@ -21,15 +27,15 @@ export function generateShortImageId(): string {
 export interface StoredImageResult {
   id: string;
   name: string;
-  shortUrl: string; // e.g. "image://img_a8f2q"
-  markdownTag: string; // e.g. "![My Photo](image://img_a8f2q)"
+  shortUrl: string; // e.g. "image://img_k9x2m4p8w1q7"
+  markdownTag: string; // e.g. "![My Photo](image://img_k9x2m4p8w1q7)"
   dataUrl: string;
   sizeBytes: number;
 }
 
 /**
  * Compresses an image and stores it locally in Dexie IndexedDB.
- * Returns a short image identifier (< 10 chars) and clean markdown tag,
+ * Returns a short image identifier and clean markdown tag,
  * avoiding polluting the markdown text with 500+ lines of raw Base64.
  */
 export async function storeOptimizedImage(
@@ -42,7 +48,16 @@ export async function storeOptimizedImage(
 
   // Compress using client-side canvas WebP optimizer
   const compressionResult = await optimizeImage(fileOrBlob, name, options);
-  const id = generateShortImageId();
+  
+  // Generate unique collision-checked ID
+  let id = generateShortImageId();
+  try {
+    let attempts = 0;
+    while (attempts < 5 && (await db.images.get(id))) {
+      id = generateShortImageId();
+      attempts++;
+    }
+  } catch {}
 
   const record: StoredImage = {
     id,

@@ -17,12 +17,10 @@ import { cleanAndNormalizeMarkdown } from '../utils/markdownSanitizer';
 import { useDuplicateDocument } from '../hooks/useDocuments';
 import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
 import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
-import { fastCountLines } from '../utils/textCounters';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editorRef = useRef<CodeMirrorEditorHandle>(null);
   const duplicateDocMutation = useDuplicateDocument();
 
@@ -45,7 +43,6 @@ export const EditorPage: React.FC = () => {
   const doc = useEditorDocument({
     routeDocId: id,
     onToast: showToast,
-    textareaRef,
     editorRef,
   });
 
@@ -57,41 +54,10 @@ export const EditorPage: React.FC = () => {
     },
   });
 
-  // Track cursor position telemetry with single-pass character scan (zero string allocation)
-  const updateCursorPosition = useCallback(() => {
-    if (!textareaRef.current) return;
-    const pos = textareaRef.current.selectionStart;
-    const text = textareaRef.current.value;
-    let line = 1;
-    let lastNewline = -1;
-    for (let i = 0; i < pos; i++) {
-      if (text.charCodeAt(i) === 10) {
-        line++;
-        lastNewline = i;
-      }
-    }
-    const col = pos - lastNewline;
-    setCursorPos({ line, col });
+  // Real-time cursor telemetry received directly from CodeMirror
+  const handleCursorChange = useCallback((pos: { line: number; col: number }) => {
+    setCursorPos({ line: pos.line, col: pos.col });
   }, []);
-
-  // Smooth vertical centering for Typewriter mode (only triggered when typing / editing)
-  const performTypewriterCentering = useCallback(() => {
-    if (!modals.isTypewriterMode || !textareaRef.current) return;
-    const text = textareaRef.current.value;
-    const pos = textareaRef.current.selectionStart;
-    let currentLine = 1;
-    for (let i = 0; i < pos; i++) {
-      if (text.charCodeAt(i) === 10) currentLine++;
-    }
-    const totalLines = fastCountLines(text);
-    const scrollRatio = (currentLine - 1) / Math.max(1, totalLines);
-    const targetScroll = scrollRatio * textareaRef.current.scrollHeight - textareaRef.current.clientHeight / 2 + 30;
-
-    textareaRef.current.scrollTo({
-      top: Math.max(0, targetScroll),
-      behavior: 'smooth'
-    });
-  }, [modals.isTypewriterMode]);
 
   // Slash commands palette and shortcut injection hook
   const slash = useSlashCommands({
@@ -99,9 +65,7 @@ export const EditorPage: React.FC = () => {
     setContent: doc.setContent,
     executeSave: doc.executeSave,
     title: doc.title,
-    textareaRef,
     editorRef,
-    updateCursorPosition,
     onOpenTableBuilder: () => modals.setIsTableBuilderOpen(true),
     onOpenTemplates: () => modals.setIsTemplatesOpen(true),
     onOpenMathStudio: () => modals.setIsMathStudioOpen(true),
@@ -170,25 +134,10 @@ export const EditorPage: React.FC = () => {
         showToast('✨ Inserted KaTeX formula');
         return;
       }
-      if (!textareaRef.current) {
-        const next = doc.content + '\n\n' + latexSnippet + '\n';
-        doc.setContent(next);
-        doc.executeSave(next, doc.title);
-        showToast('✨ Inserted KaTeX formula');
-        return;
-      }
-      const cursor = textareaRef.current.selectionStart;
-      const before = doc.content.substring(0, cursor);
-      const after = doc.content.substring(cursor);
-      const sepBefore = before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
-      const sepAfter = after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
-      const next = before + sepBefore + latexSnippet + sepAfter + after;
+      const next = doc.content + '\n\n' + latexSnippet + '\n';
       doc.setContent(next);
       doc.executeSave(next, doc.title);
       showToast('✨ Inserted KaTeX formula');
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 50);
     },
     [doc, showToast]
   );
@@ -204,40 +153,12 @@ export const EditorPage: React.FC = () => {
         showToast('🖼️ Embedded image');
         return;
       }
-      if (!textareaRef.current) {
-        const next = doc.content + '\n\n' + imageSnippet.trim() + '\n';
-        doc.setContent(next);
-        doc.executeSave(next, doc.title);
-        showToast('🖼️ Embedded image');
-        return;
-      }
-      const cursor = textareaRef.current.selectionStart;
-      const before = doc.content.substring(0, cursor);
-      const after = doc.content.substring(cursor);
-      const sepBefore = before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
-      const sepAfter = after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
-      const next = before + sepBefore + imageSnippet.trim() + sepAfter + after;
+      const next = doc.content + '\n\n' + imageSnippet.trim() + '\n';
       doc.setContent(next);
       doc.executeSave(next, doc.title);
       showToast('🖼️ Embedded image');
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 50);
     },
     [doc, showToast]
-  );
-
-  // Content change handler combining slash trigger detection and debounced auto-save
-  const handleContentChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const val = e.target.value;
-      doc.setContent(val);
-      updateCursorPosition();
-      performTypewriterCentering();
-      slash.checkSlashTrigger(val, e.target.selectionStart);
-      doc.queueAutoSave(val, doc.title);
-    },
-    [doc, updateCursorPosition, performTypewriterCentering, slash]
   );
 
   // Jump to heading from Document Outline with smooth transfer & glow highlight
@@ -246,30 +167,9 @@ export const EditorPage: React.FC = () => {
       if (editorRef.current) {
         editorRef.current.scrollToLine(heading.lineIndex);
         editorRef.current.focus();
-      } else if (textareaRef.current) {
-        const lines = doc.content.split('\n');
-        let charOffset = 0;
-        for (let i = 0; i < heading.lineIndex && i < lines.length; i++) {
-          charOffset += lines[i].length + 1;
-        }
-        const lineText = lines[heading.lineIndex] || '';
-
-        // 1. Textarea alignment: Smooth scroll to target line position
-        const totalLines = Math.max(1, lines.length);
-        const scrollRatio = heading.lineIndex / totalLines;
-        const targetScroll = scrollRatio * textareaRef.current.scrollHeight - 80;
-        textareaRef.current.scrollTo({
-          top: Math.max(0, targetScroll),
-          behavior: 'smooth'
-        });
-
-        // 2. Select heading in textarea
-        textareaRef.current.focus();
-        textareaRef.current.setSelectionRange(charOffset, charOffset + lineText.length);
-        updateCursorPosition();
       }
 
-      // 3. Preview pane alignment: Smooth scroll & visual glow
+      // Preview pane alignment: Smooth scroll & visual glow
       const slug = heading.text
         .toLowerCase()
         .trim()
@@ -286,7 +186,7 @@ export const EditorPage: React.FC = () => {
         targetHeadingEl.classList.add('heading-flash-highlight');
       }
     },
-    [doc.content, updateCursorPosition]
+    []
   );
 
   // Global Keyboard Shortcuts (Ctrl+O, Ctrl+E, Ctrl+S, Ctrl+F, Esc)
@@ -408,11 +308,9 @@ export const EditorPage: React.FC = () => {
         setViewMode={setViewMode}
         content={doc.content}
         lineCount={stats.lines}
-        textareaRef={textareaRef}
-        onContentChange={handleContentChange}
-        onTextareaKeyDown={slash.handleTextareaKeyDown}
         onKeyDown={slash.handleSlashKeyDown}
-        onCursorEvent={updateCursorPosition}
+        onCursorEvent={handleCursorChange}
+        onSlashTrigger={slash.handleSlashTrigger}
         isSlashMenuOpen={slash.isSlashMenuOpen}
         setIsSlashMenuOpen={slash.setIsSlashMenuOpen}
         slashSelectedIndex={slash.slashSelectedIndex}

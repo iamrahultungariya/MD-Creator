@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase, isSupabaseConfigured, checkEmailExists, syncAllDocuments } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, syncAllDocuments } from '../lib/supabase';
 
 export interface UserProfile {
   id: string;
@@ -20,7 +20,7 @@ export const isHolidayFreeProActive = (): boolean => {
 export const isLifetimeProEmail = (email?: string | null): boolean => {
   if (!email) return false;
   const clean = email.trim().toLowerCase();
-  return clean === 'tungariyarahul08@gmail.com' || clean === 'tungariyarahul08@gamil.com';
+  return clean === 'tungariyarahul08@gmail.com';
 };
 
 export const isUserPro = (user?: UserProfile | null): boolean => {
@@ -220,15 +220,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const isPromo = isHolidayFreeProActive();
 
     if (isSupabaseConfigured() && supabase) {
-      // 1. Explicit check if email already exists in profiles
-      const exists = await checkEmailExists(cleanEmail);
-      if (exists) {
-        const msg = 'An account with this email address already exists. Please sign in instead.';
-        set({ error: msg, isLoading: false });
-        return { success: false, error: msg };
-      }
-
-      // 2. Perform Supabase auth registration
+      // 1. Perform Supabase auth registration (duplicate email handled natively)
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,

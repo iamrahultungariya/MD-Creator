@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
+import { FloatingFormattingDock, FormatAction, DockCoords } from './FloatingFormattingDock';
 
 interface WritingModeCanvasProps {
   title: string;
@@ -38,6 +39,7 @@ interface WritingModeCanvasProps {
   slashQuery: string;
   onInsertSnippet: (snippet: string) => void;
   onKeyDown?: (e: KeyboardEvent) => boolean | void;
+  onSlashTrigger?: (query: string, pos: number) => void;
 }
 
 export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
@@ -67,53 +69,289 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
   slashSelectedIndex,
   slashQuery,
   onInsertSnippet,
+  onSlashTrigger,
 }) => {
-  const [isTypingActive, setIsTypingActive] = useState(false);
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Quick Formatting Toolbar visibility & cursor-anchored positioning:
+  // When user is typing or moving cursor, it completely disappears immediately.
+  // After 500ms of stopping on cursor/typing, it smoothly appears directly above the cursor/caret.
+  // After 2 seconds (2000ms) of appearing, if user is not typing or interacting, it automatically disappears.
+  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const [dockCoords, setDockCoords] = useState<DockCoords | null>(null);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-fade dock while actively writing
+  const scheduleAutoDismiss = useCallback(() => {
+    if (autoDismissTimerRef.current) {
+      clearTimeout(autoDismissTimerRef.current);
+    }
+    autoDismissTimerRef.current = setTimeout(() => {
+      setIsToolbarVisible(false);
+    }, 2000);
+  }, []);
+
+  const updateDockPosition = useCallback(() => {
+    // If title input is currently focused, do not position toolbar over editor
+    if (document.activeElement === titleInputRef.current) {
+      setIsToolbarVisible(false);
+      return;
+    }
+
+    const caretCoords = editorRef?.current?.getCaretCoords();
+    if (!caretCoords) {
+      setIsToolbarVisible(false);
+      return;
+    }
+
+    // Check if cursor is within visible viewport (not scrolled off screen)
+    if (caretCoords.bottom < 40 || caretCoords.top > window.innerHeight - 40) {
+      setIsToolbarVisible(false);
+      return;
+    }
+
+    const DOCK_HALF_WIDTH = 165;
+    const MARGIN = 12;
+    let clampedLeft = caretCoords.left;
+    if (window.innerWidth <= (DOCK_HALF_WIDTH + MARGIN) * 2) {
+      clampedLeft = window.innerWidth / 2;
+    } else {
+      clampedLeft = Math.max(
+        DOCK_HALF_WIDTH + MARGIN,
+        Math.min(caretCoords.left, window.innerWidth - DOCK_HALF_WIDTH - MARGIN)
+      );
+    }
+
+    const placement: 'top' | 'bottom' = caretCoords.top < 70 ? 'bottom' : 'top';
+    const clampedTop = placement === 'bottom' ? caretCoords.bottom + 8 : caretCoords.top - 8;
+
+    setDockCoords({
+      left: Math.round(clampedLeft),
+      top: Math.round(clampedTop),
+      placement,
+    });
+    setIsToolbarVisible(true);
+
+    // Automatically disappear 2 seconds after appearing if user is not typing
+    scheduleAutoDismiss();
+  }, [editorRef, scheduleAutoDismiss]);
+
+  const notifyUserActivity = useCallback(() => {
+    // Instantly hide the toolbar upon any typing or cursor action
+    setIsToolbarVisible(false);
+
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    if (autoDismissTimerRef.current) {
+      clearTimeout(autoDismissTimerRef.current);
+    }
+
+    // Smoothly appear after 500ms stop on cursor
+    idleTimerRef.current = setTimeout(() => {
+      updateDockPosition();
+    }, 500);
+  }, [updateDockPosition]);
+
+  // Pause auto-dismiss when hovering over the dock so the user can click actions freely
+  const handleDockMouseEnter = useCallback(() => {
+    if (autoDismissTimerRef.current) {
+      clearTimeout(autoDismissTimerRef.current);
+    }
+  }, []);
+
+  const handleDockMouseLeave = useCallback(() => {
+    scheduleAutoDismiss();
+  }, [scheduleAutoDismiss]);
+
+  // Auto-fade dock & trigger 500ms idle timer
   const handleContentChange = useCallback(
     (newVal: string) => {
       setContent(newVal);
       queueAutoSave(newVal, title);
-
-      setIsTypingActive(true);
-      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-      typingTimerRef.current = setTimeout(() => {
-        setIsTypingActive(false);
-      }, 1800);
+      notifyUserActivity();
     },
-    [setContent, queueAutoSave, title]
+    [setContent, queueAutoSave, title, notifyUserActivity]
+  );
+
+  const handleEditorKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      notifyUserActivity();
+      if (onKeyDown) {
+        return onKeyDown(e);
+      }
+    },
+    [notifyUserActivity, onKeyDown]
   );
 
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    notifyUserActivity();
     if (e.key === 'Enter') {
       e.preventDefault();
       editorRef?.current?.focus();
     }
   };
 
-  const handleSlashTrigger = (_query: string) => {
-    // If slash typed, open slash menu
-    setIsSlashMenuOpen(true);
-  };
+  // Robust slash trigger handler that respects pos === -1 to close the menu
+  const handleSlashTrigger = useCallback(
+    (query: string, pos: number) => {
+      if (onSlashTrigger) {
+        onSlashTrigger(query, pos);
+      } else {
+        if (pos === -1 || (!query && pos < 0)) {
+          setIsSlashMenuOpen(false);
+        } else {
+          setIsSlashMenuOpen(true);
+        }
+      }
+    },
+    [onSlashTrigger, setIsSlashMenuOpen]
+  );
+
+  // Minimal Floating Formatting Dock actions
+  const handleFormat = useCallback(
+    (action: FormatAction) => {
+      const ed = editorRef?.current;
+      if (!ed) return;
+
+      const selection = ed.getSelection();
+      const hasSelection = selection.length > 0;
+
+      switch (action) {
+        case 'bold': {
+          if (hasSelection) {
+            ed.replaceSelection(`**${selection}**`);
+          } else {
+            ed.replaceSelection('****');
+            const start = ed.getSelectionStart();
+            ed.setCursor(start - 2);
+          }
+          break;
+        }
+        case 'italic': {
+          if (hasSelection) {
+            ed.replaceSelection(`*${selection}*`);
+          } else {
+            ed.replaceSelection('**');
+            const start = ed.getSelectionStart();
+            ed.setCursor(start - 1);
+          }
+          break;
+        }
+        case 'strike': {
+          if (hasSelection) {
+            ed.replaceSelection(`~~${selection}~~`);
+          } else {
+            ed.replaceSelection('~~~~');
+            const start = ed.getSelectionStart();
+            ed.setCursor(start - 2);
+          }
+          break;
+        }
+        case 'code': {
+          if (hasSelection) {
+            if (selection.includes('\n')) {
+              ed.replaceSelection(`\n\`\`\`\n${selection}\n\`\`\`\n`);
+            } else {
+              ed.replaceSelection(`\`${selection}\``);
+            }
+          } else {
+            ed.replaceSelection('``');
+            const start = ed.getSelectionStart();
+            ed.setCursor(start - 1);
+          }
+          break;
+        }
+        case 'link': {
+          if (hasSelection) {
+            ed.replaceSelection(`[${selection}](https://)`);
+          } else {
+            ed.replaceSelection('[link](https://)');
+          }
+          break;
+        }
+        case 'bullet': {
+          if (hasSelection) {
+            const formatted = selection
+              .split('\n')
+              .map((line) => (line.startsWith('- ') ? line.slice(2) : `- ${line}`))
+              .join('\n');
+            ed.replaceSelection(formatted);
+          } else {
+            ed.replaceSelection('\n- ');
+          }
+          break;
+        }
+        case 'ordered': {
+          if (hasSelection) {
+            let count = 1;
+            const formatted = selection
+              .split('\n')
+              .map((line) => `${count++}. ${line.replace(/^\d+\.\s*/, '')}`)
+              .join('\n');
+            ed.replaceSelection(formatted);
+          } else {
+            ed.replaceSelection('\n1. ');
+          }
+          break;
+        }
+        case 'quote': {
+          if (hasSelection) {
+            const formatted = selection
+              .split('\n')
+              .map((line) => (line.startsWith('> ') ? line.slice(2) : `> ${line}`))
+              .join('\n');
+            ed.replaceSelection(formatted);
+          } else {
+            ed.replaceSelection('\n> ');
+          }
+          break;
+        }
+      }
+
+      ed.focus();
+    },
+    [editorRef]
+  );
 
   useEffect(() => {
+    // Position toolbar near initial cursor after editor mount
+    const initialTimer = setTimeout(() => {
+      updateDockPosition();
+    }, 600);
+
     return () => {
-      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      clearTimeout(initialTimer);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
     };
-  }, []);
+  }, [updateDockPosition]);
 
   return (
     <div className="relative flex-1 flex flex-col h-full bg-[#fdfdfd] dark:bg-[#111114] text-neutral-800 dark:text-neutral-100 transition-colors overflow-hidden select-text">
-      {/* Integrated Document Title Header (Notion / Craft style) */}
-      <div className="w-full max-w-3xl mx-auto px-6 sm:px-12 pt-8 sm:pt-10 pb-2 shrink-0">
+      {/* Floating Minimal Formatting Dock Anchored at Cursor Coordinates */}
+      <FloatingFormattingDock 
+        onFormat={handleFormat} 
+        isVisible={isToolbarVisible} 
+        coords={dockCoords} 
+        onMouseEnter={handleDockMouseEnter}
+        onMouseLeave={handleDockMouseLeave}
+      />
+
+      {/* Integrated Document Title Header with Generous Screen Spacing */}
+      <div className="w-full max-w-4xl mx-auto px-6 sm:px-12 md:px-16 pt-16 sm:pt-20 pb-3 shrink-0">
         <input
           ref={titleInputRef}
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            notifyUserActivity();
+          }}
+          onFocus={() => {
+            setIsToolbarVisible(false);
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+            if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
+          }}
           onKeyDown={handleTitleKeyDown}
           onBlur={() => executeSave(content, title)}
           placeholder="Untitled Document..."
@@ -121,19 +359,24 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
         />
       </div>
 
-      {/* CodeMirror 6 Virtualized Document Writing Area */}
-      <div className="flex-1 w-full max-w-3xl mx-auto px-6 sm:px-12 pb-20 overflow-hidden relative">
+      {/* CodeMirror 6 Virtualized Document Writing Area with Dimmed Line Numbers */}
+      <div 
+        onPointerDown={notifyUserActivity}
+        className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-10 md:px-14 pb-24 overflow-hidden relative"
+      >
         <CodeMirrorEditor
           value={content}
           onChange={handleContentChange}
+          onCursorChange={notifyUserActivity}
+          onScroll={notifyUserActivity}
           onSlashTrigger={handleSlashTrigger}
           isTypewriterMode={isTypewriterMode}
-          showLineNumbers={false} // Clean paper feel for writers!
+          showLineNumbers={true} // Clean dimmed paper line numbers per redesign mockup
           placeholder="Write your thoughts, ideas, specs or story... (Type / for quick actions)"
           onPasteImage={onPasteImage}
           onDropImage={onDropImage}
           editorRef={editorRef}
-          onKeyDown={onKeyDown}
+          onKeyDown={handleEditorKeyDown}
           className="h-full w-full"
           autoFocus
         />
@@ -156,7 +399,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
       {/* Floating Ambient Writer Dock (Bottom Pill) */}
       <div 
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-300 pointer-events-auto ${
-          isTypingActive ? 'opacity-25 hover:opacity-100' : 'opacity-100'
+          !isToolbarVisible ? 'opacity-25 hover:opacity-100' : 'opacity-100'
         }`}
       >
         <div className="flex items-center gap-2 sm:gap-3 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-xl text-xs select-none">

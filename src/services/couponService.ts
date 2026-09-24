@@ -130,8 +130,8 @@ export async function checkUserWaitlistStatus(userId?: string | null, email?: st
   }
 
   try {
-    // 2. Call the Supabase RPC helper
-    const { data, error } = await supabase.rpc('check_user_waitlist_status', { p_user_id: userId });
+    // 2. Call the hardened Supabase RPC helper (uses auth session directly)
+    const { data, error } = await supabase.rpc('check_user_waitlist_status');
     if (!error && data) {
       const result: WaitlistStatus = {
         hasJoined: Boolean(data.has_joined),
@@ -248,48 +248,48 @@ function generateCouponCode(): string {
  * Registers an authenticated user for the Earlybird waitlist and issues a unique coupon code.
  */
 export async function joinEarlybirdWaitlist(
-  userId: string,
+  _userId: string,
   email: string
 ): Promise<{ success: boolean; couponCode?: string; error?: string }> {
-  const couponCode = generateCouponCode();
-  // 6 months expiration post-launch as recommended
-  const expiresAt = new Date();
-  expiresAt.setMonth(expiresAt.getMonth() + 6);
-
+  // 1. If Supabase is configured, use secure server-side atomic procedure
   if (isSupabaseConfigured() && supabase) {
     try {
-      // 1. Insert into coupon_redemptions
-      const { error: couponError } = await supabase.from('coupon_redemptions').insert([
-        {
-          coupon_code: couponCode,
-          user_id: userId,
-          status: 'unused',
-          expires_at: expiresAt.toISOString()
-        }
-      ]);
+      const { data, error } = await supabase.rpc('join_waitlist');
 
-      if (couponError) {
-        // If already registered
-        if (couponError.message.toLowerCase().includes('duplicate') || couponError.code === '23505') {
-          const existing = await checkUserWaitlistStatus(userId, email);
-          if (existing.hasJoined && existing.couponCode) {
-            return { success: true, couponCode: existing.couponCode };
-          }
-        }
-        console.warn('[Coupon] Creation warning:', couponError.message);
+      if (error) {
+        return { success: false, error: error.message };
       }
 
-      // 2. Also register in waitlist admin ledger
-      await supabase.from('waitlist').upsert([
-        { email, plan: 'pro', created_at: new Date().toISOString() }
-      ], { onConflict: 'email' });
+      if (!data?.success) {
+        return { success: false, error: data?.error || 'Failed to claim waitlist spot.' };
+      }
 
-    } catch (err) {
-      console.warn('[Coupon] Registration error, persisting locally:', err);
+      const assignedCode = data.coupon_code;
+      const expiresAt = data.expires_at || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
+
+      const status: WaitlistStatus = {
+        hasJoined: true,
+        couponCode: assignedCode,
+        status: data.status || 'unused',
+        expiresAt
+      };
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(status));
+        localStorage.setItem('mdwriter_waitlist_email', email);
+      }
+
+      return { success: true, couponCode: assignedCode };
+    } catch (err: any) {
+      console.warn('[Coupon] RPC error, falling back:', err);
     }
   }
 
-  // Save to local storage cache so user never sees the join form again
+  // 2. Offline simulation fallback
+  const couponCode = generateCouponCode();
+  const expiresAt = new Date();
+  expiresAt.setMonth(expiresAt.getMonth() + 6);
+
   const status: WaitlistStatus = {
     hasJoined: true,
     couponCode,

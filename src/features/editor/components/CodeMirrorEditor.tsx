@@ -6,12 +6,16 @@ import {
   highlightActiveLine, 
   keymap,
   placeholder as cmPlaceholder,
+  drawSelection,
   ViewUpdate
 } from '@codemirror/view';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { bracketMatching, indentOnInput } from '@codemirror/language';
+import { closeBrackets } from '@codemirror/autocomplete';
 import { useThemeStore } from '../../../stores/useThemeStore';
+import { getThemeExtensions, getTypewriterPaddingTheme } from '../utils/codeMirrorThemes';
 
 export interface CodeMirrorEditorHandle {
   focus: () => void;
@@ -28,6 +32,7 @@ export interface CodeMirrorEditorHandle {
   getScrollDOM: () => HTMLElement | null;
   scrollToRatio: (ratio: number) => void;
   getScrollRatio: () => number;
+  getCaretCoords: () => { left: number; top: number; bottom: number } | null;
   flush: () => void;
 }
 
@@ -212,6 +217,32 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         const maxScroll = scrollDOM.scrollHeight - scrollDOM.clientHeight;
         return maxScroll > 0 ? scrollDOM.scrollTop / maxScroll : 0;
       },
+      getCaretCoords: () => {
+        if (!viewRef.current) return null;
+        try {
+          const sel = viewRef.current.state.selection.main;
+          if (!sel.empty) {
+            const startCoords = viewRef.current.coordsAtPos(sel.from) || viewRef.current.coordsAtPos(sel.from, 1);
+            const endCoords = viewRef.current.coordsAtPos(sel.to) || viewRef.current.coordsAtPos(sel.to, -1);
+            if (startCoords) {
+              const left =
+                endCoords && Math.abs(startCoords.top - endCoords.top) < 10
+                  ? (startCoords.left + endCoords.left) / 2
+                  : startCoords.left;
+              return {
+                left,
+                top: startCoords.top,
+                bottom: endCoords ? Math.max(startCoords.bottom, endCoords.bottom) : startCoords.bottom,
+              };
+            }
+          }
+          const head = sel.head;
+          const coords = viewRef.current.coordsAtPos(head) || viewRef.current.coordsAtPos(head, -1);
+          return coords ? { left: coords.left, top: coords.top, bottom: coords.bottom } : null;
+        } catch {
+          return null;
+        }
+      },
     }),
     []
   );
@@ -219,76 +250,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   // Initialize CodeMirror instance
   useEffect(() => {
     if (!containerRef.current) return;
-
-    // Document styling theme: modern document writing feel (prose, generous breathing space, soft caret)
-    const proseTheme = EditorView.theme({
-      '&': {
-        height: '100%',
-        fontSize: '15px',
-        fontFamily: 'var(--font-sans)',
-      },
-      '.cm-scroller': {
-        fontFamily: 'inherit',
-        lineHeight: '1.8',
-        padding: '0',
-      },
-      '.cm-content': {
-        caretColor: '#2563eb',
-        padding: '24px 20px',
-        minHeight: '100%',
-      },
-      '&.cm-focused': {
-        outline: 'none !important',
-      },
-      '.cm-line': {
-        padding: '0 2px',
-      },
-      '.cm-cursor': {
-        borderLeftColor: '#2563eb',
-        borderLeftWidth: '2.5px',
-      },
-      '&.cm-focused .cm-selectionBackground, ::selection': {
-        backgroundColor: 'rgba(59, 130, 246, 0.22) !important',
-      },
-      '.cm-activeLine': {
-        backgroundColor: 'transparent',
-      },
-      '.cm-gutters': {
-        backgroundColor: 'transparent',
-        borderRight: 'none',
-        color: '#9ca3af',
-        fontFamily: 'var(--font-mono)',
-        fontSize: '11px',
-        paddingRight: '12px',
-        userSelect: 'none',
-      },
-      '.cm-activeLineGutter': {
-        backgroundColor: 'transparent',
-        color: '#2563eb',
-        fontWeight: 'bold',
-      },
-    });
-
-    const darkProseTheme = EditorView.theme(
-      {
-        '.cm-content': {
-          caretColor: '#60a5fa',
-        },
-        '.cm-cursor': {
-          borderLeftColor: '#60a5fa',
-        },
-        '&.cm-focused .cm-selectionBackground, ::selection': {
-          backgroundColor: 'rgba(96, 165, 250, 0.25) !important',
-        },
-        '.cm-gutters': {
-          color: '#6b7280',
-        },
-        '.cm-activeLineGutter': {
-          color: '#60a5fa',
-        },
-      },
-      { dark: true }
-    );
 
     // Event listener extension
     const domEventHandlers = EditorView.domEventHandlers({
@@ -346,7 +307,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
             lastInternalDocRef.current = newDoc;
             onChangeRef.current?.(newDoc);
           }
-        }, 400);
+        }, 60);
 
         // Check slash trigger (zero stringification overhead: only inspects current line)
         const head = update.state.selection.main.head;
@@ -355,6 +316,19 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         const slashMatch = textBefore.match(/(?:^|\s)\/([a-zA-Z0-9_-]*)$/);
         if (slashMatch) {
           onSlashTriggerRef.current?.(slashMatch[1], head);
+        } else {
+          onSlashTriggerRef.current?.('', -1);
+        }
+      } else if (update.selectionSet) {
+        // When selection moves without doc change (e.g. click away or arrow away from /), dismiss slash menu
+        const head = update.state.selection.main.head;
+        const line = update.state.doc.lineAt(head);
+        const textBefore = line.text.slice(0, head - line.from);
+        const slashMatch = textBefore.match(/(?:^|\s)\/([a-zA-Z0-9_-]*)$/);
+        if (slashMatch) {
+          onSlashTriggerRef.current?.(slashMatch[1], head);
+        } else {
+          onSlashTriggerRef.current?.('', -1);
         }
       }
 
@@ -370,20 +344,72 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       }
     });
 
-    // Typewriter padding extension: gives 40vh top/bottom padding when typewriter is on
-    const typewriterPaddingTheme = isTypewriterMode
-      ? EditorView.theme({
-          '.cm-content': {
-            paddingTop: '35vh !important',
-            paddingBottom: '45vh !important',
+    // Slash commands keyboard interception with highest priority so arrows and enter navigate the palette
+    const slashKeymap = Prec.highest(
+      keymap.of([
+        {
+          key: 'ArrowDown',
+          run: () => {
+            if (onKeyDownRef.current) {
+              const fakeEvt = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true });
+              if (onKeyDownRef.current(fakeEvt) === true) return true;
+            }
+            return false;
           },
-        })
-      : [];
+        },
+        {
+          key: 'ArrowUp',
+          run: () => {
+            if (onKeyDownRef.current) {
+              const fakeEvt = new KeyboardEvent('keydown', { key: 'ArrowUp', cancelable: true });
+              if (onKeyDownRef.current(fakeEvt) === true) return true;
+            }
+            return false;
+          },
+        },
+        {
+          key: 'Enter',
+          run: () => {
+            if (onKeyDownRef.current) {
+              const fakeEvt = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+              if (onKeyDownRef.current(fakeEvt) === true) return true;
+            }
+            return false;
+          },
+        },
+        {
+          key: 'Tab',
+          run: () => {
+            if (onKeyDownRef.current) {
+              const fakeEvt = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+              if (onKeyDownRef.current(fakeEvt) === true) return true;
+            }
+            return false;
+          },
+        },
+        {
+          key: 'Escape',
+          run: () => {
+            if (onKeyDownRef.current) {
+              const fakeEvt = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+              if (onKeyDownRef.current(fakeEvt) === true) return true;
+            }
+            return false;
+          },
+        },
+      ])
+    );
 
     const state = EditorState.create({
       doc: value,
       extensions: [
+        slashKeymap,
         history(),
+        bracketMatching(),
+        closeBrackets(),
+        indentOnInput(),
+        drawSelection(),
+        EditorView.contentAttributes.of({ autocorrect: 'on', spellcheck: 'true' }),
         keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
         markdown(),
         EditorView.lineWrapping,
@@ -391,8 +417,8 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         updateListener,
         cmPlaceholder(placeholder),
         lineNumbersCompartment.current.of(showLineNumbers ? [lineNumbers(), highlightActiveLineGutter()] : []),
-        themeCompartment.current.of(isDark ? [proseTheme, darkProseTheme] : [proseTheme]),
-        typewriterCompartment.current.of(typewriterPaddingTheme),
+        themeCompartment.current.of(getThemeExtensions(isDark)),
+        typewriterCompartment.current.of(getTypewriterPaddingTheme(isTypewriterMode)),
         highlightActiveLine(),
       ],
     });
@@ -448,31 +474,8 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   // Sync dark/light theme dynamically
   useEffect(() => {
     if (!viewRef.current) return;
-    const proseTheme = EditorView.theme({
-      '&': { height: '100%', fontSize: '15px', fontFamily: 'var(--font-sans)' },
-      '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.8' },
-      '.cm-content': { caretColor: '#2563eb', padding: '24px 20px', minHeight: '100%' },
-      '&.cm-focused': { outline: 'none !important' },
-      '.cm-line': { padding: '0 2px' },
-      '.cm-cursor': { borderLeftColor: '#2563eb', borderLeftWidth: '2.5px' },
-      '&.cm-focused .cm-selectionBackground, ::selection': { backgroundColor: 'rgba(59, 130, 246, 0.22) !important' },
-      '.cm-gutters': { backgroundColor: 'transparent', borderRight: 'none', color: '#9ca3af', fontFamily: 'var(--font-mono)', fontSize: '11px', paddingRight: '12px' },
-      '.cm-activeLineGutter': { backgroundColor: 'transparent', color: '#2563eb', fontWeight: 'bold' },
-    });
-
-    const darkProseTheme = EditorView.theme(
-      {
-        '.cm-content': { caretColor: '#60a5fa' },
-        '.cm-cursor': { borderLeftColor: '#60a5fa' },
-        '&.cm-focused .cm-selectionBackground, ::selection': { backgroundColor: 'rgba(96, 165, 250, 0.25) !important' },
-        '.cm-gutters': { color: '#6b7280' },
-        '.cm-activeLineGutter': { color: '#60a5fa' },
-      },
-      { dark: true }
-    );
-
     viewRef.current.dispatch({
-      effects: themeCompartment.current.reconfigure(isDark ? [proseTheme, darkProseTheme] : [proseTheme]),
+      effects: themeCompartment.current.reconfigure(getThemeExtensions(isDark)),
     });
   }, [isDark]);
 
@@ -489,17 +492,8 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   // Toggle typewriter mode padding dynamically
   useEffect(() => {
     if (!viewRef.current) return;
-    const typewriterPaddingTheme = isTypewriterMode
-      ? EditorView.theme({
-          '.cm-content': {
-            paddingTop: '35vh !important',
-            paddingBottom: '45vh !important',
-          },
-        })
-      : [];
-
     viewRef.current.dispatch({
-      effects: typewriterCompartment.current.reconfigure(typewriterPaddingTheme),
+      effects: typewriterCompartment.current.reconfigure(getTypewriterPaddingTheme(isTypewriterMode)),
     });
   }, [isTypewriterMode]);
 

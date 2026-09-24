@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Columns, Minimize2, PenTool, Eye, ArrowUpDown } from 'lucide-react';
 import { ViewMode } from '../types';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
@@ -17,10 +17,10 @@ interface EditorWorkspaceProps {
   setViewMode: (mode: ViewMode) => void;
   content: string;
   lineCount: number;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  onContentChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
+  onContentChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onTextareaKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-  onCursorEvent: () => void;
+  onCursorEvent?: (pos: { line: number; col: number; offset: number }) => void;
   isSlashMenuOpen: boolean;
   setIsSlashMenuOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
   slashSelectedIndex: number;
@@ -58,6 +58,8 @@ interface EditorWorkspaceProps {
   onOpenSprintPopover?: () => void;
   editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
   onKeyDown?: (e: KeyboardEvent) => boolean | void;
+  onSlashTrigger?: (query: string, pos: number) => void;
+  showLineNumbers?: boolean;
 }
 
 export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
@@ -66,7 +68,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   content,
   lineCount: _lineCount,
   textareaRef,
-  onContentChange,
+  onContentChange: _onContentChange,
   onTextareaKeyDown: _onTextareaKeyDown,
   onKeyDown,
   onCursorEvent,
@@ -104,6 +106,8 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   wordsWrittenInSprint = 0,
   onOpenSprintPopover,
   editorRef,
+  onSlashTrigger,
+  showLineNumbers = false,
 }) => {
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
@@ -121,23 +125,8 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     setReadingProgress,
   } = useReaderAppearance();
 
-  // Debounce content passed to MarkdownPreview to decouple heavy AST parsing from 60FPS typing
-  const [debouncedContent, setDebouncedContent] = useState(content);
-  const isInitialMount = useRef(true);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      setDebouncedContent(content);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setDebouncedContent(content);
-    }, 750);
-
-    return () => clearTimeout(timer);
-  }, [content]);
+  // Instant non-blocking Markdown preview parsing via React 19 interruptible transition
+  const deferredPreviewContent = React.useDeferredValue(content);
 
   // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
   const handleEditorScroll = useCallback((_e: Event, scrollDOM: HTMLElement) => {
@@ -203,7 +192,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         return;
       }
 
-      const ta = textareaRef.current;
+      const ta = textareaRef?.current;
       if (!ta) return;
 
       const savedScrollTop = ta.scrollTop;
@@ -232,7 +221,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
       // Second frame protection for mobile virtual keyboard reflow
       requestAnimationFrame(() => {
-        if (textareaRef.current) {
+        if (textareaRef?.current) {
           textareaRef.current.scrollTop = savedScrollTop;
         }
       });
@@ -324,6 +313,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         slashSelectedIndex={slashSelectedIndex}
         slashQuery={slashQuery}
         onInsertSnippet={onInsertSnippet}
+        onSlashTrigger={onSlashTrigger}
       />
     );
   }
@@ -438,15 +428,15 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 setContent?.(newVal);
                 queueAutoSave?.(newVal, title);
               }}
-              onCursorChange={() => {
-                onCursorEvent();
+              onCursorChange={(pos) => {
+                onCursorEvent?.(pos);
               }}
-              onSlashTrigger={() => {
-                setIsSlashMenuOpen(true);
+              onSlashTrigger={(query, pos) => {
+                onSlashTrigger?.(query, pos);
               }}
               onScroll={handleEditorScroll}
               isTypewriterMode={isTypewriterMode}
-              showLineNumbers={true}
+              showLineNumbers={showLineNumbers}
               placeholder="Start writing here... (Type / for shortcuts, drag & drop or paste images)"
               onPasteImage={async (file) => {
                 try {
@@ -467,16 +457,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               editorRef={editorRef}
               onKeyDown={onKeyDown}
               className="flex-1 w-full"
-            />
-
-            {/* Hidden fallback for any legacy refs */}
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={onContentChange}
-              className="sr-only"
-              tabIndex={-1}
-              aria-hidden="true"
             />
 
             {/* Floating Find & Replace Palette */}
@@ -509,7 +489,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         <div
           ref={previewContainerRef}
           onScroll={handlePreviewScroll}
-          className={`preview-pane-container flex-col h-full overflow-y-auto overflow-x-hidden transition-colors duration-200 ${
+          className={`preview-pane-container flex-col h-full min-h-0 overflow-y-auto overflow-x-hidden transition-colors duration-200 ${
             viewMode === 'read'
               ? `w-full flex ${readerThemeClasses}`
               : `bg-white dark:bg-neutral-950 ${viewMode === 'zen' ? 'hidden' : 'flex'} ${
@@ -525,12 +505,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               <span className="flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
                 <Columns className="w-3.5 h-3.5" />
                 <span>Live Rendered Preview</span>
-                {content !== debouncedContent && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-mono font-medium ml-2 animate-in fade-in duration-150">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    updating...
-                  </span>
-                )}
               </span>
               <span className="text-[11px] text-neutral-400 font-mono">
                 GFM + KaTeX Math + Highlights
@@ -540,7 +514,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
           {/* Rendered Document Canvas */}
           <div
-            className={`flex-1 transition-all duration-150 break-words whitespace-pre-wrap overflow-hidden max-w-full ${
+            className={`flex-1 transition-all duration-150 break-words min-h-0 max-w-full ${
               viewMode === 'read'
                 ? `px-6 sm:px-10 pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
                 : 'p-8 sm:p-10'
@@ -558,7 +532,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
             )}
 
             <MarkdownPreview 
-              content={debouncedContent} 
+              content={deferredPreviewContent} 
               onToggleTask={onToggleTask}
               className={viewMode === 'read' ? `${readerFontClass} ${readerSizeClass}` : undefined}
             />
@@ -585,7 +559,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       )}
 
       {/* 60FPS Hardware-Accelerated Editor Typing FX Overlay */}
-      <EditorWritingFx textareaRef={textareaRef} />
+      <EditorWritingFx textareaRef={textareaRef} editorRef={editorRef} />
     </>
   );
 });

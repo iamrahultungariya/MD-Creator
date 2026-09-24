@@ -104,7 +104,7 @@ export const WaitlistAdminPanel: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase tracking-wider mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Admin Control Panel • tungariyarahul08@gmail.com</span>
+            <span>Admin Control Panel</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
             <Users className="w-6 h-6 text-blue-400" />

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { GitBranch, AlertCircle, Copy, Check, Loader2 } from 'lucide-react';
 
@@ -69,7 +70,7 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
         mermaid.initialize({
           startOnLoad: false,
           theme: isDark ? 'dark' : 'default',
-          securityLevel: 'loose',
+          securityLevel: 'strict',
           fontFamily: 'inherit',
           suppressErrorRendering: true,
         });
@@ -78,9 +79,14 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
         const renderId = `svg_${chartIdRef.current}_${Date.now()}`;
         const { svg } = await mermaid.render(renderId, trimmedChart);
 
+        // Sanitize rendered SVG to eliminate stored XSS vectors
+        const sanitizedSvg = DOMPurify.sanitize(svg, {
+          USE_PROFILES: { svg: true, svgFilters: true },
+        });
+
         if (!isCancelled) {
-          mermaidSvgCache.set(cacheKey, svg);
-          setSvgContent(svg);
+          mermaidSvgCache.set(cacheKey, sanitizedSvg);
+          setSvgContent(sanitizedSvg);
           setError(null);
           setIsDebouncing(false);
         }

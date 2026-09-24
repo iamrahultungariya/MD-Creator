@@ -12,7 +12,8 @@ import {
   FileText, 
   Info, 
   ChevronDown, 
-  Sparkles, 
+  Wand2,
+  CheckCheck, 
   Copy, 
   FolderOpen, 
   Table2, 
@@ -222,7 +223,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             }`}
             title="Writing tools, outline, tables, effects & templates"
           >
-            <Sliders className="w-3.5 h-3.5 text-indigo-500" />
+            <Sliders className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
             <span>Tools</span>
             <ChevronDown className="w-3 h-3 text-neutral-400" />
           </button>
@@ -241,7 +242,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <ListTree className="w-4 h-4 text-purple-500" />
+                  <ListTree className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Document Outline</div>
                     <div className="text-[10px] text-neutral-500">Live H1–H6 table of contents</div>
@@ -255,7 +256,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <Table2 className="w-4 h-4 text-blue-500" />
+                  <Table2 className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Table Builder</div>
                     <div className="text-[10px] text-neutral-500">Visual rows & columns designer</div>
@@ -273,7 +274,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <ImageIcon className="w-4 h-4 text-purple-500" />
+                    <ImageIcon className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                     <div>
                       <div className="font-semibold text-neutral-900 dark:text-white">Embed Image Studio</div>
                       <div className="text-[10px] text-neutral-500">Offline upload or web link</div>
@@ -288,17 +289,17 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Wand2 className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Writing FX & Cursors</div>
                     <div className="text-[10px] text-neutral-500">Hardware-accelerated particles & carets</div>
                   </div>
                 </div>
                 <span 
-                  className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-bold"
+                  className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400"
                   title="Hardware-accelerated 2D canvas rendering for lag-free particle effects & carets"
                 >
-                  ⚡ 60fps
+                  60fps
                 </span>
               </button>
 
@@ -307,13 +308,13 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <LayoutTemplate className="w-4 h-4 text-emerald-500" />
+                  <LayoutTemplate className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Templates Library</div>
                     <div className="text-[10px] text-neutral-500">8 curated specs, PRDs & notes</div>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">8 Presets</span>
+                <span className="text-[10px] font-mono text-neutral-400">8 Presets</span>
               </button>
 
               <button
@@ -321,13 +322,13 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <History className="w-4 h-4 text-cyan-500" />
+                  <History className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Revision History</div>
                     <div className="text-[10px] text-neutral-500">IndexedDB checkpoints & rollback</div>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">Pro</span>
+                <span className="text-[10px] font-mono text-neutral-400">History</span>
               </button>
 
               <button
@@ -335,7 +336,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <Timer className="w-4 h-4 text-rose-500" />
+                  <Timer className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Focus Sprint Timer</div>
                     <div className="text-[10px] text-neutral-500">Pomodoro focus sprint mode</div>
@@ -351,7 +352,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <Copy className="w-4 h-4 text-sky-500" />
+                  <Copy className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Duplicate Document</div>
                     <div className="text-[10px] text-neutral-500">Clone into a new document</div>
@@ -365,7 +366,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <CheckCheck className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white">Clean & Format Markdown</div>
                     <div className="text-[10px] text-neutral-500">Repair fragmented lines & badges</div>
@@ -430,7 +431,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
           aria-label="Toggle theme"
           className="p-2 rounded-xl text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
         >
-          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-neutral-600" />}
+          {isDark ? <Sun className="w-4 h-4 text-neutral-400 hover:text-neutral-100" /> : <Moon className="w-4 h-4 text-neutral-600 hover:text-neutral-900" />}
         </button>
       </div>
     </header>

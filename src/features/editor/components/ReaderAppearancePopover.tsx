@@ -102,9 +102,9 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
   ];
 
   const COLUMN_WIDTHS: { id: ReaderColumnWidth; label: string; desc: string }[] = [
-    { id: 'focused', label: 'Focused', desc: '580px' },
-    { id: 'standard', label: 'Standard', desc: '740px' },
-    { id: 'wide', label: 'Wide', desc: '960px' },
+    { id: 'focused', label: 'Focused', desc: '576px' },
+    { id: 'standard', label: 'Standard', desc: '896px' },
+    { id: 'wide', label: 'Wide', desc: '1152px' },
   ];
 
   const handleStepFontSize = (delta: number) => {

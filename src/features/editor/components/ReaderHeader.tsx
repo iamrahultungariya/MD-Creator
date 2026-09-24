@@ -10,10 +10,13 @@ import {
   Printer, 
   Columns,
   BookOpen,
-  Clock
+  Clock,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { ViewMode } from '../types';
 import { useReaderSettingsStore } from '../../../stores/useReaderSettingsStore';
+import { useThemeStore } from '../../../stores/useThemeStore';
 import { ReaderAppearancePopover } from './ReaderAppearancePopover';
 
 interface ReaderHeaderProps {
@@ -38,6 +41,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   const navigate = useNavigate();
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const { readingProgress, isFullscreen, toggleFullscreen } = useReaderSettingsStore();
+  const { isDark, toggleTheme } = useThemeStore();
 
   return (
     <header className="relative h-14 sm:h-15 border-b border-neutral-200/70 dark:border-neutral-800/80 px-3 sm:px-6 flex items-center justify-between bg-white/95 dark:bg-[#15161a]/95 backdrop-blur-md select-none z-30 transition-colors no-print">
@@ -155,6 +159,16 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
           title="Switch to Split View"
         >
           <Columns className="w-4 h-4" />
+        </button>
+
+        {/* Theme Toggle (Sync with App Light / Dark) */}
+        <button
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          className="p-2 rounded-xl text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer flex items-center justify-center"
+          title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+        >
+          {isDark ? <Sun className="w-4 h-4 text-neutral-400 hover:text-neutral-100" /> : <Moon className="w-4 h-4 text-neutral-600 hover:text-neutral-900" />}
         </button>
 
         {/* Appearance Popover Floating Dropdown */}

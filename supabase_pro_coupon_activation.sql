@@ -67,28 +67,23 @@ USING (
     user_id = auth.uid() OR redeemed_by_user_id = auth.uid()
 );
 
--- 8. Policy: Authenticated users can insert their own waitlist coupon
-CREATE POLICY "Users can create own waitlist coupon"
-ON public.coupon_redemptions
-FOR INSERT
-TO authenticated
-WITH CHECK (
-    user_id = auth.uid()
-);
+-- 8. Policy: Users can only read their own coupons (Creation is handled server-side via join_waitlist)
+DROP POLICY IF EXISTS "Users can create own waitlist coupon" ON public.coupon_redemptions;
+REVOKE INSERT ON public.coupon_redemptions FROM authenticated, anon, public;
 
--- 9. Policy: Admin full access for tungariyarahul08@gmail.com
+-- 9. Policy: Admin access via has_role function
 CREATE POLICY "Admin full access on coupons"
 ON public.coupon_redemptions
 FOR ALL
 TO authenticated
 USING (
-    (auth.jwt() ->> 'email') = 'tungariyarahul08@gmail.com'
+    public.has_role(auth.uid(), 'admin')
 )
 WITH CHECK (
-    (auth.jwt() ->> 'email') = 'tungariyarahul08@gmail.com'
+    public.has_role(auth.uid(), 'admin')
 );
 
-GRANT SELECT, INSERT ON public.coupon_redemptions TO authenticated;
+GRANT SELECT ON public.coupon_redemptions TO authenticated;
 
 -- ==============================================================================
 -- 10. ATOMIC STORED PROCEDURE: Redeem Coupon
@@ -322,8 +317,9 @@ $$;
 
 -- Grant execution permissions
 GRANT EXECUTE ON FUNCTION public.redeem_coupon(TEXT, TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.check_user_waitlist_status(UUID) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_user_waitlist_status(UUID) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.check_user_waitlist_status(UUID) FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_waitlist_seats_remaining() TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.activate_user_pro(TEXT, INTEGER) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.activate_user_pro(TEXT, INTEGER) FROM public, anon, authenticated;
 
 COMMENT ON TABLE public.coupon_redemptions IS 'Stores one-time use Earlybird coupons bound to users with atomic redemption';

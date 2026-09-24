@@ -22,20 +22,20 @@ ALTER TABLE public.waitlist ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow public insert into waitlist" ON public.waitlist;
 DROP POLICY IF EXISTS "Allow admin read on waitlist" ON public.waitlist;
 
--- 5. Policy: Public (both anon and authenticated) can register their email
+-- 5. Policy: Public (both anon and authenticated) can register valid emails
 CREATE POLICY "Allow public insert into waitlist"
 ON public.waitlist
 FOR INSERT
 TO anon, authenticated
-WITH CHECK (true);
+WITH CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
 
--- 6. Policy: Only tungariyarahul08@gmail.com can view all waitlist entries
+-- 6. Policy: Only admins can view waitlist entries
 CREATE POLICY "Allow admin read on waitlist"
 ON public.waitlist
 FOR SELECT
 TO authenticated
 USING (
-    (auth.jwt() ->> 'email') = 'tungariyarahul08@gmail.com'
+    public.has_role(auth.uid(), 'admin')
 );
 
 -- 7. Grant necessary permissions to anon and authenticated roles

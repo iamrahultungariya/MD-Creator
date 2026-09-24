@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Sparkles, 
+  Layers, 
   Search, 
   ArrowRight, 
   Download 
@@ -67,10 +67,10 @@ export const UpdatesPage: React.FC = () => {
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-5 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <Layers className="w-3.5 h-3.5 text-neutral-500" />
             <span className="font-mono uppercase tracking-wider text-[11px]">Product Evolution &amp; Changelog</span>
             <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">v0.8.0-beta Live</span>
+            <span className="text-neutral-900 dark:text-neutral-100 font-bold">v0.8.0 Beta Live</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.08] mb-5">
