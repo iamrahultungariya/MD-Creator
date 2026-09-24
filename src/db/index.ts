@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import { fastCountWords } from '../utils/textCounters';
 
 export interface DocumentMetadata {
   id: string;
@@ -80,21 +81,31 @@ export const db = new MdWriterDB();
 
 /**
  * Extracts a lightweight 2-3 line preview snippet from raw Markdown.
+ * Scans only the first few non-empty lines to avoid allocating strings across large documents.
  */
 export function extractSnippet(markdown: string): string {
-  const lines = markdown
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0 && !l.startsWith('---')); // filter empty lines and frontmatter markers
+  const snippets: string[] = [];
+  let start = 0;
+  const len = markdown.length;
 
-  return lines.slice(0, 3).join(' \n ');
+  while (start < len && snippets.length < 3) {
+    let end = markdown.indexOf('\n', start);
+    if (end === -1) end = len;
+    const line = markdown.slice(start, end).trim();
+    if (line.length > 0 && !line.startsWith('---')) {
+      snippets.push(line);
+    }
+    start = end + 1;
+  }
+
+  return snippets.join(' \n ');
 }
 
 /**
- * Calculates word count from text.
+ * Calculates word count from text using fast non-allocating word counter.
  */
 export function countWords(text: string): number {
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
+  return fastCountWords(text);
 }
 
 /**

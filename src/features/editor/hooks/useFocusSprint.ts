@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { fastCountWords } from '../../../utils/textCounters';
 
 export type SprintMode = 'time' | 'words';
@@ -44,9 +44,11 @@ export function useFocusSprint({ content, onSprintComplete }: UseFocusSprintOpti
   const startTimeRef = useRef<number>(0);
   const pausedElapsedRef = useRef<number>(0);
 
-  // Compute words currently in content using zero-allocation scanner
-  const currentWords = fastCountWords(content);
-  const wordsWritten = Math.max(0, currentWords - sprintStartWordCount);
+  // Compute words currently in content using zero-allocation scanner ONLY when sprint is active
+  const currentWords = useMemo(() => {
+    return isSprintActive ? fastCountWords(content) : 0;
+  }, [isSprintActive, content]);
+  const wordsWritten = isSprintActive ? Math.max(0, currentWords - sprintStartWordCount) : 0;
 
   // Calculate live WPM
   const calculateWpm = useCallback(() => {

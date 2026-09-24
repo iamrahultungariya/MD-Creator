@@ -302,7 +302,8 @@ export const EditorPage: React.FC = () => {
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        doc.executeSave(doc.content, doc.title);
+        const currentVal = editorRef.current ? editorRef.current.getValue() : doc.content;
+        doc.executeSave(currentVal, doc.title);
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
         e.preventDefault();

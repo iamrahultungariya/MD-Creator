@@ -109,7 +109,8 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
-  const activeScrollSourceRef = useRef<'editor' | 'preview' | null>(null);
+  const isSyncingFromEditorRef = useRef(false);
+  const isSyncingFromPreviewRef = useRef(false);
 
   // Reader Mode Eye-Comfort Appearance
   const {
@@ -133,19 +134,15 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
     const timer = setTimeout(() => {
       setDebouncedContent(content);
-    }, 350);
+    }, 750);
 
     return () => clearTimeout(timer);
   }, [content]);
 
-  // Prevent scroll echo loop between editor and preview
-  const isSyncingRef = useRef(false);
-
   // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
   const handleEditorScroll = useCallback((_e: Event, scrollDOM: HTMLElement) => {
     if (!isSyncScrollEnabled || viewMode !== 'split') return;
-    if (isSyncingRef.current) return;
-    if (activeScrollSourceRef.current === 'preview') return;
+    if (isSyncingFromPreviewRef.current) return;
 
     const preview = previewContainerRef.current;
     if (!preview) return;
@@ -156,11 +153,11 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     const ratio = scrollDOM.scrollTop / maxEditor;
     const maxPreview = preview.scrollHeight - preview.clientHeight;
 
-    isSyncingRef.current = true;
+    isSyncingFromEditorRef.current = true;
     preview.scrollTop = ratio * maxPreview;
-    requestAnimationFrame(() => {
-      isSyncingRef.current = false;
-    });
+    setTimeout(() => {
+      isSyncingFromEditorRef.current = false;
+    }, 60);
   }, [isSyncScrollEnabled, viewMode]);
 
   // Synchronized Split-Pane Proportional Scrolling (Preview -> Editor) & Read Mode Progress
@@ -178,19 +175,18 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
     // In Split Mode: sync preview -> editor
     if (viewMode === 'split' && isSyncScrollEnabled) {
-      if (isSyncingRef.current) return;
-      if (activeScrollSourceRef.current === 'editor') return;
+      if (isSyncingFromEditorRef.current) return;
 
       const maxPrev = prev.scrollHeight - prev.clientHeight;
       if (maxPrev <= 0) return;
 
       const ratio = prev.scrollTop / maxPrev;
 
-      isSyncingRef.current = true;
+      isSyncingFromPreviewRef.current = true;
       editorRef?.current?.scrollToRatio(ratio);
-      requestAnimationFrame(() => {
-        isSyncingRef.current = false;
-      });
+      setTimeout(() => {
+        isSyncingFromPreviewRef.current = false;
+      }, 60);
     }
   }, [viewMode, isSyncScrollEnabled, setReadingProgress, editorRef]);
 
@@ -384,9 +380,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       <div className={`flex-1 flex overflow-hidden relative ${viewMode === 'read' ? 'pb-0' : 'pb-14 md:pb-0'}`}>
         {/* Left Pane: Editor */}
         <div
-          onMouseEnter={() => { activeScrollSourceRef.current = 'editor'; }}
-          onTouchStart={() => { activeScrollSourceRef.current = 'editor'; }}
-          onWheel={() => { activeScrollSourceRef.current = 'editor'; }}
           className={`editor-pane-container flex-col h-full bg-neutral-50/70 dark:bg-[#18181c] text-neutral-800 dark:text-neutral-200 transition-colors ${
             viewMode === 'read' ? 'hidden' : 'flex'
           } ${
@@ -516,9 +509,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         <div
           ref={previewContainerRef}
           onScroll={handlePreviewScroll}
-          onMouseEnter={() => { activeScrollSourceRef.current = 'preview'; }}
-          onTouchStart={() => { activeScrollSourceRef.current = 'preview'; }}
-          onWheel={() => { activeScrollSourceRef.current = 'preview'; }}
           className={`preview-pane-container flex-col h-full overflow-y-auto overflow-x-hidden transition-colors duration-200 ${
             viewMode === 'read'
               ? `w-full flex ${readerThemeClasses}`

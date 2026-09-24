@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -287,10 +287,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [activeLightboxImage, setActiveLightboxImage] = useState<{ src: string; alt?: string; title?: string } | null>(null);
 
+  // React 18/19 interruptible deferred value: markdown AST & KaTeX processing runs in background transitions
+  // and will yield immediately to keystrokes and typing
+  const deferredContent = useDeferredValue(content);
+
   // Parse opening YAML front matter if present
-  const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  const frontmatterMatch = deferredContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   const rawFrontmatter = frontmatterMatch ? frontmatterMatch[1] : null;
-  const rawMarkdownBody = frontmatterMatch ? content.slice(frontmatterMatch[0].length) : content;
+  const rawMarkdownBody = frontmatterMatch ? deferredContent.slice(frontmatterMatch[0].length) : deferredContent;
 
   // Sanitize math comparisons & unescaped tokens for rehype-raw
   const sanitizedMarkdownBody = useMemo(() => {

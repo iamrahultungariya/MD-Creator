@@ -67,6 +67,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSnapshotContentRef = useRef<string>('');
+  const lastLocalEditTimeRef = useRef<number>(0);
 
   // 1. Load document from Dexie on mount or ID change
   useEffect(() => {
@@ -153,6 +154,11 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
           filter: `id=eq.${docId}`,
         },
         (payload: any) => {
+          // If the user has edited locally within the last 8 seconds, ignore incoming remote updates
+          // to prevent overwriting active typing or freezing the UI thread with remote echoes
+          if (Date.now() - lastLocalEditTimeRef.current < 8000) {
+            return;
+          }
           const remoteContent = payload.new?.content;
           if (typeof remoteContent === 'string' && remoteContent !== contentRef.current) {
             setContent(remoteContent);
@@ -173,22 +179,25 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
   // 4. Save Execution: Multi-tier fallback (Dexie + localStorage + Supabase Cloud)
   const executeSave = useCallback(
     async (newContent: string, newTitle: string) => {
+      lastLocalEditTimeRef.current = Date.now();
       setIsSaving(true);
 
       // A. Save immediately to primary local source (Dexie IndexedDB)
       await saveDocument(docId, newTitle, newContent, docMetadata?.tags);
 
-      // B. Emergency snapshot in localStorage
-      try {
-        localStorage.setItem(
-          `md-writer-offline-backup-${docId}`,
-          JSON.stringify({
-            title: newTitle,
-            content: newContent,
-            savedAt: Date.now(),
-          })
-        );
-      } catch {}
+      // B. Emergency snapshot in localStorage (skip for large documents > 150KB to avoid freezing main thread)
+      if (newContent.length < 150000) {
+        try {
+          localStorage.setItem(
+            `md-writer-offline-backup-${docId}`,
+            JSON.stringify({
+              title: newTitle,
+              content: newContent,
+              savedAt: Date.now(),
+            })
+          );
+        } catch {}
+      }
 
       const updatedMeta = await db.documents.get(docId);
       if (updatedMeta) {
@@ -222,15 +231,16 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     [docId, docMetadata?.tags]
   );
 
-  // 5. Auto-save debounce (1.5s) and snapshot debounce (30s)
+  // 5. Auto-save debounce (4.0s idle) and snapshot debounce (30s)
   const queueAutoSave = useCallback(
     (newContent: string, currentTitle: string) => {
+      lastLocalEditTimeRef.current = Date.now();
       setIsSaved(false);
 
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = setTimeout(() => {
         executeSave(newContent, currentTitle);
-      }, 1500);
+      }, 4000);
 
       if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
       snapshotTimerRef.current = setTimeout(() => {

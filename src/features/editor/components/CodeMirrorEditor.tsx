@@ -28,6 +28,7 @@ export interface CodeMirrorEditorHandle {
   getScrollDOM: () => HTMLElement | null;
   scrollToRatio: (ratio: number) => void;
   getScrollRatio: () => number;
+  flush: () => void;
 }
 
 export interface CodeMirrorEditorProps {
@@ -93,6 +94,23 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   const isTypewriterModeRef = useRef(isTypewriterMode);
   isTypewriterModeRef.current = isTypewriterMode;
 
+  // Buffer & debounce keystrokes so React state is not updated on every single keypress
+  const changeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingChangeRef = useRef(false);
+
+  const flushChange = useCallback(() => {
+    if (changeTimerRef.current) {
+      clearTimeout(changeTimerRef.current);
+      changeTimerRef.current = null;
+    }
+    if (pendingChangeRef.current && viewRef.current) {
+      pendingChangeRef.current = false;
+      const newDoc = viewRef.current.state.doc.toString();
+      lastInternalDocRef.current = newDoc;
+      onChangeRef.current?.(newDoc);
+    }
+  }, []);
+
   // Handle Typewriter smooth centering with RAF throttling
   const typewriterRafRef = useRef<number | null>(null);
   const performTypewriterScroll = useCallback((view: EditorView) => {
@@ -120,7 +138,11 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         viewRef.current?.focus();
       },
       getValue: () => {
+        flushChange();
         return viewRef.current?.state.doc.toString() || '';
+      },
+      flush: () => {
+        flushChange();
       },
       setValue: (val: string) => {
         if (!viewRef.current) return;
@@ -303,16 +325,30 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         }
         return false;
       },
+      blur: () => {
+        flushChange();
+        return false;
+      },
     });
 
     // Update listener extension: debounced content update & cursor telemetry
     const updateListener = EditorView.updateListener.of((update: ViewUpdate) => {
       if (update.docChanged) {
-        const newDoc = update.state.doc.toString();
-        lastInternalDocRef.current = newDoc;
-        onChangeRef.current(newDoc);
+        pendingChangeRef.current = true;
+        if (changeTimerRef.current) {
+          clearTimeout(changeTimerRef.current);
+        }
+        changeTimerRef.current = setTimeout(() => {
+          changeTimerRef.current = null;
+          if (viewRef.current && pendingChangeRef.current) {
+            pendingChangeRef.current = false;
+            const newDoc = viewRef.current.state.doc.toString();
+            lastInternalDocRef.current = newDoc;
+            onChangeRef.current?.(newDoc);
+          }
+        }, 400);
 
-        // Check slash trigger
+        // Check slash trigger (zero stringification overhead: only inspects current line)
         const head = update.state.selection.main.head;
         const line = update.state.doc.lineAt(head);
         const textBefore = line.text.slice(0, head - line.from);
@@ -380,6 +416,10 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     }
 
     return () => {
+      if (changeTimerRef.current) {
+        clearTimeout(changeTimerRef.current);
+        changeTimerRef.current = null;
+      }
       scrollDOM.removeEventListener('scroll', handleScroll);
       if (typewriterRafRef.current) cancelAnimationFrame(typewriterRafRef.current);
       view.destroy();
@@ -390,7 +430,8 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   // Sync external value changes into CodeMirror without disturbing cursor position or lag
   useEffect(() => {
     if (!viewRef.current) return;
-    // Fast path: if the change originated from internal typing, do NOTHING (instant 60+ FPS)
+    // Fast path: if user has pending unsaved typing or if value matches last known doc, do NOTHING
+    if (changeTimerRef.current !== null || pendingChangeRef.current) return;
     if (value === lastInternalDocRef.current) return;
 
     lastInternalDocRef.current = value;
