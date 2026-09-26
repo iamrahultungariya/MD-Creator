@@ -15,7 +15,8 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
 import { useThemeStore } from '../../../stores/useThemeStore';
-import { getThemeExtensions, getTypewriterPaddingTheme } from '../utils/codeMirrorThemes';
+import { getThemeExtensions } from '../utils/codeMirrorThemes';
+import { createTableKeybindings } from '../../../utils/editorTableKeymap';
 
 export interface CodeMirrorEditorHandle {
   focus: () => void;
@@ -42,7 +43,6 @@ export interface CodeMirrorEditorProps {
   onCursorChange?: (pos: { line: number; col: number; offset: number }) => void;
   onSlashTrigger?: (query: string, pos: number) => void;
   onScroll?: (event: Event, scrollDOM: HTMLElement) => void;
-  isTypewriterMode?: boolean;
   showLineNumbers?: boolean;
   placeholder?: string;
   className?: string;
@@ -59,7 +59,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   onCursorChange,
   onSlashTrigger,
   onScroll,
-  isTypewriterMode = false,
   showLineNumbers = false,
   placeholder = 'Start writing your document...',
   className = '',
@@ -76,7 +75,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   // Compartments for dynamic reconfiguration without destroying state
   const lineNumbersCompartment = useRef(new Compartment());
   const themeCompartment = useRef(new Compartment());
-  const typewriterCompartment = useRef(new Compartment());
 
   // Avoid recreating editor or full doc re-parsing on typing
   const lastInternalDocRef = useRef<string>(value);
@@ -96,8 +94,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   onDropImageRef.current = onDropImage;
   const onKeyDownRef = useRef(onKeyDown);
   onKeyDownRef.current = onKeyDown;
-  const isTypewriterModeRef = useRef(isTypewriterMode);
-  isTypewriterModeRef.current = isTypewriterMode;
 
   // Buffer & debounce keystrokes so React state is not updated on every single keypress
   const changeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,25 +110,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       lastInternalDocRef.current = newDoc;
       onChangeRef.current?.(newDoc);
     }
-  }, []);
-
-  // Handle Typewriter smooth centering with RAF throttling
-  const typewriterRafRef = useRef<number | null>(null);
-  const performTypewriterScroll = useCallback((view: EditorView) => {
-    if (!isTypewriterModeRef.current) return;
-    if (typewriterRafRef.current) cancelAnimationFrame(typewriterRafRef.current);
-    typewriterRafRef.current = requestAnimationFrame(() => {
-      try {
-        const head = view.state.selection.main.head;
-        const lineBlock = view.lineBlockAt(head);
-        const scrollDOM = view.scrollDOM;
-        const target = lineBlock.top - scrollDOM.clientHeight / 2 + lineBlock.height / 2;
-        scrollDOM.scrollTo({
-          top: Math.max(0, target),
-          behavior: 'smooth',
-        });
-      } catch {}
-    });
   }, []);
 
   // Expose imperative handle for external integrations
@@ -337,10 +314,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         const line = update.state.doc.lineAt(head);
         const col = head - line.from + 1;
         onCursorChangeRef.current?.({ line: line.number, col, offset: head });
-
-        if (isTypewriterModeRef.current) {
-          performTypewriterScroll(update.view);
-        }
       }
     });
 
@@ -404,6 +377,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       doc: value,
       extensions: [
         slashKeymap,
+        Prec.high(keymap.of(createTableKeybindings())),
         history(),
         bracketMatching(),
         closeBrackets(),
@@ -418,7 +392,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         cmPlaceholder(placeholder),
         lineNumbersCompartment.current.of(showLineNumbers ? [lineNumbers(), highlightActiveLineGutter()] : []),
         themeCompartment.current.of(getThemeExtensions(isDark)),
-        typewriterCompartment.current.of(getTypewriterPaddingTheme(isTypewriterMode)),
         highlightActiveLine(),
       ],
     });
@@ -447,7 +420,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         changeTimerRef.current = null;
       }
       scrollDOM.removeEventListener('scroll', handleScroll);
-      if (typewriterRafRef.current) cancelAnimationFrame(typewriterRafRef.current);
       view.destroy();
       viewRef.current = null;
     };
@@ -488,14 +460,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       ),
     });
   }, [showLineNumbers]);
-
-  // Toggle typewriter mode padding dynamically
-  useEffect(() => {
-    if (!viewRef.current) return;
-    viewRef.current.dispatch({
-      effects: typewriterCompartment.current.reconfigure(getTypewriterPaddingTheme(isTypewriterMode)),
-    });
-  }, [isTypewriterMode]);
 
   return (
     <div

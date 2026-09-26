@@ -15,6 +15,8 @@ const BlogPage = React.lazy(() => import('./pages/BlogPage').then((m) => ({ defa
 const UpdatesPage = React.lazy(() => import('./pages/UpdatesPage').then((m) => ({ default: m.UpdatesPage })));
 const FeedbackPage = React.lazy(() => import('./pages/FeedbackPage').then((m) => ({ default: m.FeedbackPage })));
 const FeaturesPage = React.lazy(() => import('./pages/FeaturesPage').then((m) => ({ default: m.FeaturesPage })));
+const AboutPage = React.lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const PublicDocumentPage = React.lazy(() => import('./pages/PublicDocumentPage').then((m) => ({ default: m.PublicDocumentPage })));
 
 // Lazy-loaded global utility modals (zero impact on initial critical render)
 const GlobalConfirmDialog = React.lazy(() =>
@@ -89,10 +91,13 @@ export const App: React.FC = () => {
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/updates" element={<UpdatesPage />} />
           <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/editor" element={<EditorPage />} />
           <Route path="/editor/:id" element={<EditorPage />} />
+          <Route path="/p/:slug" element={<PublicDocumentPage />} />
+          <Route path="/share/:slug" element={<PublicDocumentPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

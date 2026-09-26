@@ -7,14 +7,9 @@ import {
   Columns, 
   PenTool, 
   Eye, 
-  Maximize2, 
-  Minimize2, 
   FileText, 
   Info, 
   ChevronDown, 
-  Wand2,
-  CheckCheck, 
-  Copy, 
   FolderOpen, 
   Table2, 
   Timer, 
@@ -22,9 +17,12 @@ import {
   FileX, 
   ListTree, 
   Sliders, 
-  History, 
+  History,
+  Presentation,
+  Globe, 
   LayoutTemplate,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FolderTree
 } from 'lucide-react';
 import { useThemeStore } from '../../../stores/useThemeStore';
 import { ViewMode } from '../types';
@@ -47,15 +45,12 @@ interface EditorHeaderProps {
   onOpenPdfStudio: () => void;
   onOpenTableBuilder: () => void;
   onOpenImageModal?: () => void;
-  onOpenFxPopover: () => void;
   onOpenOutline: () => void;
   onOpenTemplates: () => void;
   onOpenRevisions: () => void;
   onOpenSprintPopover: () => void;
   onExportMd: () => void;
   onExportDocx?: () => void;
-  onDuplicateDoc?: () => void;
-  onCleanFormat?: () => void;
   onCopyMarkdown: () => void;
   onClearContent: () => void;
   onDeleteCurrentDoc: () => void;
@@ -63,6 +58,8 @@ interface EditorHeaderProps {
   setIsToolsMenuOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
   isExportMenuOpen?: boolean;
   setIsExportMenuOpen?: (open: boolean | ((prev: boolean) => boolean)) => void;
+  onOpenPublish?: () => void;
+  onOpenLocalFolder?: () => void;
 }
 
 export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
@@ -81,15 +78,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   onOpenPdfStudio: _onOpenPdfStudio,
   onOpenTableBuilder,
   onOpenImageModal,
-  onOpenFxPopover,
   onOpenOutline,
   onOpenTemplates,
   onOpenRevisions,
   onOpenSprintPopover,
   onExportMd: _onExportMd,
   onExportDocx: _onExportDocx,
-  onDuplicateDoc,
-  onCleanFormat,
   onCopyMarkdown: _onCopyMarkdown,
   onClearContent,
   onDeleteCurrentDoc,
@@ -97,14 +91,14 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   setIsToolsMenuOpen,
   isExportMenuOpen: _isExportMenuOpen,
   setIsExportMenuOpen: _setIsExportMenuOpen,
+  onOpenPublish,
+  onOpenLocalFolder,
 }) => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useThemeStore();
 
   return (
-    <header className={`h-14 sm:h-15 border-b border-neutral-200/80 dark:border-neutral-800/80 px-3 sm:px-6 flex items-center justify-between bg-white dark:bg-neutral-900 select-none z-30 transition-all no-print ${
-      viewMode === 'zen' ? 'opacity-0 hover:opacity-100 duration-200' : ''
-    }`}>
+    <header className="h-14 sm:h-15 border-b border-neutral-200/80 dark:border-neutral-800/80 px-3 sm:px-6 flex items-center justify-between bg-white dark:bg-neutral-900 select-none z-30 transition-all no-print">
       {/* Zone 1 (Left): Documents Back, Document Switcher, Responsive Title & Save Indicator */}
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
         <button
@@ -124,6 +118,17 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
           <FolderOpen className="w-3.5 h-3.5 text-neutral-400" />
           <span className="hidden md:inline">Open (Ctrl+O)</span>
         </button>
+
+        {onOpenLocalFolder && (
+          <button
+            onClick={onOpenLocalFolder}
+            className="hidden sm:flex px-2.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-600 dark:text-neutral-300 items-center gap-1.5 cursor-pointer shrink-0 transition-colors shadow-2xs"
+            title="Open Local Folder / Vault"
+          >
+            <FolderTree className="w-3.5 h-3.5 text-neutral-400" />
+            <span className="hidden lg:inline">Vault</span>
+          </button>
+        )}
 
         <div className="hidden sm:block h-4 w-px bg-neutral-200 dark:bg-neutral-800 shrink-0" />
 
@@ -199,19 +204,31 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
           <span>Read</span>
         </button>
         <button
-          onClick={() => setViewMode(viewMode === 'zen' ? 'split' : 'zen')}
+          onClick={() => setViewMode(viewMode === 'present' ? 'split' : 'present')}
           className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
-            viewMode === 'zen' ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold' : 'hover:text-neutral-900 dark:hover:text-white'
+            viewMode === 'present' ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold' : 'hover:text-neutral-900 dark:hover:text-white'
           }`}
-          title="Zen Fullscreen Mode"
+          title="Slide Presentation Mode"
         >
-          {viewMode === 'zen' ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-          <span>Zen</span>
+          <Presentation className="w-3.5 h-3.5" />
+          <span>Present</span>
         </button>
       </div>
 
       {/* Zone 3 (Right): Consolidated Action Cluster */}
       <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Instant Web Publishing Trigger */}
+        {onOpenPublish && (
+          <button
+            onClick={onOpenPublish}
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95 shrink-0"
+            title="Publish document to a shareable web link"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Publish</span>
+          </button>
+        )}
+
         {/* Consolidated Tools & Studio Dropdown Menu - Hidden on mobile (< md), accessible via mobile toolbar */}
         <div className="hidden md:block relative">
           <button
@@ -285,25 +302,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               )}
 
               <button
-                onClick={onOpenFxPopover}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Wand2 className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
-                  <div>
-                    <div className="font-semibold text-neutral-900 dark:text-white">Writing FX & Cursors</div>
-                    <div className="text-[10px] text-neutral-500">Hardware-accelerated particles & carets</div>
-                  </div>
-                </div>
-                <span 
-                  className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400"
-                  title="Hardware-accelerated 2D canvas rendering for lag-free particle effects & carets"
-                >
-                  60fps
-                </span>
-              </button>
-
-              <button
                 onClick={onOpenTemplates}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
@@ -345,35 +343,24 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 <span className="text-[10px] font-mono text-neutral-400">25m</span>
               </button>
 
-              <div className="border-t border-neutral-100 dark:border-neutral-800 my-1" />
-
-              <button
-                onClick={onDuplicateDoc}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Copy className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
-                  <div>
-                    <div className="font-semibold text-neutral-900 dark:text-white">Duplicate Document</div>
-                    <div className="text-[10px] text-neutral-500">Clone into a new document</div>
+              {onOpenLocalFolder && (
+                <button
+                  onClick={() => {
+                    setIsToolsMenuOpen(false);
+                    onOpenLocalFolder();
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <FolderTree className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+                    <div>
+                      <div className="font-semibold text-neutral-900 dark:text-white">Local Vault / Folder</div>
+                      <div className="text-[10px] text-neutral-500">Edit notes directly from disk</div>
+                    </div>
                   </div>
-                </div>
-                <span className="text-[10px] font-mono text-neutral-400">Clone</span>
-              </button>
-
-              <button
-                onClick={onCleanFormat}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <CheckCheck className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
-                  <div>
-                    <div className="font-semibold text-neutral-900 dark:text-white">Clean & Format Markdown</div>
-                    <div className="text-[10px] text-neutral-500">Repair fragmented lines & badges</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-neutral-400">/clean</span>
-              </button>
+                  <span className="text-[10px] font-mono text-neutral-400">Disk</span>
+                </button>
+              )}
 
               <div className="border-t border-neutral-100 dark:border-neutral-800 my-1" />
 

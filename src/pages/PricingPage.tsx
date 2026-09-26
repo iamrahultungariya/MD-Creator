@@ -14,11 +14,9 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
-import { CtaBanner } from '../components/home/CtaBanner';
 import { useAuthStore, isHolidayFreeProActive } from '../stores/useAuthStore';
 import { WaitlistSuccessModal } from '../components/common/WaitlistSuccessModal';
 import { WaitlistAdminPanel } from '../components/pricing/WaitlistAdminPanel';
-import { PricingComparisonTable } from '../components/pricing/PricingComparisonTable';
 import { PricingFaqSection } from '../components/pricing/PricingFaqSection';
 import { 
   detectUserRegion, 
@@ -199,13 +197,18 @@ export const PricingPage: React.FC = () => {
 
           {/* 2026 Celebration Banner */}
           {isHolidayFreeProActive() && (
-            <div className="mb-8 mx-auto max-w-2xl p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 dark:border-amber-500/20 text-center shadow-sm animate-in fade-in zoom-in-95 duration-200">
-              <div className="flex items-center justify-center gap-2 text-sm sm:text-base font-bold text-amber-700 dark:text-amber-300 mb-1">
-                <Sparkles className="w-4 h-4 text-amber-500 animate-pulse shrink-0" />
-                <span>2026 Launch Celebration: Pro Is 100% Free For All Users!</span>
+            <div className="mb-10 mx-auto max-w-2xl p-5 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-left sm:text-center shadow-xs">
+              <div className="flex items-center justify-start sm:justify-center gap-2 mb-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 text-[11px] font-semibold tracking-wide">
+                  <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-600" />
+                  <span>2026 Launch Initiative</span>
+                </span>
+                <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                  Pro Is 100% Free For All Users
+                </span>
               </div>
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                Enjoy unlimited multi-device cloud sync, Word (.docx) export, and publication-grade PDF tooling with zero payment required through <strong>December 31, 2026</strong>.
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-xl mx-auto">
+                Enjoy unlimited multi-device cloud sync, Word (.docx) export, and publication-grade PDF tooling with zero payment required through <strong className="text-neutral-900 dark:text-neutral-200 font-medium">December 31, 2026</strong>.
               </p>
             </div>
           )}
@@ -540,9 +543,6 @@ export const PricingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Feature Comparison Matrix Table */}
-        <PricingComparisonTable />
-
         {/* Admin Hub for tungariyarahul08@gmail.com */}
         {isAdmin && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
@@ -552,9 +552,6 @@ export const PricingPage: React.FC = () => {
 
         {/* FAQ Accordion Section */}
         <PricingFaqSection />
-
-        {/* CTA Banner */}
-        <CtaBanner onOpenTemplates={() => navigate('/editor')} />
       </main>
 
       <WaitlistSuccessModal

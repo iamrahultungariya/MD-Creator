@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Tag, Clock, Database, Cloud, Plus, Trash2, Calendar, FileX } from 'lucide-react';
+import { X, Tag, Clock, Database, Plus, Trash2, Calendar, FileX } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
-import { isSupabaseConfigured } from '../../lib/supabase';
 
 interface DocumentDrawerProps {
   isOpen: boolean;
@@ -30,7 +29,6 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
   const [newTag, setNewTag] = useState('');
   const tags = metadata?.tags || [];
   const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
-  const hasSupabase = isSupabaseConfigured();
 
   const handleAddTag = (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,49 +154,6 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                     <span>Add</span>
                   </button>
                 </form>
-              </section>
-
-              {/* Storage & Sync Status */}
-              <section className="space-y-3">
-                <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                  Storage Architecture
-                </h4>
-                
-                <div className="p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-800 space-y-2.5">
-                  {/* Dexie Status */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1.5 font-medium text-neutral-800 dark:text-neutral-200">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      Dexie (IndexedDB)
-                    </span>
-                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                      Active Cache
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-normal">
-                    Only metadata & 2-3 line snippets are indexed for instant listing. Full content is cached on-demand.
-                  </p>
-
-                  <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-2"></div>
-
-                  {/* Supabase Status */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1.5 font-medium text-neutral-800 dark:text-neutral-200">
-                      <Cloud className="w-3.5 h-3.5 text-sky-500" />
-                      Supabase Cloud
-                    </span>
-                    <span className={`text-[11px] font-semibold ${
-                      hasSupabase ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
-                    }`}>
-                      {hasSupabase ? 'Connected' : 'Offline / .env not set'}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-normal">
-                    {hasSupabase 
-                      ? 'All changes automatically sync to your Supabase PostgreSQL tables.'
-                      : 'Add your Supabase URL & Anon key to .env to enable multi-device cloud backup.'}
-                  </p>
-                </div>
               </section>
 
               {/* Timestamps */}

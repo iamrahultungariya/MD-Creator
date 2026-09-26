@@ -12,7 +12,8 @@ import {
   MessageSquare, 
   Menu, 
   X,
-  ArrowRight
+  ArrowRight,
+  Info
 } from 'lucide-react';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -65,8 +66,8 @@ const RESOURCE_ITEMS: ResourceItem[] = [
   {
     id: 'updates',
     title: 'Changelog & Updates',
-    desc: '60FPS canvas & roadmap timeline',
-    badge: 'v0.8.0',
+    desc: 'Milestones & architectural evolution',
+    badge: 'v0.9.0 Beta',
     icon: Sparkles,
     iconColor: 'text-indigo-600 dark:text-indigo-400',
     iconBg: 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200/40 dark:border-indigo-900/40',
@@ -102,6 +103,16 @@ const RESOURCE_ITEMS: ResourceItem[] = [
     iconBg: 'bg-rose-50 dark:bg-rose-950/60 border-rose-200/40 dark:border-rose-900/40',
     path: '/feedback',
     action: ({ navigate }) => navigate('/feedback')
+  },
+  {
+    id: 'about',
+    title: 'About MD Writer',
+    desc: 'Mission, architecture & privacy',
+    icon: Info,
+    iconColor: 'text-neutral-600 dark:text-neutral-400',
+    iconBg: 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200/40 dark:border-neutral-700/40',
+    path: '/about',
+    action: ({ navigate }) => navigate('/about')
   }
 ];
 
@@ -241,6 +252,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             }`}
           >
             Features
+          </button>
+
+          <button 
+            onClick={() => navigate('/about')}
+            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              location.pathname === '/about' 
+                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800' 
+                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+            }`}
+          >
+            About
           </button>
 
           {/* Resources & More Dropdown */}

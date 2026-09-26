@@ -79,17 +79,3 @@ export const darkProseTheme = EditorView.theme(
 export function getThemeExtensions(isDark: boolean): Extension[] {
   return isDark ? [proseTheme, darkProseTheme] : [proseTheme];
 }
-
-/**
- * Returns typewriter mode vertical breathing padding
- */
-export function getTypewriterPaddingTheme(isTypewriterMode: boolean): Extension {
-  return isTypewriterMode
-    ? EditorView.theme({
-        '.cm-content': {
-          paddingTop: '35vh !important',
-          paddingBottom: '45vh !important',
-        },
-      })
-    : [];
-}

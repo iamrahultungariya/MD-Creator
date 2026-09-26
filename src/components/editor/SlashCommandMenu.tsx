@@ -14,18 +14,8 @@ import {
   AlertCircle,
   Lightbulb,
   AlertTriangle,
-  ChevronDown,
-  Keyboard,
   GitBranch,
-  LayoutTemplate,
   Image as ImageIcon,
-  Braces,
-  Tag,
-  Bookmark,
-  FileDown,
-  Printer,
-  Sliders,
-  CheckCheck,
   Command
 } from 'lucide-react';
 
@@ -39,14 +29,6 @@ export interface CommandItem {
 }
 
 export const COMMANDS: CommandItem[] = [
-  {
-    id: 'clean-markdown',
-    title: 'Clean & Format Markdown',
-    description: 'Repair fragmented lines, clean metrics & normalize spacing',
-    icon: CheckCheck,
-    shortcut: '/clean',
-    insertSnippet: '__ACTION_CLEAN_FORMAT__'
-  },
   {
     id: 'h1',
     title: 'Heading 1',
@@ -104,62 +86,6 @@ export const COMMANDS: CommandItem[] = [
     insertSnippet: '```typescript\n// Write your code here\nconst greeting = "Hello, MD Writer!";\nconsole.log(greeting);\n```\n'
   },
   {
-    id: 'callout-note',
-    title: 'Alert Note',
-    description: 'GitHub-style note callout box',
-    icon: AlertCircle,
-    shortcut: '/note',
-    insertSnippet: '> [!NOTE]\n> Write your note or key context here.\n'
-  },
-  {
-    id: 'callout-tip',
-    title: 'Alert Tip',
-    description: 'GitHub-style helpful tip callout',
-    icon: Lightbulb,
-    shortcut: '/tip',
-    insertSnippet: '> [!TIP]\n> Write your helpful tip here.\n'
-  },
-  {
-    id: 'callout-warning',
-    title: 'Alert Warning',
-    description: 'GitHub-style cautionary warning',
-    icon: AlertTriangle,
-    shortcut: '/warning',
-    insertSnippet: '> [!WARNING]\n> Write your cautionary warning here.\n'
-  },
-  {
-    id: 'details',
-    title: 'Collapsible Accordion',
-    description: 'Expandable spoiler / details section',
-    icon: ChevronDown,
-    shortcut: '/details',
-    insertSnippet: '<details>\n<summary>Click to view details</summary>\n\nHidden details and specifications go here.\n\n</details>\n'
-  },
-  {
-    id: 'kbd',
-    title: 'Keyboard Shortcut',
-    description: 'Styled keycap combination badge',
-    icon: Keyboard,
-    shortcut: '/kbd',
-    insertSnippet: '<kbd>Ctrl</kbd> + <kbd>K</kbd>'
-  },
-  {
-    id: 'mermaid',
-    title: 'Mermaid Flowchart',
-    description: 'Architecture diagram & sequence chart',
-    icon: GitBranch,
-    shortcut: '/mermaid',
-    insertSnippet: '```mermaid\ngraph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Result 1]\n    B -->|No| D[Result 2]\n```\n'
-  },
-  {
-    id: 'template',
-    title: 'Insert Template',
-    description: 'Choose from 8 curated blueprints',
-    icon: LayoutTemplate,
-    shortcut: '/template',
-    insertSnippet: '__ACTION_OPEN_TEMPLATES__'
-  },
-  {
     id: 'quote',
     title: 'Blockquote',
     description: 'Highlighted quote passage',
@@ -208,52 +134,28 @@ export const COMMANDS: CommandItem[] = [
     insertSnippet: '__ACTION_OPEN_IMAGE_MODAL__'
   },
   {
-    id: 'api-json',
-    title: 'API Response (JSON)',
-    description: 'Structured REST JSON mock response with status & schema',
-    icon: Braces,
-    shortcut: '/json /api',
-    insertSnippet: '```json\n{\n  "status": 200,\n  "message": "Success",\n  "data": {\n    "id": "item_101",\n    "name": "Production Resource",\n    "active": true\n  }\n}\n```\n'
+    id: 'callout-note',
+    title: 'Alert Note',
+    description: 'GitHub-style note callout box',
+    icon: AlertCircle,
+    shortcut: '/note',
+    insertSnippet: '> [!NOTE]\n> Write your note or key context here.\n'
   },
   {
-    id: 'badge-status',
-    title: 'Status Badges',
-    description: 'Visual status badges (Active, Passing, v1.0)',
-    icon: Tag,
-    shortcut: '/badge /status',
-    insertSnippet: '![Status: Active](https://img.shields.io/badge/status-active-emerald?style=flat-square) ![Build: Passing](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square) ![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)\n\n'
+    id: 'callout-tip',
+    title: 'Alert Tip',
+    description: 'GitHub-style helpful tip callout',
+    icon: Lightbulb,
+    shortcut: '/tip',
+    insertSnippet: '> [!TIP]\n> Write your helpful tip here.\n'
   },
   {
-    id: 'footnote',
-    title: 'Footnote & Citation',
-    description: 'Inline reference citation badge with matching definition',
-    icon: Bookmark,
-    shortcut: '/footnote /fn',
-    insertSnippet: '[^1]\n\n[^1]: Explanatory citation or reference source.\n'
-  },
-  {
-    id: 'export-md',
-    title: 'Export Markdown (.md)',
-    description: 'Directly download current document as a .md file',
-    icon: FileDown,
-    shortcut: '/exportmd',
-    insertSnippet: '__ACTION_EXPORT_MD__'
-  },
-  {
-    id: 'export-pdf',
-    title: 'Export to PDF Studio',
-    description: 'Open publication-ready PDF toolbar with themes & cover styling',
-    icon: Printer,
-    shortcut: '/exportpdf',
-    insertSnippet: '__ACTION_OPEN_PDF_STUDIO__'
-  },
-  {
-    id: 'yaml-frontmatter',
-    title: 'YAML Front Matter',
-    description: 'Metadata header for Jekyll, Hugo, Astro & Obsidian',
-    icon: Sliders,
-    shortcut: '/yaml /frontmatter',
-    insertSnippet: '__ACTION_INSERT_FRONTMATTER__'
+    id: 'callout-warning',
+    title: 'Alert Warning',
+    description: 'GitHub-style cautionary warning',
+    icon: AlertTriangle,
+    shortcut: '/warning',
+    insertSnippet: '> [!WARNING]\n> Write your cautionary warning here.\n'
   },
   {
     id: 'divider',
@@ -262,6 +164,14 @@ export const COMMANDS: CommandItem[] = [
     icon: Minus,
     shortcut: '---',
     insertSnippet: '\n---\n\n'
+  },
+  {
+    id: 'mermaid',
+    title: 'Mermaid Flowchart',
+    description: 'Architecture diagram & sequence chart',
+    icon: GitBranch,
+    shortcut: '/mermaid',
+    insertSnippet: '```mermaid\ngraph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Result 1]\n    B -->|No| D[Result 2]\n```\n'
   }
 ];
 

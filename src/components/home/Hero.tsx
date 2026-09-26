@@ -1,13 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Play, Check, Hexagon, ArrowLeftRight } from 'lucide-react';
+import { ArrowRight, Check, Hexagon, ArrowLeftRight } from 'lucide-react';
 import { EditorMockup } from './EditorMockup';
 
 interface HeroProps {
-  onWatchDemo: () => void;
+  onOpenTemplates?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onWatchDemo }) => {
+export const Hero: React.FC<HeroProps> = () => {
   const navigate = useNavigate();
 
   return (
@@ -47,15 +47,13 @@ export const Hero: React.FC<HeroProps> = ({ onWatchDemo }) => {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
-              {/* Secondary Watch Demo Button */}
+              {/* Secondary Explore Features Button */}
               <button
-                onClick={onWatchDemo}
-                className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 px-5 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2.5 shadow-xs"
+                onClick={() => navigate('/features')}
+                className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 px-5 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
               >
-                <div className="w-5 h-5 rounded-full border border-neutral-300 dark:border-neutral-600 flex items-center justify-center">
-                  <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
-                </div>
-                <span>Watch Demo</span>
+                <span>Explore Features</span>
+                <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
               </button>
             </div>
 

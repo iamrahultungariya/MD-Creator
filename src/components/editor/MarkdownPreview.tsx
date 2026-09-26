@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useDeferredValue } from 'react';
+import React, { useState, useMemo, useDeferredValue, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -14,14 +14,17 @@ import { replaceRichIconsInReactNode } from '../../utils/richIcons';
 import { FrontmatterCard } from './FrontmatterCard';
 import { extractTextFromReactNode, toHeadingSlug, extractAlertInfo } from './markdownAlerts';
 import { MarkdownImage } from './MarkdownImage';
+import { findAllTablesInDocument, replaceTableInDocument, ParsedTable } from '../../utils/markdownTable';
+import { InteractiveTableOverlay } from './InteractiveTableOverlay';
 
 interface MarkdownPreviewProps {
   content: string;
   onToggleTask?: (taskIndex: number, currentChecked: boolean) => void;
+  onUpdateContent?: (newContent: string) => void;
   className?: string;
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ content, onToggleTask, className }) => {
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ content, onToggleTask, onUpdateContent, className }) => {
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [activeLightboxImage, setActiveLightboxImage] = useState<{ src: string; alt?: string; title?: string } | null>(null);
 
@@ -38,6 +41,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
   const sanitizedMarkdownBody = useMemo(() => {
     return sanitizeMarkdownForPreview(rawMarkdownBody);
   }, [rawMarkdownBody]);
+
+  // Locate Markdown tables for interactive inline editing
+  const locatedTables = useMemo(() => {
+    return findAllTablesInDocument(rawMarkdownBody);
+  }, [rawMarkdownBody]);
+
+  const tableRenderCounterRef = useRef(0);
+  tableRenderCounterRef.current = 0;
 
   const handleCopyCode = (codeText: string, id: string) => {
     navigator.clipboard.writeText(codeText);
@@ -238,14 +249,33 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             </kbd>
           ),
 
-          // Tables
-          table: ({ children }) => (
-            <div className="overflow-x-auto my-5 rounded-xl border border-current/20 shadow-2xs max-w-full">
-              <table className="min-w-full w-max text-left text-xs divide-y divide-current/15">
-                {children}
-              </table>
-            </div>
-          ),
+          // Tables (with Interactive Live Table Studio overlay if editable)
+          table: ({ children }: any) => {
+            const currentTableIndex = tableRenderCounterRef.current++;
+            const located = locatedTables[currentTableIndex];
+
+            if (onUpdateContent && located) {
+              return (
+                <InteractiveTableOverlay
+                  table={located.table}
+                  isEditable={true}
+                  onTableChange={(updatedTable: ParsedTable) => {
+                    const newBody = replaceTableInDocument(rawMarkdownBody, currentTableIndex, updatedTable);
+                    const finalDoc = frontmatterMatch ? `${frontmatterMatch[0]}${newBody}` : newBody;
+                    onUpdateContent(finalDoc);
+                  }}
+                />
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto my-5 rounded-xl border border-current/20 shadow-2xs max-w-full">
+                <table className="min-w-full w-max text-left text-xs divide-y divide-current/15">
+                  {children}
+                </table>
+              </div>
+            );
+          },
           thead: ({ children }) => (
             <thead className="bg-current/[0.04] text-inherit font-semibold uppercase tracking-wider text-[10px]">
               {children}

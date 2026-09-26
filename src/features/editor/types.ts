@@ -1,4 +1,4 @@
-export type ViewMode = 'split' | 'write' | 'read' | 'zen';
+export type ViewMode = 'split' | 'write' | 'read' | 'present';
 
 export interface CursorPosition {
   line: number;

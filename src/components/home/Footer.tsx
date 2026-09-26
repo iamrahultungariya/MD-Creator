@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { openBuyCoffeeModal } from '../../utils/coffeeModalEvents';
 import { BmcCoffeeCupIcon } from '../common/BuyMeCoffeeButton';
+import { LegalModal } from '../common/LegalModal';
 
 interface FooterProps {
   onOpenUpdates?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
+  const [isLegalOpen, setIsLegalOpen] = useState(false);
+
   return (
     <footer className="py-12 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                   className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                 >
                   <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v3.1</span>
+                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v0.9.0 Beta</span>
                 </button>
               ) : (
                 <Link 
@@ -58,7 +61,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                   className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                 >
                   <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v3.1</span>
+                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v0.9.0 Beta</span>
                 </Link>
               )}
               <button
@@ -69,20 +72,20 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                 <BmcCoffeeCupIcon className="w-3.5 h-3.5" />
                 <span>Buy me a coffee</span>
               </button>
-              <a href="#about" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
+              <Link to="/about" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 About
-              </a>
-              <a href="#privacy" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
-                Privacy
-              </a>
-              <a href="#terms" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
-                Terms
-              </a>
+              </Link>
+              <button 
+                type="button"
+                onClick={() => setIsLegalOpen(true)} 
+                className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Privacy &amp; Terms
+              </button>
             </div>
 
-            {/* Social Icons (SVGs matching screenshot) */}
+            {/* Social Icons */}
             <div className="flex items-center gap-4 text-neutral-400 dark:text-neutral-500">
-              {/* GitHub */}
               <a
                 href="https://github.com"
                 target="_blank"
@@ -95,7 +98,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                 </svg>
               </a>
 
-              {/* Twitter / X */}
               <a
                 href="https://twitter.com"
                 target="_blank"
@@ -108,7 +110,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                 </svg>
               </a>
 
-              {/* YouTube */}
               <a
                 href="https://youtube.com"
                 target="_blank"
@@ -121,7 +122,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                 </svg>
               </a>
 
-              {/* LinkedIn */}
               <a
                 href="https://linkedin.com"
                 target="_blank"
@@ -140,6 +140,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
         </div>
 
       </div>
+
+      <LegalModal isOpen={isLegalOpen} onClose={() => setIsLegalOpen(false)} />
     </footer>
   );
 };

@@ -2,7 +2,7 @@ import React from 'react';
 
 export const BentoCalmerCard: React.FC = () => {
   return (
-    <div className="lg:col-span-5 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-[0_4px_30px_-6px_rgba(0,0,0,0.03)] dark:shadow-none overflow-hidden flex flex-col sm:flex-row items-stretch transition-all group">
+    <div className="lg:col-span-7 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-[0_4px_30px_-6px_rgba(0,0,0,0.03)] dark:shadow-none overflow-hidden flex flex-col sm:flex-row items-stretch transition-all group">
       {/* Left Photo */}
       <div className="sm:w-1/2 relative min-h-[180px] sm:min-h-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
         <img

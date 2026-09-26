@@ -31,8 +31,28 @@ export interface UpdateMilestone {
 
 export const MILESTONES: UpdateMilestone[] = [
   {
-    version: 'v0.8.0 Beta',
+    version: 'v0.9.0 Beta',
     isLatest: true,
+    date: 'October 2026',
+    title: 'Minimalist Architecture, Interactive Community Reviews, Curated Visual Tools & Performance Focus',
+    category: 'ux',
+    categoryLabel: 'Refinement & Platform Polish',
+    summary: 'A major release dedicated to purity, structural elegance, and essential workflows: introduced interactive community reviews, comprehensive editorial blog platform, refined MacBook workspace mockup, visual table & KaTeX studios, purged obsolete experimental modes (Zen, Typewriter, Canvas FX) for native typing responsiveness, and elevated overall design system to high-contrast modern minimalism.',
+    icon: Layers,
+    iconColor: 'text-neutral-900 dark:text-neutral-100',
+    iconBg: 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
+    highlights: [
+      { type: 'new', text: 'Top 5 Community Reviews: Dynamic reviews showcase with verified author badges, star ratings, local persistence, and an interactive review submission studio.' },
+      { type: 'new', text: 'Community Blog Platform: Multi-category publication hub supporting Engineering, Productivity, Guides, Architecture, and Design with reader modal and instant filtering.' },
+      { type: 'improved', text: 'Pure Editor Performance: Purged experimental particle engines and extraneous modes to guarantee zero-latency 0ms raw typing canvas performance.' },
+      { type: 'improved', text: 'Curated Slash Menu: Replaced cluttered prompt list with essential visual studios (KaTeX, Table Builder, Headings, Callouts, and Mermaid diagrams).' },
+      { type: 'improved', text: 'Hero Laptop Mockup Overhaul: Pixel-perfect MacBook frame with calibrated camera notch, 4-blueprint studio tabs, and elimination of decorative SVG noise.' },
+      { type: 'improved', text: 'Refined Subscription Architecture: Clean editorial launch initiative card replacing gradient noise, with zero external platform comparisons.' },
+      { type: 'fix', text: 'Presentation Theme Contrast Isolation: Synchronized slide color modes directly with system theme transitions to guarantee crisp contrast across Nordic, Sepia, and Dark themes.' }
+    ]
+  },
+  {
+    version: 'v0.8.0 Beta',
     date: 'September 2026',
     title: 'Writing Mode Redesign, Floating Formatting Dock, Slash Menu Polish, Eye-Comfort Reader & Minimalist Aesthetics',
     category: 'ux',
@@ -77,7 +97,7 @@ export const MILESTONES: UpdateMilestone[] = [
   {
     version: 'v0.7.0',
     date: 'September 2026',
-    title: 'Game-Developer 60–144FPS Canvas Engine & Idempotent Cloud Sync',
+    title: 'High-Throughput Canvas Engine & Idempotent Cloud Sync',
     category: 'engine',
     categoryLabel: 'Performance & Engine',
     summary: 'A complete architectural rebuild of the writing effect pipeline. Replaced DOM particle rendering with a hardware-accelerated 2D canvas layer and persistent mirror singleton, eliminating all input lag during rapid typing.',
@@ -85,7 +105,7 @@ export const MILESTONES: UpdateMilestone[] = [
     iconColor: 'text-amber-500 dark:text-amber-400',
     iconBg: 'bg-amber-50 dark:bg-amber-950/50 border-amber-200/60 dark:border-amber-900/50',
     highlights: [
-      { type: 'perf', text: 'Hardware-Accelerated 2D Canvas Layer: Full-screen High-DPI canvas overlay for 60–144FPS particle physics with 0 DOM nodes mounted per keypress.' },
+      { type: 'perf', text: 'Hardware-Accelerated 2D Canvas Layer: Full-screen High-DPI canvas overlay with 0 DOM nodes mounted per keypress.' },
       { type: 'perf', text: 'Zero-Allocation Particle Pool: Pre-allocated pool of 256 particle structures, entirely eliminating Garbage Collection pauses.' },
       { type: 'perf', text: 'Persistent Mirror Singleton: Caret measurement now completes in < 0.05ms without adding/removing DOM elements or forcing synchronous reflows.' },
       { type: 'perf', text: 'Direct GPU-Composited Cursor: Visual carets positioned via direct translate3d transform, bypassing React render cycles for native 0ms typing latency.' },

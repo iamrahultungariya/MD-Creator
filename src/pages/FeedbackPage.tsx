@@ -109,7 +109,7 @@ export const FeedbackPage: React.FC = () => {
     return {
       userAgent: navigator.userAgent,
       screenResolution: `${window.innerWidth}x${window.innerHeight}`,
-      appVersion: 'v3.1.0',
+      appVersion: 'v0.9.0 Beta',
       language: navigator.language,
       platform: navigator.platform
     };

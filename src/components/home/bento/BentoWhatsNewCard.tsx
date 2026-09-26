@@ -7,7 +7,7 @@ interface BentoWhatsNewCardProps {
 
 export const BentoWhatsNewCard: React.FC<BentoWhatsNewCardProps> = ({ onOpenUpdates }) => {
   return (
-    <div className="lg:col-span-4 rounded-3xl bg-neutral-950 text-white border border-neutral-800 shadow-[0_4px_30px_-6px_rgba(0,0,0,0.3)] p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden transition-all group">
+    <div className="lg:col-span-5 rounded-3xl bg-neutral-950 text-white border border-neutral-800 shadow-[0_4px_30px_-6px_rgba(0,0,0,0.3)] p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden transition-all group">
       {/* Abstract Glowing Mesh Wave Background */}
       <div className="absolute -right-12 -bottom-12 w-64 h-64 pointer-events-none opacity-40 group-hover:opacity-60 transition-opacity duration-700">
         <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -23,7 +23,7 @@ export const BentoWhatsNewCard: React.FC<BentoWhatsNewCardProps> = ({ onOpenUpda
       {/* Top Badges */}
       <div className="flex items-center justify-between z-10">
         <span className="px-2.5 py-0.5 rounded-full bg-neutral-800 text-neutral-300 text-[11px] font-mono font-bold">
-          v2.0
+          v0.9.0 Beta
         </span>
         <button
           onClick={onOpenUpdates}

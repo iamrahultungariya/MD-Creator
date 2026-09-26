@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Columns, Minimize2, PenTool, Eye, ArrowUpDown } from 'lucide-react';
+import { Columns, PenTool, Eye, ArrowUpDown } from 'lucide-react';
 import { ViewMode } from '../types';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
 import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
-import { EditorWritingFx } from '../../../components/editor/EditorWritingFx';
 import { MobileEditorToolbar } from './MobileEditorToolbar';
 import { storeOptimizedImage } from '../../../services/imageStorageService';
 import { FindReplaceBar } from './FindReplaceBar';
@@ -11,6 +10,7 @@ import { useReaderAppearance } from '../hooks/useReaderAppearance';
 import { ReaderArticleHeader } from './ReaderArticleHeader';
 import { WritingModeCanvas } from './WritingModeCanvas';
 import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
+import { PresentationView } from '../../presentation/PresentationView';
 
 interface EditorWorkspaceProps {
   viewMode: ViewMode;
@@ -51,8 +51,6 @@ interface EditorWorkspaceProps {
   isOffline?: boolean;
   wordCount?: number;
   readingTime?: number | string;
-  isTypewriterMode?: boolean;
-  onToggleTypewriter?: () => void;
   isSprintActive?: boolean;
   wordsWrittenInSprint?: number;
   onOpenSprintPopover?: () => void;
@@ -100,8 +98,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   isOffline = false,
   wordCount = 0,
   readingTime = 1,
-  isTypewriterMode = false,
-  onToggleTypewriter,
   isSprintActive = false,
   wordsWrittenInSprint = 0,
   onOpenSprintPopover,
@@ -266,7 +262,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   }, [insertFormatting]);
 
   // Determine visibility of editor and preview panes on mobile (< 768px) vs desktop (>= 768px)
-  const isEditorVisibleOnMobile = viewMode === 'zen' || (viewMode === 'split' && mobileTab === 'edit');
+  const isEditorVisibleOnMobile = viewMode === 'split' && mobileTab === 'edit';
   const isPreviewVisibleOnMobile = viewMode === 'read' || (viewMode === 'split' && mobileTab === 'preview');
 
   // Dedicated focused Writing Mode canvas (Bug 1 Fix & Writing Mode Redesign)
@@ -284,8 +280,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         isOffline={isOffline}
         wordCount={wordCount}
         readingTime={readingTime}
-        isTypewriterMode={isTypewriterMode}
-        onToggleTypewriter={onToggleTypewriter || (() => {})}
         isSprintActive={isSprintActive}
         wordsWrittenInSprint={wordsWrittenInSprint}
         onOpenSprintPopover={onOpenSprintPopover}
@@ -318,24 +312,18 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     );
   }
 
+  if (viewMode === 'present') {
+    return (
+      <PresentationView
+        content={content}
+        title={title}
+        onExit={() => setViewMode('split')}
+      />
+    );
+  }
+
   return (
     <>
-      {/* Floating Exit Zen Mode Button */}
-      {viewMode === 'zen' && (
-        <div className="fixed top-3 right-5 z-50 animate-in fade-in slide-in-from-top-1 duration-200 no-print">
-          <button
-            onClick={() => setViewMode('split')}
-            className="px-3 py-1.5 rounded-full bg-neutral-900/85 hover:bg-neutral-900 text-white dark:bg-neutral-100/90 dark:hover:bg-white dark:text-neutral-950 text-xs font-semibold backdrop-blur-md shadow-lg flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105 select-none ring-1 ring-black/10 dark:ring-white/20"
-            title="Exit Zen Mode (or press Esc)"
-          >
-            <Minimize2 className="w-3.5 h-3.5" />
-            <span>
-              Exit Zen <kbd className="font-mono text-[10px] bg-white/20 dark:bg-black/15 px-1 py-0.2 rounded ml-0.5">Esc</kbd>
-            </span>
-          </button>
-        </div>
-      )}
-
       {/* Mobile-Only Edit / Preview Segmented Tab Bar (< 768px) */}
       {viewMode === 'split' && (
         <div className="md:hidden flex items-center justify-center py-2 px-4 bg-neutral-100/90 dark:bg-neutral-900/90 border-b border-neutral-200 dark:border-neutral-800 select-none z-20">
@@ -417,11 +405,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           </div>
 
           {/* Virtualized Document Editor (Bug 1: 5500 LOC Fix) */}
-          <div
-            className={`flex-1 flex overflow-hidden relative ${
-              viewMode === 'zen' ? 'max-w-4xl mx-auto w-full' : ''
-            }`}
-          >
+          <div className="flex-1 flex overflow-hidden relative">
             <CodeMirrorEditor
               value={content}
               onChange={(newVal) => {
@@ -435,7 +419,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                 onSlashTrigger?.(query, pos);
               }}
               onScroll={handleEditorScroll}
-              isTypewriterMode={isTypewriterMode}
               showLineNumbers={showLineNumbers}
               placeholder="Start writing here... (Type / for shortcuts, drag & drop or paste images)"
               onPasteImage={async (file) => {
@@ -492,7 +475,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           className={`preview-pane-container flex-col h-full min-h-0 overflow-y-auto overflow-x-hidden transition-colors duration-200 ${
             viewMode === 'read'
               ? `w-full flex ${readerThemeClasses}`
-              : `bg-white dark:bg-neutral-950 ${viewMode === 'zen' ? 'hidden' : 'flex'} ${
+              : `bg-white dark:bg-neutral-950 flex ${
                   viewMode === 'split'
                     ? `w-full md:w-1/2 ${isPreviewVisibleOnMobile ? 'flex' : 'hidden md:flex'}`
                     : 'w-full'
@@ -534,6 +517,10 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
             <MarkdownPreview 
               content={deferredPreviewContent} 
               onToggleTask={onToggleTask}
+              onUpdateContent={(newContent) => {
+                setContent?.(newContent);
+                queueAutoSave?.(newContent, title);
+              }}
               className={viewMode === 'read' ? `${readerFontClass} ${readerSizeClass}` : undefined}
             />
           </div>
@@ -557,9 +544,6 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           onClearContent={onClearContent || (() => {})}
         />
       )}
-
-      {/* 60FPS Hardware-Accelerated Editor Typing FX Overlay */}
-      <EditorWritingFx textareaRef={textareaRef} editorRef={editorRef} />
     </>
   );
 });

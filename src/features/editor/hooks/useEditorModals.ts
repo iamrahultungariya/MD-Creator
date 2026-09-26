@@ -7,8 +7,6 @@ export function useEditorModals() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isPdfStudioOpen, setIsPdfStudioOpen] = useState(false);
   const [isTableBuilderOpen, setIsTableBuilderOpen] = useState(false);
-  const [isTypewriterMode, setIsTypewriterMode] = useState(false);
-  const [isFxPopoverOpen, setIsFxPopoverOpen] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
   const [isUpdatesOpen, setIsUpdatesOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
@@ -17,6 +15,8 @@ export function useEditorModals() {
   const [isSprintPopoverOpen, setIsSprintPopoverOpen] = useState(false);
   const [isMathStudioOpen, setIsMathStudioOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
 
   return {
     isDrawerOpen,
@@ -31,10 +31,6 @@ export function useEditorModals() {
     setIsPdfStudioOpen,
     isTableBuilderOpen,
     setIsTableBuilderOpen,
-    isTypewriterMode,
-    setIsTypewriterMode,
-    isFxPopoverOpen,
-    setIsFxPopoverOpen,
     isOutlineOpen,
     setIsOutlineOpen,
     isUpdatesOpen,
@@ -51,5 +47,9 @@ export function useEditorModals() {
     setIsMathStudioOpen,
     isImageModalOpen,
     setIsImageModalOpen,
+    isPublishModalOpen,
+    setIsPublishModalOpen,
+    isLocalFolderOpen,
+    setIsLocalFolderOpen,
   };
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, Plus, Pin, Clock, X, Upload } from 'lucide-react';
+import { Search, FileText, Plus, Pin, Clock, X, Upload, FolderTree } from 'lucide-react';
 import { useDocuments, useCreateDocument } from '../../hooks/useDocuments';
 import { saveDocument } from '../../db';
 
@@ -8,12 +8,14 @@ interface DocumentSwitcherModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentDocId: string;
+  onOpenLocalFolder?: () => void;
 }
 
 export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
   isOpen,
   onClose,
-  currentDocId
+  currentDocId,
+  onOpenLocalFolder,
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -129,6 +131,19 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
             <Upload className="w-3.5 h-3.5" />
             <span>Import .md</span>
           </button>
+
+          {onOpenLocalFolder && (
+            <button
+              onClick={() => {
+                onClose();
+                onOpenLocalFolder();
+              }}
+              className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <FolderTree className="w-3.5 h-3.5" />
+              <span>Local Vault</span>
+            </button>
+          )}
           <input
             type="file"
             ref={fileInputRef}

@@ -16,13 +16,13 @@ export const SAMPLE_DOCS: SampleDoc[] = [
     status: 'Synced',
     content: `# ⚡ Fast Markdown Studio
 
-Turn ideas into publication-ready PDFs with **smooth 60fps canvas rendering**.
+Turn ideas into publication-ready PDFs with **instant local-first rendering**.
 
 > [!TIP]
 > Try typing directly in this editor or click the task checkboxes below!
 
 ### Interactive Checklist
-- [x] Hardware-accelerated 60fps 2D canvas engine
+- [x] Instant client-side IndexedDB cache
 - [x] Real-time GitHub alert callouts
 - [ ] Live Mermaid.js system architecture
 - [ ] Vector PDF export with custom typography & cover pages
@@ -42,7 +42,7 @@ Zero-latency input with seamless cloud persistence.
 
 \`\`\`mermaid
 flowchart LR
-    A[⌨️ 60FPS Keystroke] --> B[(IndexedDB 0ms)]
+    A[⌨️ Keystroke (0ms)] --> B[(IndexedDB Cache)]
     B --> C{Online?}
     C -->|Yes| D[☁️ Cloud Sync]
     C -->|No| E[📦 Local Store]

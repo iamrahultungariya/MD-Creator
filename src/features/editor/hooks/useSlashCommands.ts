@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { COMMANDS } from '../../../components/editor/SlashCommandMenu';
-import { cleanAndNormalizeMarkdown } from '../../../utils/markdownSanitizer';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
 import { handleEditorAutoPair } from '../utils/editorAutoPair';
 import { handleEditorListShortcuts } from '../utils/editorListShortcuts';
@@ -14,7 +13,7 @@ interface UseSlashCommandsOptions {
   editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
   updateCursorPosition?: () => void;
   onOpenTableBuilder: () => void;
-  onOpenTemplates: () => void;
+  onOpenTemplates?: () => void;
   onOpenMathStudio: () => void;
   onOpenImageModal?: () => void;
   onExportMd?: () => void;
@@ -100,15 +99,6 @@ export function useSlashCommands({
           return;
         }
 
-        if (snippet === '__ACTION_OPEN_TEMPLATES__') {
-          ed.setSelectionRange(from, cursor);
-          ed.replaceSelection('');
-          setIsSlashMenuOpen(false);
-          setSlashQuery('');
-          onOpenTemplates();
-          return;
-        }
-
         if (snippet === '__ACTION_OPEN_MATH_STUDIO__') {
           ed.setSelectionRange(from, cursor);
           ed.replaceSelection('');
@@ -127,24 +117,6 @@ export function useSlashCommands({
           return;
         }
 
-        if (snippet === '__ACTION_EXPORT_MD__') {
-          ed.setSelectionRange(from, cursor);
-          ed.replaceSelection('');
-          setIsSlashMenuOpen(false);
-          setSlashQuery('');
-          onExportMd?.();
-          return;
-        }
-
-        if (snippet === '__ACTION_OPEN_PDF_STUDIO__') {
-          ed.setSelectionRange(from, cursor);
-          ed.replaceSelection('');
-          setIsSlashMenuOpen(false);
-          setSlashQuery('');
-          onOpenPdfStudio?.();
-          return;
-        }
-
         if (snippet === '__ACTION_OPEN_FIND__') {
           ed.setSelectionRange(from, cursor);
           ed.replaceSelection('');
@@ -160,35 +132,6 @@ export function useSlashCommands({
           setIsSlashMenuOpen(false);
           setSlashQuery('');
           onOpenReplace?.();
-          return;
-        }
-
-        if (snippet === '__ACTION_CLEAN_FORMAT__') {
-          ed.setSelectionRange(from, cursor);
-          ed.replaceSelection('');
-          const cleaned = cleanAndNormalizeMarkdown(ed.getValue());
-          ed.setValue(cleaned);
-          setContent(cleaned);
-          executeSave(cleaned, title);
-          setIsSlashMenuOpen(false);
-          setSlashQuery('');
-          return;
-        }
-
-        if (snippet === '__ACTION_INSERT_FRONTMATTER__') {
-          const todayStr = new Date().toISOString().slice(0, 10);
-          const yamlBlock = `---\ntitle: "${title || 'Untitled Document'}"\ndate: ${todayStr}\nauthor: "Author Name"\ntags: ["documentation", "guide"]\ndraft: false\n---\n\n`;
-          ed.setSelectionRange(from, cursor);
-          ed.replaceSelection('');
-          const curVal = ed.getValue();
-          const nextVal = yamlBlock + curVal;
-          ed.setValue(nextVal);
-          setContent(nextVal);
-          executeSave(nextVal, title);
-          setIsSlashMenuOpen(false);
-          setSlashQuery('');
-          ed.setSelectionRange(yamlBlock.length, yamlBlock.length);
-          ed.focus();
           return;
         }
 
@@ -220,14 +163,6 @@ export function useSlashCommands({
         return;
       }
 
-      if (snippet === '__ACTION_OPEN_TEMPLATES__') {
-        setContent(cleanBefore + afterCursor);
-        setIsSlashMenuOpen(false);
-        setSlashQuery('');
-        onOpenTemplates();
-        return;
-      }
-
       if (snippet === '__ACTION_OPEN_MATH_STUDIO__') {
         setContent(cleanBefore + afterCursor);
         setIsSlashMenuOpen(false);
@@ -241,60 +176,6 @@ export function useSlashCommands({
         setIsSlashMenuOpen(false);
         setSlashQuery('');
         onOpenImageModal?.();
-        return;
-      }
-
-      if (snippet === '__ACTION_EXPORT_MD__') {
-        setContent(cleanBefore + afterCursor);
-        setIsSlashMenuOpen(false);
-        setSlashQuery('');
-        onExportMd?.();
-        return;
-      }
-
-      if (snippet === '__ACTION_OPEN_PDF_STUDIO__') {
-        setContent(cleanBefore + afterCursor);
-        setIsSlashMenuOpen(false);
-        setSlashQuery('');
-        onOpenPdfStudio?.();
-        return;
-      }
-
-      if (snippet === '__ACTION_CLEAN_FORMAT__') {
-        const fullCleaned = cleanAndNormalizeMarkdown(cleanBefore + afterCursor);
-        setContent(fullCleaned);
-        setIsSlashMenuOpen(false);
-        setSlashQuery('');
-        executeSave(fullCleaned, title);
-        return;
-      }
-
-      if (snippet === '__ACTION_INSERT_FRONTMATTER__') {
-        const todayStr = new Date().toISOString().slice(0, 10);
-        const yamlBlock = `---\ntitle: "${title || 'Untitled Document'}"\ndate: ${todayStr}\nauthor: "Author Name"\ntags: ["documentation", "guide"]\ndraft: false\n---\n\n`;
-        
-        let nextContent = '';
-        if (content.startsWith('---')) {
-          nextContent = cleanBefore + yamlBlock + afterCursor;
-        } else {
-          const stripped = cleanBefore + afterCursor;
-          nextContent = yamlBlock + stripped;
-        }
-
-        setContent(nextContent);
-        setIsSlashMenuOpen(false);
-        setSlashQuery('');
-        executeSave(nextContent, title);
-        setTimeout(() => {
-          if (textareaRef?.current) {
-            const prevScroll = textareaRef.current.scrollTop;
-            textareaRef.current.focus({ preventScroll: true });
-            const newPos = yamlBlock.length;
-            textareaRef.current.setSelectionRange(newPos, newPos);
-            textareaRef.current.scrollTop = prevScroll;
-            updateCursorPosition?.();
-          }
-        }, 20);
         return;
       }
 

@@ -3,7 +3,6 @@ import {
   Check, 
   Clock, 
   Flame, 
-  ArrowUpDown, 
   CloudOff, 
   ListTree
 } from 'lucide-react';
@@ -23,8 +22,6 @@ interface WritingModeCanvasProps {
   isOffline?: boolean;
   wordCount: number;
   readingTime: number | string;
-  isTypewriterMode: boolean;
-  onToggleTypewriter: () => void;
   isSprintActive?: boolean;
   wordsWrittenInSprint?: number;
   onOpenSprintPopover?: () => void;
@@ -54,8 +51,6 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
   isOffline = false,
   wordCount,
   readingTime,
-  isTypewriterMode,
-  onToggleTypewriter,
   isSprintActive = false,
   wordsWrittenInSprint = 0,
   onOpenSprintPopover,
@@ -370,7 +365,6 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           onCursorChange={notifyUserActivity}
           onScroll={notifyUserActivity}
           onSlashTrigger={handleSlashTrigger}
-          isTypewriterMode={isTypewriterMode}
           showLineNumbers={true} // Clean dimmed paper line numbers per redesign mockup
           placeholder="Write your thoughts, ideas, specs or story... (Type / for quick actions)"
           onPasteImage={onPasteImage}
@@ -444,20 +438,6 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           </div>
 
           <div className="h-3.5 w-px bg-neutral-200 dark:bg-neutral-800" />
-
-          {/* Quick Action: Typewriter Centering Toggle */}
-          <button
-            onClick={onToggleTypewriter}
-            className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer ${
-              isTypewriterMode
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300 font-semibold'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-            title={isTypewriterMode ? 'Typewriter Mode: ON' : 'Typewriter Mode: OFF'}
-          >
-            <ArrowUpDown className="w-3 h-3" />
-            <span className="hidden md:inline">Typewriter</span>
-          </button>
 
           {/* Quick Action: Focus Sprint Timer */}
           {onOpenSprintPopover && (

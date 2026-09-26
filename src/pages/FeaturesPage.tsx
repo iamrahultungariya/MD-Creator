@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
-import { CtaBanner } from '../components/home/CtaBanner';
-import { FeaturesComparisonTable, PillarId } from '../components/features/FeaturesComparisonTable';
+
+export type PillarId = 'pdf' | 'math' | 'offline' | 'slash' | 'media';
 
 export const FeaturesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ export const FeaturesPage: React.FC = () => {
         <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 text-center max-w-5xl mx-auto px-4 sm:px-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 mb-5 shadow-2xs">
             <Layers className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="font-mono uppercase tracking-wider text-[11px]">v0.8.0 Beta Architecture &amp; Feature Groups</span>
+            <span className="font-mono uppercase tracking-wider text-[11px]">v0.9.0 Beta Architecture &amp; Feature Groups</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-neutral-950 dark:text-white tracking-tight mb-5 leading-tight">
@@ -498,12 +498,6 @@ export const FeaturesPage: React.FC = () => {
             </div>
           </div>
         </section>
-
-        {/* Verifiable Feature Comparison Matrix Table */}
-        <FeaturesComparisonTable onScrollToPillar={scrollToPillar} />
-
-        {/* CTA Banner */}
-        <CtaBanner onOpenTemplates={() => navigate('/editor')} />
       </main>
 
       <Footer />

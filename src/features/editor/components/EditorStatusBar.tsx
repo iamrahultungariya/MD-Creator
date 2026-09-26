@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  AlignCenterVertical, 
   Timer, 
   Play, 
   Pause, 
@@ -19,8 +18,6 @@ interface EditorStatusBarProps {
   wordCount: number;
   charCount: number;
   readingTime: number;
-  isTypewriterMode: boolean;
-  onToggleTypewriter: () => void;
   isSprintActive: boolean;
   sprintDuration: number;
   sprintSecondsRemaining: number;
@@ -43,14 +40,12 @@ interface EditorStatusBarProps {
 }
 
 export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
-  viewMode,
+  viewMode: _viewMode,
   cursorPos,
   lineCount,
   wordCount,
   charCount,
   readingTime,
-  isTypewriterMode,
-  onToggleTypewriter,
   isSprintActive,
   sprintDuration,
   sprintSecondsRemaining,
@@ -78,9 +73,7 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
 
   return (
     <footer
-      className={`editor-status-bar h-8 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/90 px-4 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 select-none z-30 transition-all duration-200 no-print ${
-        viewMode === 'zen' ? 'opacity-0 hover:opacity-100' : ''
-      }`}
+      className="editor-status-bar h-8 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/90 px-4 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 select-none z-30 transition-all duration-200 no-print"
     >
       {/* Left Stats: Cursor & Document Telemetry */}
       <div className="flex items-center gap-3">
@@ -95,22 +88,8 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
         <span className="hidden md:inline">~{readingTime} min read</span>
       </div>
 
-      {/* Center Actions: Typewriter Mode & Upgraded Focus Sprint Companion */}
+      {/* Center Actions: Focus Sprint Companion */}
       <div className="flex items-center gap-2">
-        {/* Typewriter Scrolling Toggle */}
-        <button
-          type="button"
-          onClick={onToggleTypewriter}
-          className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition-colors cursor-pointer text-[10px] font-semibold ${
-            isTypewriterMode
-              ? 'bg-blue-600 text-white shadow-2xs'
-              : 'hover:bg-neutral-200/60 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
-          }`}
-          title="Typewriter Scrolling: Keeps active writing line centered vertically at eye level"
-        >
-          <AlignCenterVertical className="w-3 h-3" />
-          <span className="hidden sm:inline">Typewriter</span>
-        </button>
 
         {/* Upgraded Focus Sprint Timer Button */}
         <div className="relative">

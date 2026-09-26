@@ -6,7 +6,6 @@ import { BentoEditorCard } from './bento/BentoEditorCard';
 import { BentoTemplatesCard } from './bento/BentoTemplatesCard';
 import { BentoWorkflowsCard } from './bento/BentoWorkflowsCard';
 import { BentoCalmerCard } from './bento/BentoCalmerCard';
-import { BentoTestimonialCard } from './bento/BentoTestimonialCard';
 import { BentoWhatsNewCard } from './bento/BentoWhatsNewCard';
 
 interface BentoFeaturesProps {
@@ -39,10 +38,9 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = ({
           <BentoWorkflowsCard />
         </div>
 
-        {/* Row 3: Social Proof & Highlights - 3 Columns (Calmer 5 cols, Testimonial 3 cols, What's New 4 cols) */}
+        {/* Row 3: Focus & Platform Highlights - 2 Columns (Calmer 7 cols, What's New 5 cols) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-7 items-stretch">
           <BentoCalmerCard />
-          <BentoTestimonialCard />
           <BentoWhatsNewCard onOpenUpdates={onOpenUpdates} />
         </div>
 

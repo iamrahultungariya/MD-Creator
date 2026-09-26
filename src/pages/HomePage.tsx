@@ -4,21 +4,16 @@ import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
 import { FeatureStrip } from '../components/home/FeatureStrip';
 import { BentoFeatures } from '../components/home/BentoFeatures';
-import { Testimonial } from '../components/home/Testimonial';
-import { CtaBanner } from '../components/home/CtaBanner';
+import { ReviewsSection } from '../components/home/ReviewsSection';
 import { Footer } from '../components/home/Footer';
 
 // Code-split heavy interactive modals on-demand
-const DemoModal = React.lazy(() =>
-  import('../components/home/DemoModal').then((m) => ({ default: m.DemoModal }))
-);
 const TemplatesModal = React.lazy(() =>
   import('../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
 );
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
 
   // Global listener for Templates modal trigger and URL query param
@@ -54,7 +49,7 @@ export const HomePage: React.FC = () => {
       {/* Main Content Sections */}
       <main className="flex-1">
         {/* Hero Section with Laptop Mockup */}
-        <Hero onWatchDemo={() => setIsDemoOpen(true)} />
+        <Hero onOpenTemplates={() => setIsTemplatesOpen(true)} />
 
         {/* 5-Item Highlights Strip */}
         <FeatureStrip />
@@ -66,27 +61,14 @@ export const HomePage: React.FC = () => {
           onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
 
-        {/* Testimonial Quote */}
-        <Testimonial />
-
-        {/* Bottom CTA Banner with Wave */}
-        <CtaBanner onOpenTemplates={() => setIsTemplatesOpen(true)} />
+        {/* Top 5 Verified Community Reviews + Review Submission */}
+        <ReviewsSection />
       </main>
 
       {/* Footer */}
       <Footer onOpenUpdates={() => navigate('/updates')} />
 
-      {/* Interactive Modals — Lazy Loaded On-Demand */}
-      {isDemoOpen && (
-        <Suspense fallback={null}>
-          <DemoModal 
-            isOpen={isDemoOpen} 
-            onClose={() => setIsDemoOpen(false)} 
-            onOpenUpdates={() => navigate('/updates')}
-          />
-        </Suspense>
-      )}
-      
+      {/* Interactive Templates Modal — Lazy Loaded On-Demand */}
       {isTemplatesOpen && (
         <Suspense fallback={null}>
           <TemplatesModal 

@@ -5,8 +5,6 @@ import {
   PenTool, 
   Eye, 
   Workflow,
-  Lightbulb,
-  Table as TableIcon,
   Sparkles,
   Folder,
   FileText,
@@ -64,7 +62,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
   emitSparks,
   handleSelectDoc,
   handleToggleTask,
-  handleInsertSnippet,
+  handleInsertSnippet: _handleInsertSnippet,
   startAutoType,
   stopAutoType,
   onOpenInFullApp,
@@ -150,7 +148,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                 }`}
               >
                 <PenTool className="w-2.5 h-2.5" />
-                <span>Code</span>
+                <span>Writing</span>
               </button>
               <button
                 onClick={() => setViewMode('preview')}
@@ -163,6 +161,29 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
               >
                 <Eye className="w-2.5 h-2.5" />
                 <span>Preview</span>
+              </button>
+            </div>
+
+            {/* Auto-Type Demo Player & Reset */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={isAutoTyping ? stopAutoType : startAutoType}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                  isAutoTyping 
+                    ? 'bg-amber-500 text-neutral-950 animate-pulse'
+                    : mockupTheme === 'dark' ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700' : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                }`}
+                title="Simulate typing in mockup"
+              >
+                {isAutoTyping ? <Pause className="w-2.5 h-2.5" /> : <Play className="w-2.5 h-2.5 fill-current" />}
+                <span className="hidden sm:inline">{isAutoTyping ? 'Typing...' : 'Auto-Type'}</span>
+              </button>
+              <button
+                onClick={() => setContent(currentDoc.content)}
+                title="Reset text"
+                className={`p-1 rounded cursor-pointer transition-colors ${mockupTheme === 'dark' ? 'hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200' : 'hover:bg-neutral-200 text-neutral-500 hover:text-neutral-800'}`}
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
               </button>
             </div>
 
@@ -186,137 +207,85 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
           </div>
         </div>
 
-        {/* Action Chips Bar */}
-        <div className={`px-3 py-1.5 border-b ${mockupTheme === 'dark' ? 'bg-[#15151c] border-neutral-800/80 text-neutral-400' : 'bg-neutral-50 border-neutral-200 text-neutral-600'} flex items-center justify-between text-[10.5px] z-10 shrink-0 overflow-x-auto no-scrollbar`}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] uppercase tracking-wider font-mono opacity-60">Insert:</span>
-            <button 
-              onClick={() => handleInsertSnippet('> [!TIP]\n> Write with clarity and speed.')}
-              className="px-2 py-0.5 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-medium cursor-pointer transition-colors flex items-center gap-1 text-[10px]"
-            >
-              <Lightbulb className="w-2.5 h-2.5" /> + Tip
-            </button>
-            <button 
-              onClick={() => handleInsertSnippet('```mermaid\ngraph TD;\n  Start-->Process-->Complete;\n```')}
-              className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-medium cursor-pointer transition-colors flex items-center gap-1 text-[10px]"
-            >
-              <Workflow className="w-2.5 h-2.5" /> + Flowchart
-            </button>
-            <button 
-              onClick={() => handleInsertSnippet('- [ ] Review architecture milestones')}
-              className="px-2 py-0.5 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 font-medium cursor-pointer transition-colors flex items-center gap-1 text-[10px]"
-            >
-              <CheckSquare className="w-2.5 h-2.5" /> + Task
-            </button>
-          </div>
-
-          {/* Auto-Type Demo Player & Reset */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={isAutoTyping ? stopAutoType : startAutoType}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
-                isAutoTyping 
-                  ? 'bg-amber-500 text-neutral-950 animate-pulse'
-                  : 'bg-neutral-800/80 hover:bg-neutral-700 text-neutral-300'
-              }`}
-            >
-              {isAutoTyping ? <Pause className="w-2.5 h-2.5" /> : <Play className="w-2.5 h-2.5 fill-current" />}
-              <span>{isAutoTyping ? 'Typing...' : 'Auto-Type'}</span>
-            </button>
-            <button
-              onClick={() => setContent(currentDoc.content)}
-              title="Reset text"
-              className="p-1 rounded hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 cursor-pointer"
-            >
-              <RotateCcw className="w-2.5 h-2.5" />
-            </button>
-          </div>
-        </div>
-
         {/* Screen Content Engine (Supports 4 Modes: Write, Organize, Create, Export) */}
         <div className="flex-1 relative overflow-hidden flex">
           {/* MODE: ORGANIZE */}
           {activeSideTab === 'organize' && (
-            <div className="absolute inset-0 z-30 bg-[#121216]/95 backdrop-blur-md p-4 flex flex-col justify-between text-neutral-200 animate-in fade-in duration-150">
-              <div>
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-800">
+            <div className={`absolute inset-0 z-30 ${mockupTheme === 'dark' ? 'bg-[#121216]/98 text-neutral-200' : 'bg-white/98 text-neutral-800'} backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between animate-in fade-in duration-150`}>
+              <div className="overflow-y-auto space-y-4">
+                <div className={`flex items-center justify-between pb-3 border-b ${mockupTheme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'}`}>
                   <div className="flex items-center gap-2">
-                    <Folder className="w-4 h-4 text-blue-400" />
-                    <span className="font-semibold text-xs tracking-tight">Workspace Navigator</span>
+                    <Folder className="w-4 h-4 text-blue-500" />
+                    <span className="font-bold text-xs tracking-tight">Workspace Navigator</span>
                   </div>
-                  <span className="text-[10px] font-mono text-neutral-500">2 documents synced</span>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${mockupTheme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-neutral-100 text-neutral-600'}`}>
+                    IndexedDB Sync Active
+                  </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 text-xs">
                   <div>
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-neutral-500 font-semibold px-2">
-                      📁 Product Specs & RFCs
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-neutral-400 font-bold px-1">
+                      📁 Product RFCs & Architecture
                     </span>
-                    <div className="mt-1 space-y-1">
-                      {SAMPLE_DOCS.filter(d => d.folder === 'Product Specs').map(doc => (
+                    <div className="mt-1.5 space-y-1">
+                      {SAMPLE_DOCS.map(doc => (
                         <button
                           key={doc.id}
                           onClick={() => {
                             handleSelectDoc(doc.id);
                             setActiveSideTab('write');
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-colors ${
                             activeDocId === doc.id
-                              ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                              : 'hover:bg-neutral-800/60 text-neutral-300'
+                              ? 'bg-blue-600/15 text-blue-500 dark:text-blue-400 border border-blue-500/30 font-medium'
+                              : mockupTheme === 'dark' ? 'hover:bg-neutral-800/60 text-neutral-300' : 'hover:bg-neutral-100 text-neutral-700'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-3.5 h-3.5 text-blue-400" />
+                          <div className="flex items-center gap-2.5">
+                            <FileText className="w-3.5 h-3.5 text-blue-500" />
                             <span>{doc.title}</span>
                           </div>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400">
-                            {doc.status}
-                          </span>
+                          <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-mono">
+                            <span>{doc.status}</span>
+                            <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                          </div>
                         </button>
                       ))}
+                      <div className={`px-3 py-2 rounded-xl text-xs flex items-center justify-between opacity-60 ${mockupTheme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                          <span>Security_Audit_Model.md</span>
+                        </div>
+                        <span className="text-[10px] font-mono">Local Vault</span>
+                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-neutral-500 font-semibold px-2">
-                      📁 System Flow & Diagrams
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-neutral-400 font-bold px-1">
+                      📁 Engineering Notes
                     </span>
-                    <div className="mt-1 space-y-1">
-                      {SAMPLE_DOCS.filter(d => d.folder === 'Architecture').map(doc => (
-                        <button
-                          key={doc.id}
-                          onClick={() => {
-                            handleSelectDoc(doc.id);
-                            setActiveSideTab('write');
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between cursor-pointer transition-colors ${
-                            activeDocId === doc.id
-                              ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                              : 'hover:bg-neutral-800/60 text-neutral-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Workflow className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>{doc.title}</span>
-                          </div>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
-                            {doc.status}
-                          </span>
-                        </button>
-                      ))}
+                    <div className="mt-1.5 space-y-1">
+                      <div className={`px-3 py-2 rounded-xl text-xs flex items-center justify-between opacity-60 ${mockupTheme === 'dark' ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                        <div className="flex items-center gap-2.5">
+                          <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                          <span>Weekly_Sync_Retrospective.md</span>
+                        </div>
+                        <span className="text-[10px] font-mono">2 days ago</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400">
-                <span>IndexedDB 0ms Local Cache</span>
+              <div className={`pt-3 border-t ${mockupTheme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'} flex items-center justify-between text-[11px] text-neutral-400`}>
+                <span>Dexie IndexedDB • 100% Private Offline</span>
                 <button
                   onClick={() => setActiveSideTab('write')}
-                  className="text-blue-400 hover:text-blue-300 font-medium cursor-pointer"
+                  className="text-blue-500 hover:text-blue-400 font-semibold cursor-pointer"
                 >
-                  Return to Editor →
+                  Return to Writing →
                 </button>
               </div>
             </div>
@@ -324,78 +293,92 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
 
           {/* MODE: CREATE */}
           {activeSideTab === 'create' && (
-            <div className="absolute inset-0 z-30 bg-[#121216]/95 backdrop-blur-md p-4 flex flex-col justify-between text-neutral-200 animate-in fade-in duration-150">
-              <div>
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-800">
+            <div className={`absolute inset-0 z-30 ${mockupTheme === 'dark' ? 'bg-[#121216]/98 text-neutral-200' : 'bg-white/98 text-neutral-800'} backdrop-blur-md p-4 sm:p-5 flex flex-col justify-between animate-in fade-in duration-150`}>
+              <div className="overflow-y-auto space-y-3">
+                <div className={`flex items-center justify-between pb-3 border-b ${mockupTheme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'}`}>
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-400" />
-                    <span className="font-semibold text-xs tracking-tight">Component & Blueprint Studio</span>
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <span className="font-bold text-xs tracking-tight">Document Blueprint Studio</span>
                   </div>
-                  <span className="text-[10px] font-mono text-neutral-500">1-click insert</span>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${mockupTheme === 'dark' ? 'bg-neutral-800 text-neutral-400' : 'bg-neutral-100 text-neutral-600'}`}>
+                    1-Click Bootstrap
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <button
-                    onClick={() => handleInsertSnippet('```mermaid\nsequenceDiagram\n  autonumber\n  Client->>Dexie: 0ms Local Write\n  Dexie-->>Client: Instant Render\n  Dexie->>Supabase: Background Sync\n```')}
-                    className="p-3 rounded-xl bg-neutral-900 hover:bg-neutral-800/80 border border-neutral-800 text-left transition-all hover:border-emerald-500/50 cursor-pointer group"
+                    onClick={() => {
+                      setContent(`# RFC: High-Performance Architecture\n\n## 1. Context & Problem Statement\nDescribe the background and problem requiring this design.\n\n## 2. Technical Architecture\n- **Client Cache**: IndexedDB 0ms read/write\n- **Vector Export**: Browser-side print stylesheets\n\n## 3. Security Considerations\nAll user data remains strictly client-side.\n`);
+                      setActiveSideTab('write');
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer group ${mockupTheme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-blue-500/50' : 'bg-neutral-50 border-neutral-200 hover:border-blue-500'}`}
                   >
-                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold mb-1">
+                    <div className="flex items-center gap-2 text-blue-500 text-xs font-bold mb-1">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Technical RFC</span>
+                    </div>
+                    <p className="text-[10.5px] text-neutral-500 leading-snug">
+                      Standard Request for Comments with problem context, architectural design & rollout plan.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setContent(`# ADR 001: Local-First Storage with Dexie.js\n\n## Status\nAccepted\n\n## Context\nUsers need zero typing latency even on intermittent network connections.\n\n## Decision\nUse IndexedDB as the single source of truth, synchronizing lazily.\n\n## Consequences\nImmediate 0ms keystrokes with reliable offline durability.\n`);
+                      setActiveSideTab('write');
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer group ${mockupTheme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-emerald-500/50' : 'bg-neutral-50 border-neutral-200 hover:border-emerald-500'}`}
+                  >
+                    <div className="flex items-center gap-2 text-emerald-500 text-xs font-bold mb-1">
                       <Workflow className="w-3.5 h-3.5" />
-                      <span>Sequence Flow</span>
+                      <span>Architecture Decision (ADR)</span>
                     </div>
-                    <p className="text-[10.5px] text-neutral-400 leading-snug">
-                      Live Mermaid sequence flow with instant vector rendering.
+                    <p className="text-[10.5px] text-neutral-500 leading-snug">
+                      Document architectural choices, trade-offs, consequences, and alternative options.
                     </p>
                   </button>
 
                   <button
-                    onClick={() => handleInsertSnippet('| Metric | Benchmark | Status |\n| :--- | :--- | :--- |\n| Keystroke Latency | < 0.05ms | ✅ Passed |\n| GC Thrashing | 0 Bytes | ✅ Passed |')}
-                    className="p-3 rounded-xl bg-neutral-900 hover:bg-neutral-800/80 border border-neutral-800 text-left transition-all hover:border-blue-500/50 cursor-pointer group"
+                    onClick={() => {
+                      setContent(`# Sprint Retrospective\n\n## What Went Well\n- Shipped v0.9.0 Beta with zero build regressions\n- Rebuilt review showcase with real-time ratings\n\n## Opportunities for Improvement\n- Enhance table shortcuts and cell navigation\n\n## Action Items\n- [ ] Release production changelog\n- [ ] Monitor user feedback triage\n`);
+                      setActiveSideTab('write');
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer group ${mockupTheme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-amber-500/50' : 'bg-neutral-50 border-neutral-200 hover:border-amber-500'}`}
                   >
-                    <div className="flex items-center gap-2 text-blue-400 text-xs font-semibold mb-1">
-                      <TableIcon className="w-3.5 h-3.5" />
-                      <span>Telemetry Table</span>
-                    </div>
-                    <p className="text-[10.5px] text-neutral-400 leading-snug">
-                      Clean Markdown comparison matrix with header alignment.
-                    </p>
-                  </button>
-
-                  <button
-                    onClick={() => handleInsertSnippet('> [!IMPORTANT]\n> High availability storage guarantees zero data loss on unexpected power cuts.')}
-                    className="p-3 rounded-xl bg-neutral-900 hover:bg-neutral-800/80 border border-neutral-800 text-left transition-all hover:border-purple-500/50 cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-2 text-purple-400 text-xs font-semibold mb-1">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Important Callout</span>
-                    </div>
-                    <p className="text-[10.5px] text-neutral-400 leading-snug">
-                      GitHub alert callout in vivid purple container.
-                    </p>
-                  </button>
-
-                  <button
-                    onClick={() => handleInsertSnippet('- [ ] Stage 1: Local IndexedDB\n- [ ] Stage 2: Supabase Replication\n- [ ] Stage 3: PDF Vector Printing')}
-                    className="p-3 rounded-xl bg-neutral-900 hover:bg-neutral-800/80 border border-neutral-800 text-left transition-all hover:border-amber-500/50 cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
+                    <div className="flex items-center gap-2 text-amber-500 text-xs font-bold mb-1">
                       <CheckSquare className="w-3.5 h-3.5" />
-                      <span>Action Checklist</span>
+                      <span>Sprint Retrospective</span>
                     </div>
-                    <p className="text-[10.5px] text-neutral-400 leading-snug">
-                      Interactive checkboxes that toggle live on click.
+                    <p className="text-[10.5px] text-neutral-500 leading-snug">
+                      Evaluate team execution, highlight wins, surface blockers, and track actionable tasks.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setContent(`# Executive Summary: MD Writer\n\n## Executive Overview\nMD Writer delivers a modern, focused writing environment with design-grade PDF export.\n\n## Key Strategic Pillars\n1. **Zero Distraction**: Stripped extraneous gimmicks and clutter.\n2. **Privacy Sovereignty**: Client-side storage without tracking.\n\n## Target Outcomes\n- 100% offline autonomy\n- High customer satisfaction ratings\n`);
+                      setActiveSideTab('write');
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer group ${mockupTheme === 'dark' ? 'bg-neutral-900 border-neutral-800 hover:border-purple-500/50' : 'bg-neutral-50 border-neutral-200 hover:border-purple-500'}`}
+                  >
+                    <div className="flex items-center gap-2 text-purple-500 text-xs font-bold mb-1">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Executive Summary</span>
+                    </div>
+                    <p className="text-[10.5px] text-neutral-500 leading-snug">
+                      High-level strategic briefing with goals, deliverables, core metrics, and timelines.
                     </p>
                   </button>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-[11px]">
-                <span className="text-neutral-500">Pick any card to inject directly into editor</span>
+              <div className={`pt-3 border-t ${mockupTheme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'} flex items-center justify-between text-[11px]`}>
+                <span className="text-neutral-400">Select any blueprint to bootstrap into editor</span>
                 <button
                   onClick={() => setActiveSideTab('write')}
-                  className="text-purple-400 hover:text-purple-300 font-medium cursor-pointer"
+                  className="text-purple-500 hover:text-purple-400 font-semibold cursor-pointer"
                 >
-                  Close Studio →
+                  Return to Writing →
                 </button>
               </div>
             </div>
@@ -403,44 +386,44 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
 
           {/* MODE: EXPORT */}
           {activeSideTab === 'export' && (
-            <div className="absolute inset-0 z-30 bg-neutral-900/95 backdrop-blur-md p-4 overflow-y-auto flex flex-col items-center animate-in fade-in duration-150">
-              <div className="w-full max-w-md bg-white text-neutral-900 rounded-lg shadow-2xl p-6 flex flex-col justify-between min-h-[340px] text-left border border-neutral-200">
+            <div className="absolute inset-0 z-30 bg-neutral-950/90 backdrop-blur-md p-4 overflow-y-auto flex flex-col items-center justify-between animate-in fade-in duration-150">
+              <div className="w-full max-w-md bg-white text-neutral-900 rounded-xl shadow-2xl p-6 flex flex-col justify-between min-h-[310px] text-left border border-neutral-200 font-sans">
                 <div>
                   <div className="border-b border-neutral-200 pb-2 mb-4 flex items-center justify-between text-[9px] uppercase tracking-wider text-neutral-500 font-mono">
-                    <span>MD WRITER • SYSTEM SPECIFICATION</span>
-                    <span className="text-blue-600 font-bold">PDF STUDIO v2.4</span>
+                    <span>MD WRITER • SPECIFICATION</span>
+                    <span className="text-blue-600 font-bold">VERSION 0.9.0 BETA</span>
                   </div>
 
                   <h2 className="text-lg font-black text-neutral-950 tracking-tight mb-1">
-                    High-Performance Markdown Engine
+                    High-Performance Markdown Platform
                   </h2>
                   <p className="text-[10px] text-neutral-500 mb-3">
-                    Author: Engineering Core • Status: Verified • Date: September 2026
+                    Prepared by: Core Engineering • Status: Verified • Date: September 2026
                   </p>
 
                   <div className="space-y-2 text-[11px] text-neutral-700 leading-relaxed border-l-2 border-blue-500 pl-3 py-1 bg-blue-50/50 rounded-r">
-                    <p className="font-semibold text-neutral-900">
-                      Dual-Engine Architecture Overview
+                    <p className="font-semibold text-neutral-900 text-xs">
+                      Publication-Grade Vector Typography
                     </p>
                     <p className="text-[10.5px]">
-                      MD Writer decouples typing latency from cloud network roundtrips. Every keystroke commits to browser IndexedDB in 0ms with zero React re-renders.
+                      MD Writer decouples typing latency from cloud network roundtrips. Documents compile with precision margins, running headers, and clean vector output.
                     </p>
                   </div>
                 </div>
 
-                <div className="border-t border-neutral-200 pt-3 mt-6 flex items-center justify-between text-[9px] text-neutral-400 font-mono">
-                  <span>CONFIDENTIAL • STRICTLY FOR PEER REVIEW</span>
+                <div className="border-t border-neutral-200 pt-3 mt-4 flex items-center justify-between text-[9px] text-neutral-400 font-mono">
+                  <span>CONFIDENTIAL • FOR PEER REVIEW</span>
                   <span>PAGE 1 OF 1</span>
                 </div>
               </div>
 
               <div className="w-full max-w-md mt-3 flex items-center justify-between text-xs text-neutral-300">
-                <span>Export-ready vector typography</span>
+                <span>Vector PDF Print Engine</span>
                 <button
                   onClick={() => setActiveSideTab('write')}
                   className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-[11px] font-medium transition-colors cursor-pointer"
                 >
-                  Back to Editor
+                  Return to Writing →
                 </button>
               </div>
             </div>
@@ -499,11 +482,11 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                   <div className={`px-3 py-1.5 border-t ${mockupTheme === 'dark' ? 'bg-[#121217] border-neutral-800/80 text-neutral-500' : 'bg-neutral-100 border-neutral-200 text-neutral-500'} flex items-center justify-between text-[10px] font-mono shrink-0`}>
                     <div className="flex items-center gap-2">
                       <span 
-                        className="flex items-center gap-1 text-emerald-500 dark:text-emerald-400 font-medium cursor-help"
-                        title="Hardware-accelerated 2D canvas rendering for lag-free particle effects & carets"
+                        className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium"
+                        title="Instant local-first offline storage via Dexie IndexedDB"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>⚡ Smooth 60fps</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>IndexedDB (0ms)</span>
                       </span>
                       <span>•</span>
                       <span>Ln {stats.lines}, Col 1</span>

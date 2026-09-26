@@ -52,7 +52,7 @@ export const UpdatesPage: React.FC = () => {
   const getBadgeLabel = (type: 'new' | 'improved' | 'perf' | 'fix') => {
     switch (type) {
       case 'new': return 'New';
-      case 'perf': return '60FPS Perf';
+      case 'perf': return 'Performance';
       case 'improved': return 'Improved';
       case 'fix': return 'Resolved';
     }
@@ -70,7 +70,7 @@ export const UpdatesPage: React.FC = () => {
             <Layers className="w-3.5 h-3.5 text-neutral-500" />
             <span className="font-mono uppercase tracking-wider text-[11px]">Product Evolution &amp; Changelog</span>
             <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-            <span className="text-neutral-900 dark:text-neutral-100 font-bold">v0.8.0 Beta Live</span>
+            <span className="text-neutral-900 dark:text-neutral-100 font-bold">v0.9.0 Beta Live</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.08] mb-5">
@@ -114,11 +114,11 @@ export const UpdatesPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-10 pb-4 border-b border-neutral-100 dark:border-neutral-850">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
             {[
-              { id: 'all', label: 'All Releases' },
-              { id: 'engine', label: '⚡ Engine & 60FPS' },
-              { id: 'publishing', label: '📄 PDF Studio' },
-              { id: 'ux', label: '✨ UI & Carets' },
-              { id: 'sync', label: '☁️ Cloud Sync' }
+              { id: 'all', label: 'All Updates' },
+              { id: 'engine', label: 'Architecture & Engine' },
+              { id: 'publishing', label: 'PDF & Export' },
+              { id: 'ux', label: 'Editor & Design' },
+              { id: 'sync', label: 'Cloud & Offline' }
             ].map(cat => (
               <button
                 key={cat.id}

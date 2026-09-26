@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { ViewMode, CursorPosition } from '../features/editor/types';
 import { useEditorModals } from '../features/editor/hooks/useEditorModals';
@@ -13,16 +13,13 @@ import { EditorStatusBar } from '../features/editor/components/EditorStatusBar';
 import { EditorModalsContainer } from '../features/editor/components/EditorModalsContainer';
 import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
 import { exportToDocx } from '../features/docx-export/services/docxExportService';
-import { cleanAndNormalizeMarkdown } from '../utils/markdownSanitizer';
-import { useDuplicateDocument } from '../hooks/useDocuments';
 import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
 import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
+import { writeLocalFile } from '../services/localFolderService';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const editorRef = useRef<CodeMirrorEditorHandle>(null);
-  const duplicateDocMutation = useDuplicateDocument();
 
   // View mode and feedback toasts
   const [viewMode, setViewMode] = useState<ViewMode>('split');
@@ -93,36 +90,6 @@ export const EditorPage: React.FC = () => {
     }
   }, [doc.title, doc.content, showToast]);
 
-  const handleDuplicateDoc = useCallback(async () => {
-    try {
-      const docId = doc.docMetadata?.id || id;
-      if (!docId) {
-        showToast('Please save the document first before duplicating.');
-        return;
-      }
-      await doc.executeSave(doc.content, doc.title);
-      const newId = await duplicateDocMutation.mutateAsync(docId);
-      if (newId) {
-        showToast('Document duplicated! Redirecting...');
-        navigate(`/editor/${newId}`);
-      }
-    } catch (err) {
-      console.error('Failed to duplicate document', err);
-      showToast('Duplication failed.');
-    }
-  }, [doc, id, duplicateDocMutation, navigate, showToast]);
-
-  const handleCleanFormat = useCallback(() => {
-    const cleaned = cleanAndNormalizeMarkdown(doc.content);
-    if (cleaned !== doc.content) {
-      doc.setContent(cleaned);
-      doc.executeSave(cleaned, doc.title);
-      showToast('Markdown cleaned & normalized!');
-    } else {
-      showToast('Markdown is already clean.');
-    }
-  }, [doc, showToast]);
-
   // Insert formula snippet from KaTeX Studio at cursor
   const handleInsertFormulaAtCursor = useCallback(
     (latexSnippet: string) => {
@@ -160,6 +127,42 @@ export const EditorPage: React.FC = () => {
     },
     [doc, showToast]
   );
+
+  // Active local disk file handle (Local Folder / Vault mode)
+  const activeLocalFileHandleRef = useRef<FileSystemFileHandle | null>(null);
+  const lastSavedLocalContentRef = useRef<string>('');
+
+  const handleSelectLocalFile = useCallback(
+    async (fileHandle: FileSystemFileHandle, fileName: string, content: string) => {
+      activeLocalFileHandleRef.current = fileHandle;
+      lastSavedLocalContentRef.current = content;
+      doc.setTitle(fileName);
+      doc.setContent(content);
+      if (editorRef.current) {
+        editorRef.current.setValue(content);
+      }
+      await doc.executeSave(content, fileName);
+      showToast(`📂 Opened "${fileName}" from local vault`);
+    },
+    [doc, showToast]
+  );
+
+  // Auto-sync back to local disk file when content updates in vault mode
+  useEffect(() => {
+    if (!activeLocalFileHandleRef.current) return;
+    if (doc.content === lastSavedLocalContentRef.current) return;
+
+    const timer = setTimeout(async () => {
+      if (activeLocalFileHandleRef.current) {
+        const ok = await writeLocalFile(activeLocalFileHandleRef.current, doc.content);
+        if (ok) {
+          lastSavedLocalContentRef.current = doc.content;
+        }
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [doc.content]);
 
   // Jump to heading from Document Outline with smooth transfer & glow highlight
   const handleSelectHeading = useCallback(
@@ -215,20 +218,10 @@ export const EditorPage: React.FC = () => {
         setFindMode('replace');
         setIsFindOpen(true);
       }
-      if (
-        e.key === 'Escape' &&
-        viewMode === 'zen' &&
-        !slash.isSlashMenuOpen &&
-        !modals.isSwitcherOpen &&
-        !modals.isDrawerOpen &&
-        !modals.isExportModalOpen
-      ) {
-        setViewMode('split');
-      }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [doc, viewMode, slash.isSlashMenuOpen, modals]);
+  }, [doc, slash.isSlashMenuOpen, modals]);
 
   // Telemetry computations offloaded to background Web Worker (Bug 1: 5500 LOC crash fix)
   const workerStats = useMarkdownWorker(doc.content);
@@ -243,9 +236,7 @@ export const EditorPage: React.FC = () => {
 
   return (
     <div
-      className={`h-[100dvh] min-h-[100dvh] flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors overflow-hidden ${
-        viewMode === 'zen' ? 'fixed inset-0 z-50' : ''
-      }`}
+      className="h-[100dvh] min-h-[100dvh] flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors overflow-hidden"
     >
       {/* Toast Notification */}
       {copyToast && (
@@ -283,15 +274,12 @@ export const EditorPage: React.FC = () => {
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
           onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
           onOpenImageModal={() => modals.setIsImageModalOpen(true)}
-          onOpenFxPopover={() => modals.setIsFxPopoverOpen(true)}
           onOpenOutline={() => modals.setIsOutlineOpen(true)}
           onOpenTemplates={() => modals.setIsTemplatesOpen(true)}
           onOpenRevisions={() => modals.setIsRevisionsOpen(true)}
           onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
           onExportMd={doc.handleExportMd}
           onExportDocx={handleExportDocx}
-          onDuplicateDoc={handleDuplicateDoc}
-          onCleanFormat={handleCleanFormat}
           onCopyMarkdown={doc.handleCopyMarkdown}
           onClearContent={doc.handleClearContent}
           onDeleteCurrentDoc={doc.handleDeleteCurrentDoc}
@@ -299,6 +287,8 @@ export const EditorPage: React.FC = () => {
           setIsToolsMenuOpen={modals.setIsToolsMenuOpen}
           isExportMenuOpen={modals.isExportMenuOpen}
           setIsExportMenuOpen={modals.setIsExportMenuOpen}
+          onOpenPublish={() => modals.setIsPublishModalOpen(true)}
+          onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
         />
       )}
 
@@ -339,12 +329,10 @@ export const EditorPage: React.FC = () => {
         isOffline={doc.isOffline}
         wordCount={stats.words}
         readingTime={stats.reading}
-        onToggleTypewriter={() => modals.setIsTypewriterMode(!modals.isTypewriterMode)}
         isSprintActive={sprint.isSprintActive}
         wordsWrittenInSprint={sprint.wordsWritten}
         onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
         editorRef={editorRef}
-        isTypewriterMode={modals.isTypewriterMode}
       />
 
       {/* Telemetry Status Bar - Hidden in Read mode and on mobile (< md) to maximize reading area */}
@@ -357,12 +345,6 @@ export const EditorPage: React.FC = () => {
             wordCount={stats.words}
             charCount={stats.chars}
             readingTime={stats.reading}
-            isTypewriterMode={modals.isTypewriterMode}
-            onToggleTypewriter={() => {
-              const next = !modals.isTypewriterMode;
-              modals.setIsTypewriterMode(next);
-              showToast(next ? 'Typewriter Mode Activated' : 'Typewriter Mode Off', 1500);
-            }}
             isSprintActive={sprint.isSprintActive}
             sprintDuration={sprint.sprintDuration}
             sprintSecondsRemaining={sprint.sprintSecondsRemaining}
@@ -414,8 +396,6 @@ export const EditorPage: React.FC = () => {
         isTableBuilderOpen={modals.isTableBuilderOpen}
         onCloseTableBuilder={() => modals.setIsTableBuilderOpen(false)}
         onInsertTable={doc.handleInsertTableFromModal}
-        isFxPopoverOpen={modals.isFxPopoverOpen}
-        onCloseFxPopover={() => modals.setIsFxPopoverOpen(false)}
         isOutlineOpen={modals.isOutlineOpen}
         onCloseOutline={() => modals.setIsOutlineOpen(false)}
         onSelectHeading={handleSelectHeading}
@@ -433,6 +413,12 @@ export const EditorPage: React.FC = () => {
         isImageModalOpen={modals.isImageModalOpen}
         onCloseImageModal={() => modals.setIsImageModalOpen(false)}
         onInsertImage={handleInsertImageAtCursor}
+        isPublishModalOpen={modals.isPublishModalOpen}
+        onClosePublishModal={() => modals.setIsPublishModalOpen(false)}
+        isLocalFolderOpen={modals.isLocalFolderOpen}
+        onCloseLocalFolder={() => modals.setIsLocalFolderOpen(false)}
+        onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
+        onSelectLocalFile={handleSelectLocalFile}
       />
     </div>
   );

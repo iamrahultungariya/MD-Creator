@@ -16,9 +16,6 @@ const ExportPdfModal = React.lazy(() =>
 const TableBuilderModal = React.lazy(() =>
   import('../../../components/editor/TableBuilderModal').then((m) => ({ default: m.TableBuilderModal }))
 );
-const WritingFxPopover = React.lazy(() =>
-  import('../../../components/editor/WritingFxPopover').then((m) => ({ default: m.WritingFxPopover }))
-);
 const DocumentOutlineDrawer = React.lazy(() =>
   import('../../../components/editor/DocumentOutlineDrawer').then((m) => ({ default: m.DocumentOutlineDrawer }))
 );
@@ -39,6 +36,12 @@ const ImageEmbedModal = React.lazy(() =>
 );
 const ExportModal = React.lazy(() =>
   import('../../../components/editor/ExportModal').then((m) => ({ default: m.ExportModal }))
+);
+const PublishModal = React.lazy(() =>
+  import('../../../components/editor/PublishModal').then((m) => ({ default: m.PublishModal }))
+);
+const LocalFolderDrawer = React.lazy(() =>
+  import('../../../components/editor/LocalFolderDrawer').then((m) => ({ default: m.LocalFolderDrawer }))
 );
 
 interface EditorModalsContainerProps {
@@ -61,8 +64,6 @@ interface EditorModalsContainerProps {
   isTableBuilderOpen: boolean;
   onCloseTableBuilder: () => void;
   onInsertTable: (tableMarkdown: string) => void;
-  isFxPopoverOpen: boolean;
-  onCloseFxPopover: () => void;
   isOutlineOpen: boolean;
   onCloseOutline: () => void;
   onSelectHeading: (heading: HeadingItem) => void;
@@ -86,6 +87,12 @@ interface EditorModalsContainerProps {
   onExportMd?: () => void;
   onExportDocx?: () => void;
   onCopyMarkdown?: () => void;
+  isPublishModalOpen?: boolean;
+  onClosePublishModal?: () => void;
+  isLocalFolderOpen?: boolean;
+  onCloseLocalFolder?: () => void;
+  onOpenLocalFolder?: () => void;
+  onSelectLocalFile?: (fileHandle: FileSystemFileHandle, fileName: string, content: string) => void;
 }
 
 export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React.memo(({
@@ -108,8 +115,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   isTableBuilderOpen,
   onCloseTableBuilder,
   onInsertTable,
-  isFxPopoverOpen,
-  onCloseFxPopover,
   isOutlineOpen,
   onCloseOutline,
   onSelectHeading,
@@ -133,6 +138,12 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   onExportMd,
   onExportDocx,
   onCopyMarkdown,
+  isPublishModalOpen = false,
+  onClosePublishModal,
+  isLocalFolderOpen = false,
+  onCloseLocalFolder,
+  onOpenLocalFolder,
+  onSelectLocalFile,
 }) => {
   return (
     <Suspense fallback={null}>
@@ -155,6 +166,7 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           isOpen={isSwitcherOpen}
           onClose={onCloseSwitcher}
           currentDocId={docId}
+          onOpenLocalFolder={onOpenLocalFolder}
         />
       )}
 
@@ -187,13 +199,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           isOpen={isTableBuilderOpen}
           onClose={onCloseTableBuilder}
           onInsert={onInsertTable}
-        />
-      )}
-
-      {isFxPopoverOpen && (
-        <WritingFxPopover
-          isOpen={isFxPopoverOpen}
-          onClose={onCloseFxPopover}
         />
       )}
 
@@ -245,6 +250,25 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           isOpen={isImageModalOpen}
           onClose={onCloseImageModal || (() => {})}
           onInsertImage={onInsertImage || (() => {})}
+        />
+      )}
+
+      {isPublishModalOpen && (
+        <PublishModal
+          isOpen={isPublishModalOpen}
+          onClose={onClosePublishModal || (() => {})}
+          docId={docId}
+          title={title}
+          content={content}
+        />
+      )}
+
+      {isLocalFolderOpen && (
+        <LocalFolderDrawer
+          isOpen={isLocalFolderOpen}
+          onClose={onCloseLocalFolder || (() => {})}
+          onSelectFile={onSelectLocalFile || (() => {})}
+          activeFileName={title}
         />
       )}
     </Suspense>
