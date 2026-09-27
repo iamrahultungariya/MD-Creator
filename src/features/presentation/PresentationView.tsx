@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -10,7 +11,8 @@ import {
   FileText, 
   X, 
   Palette,
-  HelpCircle
+  HelpCircle,
+  ArrowLeft
 } from 'lucide-react';
 import { parseSlides, SlideData } from '../../utils/slideParser';
 import { MarkdownPreview } from '../../components/editor/MarkdownPreview';
@@ -29,6 +31,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   title: _title,
   onExit,
 }) => {
+  const navigate = useNavigate();
   const slides = useMemo(() => parseSlides(content), [content]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [theme, setTheme] = useState<PresentationTheme>('dark');
@@ -80,6 +83,33 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       setCurrentSlideIndex(idx);
     }
   };
+
+  // Touch swipe support for mobile presentations
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+    setIsHudVisible(true);
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+
+    // Detect horizontal swipe > 45px with dominant X movement
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      if (deltaX < 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  }, [nextSlide, prevSlide]);
 
   // Fullscreen toggle
   const toggleFullscreen = useCallback(async () => {
@@ -235,23 +265,31 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       className={`fixed inset-0 z-50 flex flex-col select-none overflow-hidden transition-colors duration-300 ${currentTheme.bg} ${currentTheme.text}`}
     >
       {/* Top Floating Mini Header (Exit & Slide Jumper) */}
       <div 
-        className={`absolute top-4 left-4 right-4 z-40 flex items-center justify-between pointer-events-none transition-opacity duration-200 ${
+        className={`absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-40 flex items-center justify-between pointer-events-none transition-opacity duration-200 ${
           isHudVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
           <button
-            onClick={onExit}
-            className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-lg border border-white/10 transition-all hover:scale-105"
-            title="Exit Presentation Mode (Esc)"
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                onExit();
+              }
+            }}
+            className="px-2.5 sm:px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-lg border border-white/10 transition-all hover:scale-105"
+            title="Back to Previous Page / Mode (Esc)"
           >
-            <X className="w-3.5 h-3.5" />
-            <span>Exit</span>
-            <kbd className="font-mono text-[10px] bg-white/20 px-1 py-0.2 rounded ml-0.5">Esc</kbd>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back</span>
+            <kbd className="hidden sm:inline font-mono text-[10px] bg-white/20 px-1 py-0.2 rounded ml-0.5">Esc</kbd>
           </button>
 
           <button
@@ -264,15 +302,15 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         </div>
 
         {/* Slide Counter Selector */}
-        <div className="flex items-center gap-1.5 pointer-events-auto bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-mono border border-white/10 shadow-lg">
+        <div className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto bg-black/60 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full text-white text-xs font-mono border border-white/10 shadow-lg">
           <select
             value={currentSlideIndex}
             onChange={(e) => goToSlide(Number(e.target.value))}
-            className="bg-transparent text-white font-mono text-xs focus:outline-none cursor-pointer"
+            className="bg-transparent text-white font-mono text-xs focus:outline-none cursor-pointer max-w-[130px] sm:max-w-none truncate"
           >
             {slides.map((s, idx) => (
               <option key={s.index} value={idx} className="bg-neutral-900 text-white">
-                Slide {idx + 1}: {s.title.slice(0, 24)}
+                Slide {idx + 1}: {s.title.slice(0, 20)}
               </option>
             ))}
           </select>
@@ -282,21 +320,21 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       </div>
 
       {/* Main Slide Stage */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 md:p-16 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-3 pt-14 pb-20 sm:p-8 md:p-14 overflow-y-auto">
         <div 
-          className={`w-full max-w-5xl rounded-3xl p-8 sm:p-14 md:p-20 shadow-2xl transition-all duration-300 border flex flex-col justify-center min-h-[60vh] max-h-[85vh] overflow-y-auto select-text ${currentTheme.card} ${currentTheme.border}`}
+          className={`w-full max-w-5xl rounded-2xl sm:rounded-3xl p-5 sm:p-10 md:p-16 shadow-2xl transition-all duration-300 border flex flex-col justify-center min-h-[50vh] sm:min-h-[60vh] max-h-[82vh] overflow-y-auto select-text ${currentTheme.card} ${currentTheme.border}`}
         >
-          <div className={`prose prose-lg sm:prose-xl lg:prose-2xl max-w-none text-inherit leading-relaxed font-sans ${currentTheme.prose}`}>
+          <div className={`prose prose-base sm:prose-lg md:prose-xl lg:prose-2xl max-w-none text-inherit leading-relaxed font-sans ${currentTheme.prose}`}>
             <MarkdownPreview content={currentSlide.body} className="text-inherit" />
           </div>
         </div>
       </div>
 
-      {/* Slide Navigation Click Zones (Invisible desktop arrows on edges) */}
+      {/* Slide Navigation Click Zones (Invisible on mobile, swipe used instead) */}
       <button
         onClick={prevSlide}
         disabled={currentSlideIndex === 0}
-        className={`absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl ${
+        className={`hidden sm:block absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl ${
           currentSlideIndex === 0 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-70 hover:opacity-100 hover:scale-110' : 'opacity-0'
         }`}
         title="Previous Slide (← / Backspace)"
@@ -307,7 +345,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       <button
         onClick={nextSlide}
         disabled={currentSlideIndex === totalSlides - 1}
-        className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl ${
+        className={`hidden sm:block absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl ${
           currentSlideIndex === totalSlides - 1 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-70 hover:opacity-100 hover:scale-110' : 'opacity-0'
         }`}
         title="Next Slide (→ / Space / Enter)"
@@ -372,38 +410,38 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
       {/* Bottom Floating Presenter HUD */}
       <div
-        className={`absolute bottom-5 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-200 select-none ${
+        className={`absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-200 select-none max-w-[calc(100vw-1rem)] ${
           isHudVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="flex items-center gap-2 sm:gap-3 px-4 py-2 rounded-full bg-neutral-950/85 text-neutral-300 backdrop-blur-xl border border-white/10 shadow-2xl text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-3 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-neutral-950/90 text-neutral-300 backdrop-blur-xl border border-white/10 shadow-2xl text-xs overflow-x-auto no-scrollbar">
           {/* Previous / Next */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <button
               onClick={prevSlide}
               disabled={currentSlideIndex === 0}
-              className="p-1.5 rounded-full hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
+              className="p-1 sm:p-1.5 rounded-full hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
               title="Previous Slide"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-mono text-xs text-white font-bold px-1">
+            <span className="font-mono text-xs text-white font-bold px-1 whitespace-nowrap">
               {currentSlideIndex + 1} <span className="text-neutral-500 font-normal">/ {totalSlides}</span>
             </span>
             <button
               onClick={nextSlide}
               disabled={currentSlideIndex === totalSlides - 1}
-              className="p-1.5 rounded-full hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
+              className="p-1 sm:p-1.5 rounded-full hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
               title="Next Slide"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-3.5 w-px bg-white/15" />
+          <div className="h-3.5 w-px bg-white/15 shrink-0" />
 
           {/* Presenter Stopwatch */}
-          <div className="flex items-center gap-1.5 font-mono text-[11px] text-neutral-300">
+          <div className="flex items-center gap-1 sm:gap-1.5 font-mono text-[11px] text-neutral-300 shrink-0">
             <button
               onClick={() => setIsTimerRunning((prev) => !prev)}
               className="p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
@@ -414,23 +452,23 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             <span className="font-semibold text-white tracking-wider">{formatTimer(timerSeconds)}</span>
             <button
               onClick={() => setTimerSeconds(0)}
-              className="p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
+              className="hidden sm:inline-flex p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
               title="Reset stopwatch"
             >
               <RotateCcw className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="h-3.5 w-px bg-white/15" />
+          <div className="h-3.5 w-px bg-white/15 shrink-0" />
 
           {/* Theme switcher */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <Palette className="w-3.5 h-3.5 text-neutral-400 mr-0.5" />
             {(['dark', 'paper', 'sepia', 'nordic'] as PresentationTheme[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTheme(t)}
-                className={`w-4 h-4 rounded-full border transition-all cursor-pointer ${
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border transition-all cursor-pointer ${
                   t === 'dark' ? 'bg-[#0c0d12] border-neutral-600' :
                   t === 'paper' ? 'bg-[#f8f6f2] border-neutral-400' :
                   t === 'sepia' ? 'bg-[#f6ebd7] border-amber-400' :
@@ -441,12 +479,12 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             ))}
           </div>
 
-          <div className="h-3.5 w-px bg-white/15" />
+          <div className="h-3.5 w-px bg-white/15 shrink-0" />
 
           {/* Speaker Notes Toggle */}
           <button
             onClick={() => setIsNotesOpen((prev) => !prev)}
-            className={`p-1.5 rounded-full cursor-pointer transition-all ${
+            className={`p-1.5 rounded-full cursor-pointer transition-all shrink-0 ${
               isNotesOpen ? 'bg-amber-500 text-neutral-950 font-bold' : 'hover:bg-white/10 text-neutral-300 hover:text-white'
             }`}
             title="Toggle Speaker Notes (N)"
@@ -457,7 +495,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-full hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all"
+            className="p-1.5 rounded-full hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all shrink-0"
             title="Toggle Fullscreen (F)"
           >
             {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}

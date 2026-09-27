@@ -117,7 +117,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
   return (
     <div
       ref={popoverRef}
-      className="absolute top-14 right-4 sm:right-6 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white dark:bg-[#1a1b20] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-4.5 z-50 text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in duration-100 will-change-transform"
+      className="absolute top-14 right-2 sm:right-6 w-80 max-w-[calc(100vw-1rem)] rounded-2xl bg-white dark:bg-[#1a1b20] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-3.5 sm:p-4.5 z-50 text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in duration-100 will-change-transform"
     >
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-100 dark:border-neutral-800/80">
         <div className="flex items-center gap-2">

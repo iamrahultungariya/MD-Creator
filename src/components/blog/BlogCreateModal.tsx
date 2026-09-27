@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, PenTool } from 'lucide-react';
+import { X, PenTool, Sparkles, ShieldCheck } from 'lucide-react';
 import { BlogCategory } from '../../data/blogArticles';
 
 interface BlogCreateModalProps {
@@ -44,15 +44,25 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-neutral-950/70 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-5 sm:px-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <PenTool className="w-4 h-4 text-neutral-700 dark:text-neutral-300" />
-            <h3 className="text-base font-bold text-neutral-950 dark:text-white">
-              Publish a Story to MD Writer Blog
-            </h3>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200">
+              <PenTool className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
+                <span>Submit Story for Publication</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-semibold">
+                  Editorial Review
+                </span>
+              </h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                You Write, We Publish. Every submission is reviewed by our team.
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -68,6 +78,15 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
               {formError}
             </div>
           )}
+
+          {/* Editorial Notice Banner */}
+          <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200/80 dark:border-neutral-800 flex items-start gap-2.5 text-xs text-neutral-600 dark:text-neutral-300">
+            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold text-neutral-900 dark:text-white">Editorial Guarantee: </span>
+              Your post will enter the moderation desk upon submission. Once approved, it appears live on the community blog with full author attribution.
+            </div>
+          </div>
 
           {/* Title */}
           <div>
@@ -167,9 +186,10 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors cursor-pointer shadow-xs"
+              className="px-5 py-2 rounded-xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
             >
-              Publish Article
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Submit for Review</span>
             </button>
           </div>
         </form>

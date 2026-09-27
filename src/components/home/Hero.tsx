@@ -26,13 +26,13 @@ export const Hero: React.FC<HeroProps> = () => {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[52px] font-black text-neutral-950 dark:text-white tracking-tight leading-[1.08] mb-5">
+            <h1 className="text-3xl sm:text-4xl lg:text-[52px] font-black text-neutral-950 dark:text-white tracking-tight leading-[1.1] mb-5">
               Markdown that exports <br />
               <span className="text-blue-600 dark:text-blue-500">like a design tool.</span>
             </h1>
 
             {/* Subheadline Description */}
-            <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-lg leading-relaxed mb-8">
+            <p className="text-sm sm:text-base lg:text-lg text-neutral-600 dark:text-neutral-400 max-w-lg leading-relaxed mb-8">
               A clean, distraction-free writing studio that turns plain text into polished, publication-ready PDFs with cover pages, curated typography, and zero formatting pain.
             </p>
 
@@ -75,8 +75,8 @@ export const Hero: React.FC<HeroProps> = () => {
 
           </div>
 
-          {/* Right Hero Column: Laptop Editor Mockup */}
-          <div className="lg:col-span-7 w-full pt-4 lg:pt-0">
+          {/* Right Hero Column: Laptop Editor Mockup (Visible on large screens only) */}
+          <div className="hidden lg:block lg:col-span-7 w-full pt-4 lg:pt-0">
             <EditorMockup />
           </div>
 

@@ -96,7 +96,7 @@ export function useMockupSimulation() {
 
   const startAutoType = useCallback(() => {
     setIsAutoTyping(true);
-    const demoSnippet = `\n\n> [!TIP]\n> 🚀 Instant 0ms response time with 60FPS particle engine!`;
+    const demoSnippet = `\n\n> [!TIP]\n> Instant local-first response time with zero typing latency!`;
     let i = 0;
 
     if (autoTypeIntervalRef.current) clearInterval(autoTypeIntervalRef.current);

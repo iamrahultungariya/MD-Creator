@@ -109,7 +109,7 @@ export const FeedbackPage: React.FC = () => {
     return {
       userAgent: navigator.userAgent,
       screenResolution: `${window.innerWidth}x${window.innerHeight}`,
-      appVersion: 'v0.9.0 Beta',
+      appVersion: 'v0.9.1 Beta',
       language: navigator.language,
       platform: navigator.platform
     };
@@ -349,7 +349,7 @@ export const FeedbackPage: React.FC = () => {
                       <span>Include browser & platform specs for debugging</span>
                     </div>
                   </label>
-                  <span className="text-[10px] text-neutral-400">MD Writer v3.1</span>
+                  <span className="text-[10px] text-neutral-400">MD Writer v0.9.1 Beta</span>
                 </div>
               </div>
 

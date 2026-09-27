@@ -8,7 +8,7 @@ interface BuyMeCoffeeButtonProps {
 }
 
 export const BMC_SLUG = 'Sponoora';
-export const BMC_URL = `https://www.buymeacoffee.com/${BMC_SLUG}`;
+export const BMC_URL = `https://buymeacoffee.com/${BMC_SLUG}`;
 
 /**
  * Official Buy Me a Coffee SVG Logo with white cup & black outline
@@ -66,7 +66,7 @@ export const BuyMeCoffeeButton: React.FC<BuyMeCoffeeButtonProps> = ({
   variant = 'official',
   className = ''
 }) => {
-  const url = `https://www.buymeacoffee.com/${slug}`;
+  const url = `https://buymeacoffee.com/${slug}`;
 
   if (variant === 'compact') {
     return (

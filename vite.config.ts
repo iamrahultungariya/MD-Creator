@@ -127,6 +127,9 @@ export default defineConfig({
             if (id.includes('docx')) {
               return 'vendor-docx';
             }
+            if (id.includes('html2pdf.js') || id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-pdf';
+            }
             if (id.includes('lucide-react') || id.includes('zustand') || id.includes('clsx') || id.includes('tailwind-merge')) {
               return 'vendor-ui';
             }

@@ -11,26 +11,53 @@ export interface UserProfile {
   proExpiresAt?: string | null;
 }
 
-export const PROMO_FREE_PRO_UNTIL = '2026-12-31T23:59:59.999Z';
+// ─── Environment-driven configuration ────────────────────────────────────────
+// All values are read from .env — no personal credentials in source code.
 
-export const isHolidayFreeProActive = (): boolean => {
-  return new Date() <= new Date(PROMO_FREE_PRO_UNTIL);
-};
+/**
+ * Beta Phase Flag:
+ * All users receive full, unrestricted Pro capabilities free while MD Writer is in Beta.
+ * Linked to product maturity (until v1.0 launch) rather than fixed calendar dates.
+ */
+export const IS_BETA = true;
 
+/** ISO timestamp for reward window. Configured via env. */
+export const PROMO_FREE_PRO_UNTIL: string =
+  import.meta.env.VITE_FREE_PRO_UNTIL || '2026-12-31T23:59:59.999Z';
+
+/** Returns true while the Beta Phase or promotional window is active. */
+export const isHolidayFreeProActive = (): boolean =>
+  IS_BETA || new Date() <= new Date(PROMO_FREE_PRO_UNTIL);
+
+/**
+ * Returns true if the given email is in the comma-separated
+ * VITE_LIFETIME_PRO_EMAILS environment variable.
+ */
 export const isLifetimeProEmail = (email?: string | null): boolean => {
   if (!email) return false;
-  const clean = email.trim().toLowerCase();
-  return clean === 'tungariyarahul08@gmail.com';
+  const raw: string = import.meta.env.VITE_LIFETIME_PRO_EMAILS || '';
+  if (!raw.trim()) return false;
+  const allowed = raw
+    .split(',')
+    .map((e: string) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(email.trim().toLowerCase());
 };
 
 export const isUserPro = (user?: UserProfile | null): boolean => {
-  // Free Pro campaign for everyone through December 31, 2026!
-  if (isHolidayFreeProActive()) return true;
+  if (IS_BETA) return true;
   if (!user) return false;
   if (isLifetimeProEmail(user.email)) return true;
   return user.subscriptionTier === 'pro' || user.subscriptionTier === 'team';
 };
 
+// ─── Avatar helper ────────────────────────────────────────────────────────────
+// Generates a deterministic, personalized initials avatar keyed by email.
+// Uses the DiceBear API — privacy-safe, no tracking, no Unsplash dependency.
+const getAvatarUrl = (email: string): string =>
+  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(email)}&backgroundColor=0a0a0a&textColor=ffffff`;
+
+// ─── Store types ──────────────────────────────────────────────────────────────
 interface AuthState {
   user: UserProfile | null;
   isLoading: boolean;
@@ -46,6 +73,7 @@ interface AuthState {
 const DEMO_USER_STORAGE_KEY = 'md_writer_demo_user';
 const LOCAL_USERS_STORAGE_KEY = 'md_writer_registered_accounts';
 
+// ─── Store implementation ─────────────────────────────────────────────────────
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
@@ -77,23 +105,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkAuth: async () => {
-    // 1. Check local demo user first
+    // 1. Check for an existing local demo session first (instant restore)
     const savedDemo = localStorage.getItem(DEMO_USER_STORAGE_KEY);
     if (savedDemo) {
       try {
         const parsed = JSON.parse(savedDemo);
+        // Always re-evaluate promo/founder status in case env vars changed
         if (isLifetimeProEmail(parsed.email) || isHolidayFreeProActive()) {
           parsed.subscriptionTier = 'pro';
           parsed.proExpiresAt = isLifetimeProEmail(parsed.email) ? null : PROMO_FREE_PRO_UNTIL;
         }
         set({ user: parsed, isLoading: false });
         return;
-      } catch (e) {
+      } catch {
         localStorage.removeItem(DEMO_USER_STORAGE_KEY);
       }
     }
 
-    // 2. If Supabase configured, check active session
+    // 2. If Supabase is configured, check for an active server session
     if (isSupabaseConfigured() && supabase) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -103,6 +132,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const isPromo = isHolidayFreeProActive();
           let tier: 'free' | 'pro' | 'team' = (isFounder || isPromo) ? 'pro' : 'free';
           let proExpiresAt: string | null = isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null;
+
           try {
             const { data: prof } = await supabase
               .from('profiles')
@@ -113,8 +143,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               tier = prof.subscription_tier || 'free';
               proExpiresAt = prof.pro_expires_at || null;
             }
-          } catch (e) {
-            // ignore
+          } catch {
+            // Silently ignore — tier defaults already applied above
           }
 
           set({
@@ -122,15 +152,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               id: u.id,
               email: u.email || '',
               displayName: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Writer',
-              avatarUrl: u.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+              avatarUrl: u.user_metadata?.avatar_url || getAvatarUrl(u.email || 'user'),
               isDemoUser: false,
               subscriptionTier: tier,
-              proExpiresAt: proExpiresAt
+              proExpiresAt,
             },
-            isLoading: false
+            isLoading: false,
           });
 
-          // Run background cloud sync on app start
+          // Background cloud sync on app start
           syncAllDocuments().catch(console.warn);
           return;
         }
@@ -147,7 +177,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const cleanEmail = email.trim().toLowerCase();
     const isFounder = isLifetimeProEmail(cleanEmail);
 
-    // If Supabase is configured
+    // ── Supabase real auth ────────────────────────────────────────────────
     if (isSupabaseConfigured() && supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
       if (error) {
@@ -180,33 +210,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: data.user.id,
           email: data.user.email || cleanEmail,
           displayName: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
-          avatarUrl: data.user.user_metadata?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          avatarUrl: data.user.user_metadata?.avatar_url || getAvatarUrl(data.user.email || cleanEmail),
           isDemoUser: false,
           subscriptionTier: tier,
-          proExpiresAt: proExpiresAt
+          proExpiresAt,
         };
         set({ user: profile, isLoading: false });
-
-        // Pull latest cloud documents on sign in
         syncAllDocuments().catch(console.warn);
         return { success: true };
       }
     }
 
-    // Fallback if Supabase not configured: verify against local accounts registry
+    // ── Offline / demo fallback (no Supabase configured) ─────────────────
+    // Accepts any email/password locally without server validation.
     const rawAccounts = localStorage.getItem(LOCAL_USERS_STORAGE_KEY);
-    const localAccounts: Array<{ email: string; name: string }> = rawAccounts ? JSON.parse(rawAccounts) : [];
+    const localAccounts: Array<{ email: string; name: string }> = rawAccounts
+      ? JSON.parse(rawAccounts)
+      : [];
     const found = localAccounts.find(acc => acc.email === cleanEmail);
     const isPromo = isHolidayFreeProActive();
 
     const demoUser: UserProfile = {
       id: `usr_${Date.now()}`,
       email: cleanEmail,
-      displayName: found ? found.name : cleanEmail.split('@')[0] || 'Rahul Mehta',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      displayName: found ? found.name : cleanEmail.split('@')[0] || 'Writer',
+      avatarUrl: getAvatarUrl(cleanEmail),
       isDemoUser: true,
       subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
-      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
+      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null,
     };
     localStorage.setItem(DEMO_USER_STORAGE_KEY, JSON.stringify(demoUser));
     set({ user: demoUser, isLoading: false });
@@ -218,16 +249,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const cleanEmail = email.trim().toLowerCase();
     const isFounder = isLifetimeProEmail(cleanEmail);
     const isPromo = isHolidayFreeProActive();
+    const avatarUrl = getAvatarUrl(cleanEmail);
 
+    // ── Supabase real auth ────────────────────────────────────────────────
     if (isSupabaseConfigured() && supabase) {
-      // 1. Perform Supabase auth registration (duplicate email handled natively)
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
           data: {
             full_name: name || cleanEmail.split('@')[0],
-            avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+            avatar_url: avatarUrl,
           }
         }
       });
@@ -240,7 +272,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: false, error: errorMsg };
       }
 
-      // If Supabase has email confirmation enabled, identities array is empty when user already exists
+      // Empty identities = email already exists when email confirmation is on
       if (data.user?.identities && data.user.identities.length === 0) {
         const msg = 'An account with this email address already exists. Please sign in instead.';
         set({ error: msg, isLoading: false });
@@ -252,22 +284,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: data.user.id,
           email: data.user.email || cleanEmail,
           displayName: name || cleanEmail.split('@')[0],
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          avatarUrl,
           isDemoUser: false,
           subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
-          proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
+          proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null,
         };
         set({ user: profile, isLoading: false });
-
-        // Sync documents immediately on signup
         syncAllDocuments().catch(console.warn);
         return { success: true };
       }
     }
 
-    // Fallback demo signup: check local registered accounts
+    // ── Offline / demo fallback signup ────────────────────────────────────
     const rawAccounts = localStorage.getItem(LOCAL_USERS_STORAGE_KEY);
-    const localAccounts: Array<{ email: string; name: string }> = rawAccounts ? JSON.parse(rawAccounts) : [];
+    const localAccounts: Array<{ email: string; name: string }> = rawAccounts
+      ? JSON.parse(rawAccounts)
+      : [];
+
     if (localAccounts.some(acc => acc.email === cleanEmail)) {
       const msg = 'An account with this email address already exists. Please sign in instead.';
       set({ error: msg, isLoading: false });
@@ -280,28 +313,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const demoUser: UserProfile = {
       id: `usr_${Date.now()}`,
       email: cleanEmail,
-      displayName: name || cleanEmail.split('@')[0] || 'Rahul Mehta',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      displayName: name || cleanEmail.split('@')[0] || 'Writer',
+      avatarUrl,
       isDemoUser: true,
       subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
-      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
+      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null,
     };
     localStorage.setItem(DEMO_USER_STORAGE_KEY, JSON.stringify(demoUser));
     set({ user: demoUser, isLoading: false });
     return { success: true };
   },
 
-  demoSignIn: (name = 'Rahul Mehta', email = 'rahul.mehta@example.com') => {
+  demoSignIn: (
+    name = import.meta.env.VITE_DEMO_USER_NAME || 'Demo User',
+    email = import.meta.env.VITE_DEMO_USER_EMAIL || 'demo@example.com',
+  ) => {
     const isFounder = isLifetimeProEmail(email);
     const isPromo = isHolidayFreeProActive();
     const demoUser: UserProfile = {
-      id: 'usr_rahul_mehta_demo',
+      id: 'usr_demo',
       email,
       displayName: name,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      avatarUrl: getAvatarUrl(email),
       isDemoUser: true,
       subscriptionTier: (isFounder || isPromo) ? 'pro' : 'free',
-      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null
+      proExpiresAt: isFounder ? null : isPromo ? PROMO_FREE_PRO_UNTIL : null,
     };
     localStorage.setItem(DEMO_USER_STORAGE_KEY, JSON.stringify(demoUser));
     set({ user: demoUser, isLoading: false, error: null });
@@ -313,5 +349,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await supabase.auth.signOut().catch(console.warn);
     }
     set({ user: null, isLoading: false, error: null });
-  }
+  },
 }));

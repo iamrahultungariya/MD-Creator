@@ -123,8 +123,12 @@ body {
 }
 
 @media (max-width: 640px) {
+  .cm-editor {
+    font-size: 14px;
+    line-height: 1.65;
+  }
   .cm-content {
-    padding: 12px 16px 80px 16px !important;
+    padding: 12px 14px 80px 14px !important;
   }
 }
 
@@ -210,6 +214,25 @@ body {
   line-height: 1.95 !important;
 }
 
+@media (max-width: 640px) {
+  .reader-size-sm, .reader-size-sm p, .reader-size-sm li, .reader-size-sm blockquote, .reader-size-sm td, .reader-size-sm th {
+    font-size: 13.5px !important;
+    line-height: 1.65 !important;
+  }
+  .reader-size-base, .reader-size-base p, .reader-size-base li, .reader-size-base blockquote, .reader-size-base td, .reader-size-base th {
+    font-size: 14.5px !important;
+    line-height: 1.7 !important;
+  }
+  .reader-size-lg, .reader-size-lg p, .reader-size-lg li, .reader-size-lg blockquote, .reader-size-lg td, .reader-size-lg th {
+    font-size: 16px !important;
+    line-height: 1.75 !important;
+  }
+  .reader-size-xl, .reader-size-xl p, .reader-size-xl li, .reader-size-xl blockquote, .reader-size-xl td, .reader-size-xl th {
+    font-size: 17.5px !important;
+    line-height: 1.8 !important;
+  }
+}
+
 /* Scoped layout isolation to prevent styling bleed */
 .prose-container {
   contain: layout style;
@@ -293,6 +316,53 @@ body {
 
 .dark .preview-pane-container::-webkit-scrollbar-thumb:hover {
   background: rgba(220, 220, 220, 0.6);
+  background-clip: padding-box;
+}
+
+/* Dedicated high-visibility scrollbar for PDF Studio Preview and Panels */
+.pdf-studio-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 140, 140, 0.6) rgba(0, 0, 0, 0.05);
+  -webkit-overflow-scrolling: touch;
+}
+
+.pdf-studio-scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pdf-studio-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 9999px;
+}
+
+.pdf-studio-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 120, 0.6);
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
+}
+
+.pdf-studio-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(80, 80, 80, 0.85);
+  background-clip: padding-box;
+}
+
+.dark .pdf-studio-scroll-container {
+  scrollbar-color: rgba(180, 180, 180, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+.dark .pdf-studio-scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .pdf-studio-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 180, 0.5);
+  background-clip: padding-box;
+}
+
+.dark .pdf-studio-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(230, 230, 230, 0.8);
   background-clip: padding-box;
 }
 
@@ -405,8 +475,79 @@ body {
   .editor-status-bar, 
   .editor-top-nav,
   input, textarea, button,
-  [data-pdf-studio-modal="true"] {
+  [data-pdf-studio-navbar="true"],
+  [data-pdf-studio-sidebar="true"],
+  .pdf-page-indicator {
     display: none !important;
+  }
+
+  /* Unroll PDF Studio Modal into clean multi-page document */
+  [data-pdf-studio-modal="true"] {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    inset: auto !important;
+    z-index: auto !important;
+  }
+
+  [data-pdf-studio-modal="true"] > div {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  [data-pdf-studio-modal="true"] .flex-1 {
+    overflow: visible !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  [data-pdf-zoom-container="true"] {
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    gap: 0 !important;
+    display: block !important;
+  }
+
+  .pdf-paper-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .pdf-paper-sheet:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   /* Maximize and format the preview section */
@@ -502,4 +643,116 @@ body {
 
 .heading-flash-highlight {
   animation: headingFlashHighlight 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================================================
+   DOCUMENT PRINT & PDF STUDIO - ISOLATED PAPER SHEET STYLING
+   Enforces high-contrast print typography on paper sheets even when the
+   entire application is operating in Dark Mode.
+   ========================================================================== */
+.pdf-paper-sheet {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  color-scheme: light !important;
+}
+
+/* Base text elements */
+.pdf-paper-sheet,
+.pdf-paper-sheet .prose,
+.pdf-paper-sheet [data-markdown-preview="true"],
+.pdf-paper-sheet [data-markdown-preview="true"] *,
+.pdf-paper-sheet .prose * {
+  color: #111827;
+}
+
+/* Headings */
+.pdf-paper-sheet h1,
+.pdf-paper-sheet h2,
+.pdf-paper-sheet h3,
+.pdf-paper-sheet h4,
+.pdf-paper-sheet h5,
+.pdf-paper-sheet h6,
+.pdf-paper-sheet strong,
+.pdf-paper-sheet b {
+  color: #030712 !important;
+}
+
+/* Paragraphs & Lists */
+.pdf-paper-sheet p,
+.pdf-paper-sheet li {
+  color: #111827 !important;
+}
+
+/* Table styling in PDF preview */
+.pdf-paper-sheet table {
+  color: #111827 !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 1rem 0 !important;
+}
+
+.pdf-paper-sheet thead {
+  background-color: #f8fafc !important;
+}
+
+.pdf-paper-sheet th {
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.pdf-paper-sheet td {
+  color: #1e293b !important;
+  border-top: 1px solid #e2e8f0 !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+/* Code blocks in PDF preview */
+.pdf-paper-sheet pre {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+}
+
+.pdf-paper-sheet pre code {
+  color: #0f172a !important;
+  background-color: transparent !important;
+}
+
+.pdf-paper-sheet code:not(pre code) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 0.15rem 0.35rem !important;
+  border-radius: 0.25rem !important;
+}
+
+/* Code Header */
+.pdf-paper-sheet [class*="bg-neutral-100/90"],
+.pdf-paper-sheet [class*="dark:bg-[#1a1a1f]"] {
+  background-color: #f1f5f9 !important;
+  border-bottom-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.pdf-paper-sheet [class*="dark:bg-[#121215]"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Standard blockquotes */
+.pdf-paper-sheet blockquote:not([class*="callout-alert"]) {
+  color: #334155 !important;
+  background-color: #f8fafc !important;
+  border-left: 4px solid #94a3b8 !important;
+}
+
+/* Running Header & Footer */
+.pdf-paper-sheet .pdf-running-header,
+.pdf-paper-sheet .pdf-running-footer {
+  color: #64748b !important;
+  border-color: #e2e8f0 !important;
 }

@@ -68,28 +68,28 @@ export const FeaturesPage: React.FC = () => {
 
       <main className="flex-1">
         {/* Editorial Hero */}
-        <section className="pt-16 pb-12 sm:pt-20 sm:pb-16 text-center max-w-5xl mx-auto px-4 sm:px-6">
+        <section className="pt-14 pb-10 sm:pt-20 sm:pb-16 text-center max-w-5xl mx-auto px-4 sm:px-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 mb-5 shadow-2xs">
             <Layers className="w-3.5 h-3.5 text-neutral-500" />
-            <span className="font-mono uppercase tracking-wider text-[11px]">v0.9.0 Beta Architecture &amp; Feature Groups</span>
+            <span className="font-mono uppercase tracking-wider text-[11px]">v0.9.1 Beta Architecture &amp; Feature Groups</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-neutral-950 dark:text-white tracking-tight mb-5 leading-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-neutral-950 dark:text-white tracking-tight mb-4 sm:mb-5 leading-tight">
             Crafted for writers who refuse<br className="hidden sm:inline" /> to sacrifice speed or typography.
           </h1>
 
-          <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto leading-relaxed mb-8">
+          <p className="text-sm sm:text-base lg:text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
             Explore the 5 core engineering pillars powering MD Writer: sandboxed vector print typography, instantaneous KaTeX typesetting, offline-first IndexedDB caching, and distraction-free keyboard workflows.
           </p>
 
           {/* Jump to Pillar Quick Navigation */}
-          <div className="flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto">
             {[
-              { id: 'pdf' as PillarId, label: 'Publication PDF Studio', icon: Printer },
-              { id: 'math' as PillarId, label: 'KaTeX Math Engine', icon: Sigma },
-              { id: 'offline' as PillarId, label: 'Offline Dexie DB', icon: HardDrive },
-              { id: 'slash' as PillarId, label: 'Slash Commands (/)', icon: Terminal },
-              { id: 'media' as PillarId, label: 'WebP Image Studio', icon: Layers }
+              { id: 'pdf' as PillarId, label: 'Publication PDF Studio', shortLabel: 'PDF Studio', icon: Printer },
+              { id: 'math' as PillarId, label: 'KaTeX Math Engine', shortLabel: 'KaTeX Math', icon: Sigma },
+              { id: 'offline' as PillarId, label: 'Offline Dexie DB', shortLabel: 'Offline DB', icon: HardDrive },
+              { id: 'slash' as PillarId, label: 'Slash Commands (/)', shortLabel: 'Slash (/)', icon: Terminal },
+              { id: 'media' as PillarId, label: 'WebP Image Studio', shortLabel: 'WebP Media', icon: Layers }
             ].map((p) => {
               const Icon = p.icon;
               const isSelected = activePillar === p.id;
@@ -97,14 +97,15 @@ export const FeaturesPage: React.FC = () => {
                 <button
                   key={p.id}
                   onClick={() => scrollToPillar(p.id)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                  className={`px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm scale-102'
                       : 'bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  <span>{p.label}</span>
+                  <span className="hidden sm:inline">{p.label}</span>
+                  <span className="inline sm:hidden">{p.shortLabel}</span>
                 </button>
               );
             })}
@@ -117,7 +118,7 @@ export const FeaturesPage: React.FC = () => {
           {/* Pillar 1: PDF Studio */}
           <div
             id="pillar-pdf"
-            className="p-6 sm:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
+            className="p-5 sm:p-8 lg:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-4">
@@ -125,10 +126,10 @@ export const FeaturesPage: React.FC = () => {
                   <Printer className="w-3.5 h-3.5 text-blue-600" />
                   <span>Vector Print Engine v2.4</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
                   Publication-grade PDFs straight from plain Markdown.
                 </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   Generic web editors export ugly browser snapshots with UI chrome. MD Writer's print studio renders directly into an isolated vector print iframe with customizable standalone cover pages, automated H1–H3 table of contents with dot leaders, and crisp page numbering.
                 </p>
 
@@ -159,7 +160,7 @@ export const FeaturesPage: React.FC = () => {
               </div>
 
               {/* Interactive PDF Studio Preset Widget */}
-              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-4">
+              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-4">
                 <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
                   <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
                     Interactive Preset Preview
@@ -182,7 +183,7 @@ export const FeaturesPage: React.FC = () => {
                 </div>
 
                 {/* Simulated Document Preview Page */}
-                <div className="p-6 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 text-neutral-900 dark:text-white space-y-3">
+                <div className="p-4 sm:p-6 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 text-neutral-900 dark:text-white space-y-3">
                   <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 border-b border-neutral-200/60 dark:border-neutral-800 pb-2">
                     <span>A4 • 300 DPI VECTOR</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold">READY TO EXPORT</span>
@@ -191,17 +192,29 @@ export const FeaturesPage: React.FC = () => {
                     <span className="text-[10px] uppercase font-mono font-bold text-blue-600 dark:text-blue-400 block">
                       {pdfPresetPreview.toUpperCase()} PRESET
                     </span>
-                    <h4 className="text-base font-bold text-neutral-950 dark:text-white mt-0.5">
+                    <h4 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white mt-0.5">
                       Distributed Systems Architecture RFC-402
                     </h4>
                     <p className="text-[11px] text-neutral-500 mt-1 leading-relaxed">
                       Author: Engineering Architecture Squad • MD Writer Publication Vector Engine
                     </p>
                   </div>
-                  <div className="p-2.5 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-mono space-y-1">
-                    <div className="text-neutral-400">1. Executive Summary ........................ 02</div>
-                    <div className="text-neutral-400">2. Latency Benchmarks (Sub-1ms) .......... 04</div>
-                    <div className="text-neutral-400">3. Offline Partition Tolerance ............. 07</div>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-800 text-[11px] font-mono space-y-1.5">
+                    <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 gap-2">
+                      <span className="truncate">1. Executive Summary</span>
+                      <span className="flex-1 border-b border-dotted border-neutral-300 dark:border-neutral-700 min-w-4" />
+                      <span className="shrink-0 font-bold">02</span>
+                    </div>
+                    <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 gap-2">
+                      <span className="truncate">2. Latency Benchmarks (Sub-1ms)</span>
+                      <span className="flex-1 border-b border-dotted border-neutral-300 dark:border-neutral-700 min-w-4" />
+                      <span className="shrink-0 font-bold">04</span>
+                    </div>
+                    <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 gap-2">
+                      <span className="truncate">3. Offline Partition Tolerance</span>
+                      <span className="flex-1 border-b border-dotted border-neutral-300 dark:border-neutral-700 min-w-4" />
+                      <span className="shrink-0 font-bold">07</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -211,7 +224,7 @@ export const FeaturesPage: React.FC = () => {
           {/* Pillar 2: KaTeX Math */}
           <div
             id="pillar-math"
-            className="p-6 sm:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
+            className="p-5 sm:p-8 lg:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-4">
@@ -219,10 +232,10 @@ export const FeaturesPage: React.FC = () => {
                   <Sigma className="w-3.5 h-3.5 text-amber-600" />
                   <span>KaTeX Mathematical Engine</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
                   Instant scientific formulas with zero setup.
                 </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   Never scour documentation for obscure LaTeX symbols. MD Writer bundles 20+ pre-composed equations across Calculus, Statistics, Linear Algebra, and Quantum Physics with real-time browser typesetting.
                 </p>
 
@@ -253,7 +266,7 @@ export const FeaturesPage: React.FC = () => {
               </div>
 
               {/* Interactive KaTeX Formula Switcher */}
-              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-4">
+              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-4">
                 <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
                   <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
                     Formula Studio Playground
@@ -275,7 +288,7 @@ export const FeaturesPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 space-y-3">
+                <div className="p-4 sm:p-5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-900 dark:text-white">
                       {sampleFormulas[mathCategory].title}
@@ -285,7 +298,7 @@ export const FeaturesPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="p-4 bg-white dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-blue-600 dark:text-blue-400 overflow-x-auto">
+                  <div className="p-3 sm:p-4 bg-white dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-blue-600 dark:text-blue-400 overflow-x-auto">
                     {sampleFormulas[mathCategory].latex}
                   </div>
 
@@ -308,7 +321,7 @@ export const FeaturesPage: React.FC = () => {
           {/* Pillar 3: Offline Dexie DB & Storage */}
           <div
             id="pillar-offline"
-            className="p-6 sm:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
+            className="p-5 sm:p-8 lg:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-4">
@@ -316,10 +329,10 @@ export const FeaturesPage: React.FC = () => {
                   <HardDrive className="w-3.5 h-3.5 text-emerald-600" />
                   <span>Dexie.js IndexedDB Architecture</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
                   Your thoughts live on your machine. Zero cloud lock-in.
                 </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   MD Writer treats your local browser as a first-class database. Every keystroke is saved immediately to IndexedDB via Dexie.js with zero server round-trips. You can close your laptop in an airplane, write for hours, and never lose a character.
                 </p>
 
@@ -339,7 +352,7 @@ export const FeaturesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-3 font-mono text-xs">
+              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-3 font-mono text-xs">
                 <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider pb-2 border-b border-neutral-100 dark:border-neutral-800">
                   Local Storage Telemetry
                 </div>
@@ -368,7 +381,7 @@ export const FeaturesPage: React.FC = () => {
           {/* Pillar 4: Slash Commands */}
           <div
             id="pillar-slash"
-            className="p-6 sm:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
+            className="p-5 sm:p-8 lg:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-4">
@@ -376,10 +389,10 @@ export const FeaturesPage: React.FC = () => {
                   <Terminal className="w-3.5 h-3.5 text-purple-600" />
                   <span>Keyboard-First Slash Palette</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
                   Keep your fingers anchored to the home row.
                 </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   Type <code className="px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 font-mono text-xs">/</code> anywhere to trigger instant insertion of headings, callouts, tables, YAML frontmatter, or formulas without touching your mouse.
                 </p>
 
@@ -400,7 +413,7 @@ export const FeaturesPage: React.FC = () => {
               </div>
 
               {/* Interactive Slash Search Playground */}
-              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-3">
+              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-3">
                 <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-neutral-800">
                   <span className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider">
                     Interactive Slash Finder
@@ -447,7 +460,7 @@ export const FeaturesPage: React.FC = () => {
           {/* Pillar 5: WebP Image Studio */}
           <div
             id="pillar-media"
-            className="p-6 sm:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
+            className="p-5 sm:p-8 lg:p-10 rounded-3xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shadow-sm transition-all"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-4">
@@ -455,10 +468,10 @@ export const FeaturesPage: React.FC = () => {
                   <Layers className="w-3.5 h-3.5 text-cyan-600" />
                   <span>Client-Side WebP Compression Studio</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
                   Paste screenshots freely. Zero bloated documents.
                 </h2>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   Pasting raw PNGs quickly inflates documents to dozens of megabytes. MD Writer intercepts clipboard paste (Ctrl+V) and drag-and-drop, downscales on an HTML5 bicubic canvas, and compresses to modern WebP with up to 75% savings before saving to IndexedDB.
                 </p>
 
@@ -478,7 +491,7 @@ export const FeaturesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-3">
+              <div className="lg:col-span-6 bg-white dark:bg-neutral-950 p-4 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-md space-y-3">
                 <div className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-wider pb-2 border-b border-neutral-100 dark:border-neutral-800">
                   Image Compression Telemetry Example
                 </div>

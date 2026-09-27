@@ -2,140 +2,171 @@ import { db, saveDocument } from './index';
 
 export const INITIAL_SEED_DOCUMENTS = [
   {
-    id: 'doc-getting-started',
-    title: 'Getting Started.md',
-    tags: ['Guide', 'Welcome'],
-    content: `# Welcome to MD Writer
+    id: 'doc-master-user-guide',
+    title: 'MD Writer — Ultimate User Guide & Reference.md',
+    tags: ['Guide', 'Reference', 'Documentation'],
+    content: `# MD Writer — Ultimate User Guide & Reference
 
-Write **faster**, stay focused, and turn plain markdown into publication-ready documents.
+Welcome to **MD Writer** — a private, offline-first Markdown studio engineered for writers, engineers, and researchers who demand zero latency, publication-grade exports, and distraction-free focus.
 
 > [!TIP]
-> Press **Ctrl+K** (or **Cmd+K**) anytime to launch the global Command Palette, or type **/** on a blank line to insert blocks.
+> Press <kbd>Ctrl+K</kbd> (or <kbd>Cmd+K</kbd> on macOS) anywhere to open the global **Command Palette**, or press <kbd>Ctrl+M</kbd> to rapidly switch between workspace modes.
 
 ---
 
-## ⚡ Key Highlights
-- [x] **Zero Latency**: Real-time dual-pane preview with 0ms typing lag.
-- [x] **Offline First**: Documents are saved securely in your browser's IndexedDB.
-- [x] **Design-Grade Export**: Publication-grade PDFs with custom typography & cover pages.
-- [ ] **Try it yourself**: Click this checkbox to test interactive task lists!
+## 1.0 Architecture & Offline Sovereignty
+
+MD Writer is architected around a strict **local-first paradigm**:
+- **Browser-Native Storage**: All your documents, outlines, drafts, and settings are saved instantaneously into your browser's persistent **IndexedDB database** (<0.5ms write latency).
+- **Offline Parity**: You can draft, edit, format, and generate publication PDFs completely without an internet connection.
+- **Privacy Standard**: Your written words remain on your machine unless you explicitly choose to authenticate and enable cloud synchronization.
+- **No AI Training**: Your text and intellectual property are never ingested, scraped, or used to train artificial intelligence models.
 
 ---
 
-## 📐 Mathematical Equations
-Inline formulas like $E = mc^2$ or full display blocks via KaTeX:
+## 2.0 Workspace Modes
+
+MD Writer adapts to your state of work with five dedicated workspace modes:
+
+| Mode | Shortcut | Best For | Description |
+| :--- | :--- | :--- | :--- |
+| **Split Mode** | <kbd>Ctrl+M</kbd> → Split | Drafting & Editing | Synchronized dual-pane editor with instant live Markdown preview. |
+| **Writing Mode** | <kbd>Ctrl+M</kbd> → Write | Focus & Zen Writing | Single-column distraction-free canvas with floating formatting dock above cursor. |
+| **Reader Mode** | <kbd>Ctrl+M</kbd> → Read | Proofreading & Review | Clean publication article layout with custom eye-comfort themes and reading progress. |
+| **Presentation** | <kbd>Ctrl+M</kbd> → Present | Keynotes & Pitches | Transforms Markdown headings and sections into interactive slide decks. |
+| **PDF Studio** | <kbd>Ctrl+P</kbd> | Publishing & Print | Vector print engine with running headers, footers, page breaks, and cover pages. |
+
+---
+
+## 3.0 Keyboard Shortcuts Cheatsheet
+
+Speed up your writing workflow with these universal keyboard shortcuts:
+
+| Action | Windows / Linux | macOS | Scope |
+| :--- | :--- | :--- | :--- |
+| **Command Palette** | <kbd>Ctrl+K</kbd> | <kbd>Cmd+K</kbd> | Everywhere |
+| **Switch Mode** | <kbd>Ctrl+M</kbd> or <kbd>Alt+M</kbd> | <kbd>Cmd+M</kbd> or <kbd>Opt+M</kbd> | Editor Header |
+| **Document Switcher** | <kbd>Ctrl+O</kbd> | <kbd>Cmd+O</kbd> | Files / Documents |
+| **Print & PDF Studio** | <kbd>Ctrl+P</kbd> | <kbd>Cmd+P</kbd> | Studio Export |
+| **Force Save** | <kbd>Ctrl+S</kbd> | <kbd>Cmd+S</kbd> | Editor Canvas |
+| **Find in Document** | <kbd>Ctrl+F</kbd> | <kbd>Cmd+F</kbd> | Search Bar |
+| **Find & Replace** | <kbd>Ctrl+H</kbd> | <kbd>Cmd+H</kbd> | Search & Replace |
+| **Bold Selection** | <kbd>Ctrl+B</kbd> | <kbd>Cmd+B</kbd> | Formatting |
+| **Italic Selection** | <kbd>Ctrl+I</kbd> | <kbd>Cmd+I</kbd> | Formatting |
+| **Insert Hyperlink** | <kbd>Ctrl+L</kbd> | <kbd>Cmd+K</kbd> | Formatting |
+| **Quick Block Insert** | Type <kbd>/</kbd> on empty line | Type <kbd>/</kbd> on empty line | Slash Commands |
+
+---
+
+## 4.0 Rich Markdown & Formatting Syntax
+
+### 4.1 Typography & Emphasis
+- **Bold text**: \`**bold text**\` or \`__bold text__\`
+- *Italic text*: \`*italic text*\` or \`_italic text_\`
+- ~~Strikethrough~~: \`~~strikethrough~~\`
+- ==Highlighted text==: \`==highlighted text==\`
+- \`Inline code\`: Wrap code snippets with backticks \`\`\`code\`\`\`
+- [External Hyperlink](https://github.com): \`[Link Text](https://url.com)\`
+
+### 4.2 Interactive Task Lists
+- [x] Complete project kickoff review
+- [x] Implement local database persistence
+- [ ] Connect multi-page vector print layout
+- [ ] Publish documentation to shared workspace
+
+> [!NOTE]
+> You can click any task checkbox directly in the Preview pane to toggle its completion state in real time!
+
+---
+
+## 5.0 GitHub-Style Callout Alert Boxes
+
+Communicate warnings, important notes, and tips using standard GitHub blockquote callout syntax:
+
+> [!NOTE]
+> Useful background information, implementation context, and technical details.
+
+> [!TIP]
+> Helpful recommendations, best practices, and workflow acceleration advice.
+
+> [!IMPORTANT]
+> Critical prerequisites, operational steps, or must-know product rules.
+
+> [!WARNING]
+> Potential edge cases, breaking changes, or operational hazards to avoid.
+
+> [!CAUTION]
+> High-risk actions that could impact data storage or external deployments.
+
+---
+
+## 6.0 Mathematical Expressions with KaTeX
+
+MD Writer includes native, hardware-accelerated **KaTeX** formula rendering.
+
+### Inline Formula
+You can embed formulas inline like Einstein's mass-energy equivalence $E = mc^2$, or Gaussian distributions $f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}$.
+
+### Display Equation Block
+For multi-line mathematical proofs or complex integrals, use double-dollar syntax:
 
 $$\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}$$
 
-> [!NOTE]
-> All files remain strictly stored on your device unless you choose cloud sync. Happy writing!
-`
-  },
-  {
-    id: 'doc-product-roadmap',
-    title: 'Product Roadmap Q3.md',
-    tags: ['Work', 'Product', 'Planning'],
-    content: `# Product Roadmap — Q3 Strategic Milestones
-
-Quarterly product strategy focused on writer workflow acceleration and team distribution.
-
-> [!IMPORTANT]
-> Target release cutoff: **September 30**. All core initiatives must pass performance benchmarks before general rollout.
+$$\\mathbf{A} = \\begin{pmatrix} a_{11} & a_{12} & a_{13} \\\\ a_{21} & a_{22} & a_{23} \\\\ a_{31} & a_{32} & a_{33} \\end{pmatrix}$$
 
 ---
 
-## 🎯 Executive Priorities
+## 7.0 Architecture Diagrams via Mermaid
 
-| Focus Area | Target Milestone | Owner | Status |
+Render interactive diagrams directly from text using fenced \`mermaid\` blocks:
+
+\`\`\`mermaid
+graph TD
+    A["Editor Canvas"] -->|"Instant Keystroke"| B["IndexedDB Local Storage"]
+    A -->|"Deferred AST"| C["Markdown & KaTeX Parser"]
+    C --> D["Live Dual-Pane Preview"]
+    C --> E["Vector PDF Studio Engine"]
+    B -.->|"Optional Auth"| F["Encrypted Cloud Sync"]
+\`\`\`
+
+---
+
+## 8.0 Visual Table Studio & Media Embedding
+
+### Structured Data Tables
+Tables automatically render with clean typography, zebra striping, and touch-friendly horizontal scrolling:
+
+| Feature Dimension | Community Edition | Pro Studio Tier | Team Workspace |
 | :--- | :--- | :--- | :--- |
-| **PDF Publishing** | Vector Print Engine v2.0 | Design Team | Completed |
-| **Media Studio** | Client-Side WebP Compression | Frontend | Completed |
-| **Cloud Sync** | Supabase Offline Queue Sync | Infrastructure | In Progress |
-| **Mobile PWA** | Bi-directional Offline Cache | Mobile Team | In Progress |
-
----
-
-## 📋 Q3 Sprint Deliverables
-- [x] Streamline top navigation into clean, spacious Resources dropdown
-- [x] Implement hardware-accelerated 2D canvas typing FX
-- [ ] Add password-protected web publishing links
-- [ ] Finalize team workspace permission matrices
-
-> [!NOTE]
-> Metrics review scheduled for alternate Tuesdays at 10:00 AM PST.
-`
-  },
-  {
-    id: 'doc-meeting-notes',
-    title: 'Meeting Notes — Design Review.md',
-    tags: ['Work', 'Design', 'Sync'],
-    content: `# Meeting Notes — Design System Review
-
-**Date**: September 7, 2026 • **Facilitator**: Lead Product Designer  
-**Participants**: Engineering, UX Research, Brand Studio
-
----
-
-## 💡 Key Discussion Points
-1. **Typography & Hierarchy**: Transition all long-form body content to *Inter Sans* with *Plus Jakarta Sans* headings for optimal readability across high-DPI displays.
-2. **Export Visual Quality**: Running headers and footers should pin strictly to print boundaries with dynamic chapter titles.
-3. **Palette Modernization**: Adopt neutral dark tones (\`#0A0A0A\`) with high-contrast accent borders.
-
----
-
-## 📝 Action Items & Ownership
-
-- [x] Audit all typography presets for high-resolution PDF rendering (@sarah)
-- [x] Replace generic system icons with open-source modern design assets (@alex)
-- [ ] Prototype cover page template variations for corporate reports (@designer)
-- [ ] Measure First Contentful Paint benchmarks on 3G network simulation (@dev)
+| **Local Storage** | Unlimited IndexedDB | Unlimited IndexedDB | Unlimited IndexedDB |
+| **PDF Vector Print** | Multi-Page Engine | Custom Margins & Covers | Custom Brand Watermarks |
+| **Word .docx Export** | Supported | Supported | Bulk Export |
+| **Cloud Device Sync** | Free during Beta | Included in Beta | Multi-seat sync |
+| **Web Publishing** | Public links | Password-protected links | Custom vanity domains |
 
 > [!TIP]
-> Next design sync: Thursday at 3:00 PM in the Studio Room.
-`
-  },
-  {
-    id: 'doc-weekend-recipe',
-    title: 'Recipe: Weekend Brunch.md',
-    tags: ['Personal', 'Lifestyle'],
-    content: `# Sourdough French Toast with Caramelized Pecans
-
-A rich, golden weekend brunch recipe perfected for slow Sunday mornings.
-
-> [!TIP]
-> For best results, use day-old thick sliced brioche or sourdough bread.
+> Type \`/table\` anywhere in the editor to launch the interactive Visual Table Designer!
 
 ---
 
-## ⏱️ Prep & Cook Times
-- **Prep Time**: 15 minutes
-- **Cook Time**: 10 minutes
-- **Total Time**: 25 minutes
-- **Servings**: 4 portions
+## 9.0 Publication-Grade PDF & Document Export
+
+When you are ready to share your work, MD Writer provides publication-level export engines:
+1. **Multi-Page Print & PDF Studio (<kbd>Ctrl+P</kbd>)**:
+   - Automatic content-aware page pagination (no orphan headings).
+   - Running header with document title and customizable running footer with page numbers.
+   - Clean, light print preview themes designed to save printer ink and produce professional PDFs.
+2. **Word Document (.docx)**:
+   - Export structured headings, lists, tables, and code snippets straight into Microsoft Word format.
+3. **Plain Markdown (.md)**:
+   - Instant single-file markdown export with zero metadata distortion.
+4. **Web Publishing**:
+   - Share a live, read-only web link of your document with one click.
 
 ---
 
-## 🛒 Ingredients Table
-
-| Ingredient | Quantity | Notes |
-| :--- | :--- | :--- |
-| Brioche or Sourdough | 8 thick slices | Day-old preferred |
-| Large Eggs | 4 | Room temperature |
-| Whole Milk or Oat Milk | 3/4 cup | Unsweetened |
-| Heavy Cream | 1/4 cup | Adds rich custard texture |
-| Pure Vanilla Extract | 1 tsp | High-grade bourbon vanilla |
-| Ground Cinnamon | 1/2 tsp | Freshly ground |
-| Salted Butter | 2 tbsp | For frying pan |
-| Maple Syrup & Pecans | To taste | Warm before serving |
-
----
-
-## 🍳 Step-by-Step Instructions
-- [x] Whisk eggs, milk, heavy cream, vanilla, and cinnamon in a shallow dish until smooth.
-- [ ] Heat butter in a large cast iron skillet over medium heat until gently foaming.
-- [ ] Dip each bread slice for 20 seconds per side, allowing custard to soak through.
-- [ ] Cook for 3–4 minutes per side until deep golden brown.
-- [ ] Top with toasted pecans and a generous drizzle of warm pure maple syrup.
+### Need Help or Have Feedback?
+Have a feature request or found an edge case? Open the **Feedback & Reviews** page from the navigation bar or join our community discussions. Happy writing!
 `
   }
 ];

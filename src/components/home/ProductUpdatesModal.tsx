@@ -55,7 +55,7 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
   const getBadgeLabel = (type: 'new' | 'improved' | 'perf' | 'fix') => {
     switch (type) {
       case 'new': return 'New';
-      case 'perf': return '60FPS Perf';
+      case 'perf': return 'Performance';
       case 'improved': return 'Improved';
       case 'fix': return 'Resolved';
     }
@@ -76,7 +76,7 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
           {/* Header Bar */}
           <div className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-950/40 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20">
+              <div className="w-10 h-10 rounded-2xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center shadow-xs">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
@@ -85,7 +85,7 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
                     What's New & Release Timeline
                   </h2>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs">
-                    v3.1 Live
+                    v0.9.1 Beta Live
                   </span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -107,11 +107,10 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
             {/* Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
               {[
-                { id: 'all', label: 'All Milestones' },
-                { id: 'engine', label: '⚡ Engine & 60FPS' },
-                { id: 'publishing', label: '📄 PDF Studio' },
-                { id: 'ux', label: '✨ UI & Carets' },
-                { id: 'sync', label: '☁️ Cloud Sync' }
+                { id: 'all', label: 'All Updates' },
+                { id: 'ux', label: 'Editor & Design' },
+                { id: 'publishing', label: 'PDF & Export' },
+                { id: 'sync', label: 'Cloud & Offline' }
               ].map(cat => (
                 <button
                   key={cat.id}

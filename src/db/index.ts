@@ -113,11 +113,13 @@ export function countWords(text: string): number {
  * If not present in cache, generates default content or fetches from fallback.
  */
 export async function getDocumentContent(id: string): Promise<string> {
-  // Update lastOpenedAt and openCount in metadata
+  // Read document once — avoids double IndexedDB query on the same line
+  const docMeta = await db.documents.get(id);
   await db.documents.update(id, {
     lastOpenedAt: Date.now(),
-    openCount: (await db.documents.get(id))?.openCount ? ((await db.documents.get(id))!.openCount + 1) : 1
+    openCount: (docMeta?.openCount ?? 0) + 1,
   });
+
 
   const cached = await db.document_cache.get(id);
   if (cached) {
@@ -251,7 +253,8 @@ export async function duplicateDocument(id: string): Promise<string> {
 
   const baseTitle = originalDoc?.title ? originalDoc.title.replace(/\.md$/i, '') : 'Document';
   const newTitle = `${baseTitle} (Copy).md`;
-  const newId = `doc_${Date.now()}_copy`;
+  // Use cryptographically random UUID to guarantee uniqueness even on rapid duplications
+  const newId = `doc_${crypto.randomUUID()}`;
 
   const tags = originalDoc?.tags ? [...originalDoc.tags] : ['General'];
   await saveDocument(newId, newTitle, originalContent, tags);

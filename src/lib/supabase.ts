@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { db, DocumentMetadata } from '../db';
+import { isLifetimeProEmail, isHolidayFreeProActive } from '../stores/useAuthStore';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -20,14 +21,17 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured()
 
 /**
  * Checks if an email is registered.
- * Deprecated to prevent email enumeration attacks; Supabase Auth validates duplicates securely during signUp.
+ * @deprecated Removed to prevent email enumeration attacks.
+ * Supabase Auth validates duplicates securely during signUp.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function checkEmailExists(_email: string): Promise<boolean> {
   return false;
 }
 
 /**
- * Helper to check if authenticated user has Pro privileges for cloud sync
+ * Returns true if the authenticated user has Pro cloud-sync privileges.
+ * Privilege order: promo window → lifetime list → DB profile tier.
  */
 export async function isUserProForSync(): Promise<boolean> {
   if (!supabase) return false;
@@ -35,17 +39,13 @@ export async function isUserProForSync(): Promise<boolean> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return false;
 
-    // Free Pro campaign for everyone through December 31, 2026:
-    // All authenticated users get real-time cloud sync enabled!
-    if (new Date() <= new Date('2026-12-31T23:59:59.999Z')) {
-      return true;
-    }
+    // 1. Free promo window — all authenticated users get Pro
+    if (isHolidayFreeProActive()) return true;
 
-    const userEmail = session.user.email?.toLowerCase();
-    if (userEmail === 'tungariyarahul08@gmail.com') {
-      return true;
-    }
+    // 2. Lifetime Pro list from env
+    if (isLifetimeProEmail(session.user.email)) return true;
 
+    // 3. Database subscription tier
     const { data: prof } = await supabase
       .from('profiles')
       .select('subscription_tier')
@@ -57,6 +57,7 @@ export async function isUserProForSync(): Promise<boolean> {
     return false;
   }
 }
+
 
 /**
  * Pushes document metadata and full content to Supabase in the background.

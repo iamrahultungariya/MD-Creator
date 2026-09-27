@@ -13,6 +13,7 @@ import { EditorStatusBar } from '../features/editor/components/EditorStatusBar';
 import { EditorModalsContainer } from '../features/editor/components/EditorModalsContainer';
 import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
 import { exportToDocx } from '../features/docx-export/services/docxExportService';
+import { executePdfPrint } from '../features/pdf-export/services/pdfPrintService';
 import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
 import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
 import { writeLocalFile } from '../services/localFolderService';
@@ -21,8 +22,9 @@ export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const editorRef = useRef<CodeMirrorEditorHandle>(null);
 
-  // View mode and feedback toasts
+  // View mode, mobile tab and feedback toasts
   const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [cursorPos, setCursorPos] = useState<CursorPosition>({ line: 1, col: 1 });
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [isFindOpen, setIsFindOpen] = useState(false);
@@ -203,6 +205,14 @@ export const EditorPage: React.FC = () => {
         e.preventDefault();
         modals.setIsExportModalOpen((prev) => !prev);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        if (modals.isPdfStudioOpen) {
+          executePdfPrint();
+        } else {
+          modals.setIsPdfStudioOpen(true);
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         const currentVal = editorRef.current ? editorRef.current.getValue() : doc.content;
@@ -218,10 +228,22 @@ export const EditorPage: React.FC = () => {
         setFindMode('replace');
         setIsFindOpen(true);
       }
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') ||
+        (e.altKey && e.key.toLowerCase() === 'm')
+      ) {
+        e.preventDefault();
+        setViewMode((prev) => {
+          if (prev === 'split') return 'write';
+          if (prev === 'write') return 'read';
+          if (prev === 'read') return 'present';
+          return 'split';
+        });
+      }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [doc, slash.isSlashMenuOpen, modals]);
+  }, [doc, slash.isSlashMenuOpen, modals, setViewMode]);
 
   // Telemetry computations offloaded to background Web Worker (Bug 1: 5500 LOC crash fix)
   const workerStats = useMarkdownWorker(doc.content);
@@ -289,6 +311,8 @@ export const EditorPage: React.FC = () => {
           setIsExportMenuOpen={modals.setIsExportMenuOpen}
           onOpenPublish={() => modals.setIsPublishModalOpen(true)}
           onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
+          mobileTab={mobileTab}
+          onSelectMobileTab={setMobileTab}
         />
       )}
 
@@ -296,6 +320,8 @@ export const EditorPage: React.FC = () => {
       <EditorWorkspace
         viewMode={viewMode}
         setViewMode={setViewMode}
+        mobileTab={mobileTab}
+        onSelectMobileTab={setMobileTab}
         content={doc.content}
         lineCount={stats.lines}
         onKeyDown={slash.handleSlashKeyDown}

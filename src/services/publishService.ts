@@ -147,7 +147,8 @@ export async function publishDocument(
       passwordHash = await hashPassword(options.password);
     }
 
-    // 5. Upsert published document record
+    // 5. Upsert published document record scoped to this user
+    //    Conflict key is (document_id, user_id) — slugs are unique per-user, not globally.
     const { error: pubError } = await supabase.from('published_documents').upsert(
       {
         document_id: docId,
@@ -157,7 +158,7 @@ export async function publishDocument(
         password_hash: passwordHash,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: 'slug' }
+      { onConflict: 'document_id,user_id' }
     );
 
     if (pubError) {
@@ -237,13 +238,25 @@ export async function getPublicDocumentBySlug(
     const title = docRes.data?.title || 'Published Document';
     const content = contentRes.data?.content || '';
 
-    // Asynchronously increment view count without blocking
-    Promise.resolve(
-      supabase
-        .from('published_documents')
-        .update({ view_count: (pubRecord.view_count || 0) + 1 })
-        .eq('id', pubRecord.id)
-    ).catch(console.warn);
+    // Atomically increment view count — avoids read-modify-write race condition
+    // under concurrent page loads. The RPC does: UPDATE ... SET view_count = view_count + 1
+    const sb = supabase; // capture for closure
+    void (async () => {
+      try {
+        const { error } = await sb.rpc('increment_view_count', { p_id: pubRecord.id });
+        if (error) {
+          // Graceful fallback if the RPC isn't deployed yet
+          await sb
+            .from('published_documents')
+            .update({ view_count: (pubRecord.view_count || 0) + 1 })
+            .eq('id', pubRecord.id);
+        }
+      } catch {
+        // Non-blocking — don't let view count failures affect page load
+      }
+    })();
+
+
 
     return {
       status: 'ok',

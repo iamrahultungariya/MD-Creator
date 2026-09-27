@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Check, 
   Clock, 
   Flame, 
   CloudOff, 
-  ListTree
+  ListTree,
+  ArrowLeft
 } from 'lucide-react';
 import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
@@ -66,10 +68,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
   onInsertSnippet,
   onSlashTrigger,
 }) => {
-  // Quick Formatting Toolbar visibility & cursor-anchored positioning:
-  // When user is typing or moving cursor, it completely disappears immediately.
-  // After 500ms of stopping on cursor/typing, it smoothly appears directly above the cursor/caret.
-  // After 2 seconds (2000ms) of appearing, if user is not typing or interacting, it automatically disappears.
+  const navigate = useNavigate();
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
   const [dockCoords, setDockCoords] = useState<DockCoords | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -212,6 +211,30 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
       const hasSelection = selection.length > 0;
 
       switch (action) {
+        case 'h1': {
+          if (hasSelection) {
+            ed.replaceSelection(`\n# ${selection}\n`);
+          } else {
+            ed.replaceSelection('\n# ');
+          }
+          break;
+        }
+        case 'h2': {
+          if (hasSelection) {
+            ed.replaceSelection(`\n## ${selection}\n`);
+          } else {
+            ed.replaceSelection('\n## ');
+          }
+          break;
+        }
+        case 'h3': {
+          if (hasSelection) {
+            ed.replaceSelection(`\n### ${selection}\n`);
+          } else {
+            ed.replaceSelection('\n### ');
+          }
+          break;
+        }
         case 'bold': {
           if (hasSelection) {
             ed.replaceSelection(`**${selection}**`);
@@ -237,6 +260,16 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
             ed.replaceSelection(`~~${selection}~~`);
           } else {
             ed.replaceSelection('~~~~');
+            const start = ed.getSelectionStart();
+            ed.setCursor(start - 2);
+          }
+          break;
+        }
+        case 'highlight': {
+          if (hasSelection) {
+            ed.replaceSelection(`==${selection}==`);
+          } else {
+            ed.replaceSelection('====');
             const start = ed.getSelectionStart();
             ed.setCursor(start - 2);
           }
@@ -289,6 +322,18 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           }
           break;
         }
+        case 'task': {
+          if (hasSelection) {
+            const formatted = selection
+              .split('\n')
+              .map((line) => (line.startsWith('- [ ] ') ? line.slice(6) : `- [ ] ${line}`))
+              .join('\n');
+            ed.replaceSelection(formatted);
+          } else {
+            ed.replaceSelection('\n- [ ] ');
+          }
+          break;
+        }
         case 'quote': {
           if (hasSelection) {
             const formatted = selection
@@ -299,6 +344,10 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           } else {
             ed.replaceSelection('\n> ');
           }
+          break;
+        }
+        case 'hr': {
+          ed.replaceSelection('\n\n---\n\n');
           break;
         }
       }
@@ -332,8 +381,26 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
         onMouseLeave={handleDockMouseLeave}
       />
 
+      {/* Sleek Floating History Back Button */}
+      <div className="fixed top-4 left-4 z-40">
+        <button
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/documents');
+            }
+          }}
+          className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/90 dark:bg-neutral-900/90 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white border border-neutral-200/80 dark:border-neutral-800 backdrop-blur-md shadow-sm flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-all active:scale-95 group"
+          title="Back to Previous Page (History Back)"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
+      </div>
+
       {/* Integrated Document Title Header with Generous Screen Spacing */}
-      <div className="w-full max-w-4xl mx-auto px-6 sm:px-12 md:px-16 pt-16 sm:pt-20 pb-3 shrink-0">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-12 md:px-16 pt-14 sm:pt-20 pb-2 sm:pb-3 shrink-0">
         <input
           ref={titleInputRef}
           type="text"
@@ -350,14 +417,14 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           onKeyDown={handleTitleKeyDown}
           onBlur={() => executeSave(content, title)}
           placeholder="Untitled Document..."
-          className="w-full bg-transparent font-black text-2xl sm:text-4xl text-neutral-900 dark:text-white placeholder-neutral-300 dark:placeholder-neutral-700 focus:outline-none tracking-tight leading-tight transition-colors border-b border-transparent focus:border-neutral-200 dark:focus:border-neutral-800/60 pb-2"
+          className="w-full bg-transparent font-black text-xl sm:text-3xl md:text-4xl text-neutral-900 dark:text-white placeholder-neutral-300 dark:placeholder-neutral-700 focus:outline-none tracking-tight leading-tight transition-colors border-b border-transparent focus:border-neutral-200 dark:focus:border-neutral-800/60 pb-2 font-sans"
         />
       </div>
 
       {/* CodeMirror 6 Virtualized Document Writing Area with Dimmed Line Numbers */}
       <div 
         onPointerDown={notifyUserActivity}
-        className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-10 md:px-14 pb-24 overflow-hidden relative"
+        className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative"
       >
         <CodeMirrorEditor
           value={content}

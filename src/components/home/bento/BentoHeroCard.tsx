@@ -80,7 +80,7 @@ export const BentoHeroCard: React.FC<BentoHeroCardProps> = ({ onOpenTemplates })
   };
 
   return (
-    <div className="lg:col-span-8 p-6 sm:p-8 lg:p-10 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-[0_4px_30px_-6px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col justify-between relative overflow-hidden transition-all group">
+    <div className="lg:col-span-8 p-4 sm:p-6 lg:p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-[0_4px_30px_-6px_rgba(0,0,0,0.03)] dark:shadow-none flex flex-col justify-between relative overflow-hidden transition-all group">
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center">
         {/* Left Text & CTA Content */}
         <div className="xl:col-span-6 flex flex-col justify-between z-10">
@@ -230,12 +230,12 @@ export const BentoHeroCard: React.FC<BentoHeroCardProps> = ({ onOpenTemplates })
             {/* Split Window Body */}
             <div className={`p-3 sm:p-4 min-h-[220px] max-h-[300px] overflow-auto ${
               activeTab === 'split'
-                ? 'grid grid-cols-2 divide-x divide-neutral-200/80 dark:divide-neutral-800/80'
+                ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-0 sm:divide-x divide-neutral-200/80 dark:divide-neutral-800/80'
                 : 'block'
             }`}>
               {/* Left Pane: Interactive Live Textarea with Line Numbers */}
               {(activeTab === 'edit' || activeTab === 'split') && (
-                <div className={`flex ${activeTab === 'split' ? 'pr-3' : 'w-full'}`}>
+                <div className={`flex ${activeTab === 'split' ? 'sm:pr-3' : 'w-full'}`}>
                   {/* Dynamic Line Numbers */}
                   <div className="select-none text-neutral-400 dark:text-neutral-600 pr-2.5 space-y-1 text-right text-[10.5px] font-mono shrink-0">
                     {Array.from({ length: Math.max(lineCount, 6) }).map((_, i) => (

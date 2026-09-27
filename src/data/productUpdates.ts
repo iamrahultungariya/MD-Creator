@@ -10,7 +10,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 
-export type UpdateCategory = 'all' | 'engine' | 'publishing' | 'sync' | 'ux';
+export type UpdateCategory = 'all' | 'publishing' | 'sync' | 'ux';
 
 export interface UpdateMilestone {
   version: string;
@@ -31,8 +31,30 @@ export interface UpdateMilestone {
 
 export const MILESTONES: UpdateMilestone[] = [
   {
-    version: 'v0.9.0 Beta',
+    version: 'v0.9.1 Beta',
     isLatest: true,
+    date: 'October 2026',
+    title: 'Navbar Declutter, Concentric Orbital Loader, Active Mode Selector, Floating Toolbar Preferences, Drag & Drop Reordering, Community Reviews & Publication PDF Studio',
+    category: 'ux',
+    categoryLabel: 'Workflow & Refinement',
+    summary: 'A precision quality-of-life update focused on pure writing focus, personalized toolbar customization, and publication fidelity: introduced the concentric geometric orbital loader, streamlined the top navbar with an Active Mode dropdown (Alt+M / Ctrl+M), customizable floating formatting dock preferences with drag-and-drop tool reordering, interactive community reviews with 45-minute post-submission editing and editorial moderation, history-aware back navigation, and multi-page print/PDF export with automatic pagination and direct PDF download.',
+    icon: Layers,
+    iconColor: 'text-neutral-900 dark:text-neutral-100',
+    iconBg: 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
+    highlights: [
+      { type: 'new', text: 'Concentric Orbital Loader: Minimalist dual-ring geometric orbit animation replacing older loading spinners.' },
+      { type: 'new', text: 'Active Mode Dropdown & Shortcuts: Instant switching between Split, Write, Read, and Present modes with Alt+M / Ctrl+M hotkeys.' },
+      { type: 'new', text: 'Floating Formatting Dock Preferences: Full control to customize which tools appear in the cursor formatting pill, with live theme adaptation.' },
+      { type: 'new', text: 'Drag-and-Drop Toolbar Reordering: Effortlessly rearrange quick formatting tools by dragging them with mouse or touch.' },
+      { type: 'new', text: 'Community Reviews & Moderation Desk: Share your writing experience with ratings, 45-minute post-submission edits, and verified editorial moderation.' },
+      { type: 'improved', text: 'History-Aware Back Navigation: Back buttons in writing, presentation, and document views now seamlessly follow your browser history.' },
+      { type: 'improved', text: 'Publication Print & Multi-Page PDF Studio: Fixed page break distribution, clean vector print mode without editor chrome, multi-page export, and direct PDF download fix.' },
+      { type: 'improved', text: 'Publication Legal & Privacy Center: Clear, human-readable terms, privacy protections, and zero-tracking commitment.' }
+    ]
+  },
+  {
+    version: 'v0.9.0 Beta',
+    isLatest: false,
     date: 'October 2026',
     title: 'Minimalist Architecture, Interactive Community Reviews, Curated Visual Tools & Performance Focus',
     category: 'ux',
@@ -69,54 +91,53 @@ export const MILESTONES: UpdateMilestone[] = [
       { type: 'improved', text: 'Differentiated Reader Column Widths: Truly distinct layout profiles for Focused (576px editorial), Standard (896px article), and Wide (1152px expansive specs and tables).' },
       { type: 'improved', text: 'Purged "AI Slop" Visual Distractions: Stripped disparate carnival rainbow colors and sparkle star icons across headers, toolbars, and menus in favor of a timeless monochrome aesthetic.' },
       { type: 'new', text: 'Embed Image Studio (Offline + Web): Dual-tab image insertion dialog with client-side HTML5 Canvas bicubic downscaling, WebP conversion, and live size savings telemetry.' },
-      { type: 'perf', text: 'Zero-Blocking Initial Render: Code-split non-critical dialogs and decoupled Rollup chunks into vendor-query, vendor-dexie, and vendor-supabase.' }
+      { type: 'perf', text: 'Instant Page Initialization: Asynchronous code-splitting ensures rapid document loading with minimal initial transfer.' }
     ]
   },
   {
     version: 'v0.7.5',
     date: 'March 2026',
-    title: 'Architecture Modularization, PWA Desktop & Mobile App, KaTeX Studio & Rich Visual Icons',
-    category: 'engine',
-    categoryLabel: 'Flagship Architecture',
-    summary: 'A landmark platform release: total architectural decomposition with 0 monolithic files > 600 LOC, a 98.8% initial bundle reduction (31 kB entry), standalone PWA installability with 95 offline precached assets, a 20+ formula KaTeX studio, debounced 0ms Mermaid caching, and a rich visual icon engine on all platforms.',
+    title: 'High-Speed Architecture, PWA App & KaTeX Math Studio',
+    category: 'ux',
+    categoryLabel: 'Speed & Architecture',
+    summary: 'A landmark platform release: lightweight modular design with rapid loading, standalone PWA installability with offline writing support, a 20+ formula KaTeX studio, and rich visual icons across all platforms.',
     icon: Layers,
     iconColor: 'text-indigo-500 dark:text-indigo-400',
     iconBg: 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-200/60 dark:border-indigo-900/50',
     highlights: [
-      { type: 'perf', text: '98.8% Bundle Size Reduction: Initial JavaScript chunk compressed from 2.56 MB down to 31.9 kB via fine-grained Rollup manualChunks and route-level code splitting.' },
-      { type: 'perf', text: 'Zero Monoliths Architecture: Deconstructed 1,215 LOC EditorPage and 786 LOC ExportPdfModal into modular, highly testable sub-300 LOC micro-components and hooks.' },
-      { type: 'new', text: 'Progressive Web App (PWA v1.3): Full standalone app experience for Chrome/Edge, Android, and iOS Safari with 95 precached assets for offline writing without network.' },
-      { type: 'new', text: 'Rich Visual Icon Engine: Converts all Unicode symbols and shortcodes (:rocket:, :fire:, :sparkles:) into authentic, high-DPI 3D visual icons on all operating systems.' },
-      { type: 'new', text: 'Predefined KaTeX Mathematical Studio: 20+ categorized formulas across Calculus, Linear Algebra, Physics, and Statistics with 1-click insert and live preview via /math.' },
-      { type: 'new', text: 'Global Raycast Command Palette (Ctrl+K): Instant fuzzy document search, system actions, theme toggling, and math shortcuts.' },
-      { type: 'improved', text: 'Zero-Lag Debounced Mermaid Studio: 350ms typing debounce and module-level in-memory SVG caching (0ms re-render) eliminating all keystroke lag and syntax flicker.' },
-      { type: 'improved', text: 'High-Contrast Callout Alerts: Vibrant Obsidian/GitHub-style alerts for [!NOTE] (Blue), [!TIP] (Emerald), [!WARNING] (Amber), [!IMPORTANT] (Purple), and [!CAUTION] (Rose Red).' },
-      { type: 'improved', text: 'Home Bottom Showcase Redesign: Pixel-perfect floating macOS editor window with 3D perspective tilt, interactive checklist syncing, and static elevation.' }
+      { type: 'perf', text: 'Lightning-Fast Startup: Highly optimized bundle loading for instant cold starts and smooth page transitions.' },
+      { type: 'perf', text: 'Smooth Editor Engine: Modular architecture ensuring zero typing lag across long-form documents.' },
+      { type: 'new', text: 'Progressive Web App (PWA): Full standalone app experience for Chrome/Edge, Android, and iOS Safari with offline writing support.' },
+      { type: 'new', text: 'Rich Visual Icon Engine: Converts Unicode symbols and shortcodes into authentic, high-DPI visual icons on all operating systems.' },
+      { type: 'new', text: 'Predefined KaTeX Mathematical Studio: 20+ categorized formulas across Calculus, Linear Algebra, Physics, and Statistics with 1-click insert.' },
+      { type: 'new', text: 'Global Command Palette (Ctrl+K): Instant fuzzy document search, system actions, theme toggling, and shortcuts.' },
+      { type: 'improved', text: 'Zero-Lag Mermaid Diagrams: Instant preview caching and debounced rendering eliminating keystroke flicker.' },
+      { type: 'improved', text: 'High-Contrast Callout Alerts: Clean alert boxes for Note, Tip, Warning, Important, and Caution.' },
+      { type: 'improved', text: 'Home Workspace Showcase: Sleek interactive preview window highlighting live markdown editing.' }
     ]
   },
   {
     version: 'v0.7.0',
     date: 'September 2026',
-    title: 'High-Throughput Canvas Engine & Idempotent Cloud Sync',
-    category: 'engine',
-    categoryLabel: 'Performance & Engine',
-    summary: 'A complete architectural rebuild of the writing effect pipeline. Replaced DOM particle rendering with a hardware-accelerated 2D canvas layer and persistent mirror singleton, eliminating all input lag during rapid typing.',
+    title: 'Typing Responsiveness & Reliable Cloud Synchronization',
+    category: 'ux',
+    categoryLabel: 'Performance & Sync',
+    summary: 'A complete architectural rebuild of the text input pipeline. Optimized keystroke handling and cloud sync to eliminate typing latency and ensure rock-solid data integrity.',
     icon: Cpu,
     iconColor: 'text-amber-500 dark:text-amber-400',
     iconBg: 'bg-amber-50 dark:bg-amber-950/50 border-amber-200/60 dark:border-amber-900/50',
     highlights: [
-      { type: 'perf', text: 'Hardware-Accelerated 2D Canvas Layer: Full-screen High-DPI canvas overlay with 0 DOM nodes mounted per keypress.' },
-      { type: 'perf', text: 'Zero-Allocation Particle Pool: Pre-allocated pool of 256 particle structures, entirely eliminating Garbage Collection pauses.' },
-      { type: 'perf', text: 'Persistent Mirror Singleton: Caret measurement now completes in < 0.05ms without adding/removing DOM elements or forcing synchronous reflows.' },
-      { type: 'perf', text: 'Direct GPU-Composited Cursor: Visual carets positioned via direct translate3d transform, bypassing React render cycles for native 0ms typing latency.' },
-      { type: 'new', text: 'Self-Sleeping RAF Loop: Animation loop automatically sleeps when particles fade, dropping CPU & GPU usage to 0.00% when idle.' },
-      { type: 'fix', text: 'Idempotent Supabase SQL & Pre-signup Email Validation: Added checkEmailExists() and robust DROP POLICY IF EXISTS scripts to eliminate error 42710.' }
+      { type: 'perf', text: 'Zero Typing Latency: Streamlined input rendering to guarantee instantaneous keystroke feedback even on complex documents.' },
+      { type: 'perf', text: 'Fluid Cursor Tracking: Smooth, responsive caret movement that never lags during rapid writing.' },
+      { type: 'perf', text: 'Efficient Memory Management: Optimized local state management for butter-smooth long-form editing sessions.' },
+      { type: 'new', text: 'Battery & Resource Saver: Background rendering pauses automatically when idle, preserving laptop battery life.' },
+      { type: 'fix', text: 'Reliable Cloud Backup: Enhanced session safety and seamless automatic synchronization across devices.' }
     ]
   },
   {
     version: 'v0.6.5',
     date: 'August 2026',
-    title: 'PDF Publishing Studio v2 & Running Footer Geometry',
+    title: 'PDF Publishing Studio v2 & Clean Print Typography',
     category: 'publishing',
     categoryLabel: 'Vector Publishing',
     summary: 'Transformed document export into an isolated high-resolution vector publishing studio with curated typographic themes, standalone cover pages, auto TOC, and pinned running footers.',
@@ -126,8 +147,8 @@ export const MILESTONES: UpdateMilestone[] = [
     highlights: [
       { type: 'new', text: '5 Curated Typographic Presets: Editorial (Sans), Technical RFC (Mono), Academic (Serif), Corporate, and Swiss Minimalist.' },
       { type: 'new', text: 'Standalone Cover Pages & Table of Contents: Automatically extracts H1–H3 headings with dotted leader tabs.' },
-      { type: 'fix', text: 'Pinned Footer Geometry: Screen preview and print engine updated with flexbox column layout and min-height 88vh to pin running footers firmly to page bottom.' },
-      { type: 'improved', text: 'Isolated Print Engine: Renders through a hidden sandboxed iframe to preserve document-perfect print typography with 0 UI chrome.' }
+      { type: 'fix', text: 'Pinned Running Footers: Page numbers and document metadata stay neatly positioned at the bottom of printed sheets.' },
+      { type: 'improved', text: 'Clean Print Mode: Automatically strips all editor buttons, sidebars, and menus when printing for publication-grade output.' }
     ]
   },
   {
@@ -150,17 +171,17 @@ export const MILESTONES: UpdateMilestone[] = [
   {
     version: 'v0.5.0',
     date: 'June 2026',
-    title: 'Bi-Directional Supabase Cloud Sync & Multi-Device Hub',
+    title: 'Cloud Synchronization & Multi-Device Writing',
     category: 'sync',
     categoryLabel: 'Cloud & Offline',
-    summary: 'Bridges offline-first Dexie IndexedDB with real-time Supabase cloud sync, enabling seamless cross-device writing and instant recovery.',
+    summary: 'Combines offline-first local storage with real-time cloud synchronization, enabling seamless cross-device writing and instant recovery.',
     icon: Cloud,
     iconColor: 'text-emerald-500 dark:text-emerald-400',
     iconBg: 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/60 dark:border-emerald-900/50',
     highlights: [
-      { type: 'new', text: 'Inbound Cloud Pull: Automatically queries Supabase on startup to populate local Dexie with documents written on other devices.' },
-      { type: 'new', text: 'Sync All Engine: Pushes offline drafts to Supabase in the background upon login or reconnect.' },
-      { type: 'improved', text: 'Row-Level Security (RLS): All documents and revisions isolated per user_id with cryptographically verified auth tokens.' }
+      { type: 'new', text: 'Automatic Multi-Device Sync: Open your notes on any computer or mobile browser and find your latest edits ready.' },
+      { type: 'new', text: 'Offline-First Sync: Write freely without an internet connection; drafts sync automatically to the cloud whenever you reconnect.' },
+      { type: 'improved', text: 'Private & Encrypted Storage: Every document is strictly isolated and accessible only to your authenticated account.' }
     ]
   },
   {
@@ -184,8 +205,8 @@ export const MILESTONES: UpdateMilestone[] = [
     version: 'v0.1.0',
     date: 'January 2026',
     title: 'Foundational Release: The Offline-First Markdown Architecture',
-    category: 'engine',
-    categoryLabel: 'Foundation',
+    category: 'sync',
+    categoryLabel: 'Foundation & Offline',
     summary: 'The original launch of MD Writer: instant offline persistence, KaTeX mathematical typesetting, and distraction-free writing modes.',
     icon: GitCommit,
     iconColor: 'text-neutral-500 dark:text-neutral-400',

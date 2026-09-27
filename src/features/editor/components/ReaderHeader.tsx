@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, 
   PenTool, 
   ListTree, 
   Type, 
@@ -10,13 +8,10 @@ import {
   Printer, 
   Columns,
   BookOpen,
-  Clock,
-  Sun,
-  Moon
+  Clock
 } from 'lucide-react';
 import { ViewMode } from '../types';
 import { useReaderSettingsStore } from '../../../stores/useReaderSettingsStore';
-import { useThemeStore } from '../../../stores/useThemeStore';
 import { ReaderAppearancePopover } from './ReaderAppearancePopover';
 
 interface ReaderHeaderProps {
@@ -38,10 +33,8 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   onOpenPdfStudio,
   setViewMode,
 }) => {
-  const navigate = useNavigate();
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const { readingProgress, isFullscreen, toggleFullscreen } = useReaderSettingsStore();
-  const { isDark, toggleTheme } = useThemeStore();
 
   return (
     <header className="relative h-14 sm:h-15 border-b border-neutral-200/70 dark:border-neutral-800/80 px-3 sm:px-6 flex items-center justify-between bg-white/95 dark:bg-[#15161a]/95 backdrop-blur-md select-none z-30 transition-colors no-print">
@@ -65,15 +58,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
           <span className="hidden md:inline text-[10px] text-neutral-400 font-mono">Esc</span>
         </button>
 
-        <button
-          onClick={() => navigate('/documents')}
-          className="p-1.5 sm:p-2 rounded-xl text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-medium cursor-pointer shrink-0"
-          title="Library / Documents"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-
-        <div className="hidden sm:block h-4 w-px bg-neutral-200 dark:border-neutral-800 shrink-0" />
+        <div className="hidden sm:block h-4 w-px bg-neutral-200 dark:bg-neutral-800 shrink-0" />
 
         {/* Title */}
         <div className="min-w-0 flex items-center gap-2">
@@ -159,16 +144,6 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
           title="Switch to Split View"
         >
           <Columns className="w-4 h-4" />
-        </button>
-
-        {/* Theme Toggle (Sync with App Light / Dark) */}
-        <button
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          className="p-2 rounded-xl text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer flex items-center justify-center"
-          title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-        >
-          {isDark ? <Sun className="w-4 h-4 text-neutral-400 hover:text-neutral-100" /> : <Moon className="w-4 h-4 text-neutral-600 hover:text-neutral-900" />}
         </button>
 
         {/* Appearance Popover Floating Dropdown */}

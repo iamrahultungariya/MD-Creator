@@ -33,13 +33,15 @@ export const FeatureStrip: React.FC = () => {
   return (
     <section className="py-12 border-y border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8 text-center">
           {HIGHLIGHTS.map((item, idx) => {
             const Icon = item.icon;
             return (
               <div 
                 key={idx} 
-                className="flex flex-col items-center group cursor-default"
+                className={`flex flex-col items-center group cursor-default ${
+                  idx === 4 ? 'col-span-2 sm:col-span-1' : ''
+                }`}
               >
                 {/* Rounded Icon Badge */}
                 <div className="w-12 h-12 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 mb-3.5 group-hover:scale-110 group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 transition-all shadow-2xs">

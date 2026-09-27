@@ -296,7 +296,7 @@ export const BentoEditorCard: React.FC = () => {
           {/* Format 5: Code Block */}
           {activeFormat === 'code' && (
             <div className="w-full font-mono text-[10px] bg-neutral-900 text-emerald-400 p-2 rounded-lg overflow-x-auto animate-in fade-in duration-200">
-              <code>const state = &#123; isFocused: true, speed: &apos;60fps&apos; &#125;;</code>
+              <code>const state = &#123; isFocused: true, mode: &apos;local-first&apos; &#125;;</code>
             </div>
           )}
 

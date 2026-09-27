@@ -9,7 +9,8 @@ import {
   ChevronDown, 
   ShieldCheck,
   FolderOpen,
-  Sparkles
+  Sparkles,
+  SlidersHorizontal
 } from 'lucide-react';
 import { useAuthStore, isUserPro, isLifetimeProEmail } from '../../stores/useAuthStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -149,6 +150,17 @@ export const ProfileDropdown: React.FC = () => {
             >
               <FileText className="w-4 h-4 text-emerald-500" />
               <span>Open Editor</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                navigate('/settings');
+              }}
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="w-4 h-4 text-purple-500" />
+              <span>Settings &amp; Toolbar</span>
             </button>
           </div>
 

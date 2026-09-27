@@ -33,10 +33,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
           </div>
 
           {/* Links & Socials */}
-          <div className="flex flex-wrap items-center gap-6 sm:gap-8">
+          <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8 w-full md:w-auto">
             
             {/* Nav Links */}
-            <div className="flex items-center gap-5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-5 gap-y-2.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
               <Link to="/pricing" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 Pricing
               </Link>
@@ -50,18 +50,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                 <button 
                   type="button" 
                   onClick={onOpenUpdates} 
-                  className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                  className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v0.9.0 Beta</span>
+                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v0.9.1 Beta</span>
                 </button>
               ) : (
                 <Link 
                   to="/updates" 
-                  className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                  className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v0.9.0 Beta</span>
+                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">v0.9.1 Beta</span>
                 </Link>
               )}
               <button
@@ -76,7 +76,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                 About
               </Link>
               <button 
-                type="button"
+                type="button" 
                 onClick={() => setIsLegalOpen(true)} 
                 className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
               >
@@ -85,7 +85,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
             </div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-4 text-neutral-400 dark:text-neutral-500">
+            <div className="flex items-center gap-4 text-neutral-400 dark:text-neutral-500 shrink-0">
               <a
                 href="https://github.com"
                 target="_blank"

@@ -1,4 +1,12 @@
+import { jsPDF } from 'jspdf';
+import { toJpeg } from 'html-to-image';
 import { FontFamily, MarginSize, PageSize } from '../types';
+
+export interface DirectPdfOptions {
+  documentTitle: string;
+  pageSize: PageSize;
+  onProgress?: (progress: number, message: string) => void;
+}
 
 export interface PrintPdfOptions {
   documentTitle: string;
@@ -11,176 +19,126 @@ export interface PrintPdfOptions {
   includeToc?: boolean;
 }
 
-export function executePdfPrint(options: PrintPdfOptions): void {
-  const {
-    documentTitle,
-    pageSize,
-    margins,
-    fontFamily,
-    accentColor,
-    watermarkText = '',
-    includeCoverPage = false,
-    includeToc = false,
-  } = options;
+/**
+ * 1-Click Direct PDF Generation and File Download.
+ * Captures all rendered paginated sheets via html-to-image (fully supporting modern CSS
+ * including oklch colors, KaTeX, and Tailwind v4) and compiles them into a
+ * high-resolution PDF document using jsPDF, then triggers a direct file download.
+ * Does NOT open the browser print dialog.
+ */
+export async function exportDirectPdf(options: DirectPdfOptions): Promise<void> {
+  const { documentTitle, pageSize, onProgress } = options;
 
-  // 1. Target the rendered content sheets
-  const coverEl = includeCoverPage ? document.getElementById('pdf-render-cover') : null;
-  const tocEl = includeToc ? document.getElementById('pdf-render-toc') : null;
-  const bodyEl = document.getElementById('pdf-render-body');
+  onProgress?.(5, 'Preparing document sheets...');
 
-  if (!bodyEl) return;
-
-  // 2. Extract their pure HTML
-  const coverHtml = coverEl ? coverEl.outerHTML : '';
-  const tocHtml = tocEl ? tocEl.outerHTML : '';
-  const bodyHtml = bodyEl.outerHTML;
-
-  // 3. Margin & Font rules
-  const marginCss = margins === 'compact' ? '12mm' : margins === 'wide' ? '26mm' : '18mm';
-  const fontCss =
-    fontFamily === 'serif'
-      ? "'Merriweather', 'Georgia', serif"
-      : fontFamily === 'mono'
-      ? "'JetBrains Mono', 'Courier New', monospace"
-      : "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif";
-
-  // 4. Create or reuse an isolated hidden print iframe
-  let printIframe = document.getElementById('pdf-hidden-print-frame') as HTMLIFrameElement | null;
-  if (!printIframe) {
-    printIframe = document.createElement('iframe');
-    printIframe.id = 'pdf-hidden-print-frame';
-    printIframe.style.position = 'fixed';
-    printIframe.style.right = '0';
-    printIframe.style.bottom = '0';
-    printIframe.style.width = '1024px';
-    printIframe.style.height = '768px';
-    printIframe.style.border = '0';
-    printIframe.style.opacity = '0';
-    printIframe.style.pointerEvents = 'none';
-    printIframe.style.zIndex = '-9999';
-    document.body.appendChild(printIframe);
+  // 1. Ensure web fonts and KaTeX math glyphs are fully parsed and ready
+  if (document.fonts) {
+    try {
+      await document.fonts.ready;
+    } catch {
+      // Font loading failure fallback
+    }
   }
 
-  const doc = printIframe.contentDocument || printIframe.contentWindow?.document;
-  if (!doc) return;
+  // 2. Locate all rendered sheets marked with data-pdf-sheet="true"
+  let sheets = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-pdf-sheet="true"]')
+  );
 
-  // Copy stylesheet links and styles from parent (KaTeX, Tailwind tokens, highlights)
-  const styleTags = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-    .map((s) => s.outerHTML)
-    .join('\n');
+  if (sheets.length === 0) {
+    const singleBody = document.getElementById('pdf-render-body');
+    if (singleBody) {
+      sheets = [singleBody];
+    } else {
+      throw new Error('No printable sheets found in PDF Studio preview.');
+    }
+  }
 
-  doc.open();
-  doc.write(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <title>${documentTitle}</title>
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-      ${styleTags}
-      <style>
-        @page {
-          size: ${pageSize === 'a4' ? 'A4 portrait' : 'letter portrait'};
-          margin: ${marginCss};
-        }
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          box-sizing: border-box;
-        }
-        html, body {
-          background-color: #ffffff !important;
-          color: #111827 !important;
-          font-family: ${fontCss} !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100% !important;
-        }
-        #pdf-render-cover, #pdf-render-toc, #pdf-render-body {
-          box-shadow: none !important;
-          border: none !important;
-          border-radius: 0 !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          min-height: auto !important;
-          width: 100% !important;
-          max-width: 100% !important;
-        }
-        #pdf-render-cover {
-          min-height: 88vh !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: space-between !important;
-          page-break-after: always !important;
-          break-after: page !important;
-          border-top: 12px solid ${accentColor} !important;
-          padding-top: 24pt !important;
-          padding-bottom: 24pt !important;
-        }
-        #pdf-render-body {
-          min-height: 88vh !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: space-between !important;
-        }
-        #pdf-render-body > div.prose {
-          flex: 1 1 auto !important;
-        }
-        .pdf-running-footer {
-          margin-top: auto !important;
-          padding-top: 10pt !important;
-          border-top: 1px solid #e5e7eb !important;
-        }
-        #pdf-render-toc {
-          page-break-after: always !important;
-          break-after: page !important;
-          border-left: 6px solid ${accentColor} !important;
-          padding-left: 20pt !important;
-          padding-top: 12pt !important;
-          margin-bottom: 30pt !important;
-        }
-        .pdf-watermark-overlay {
-          position: fixed !important;
-          top: 45% !important;
-          left: 50% !important;
-          transform: translate(-50%, -50%) rotate(-35deg) !important;
-          font-size: 72pt !important;
-          font-weight: 900 !important;
-          text-transform: uppercase !important;
-          color: rgba(180, 180, 180, 0.14) !important;
-          pointer-events: none !important;
-          z-index: 9999 !important;
-          letter-spacing: 0.15em !important;
-          white-space: nowrap !important;
-        }
-        .canvas-watermark {
-          display: none !important;
-        }
-        h1, h2, h3, h4, h5, h6 {
-          page-break-after: avoid !important;
-          break-after: avoid !important;
-        }
-        pre, blockquote, table, tr {
-          page-break-inside: avoid !important;
-          break-inside: avoid !important;
-        }
-      </style>
-    </head>
-    <body>
-      ${watermarkText ? `<div class="pdf-watermark-overlay">${watermarkText}</div>` : ''}
-      ${coverHtml}
-      ${tocHtml}
-      ${bodyHtml}
-    </body>
-    </html>
-  `);
-  doc.close();
+  // 3. Temporarily reset zoom transform on preview container so capture runs at true 1:1 scale
+  const zoomContainer = document.querySelector<HTMLElement>('[data-pdf-zoom-container="true"]');
+  const originalTransform = zoomContainer?.style.transform || '';
+  if (zoomContainer) {
+    zoomContainer.style.transform = 'none';
+  }
 
-  // Trigger isolated print
-  setTimeout(() => {
-    printIframe?.contentWindow?.focus();
-    printIframe?.contentWindow?.print();
-  }, 400);
+  try {
+    const pdfWidthMm = pageSize === 'letter' ? 215.9 : 210;
+    const pdfHeightMm = pageSize === 'letter' ? 279.4 : 297;
+
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: pageSize === 'letter' ? 'letter' : 'a4',
+      compress: true,
+    });
+
+    const totalSheets = sheets.length;
+
+    for (let i = 0; i < totalSheets; i++) {
+      const sheet = sheets[i];
+      const pageNum = i + 1;
+      const progressPercent = Math.round(10 + (pageNum / totalSheets) * 80);
+      onProgress?.(progressPercent, `Rendering page ${pageNum} of ${totalSheets}...`);
+
+      // Render sheet using html-to-image with native SVG foreignObject support (supports oklch!)
+      const imgData = await toJpeg(sheet, {
+        quality: 0.95,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        skipFonts: true,
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.classList.contains('pdf-page-indicator')) {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      if (i > 0) {
+        pdf.addPage(pageSize === 'letter' ? 'letter' : 'a4', 'portrait');
+      }
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidthMm, pdfHeightMm, undefined, 'FAST');
+    }
+
+    onProgress?.(95, 'Compiling and saving PDF file...');
+
+    const sanitizedTitle = (documentTitle || 'document')
+      .replace(/[/\\?%*:|"<>]/g, '-')
+      .replace(/\s+/g, '_')
+      .trim();
+
+    // Trigger direct browser file download
+    pdf.save(`${sanitizedTitle}.pdf`);
+
+    onProgress?.(100, 'Download complete!');
+  } finally {
+    // Restore user zoom transform
+    if (zoomContainer) {
+      zoomContainer.style.transform = originalTransform;
+    }
+  }
+}
+
+/**
+ * System Print Dialog trigger.
+ * Triggers native browser print on the active window.
+ * All UI chrome (navbar, sidebar, modal background) is suppressed via @media print,
+ * and paginated sheets are formatted with 1-sheet-per-page geometry.
+ */
+export function executePdfPrint(_options?: PrintPdfOptions): void {
+  // 1. Temporarily reset zoom transform so printable layout computes at true 1:1 scale
+  const zoomContainer = document.querySelector<HTMLElement>('[data-pdf-zoom-container="true"]');
+  const originalTransform = zoomContainer?.style.transform || '';
+  if (zoomContainer) {
+    zoomContainer.style.transform = 'none';
+  }
+
+  try {
+    window.print();
+  } finally {
+    if (zoomContainer) {
+      zoomContainer.style.transform = originalTransform;
+    }
+  }
 }

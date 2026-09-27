@@ -84,7 +84,10 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
   onChangeWatermarkText,
 }) => {
   return (
-    <div className="w-full lg:w-[380px] xl:w-[420px] border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 overflow-y-auto p-5 space-y-6 shrink-0 text-xs">
+    <div
+      data-pdf-studio-sidebar="true"
+      className="w-full h-full min-h-0 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 overflow-y-auto pdf-studio-scroll-container p-4 sm:p-5 space-y-5 sm:space-y-6 text-xs"
+    >
       {/* Section 1: Themes & Presets */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">

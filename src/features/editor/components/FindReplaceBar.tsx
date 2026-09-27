@@ -234,12 +234,12 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Find (Ctrl+F)..."
-            className="w-full pl-7 pr-16 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900/80 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-100 text-xs font-mono"
+            className="w-full pl-7 pr-16 py-1.5 rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-neutral-50 dark:bg-neutral-900/80 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-neutral-100 text-xs font-sans"
           />
           <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
 
           {/* Match Counter Badge */}
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-neutral-400 dark:text-neutral-500">
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">
             {findQuery ? (matches.length > 0 ? `${currentMatchIndex + 1}/${matches.length}` : '0 results') : ''}
           </span>
         </div>
@@ -247,10 +247,10 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
         {/* Options: Case Sensitive & Whole Word */}
         <button
           onClick={() => setCaseSensitive((prev) => !prev)}
-          className={`px-1.5 py-1 rounded-lg border font-mono font-bold text-[10px] transition-colors ${
+          className={`px-1.5 py-1 rounded-lg border font-bold text-[10px] shadow-2xs transition-colors cursor-pointer ${
             caseSensitive
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-transparent'
-              : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              : 'border-neutral-200/70 dark:border-neutral-700/70 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
           }`}
           title="Match Case"
         >
@@ -259,10 +259,10 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
 
         <button
           onClick={() => setWholeWord((prev) => !prev)}
-          className={`px-1.5 py-1 rounded-lg border font-mono font-bold text-[10px] transition-colors ${
+          className={`px-1.5 py-1 rounded-lg border font-bold text-[10px] shadow-2xs transition-colors cursor-pointer ${
             wholeWord
               ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-transparent'
-              : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+              : 'border-neutral-200/70 dark:border-neutral-700/70 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
           }`}
           title="Match Whole Word"
         >

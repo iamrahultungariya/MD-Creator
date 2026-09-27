@@ -24,6 +24,12 @@ export const AuthPage: React.FC = () => {
       return;
     }
 
+    // Enforce minimum password length with a clear message
+    if (mode === 'signup' && password.length < 8) {
+      setFormError('Password must be at least 8 characters long.');
+      return;
+    }
+
     if (mode === 'signin') {
       const res = await signIn(email, password);
       if (res.success) {
@@ -41,10 +47,12 @@ export const AuthPage: React.FC = () => {
     }
   };
 
+  // Calls demoSignIn with no args — name/email come from env vars
   const handleQuickDemo = () => {
-    demoSignIn('Rahul Mehta', 'rahul.mehta@example.com');
+    demoSignIn();
     navigate('/documents');
   };
+
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 p-4 transition-colors">
@@ -129,7 +137,7 @@ export const AuthPage: React.FC = () => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Rahul Mehta"
+                  placeholder="Your Name"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/50 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
                 />
               </div>
@@ -190,7 +198,7 @@ export const AuthPage: React.FC = () => {
             className="w-full py-2.5 px-4 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Continue as Demo User (Rahul Mehta)</span>
+            <span>Continue as Demo User</span>
           </button>
         </div>
 

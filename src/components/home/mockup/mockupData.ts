@@ -54,7 +54,7 @@ flowchart LR
 ];
 
 export type ViewMode = 'split' | 'code' | 'preview';
-export type SideTab = 'write' | 'organize' | 'create' | 'export';
+export type SideTab = 'write' | 'organize' | 'export';
 
 export interface SparkParticle {
   id: number;
@@ -67,7 +67,7 @@ export interface SparkParticle {
 export const SPARK_COLORS = ['#38bdf8', '#34d399', '#fbbf24', '#a855f7'];
 
 export const QUICK_SNIPPETS = [
-  { label: 'Alert Tip', snippet: '> [!TIP]\n> 🚀 Instant 0ms response time with 60FPS particle engine!' },
+  { label: 'Alert Tip', snippet: '> [!TIP]\n> Instant local-first response time with zero typing latency!' },
   { label: 'Mermaid Flow', snippet: '```mermaid\ngraph TD\n  A[Code] --> B(Product)\n```' },
   { label: 'Checklist Item', snippet: '- [ ] New milestone item' },
   { label: 'Math Formula', snippet: '$$E = mc^2$$' }

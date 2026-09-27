@@ -319,7 +319,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
             placeholder="Type a command, search documents, or insert formulas..."
             className="flex-1 bg-transparent text-sm sm:text-base font-medium text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none"
           />
-          <kbd className="hidden sm:inline-flex items-center gap-1 font-mono text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-500 px-2 py-0.5 rounded-lg border border-neutral-200 dark:border-neutral-700">
+          <kbd className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 px-2 py-0.5 rounded-md border border-neutral-200/70 dark:border-neutral-700/70 shadow-2xs">
             ESC
           </kbd>
         </div>
@@ -359,9 +359,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 pl-3">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-semibold">
+                  <kbd className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60 shadow-2xs">
                     {action.shortcut}
-                  </span>
+                  </kbd>
                   {isSelected && <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />}
                 </div>
               </button>
@@ -377,18 +377,18 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         </div>
 
         {/* Palette Footer Tip */}
-        <div className="px-4 py-2.5 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/50 flex items-center justify-between text-[11px] text-neutral-400 font-mono shrink-0">
+        <div className="px-4 py-2.5 border-t border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/50 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 shrink-0">
           <div className="flex items-center gap-2">
             <span>
-              Use <kbd className="bg-neutral-200 dark:bg-neutral-800 px-1 py-0.5 rounded">↑</kbd>{' '}
-              <kbd className="bg-neutral-200 dark:bg-neutral-800 px-1 py-0.5 rounded">↓</kbd> to navigate
+              Use <kbd className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md text-[10px] font-medium shadow-2xs">↑</kbd>{' '}
+              <kbd className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md text-[10px] font-medium shadow-2xs">↓</kbd> to navigate
             </span>
             <span>•</span>
             <span>
-              <kbd className="bg-neutral-200 dark:bg-neutral-800 px-1 py-0.5 rounded">↵</kbd> to select
+              <kbd className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md text-[10px] font-medium shadow-2xs">↵</kbd> to select
             </span>
           </div>
-          <span>{filteredActions.length} actions</span>
+          <span className="text-[11px] font-medium">{filteredActions.length} actions</span>
         </div>
       </div>
     </div>

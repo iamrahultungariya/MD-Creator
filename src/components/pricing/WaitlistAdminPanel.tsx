@@ -8,9 +8,11 @@ import {
   Check, 
   Calendar,
   Sparkles,
-  Mail
+  Mail,
+  ShieldAlert
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { isCurrentUserAdmin } from '../../utils/adminAuth';
 
 interface WaitlistEntry {
   id?: string;
@@ -24,6 +26,35 @@ export const WaitlistAdminPanel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [search, setSearch] = useState('');
+  const [isAuthorised, setIsAuthorised] = useState<boolean | null>(null); // null = checking
+
+  // ── Self-contained server-side admin gate ─────────────────────────────
+  // Do NOT rely solely on parent component hiding this panel.
+  // We independently verify admin role via Supabase RPC.
+  useEffect(() => {
+    async function verifyAdmin() {
+      try {
+        if (!supabase) { setIsAuthorised(false); return; }
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userEmail = sessionData?.session?.user?.email ?? null;
+        const userId = sessionData?.session?.user?.id ?? null;
+
+        // 1. Check env-based admin email (fast path)
+        if (isCurrentUserAdmin(userEmail)) { setIsAuthorised(true); return; }
+
+        // 2. Check Supabase DB role (authoritative path)
+        if (userId) {
+          const { data } = await supabase.rpc('has_role', { p_user_id: userId, p_role: 'admin' });
+          setIsAuthorised(Boolean(data));
+        } else {
+          setIsAuthorised(false);
+        }
+      } catch {
+        setIsAuthorised(false);
+      }
+    }
+    verifyAdmin();
+  }, []);
 
   const fetchWaitlist = async () => {
     setLoading(true);
@@ -63,8 +94,9 @@ export const WaitlistAdminPanel: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchWaitlist();
-  }, []);
+    if (isAuthorised) fetchWaitlist();
+  }, [isAuthorised]);
+
 
   const handleCopyAll = () => {
     if (subscribers.length === 0) return;
@@ -93,6 +125,26 @@ export const WaitlistAdminPanel: React.FC = () => {
   const filtered = subscribers.filter((s) =>
     s.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  // ── Authorisation gate render ─────────────────────────────────────────────
+  if (isAuthorised === null) {
+    // Still checking server-side role — show nothing to avoid flash
+    return (
+      <div className="mt-12 w-full max-w-4xl mx-auto p-8 rounded-3xl bg-neutral-900 border border-neutral-800 text-center">
+        <p className="text-xs text-neutral-400 animate-pulse">Verifying admin access…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorised) {
+    return (
+      <div className="mt-12 w-full max-w-4xl mx-auto p-8 rounded-3xl bg-neutral-900 border border-red-900/50 text-center flex flex-col items-center gap-3">
+        <ShieldAlert className="w-8 h-8 text-red-500" />
+        <p className="text-sm font-semibold text-red-400">Access Denied</p>
+        <p className="text-xs text-neutral-500">You do not have admin privileges to view this panel.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-12 w-full max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl bg-neutral-900 text-white border border-neutral-800 shadow-2xl overflow-hidden relative select-none">

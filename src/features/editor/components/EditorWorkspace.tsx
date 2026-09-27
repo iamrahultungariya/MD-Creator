@@ -58,6 +58,8 @@ interface EditorWorkspaceProps {
   onKeyDown?: (e: KeyboardEvent) => boolean | void;
   onSlashTrigger?: (query: string, pos: number) => void;
   showLineNumbers?: boolean;
+  mobileTab?: 'edit' | 'preview';
+  onSelectMobileTab?: (tab: 'edit' | 'preview') => void;
 }
 
 export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
@@ -104,8 +106,12 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   editorRef,
   onSlashTrigger,
   showLineNumbers = false,
+  mobileTab: propMobileTab,
+  onSelectMobileTab,
 }) => {
-  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+  const [internalMobileTab, setInternalMobileTab] = useState<'edit' | 'preview'>('edit');
+  const mobileTab = propMobileTab !== undefined ? propMobileTab : internalMobileTab;
+  const setMobileTab = onSelectMobileTab || setInternalMobileTab;
   const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -499,8 +505,8 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           <div
             className={`flex-1 transition-all duration-150 break-words min-h-0 max-w-full ${
               viewMode === 'read'
-                ? `px-6 sm:px-10 pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
-                : 'p-8 sm:p-10'
+                ? `px-3.5 sm:px-8 md:px-10 pb-20 sm:pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
+                : 'p-4 sm:p-8 md:p-10'
             }`}
           >
             {/* Elegant Editorial Article Header in Read Mode */}

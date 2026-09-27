@@ -5,22 +5,20 @@ import {
   Moon, 
   FolderOpen, 
   ChevronDown, 
-  LayoutTemplate, 
   Sparkles, 
   CreditCard, 
   BookOpen, 
   MessageSquare, 
+  Sliders, 
   Menu, 
   X,
-  ArrowRight,
-  Info
+  ArrowRight
 } from 'lucide-react';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { ProfileDropdown } from '../auth/ProfileDropdown';
 import { PwaInstallButton } from '../common/PwaInstallButton';
 import { openBuyCoffeeModal } from '../../utils/coffeeModalEvents';
-import { openTemplatesModal } from '../../utils/templateModalEvents';
 import { BmcCoffeeCupIcon } from '../common/BuyMeCoffeeButton';
 
 interface NavbarProps {
@@ -48,26 +46,10 @@ interface ResourceItem {
 
 const RESOURCE_ITEMS: ResourceItem[] = [
   {
-    id: 'templates',
-    title: 'Templates Library',
-    desc: '8 curated Markdown blueprints',
-    icon: LayoutTemplate,
-    iconColor: 'text-blue-600 dark:text-blue-400',
-    iconBg: 'bg-blue-50 dark:bg-blue-950/60 border-blue-200/40 dark:border-blue-900/40',
-    action: ({ onOpenTemplates, navigate }) => {
-      if (onOpenTemplates) {
-        onOpenTemplates();
-      } else {
-        openTemplatesModal();
-        navigate('/?templates=open');
-      }
-    }
-  },
-  {
     id: 'updates',
     title: 'Changelog & Updates',
     desc: 'Milestones & architectural evolution',
-    badge: 'v0.9.0 Beta',
+    badge: 'v0.9.1 Beta',
     icon: Sparkles,
     iconColor: 'text-indigo-600 dark:text-indigo-400',
     iconBg: 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200/40 dark:border-indigo-900/40',
@@ -86,8 +68,8 @@ const RESOURCE_ITEMS: ResourceItem[] = [
   },
   {
     id: 'blog',
-    title: 'Blog & Guides',
-    desc: 'KaTeX formulas, syntax & craft',
+    title: 'Community Blog',
+    desc: 'You Write, We Publish.',
     icon: BookOpen,
     iconColor: 'text-amber-600 dark:text-amber-400',
     iconBg: 'bg-amber-50 dark:bg-amber-950/60 border-amber-200/40 dark:border-amber-900/40',
@@ -96,8 +78,8 @@ const RESOURCE_ITEMS: ResourceItem[] = [
   },
   {
     id: 'feedback',
-    title: 'Feedback & Community',
-    desc: 'Report bugs or suggest ideas',
+    title: 'Feedback & Ideas',
+    desc: 'Report bugs or suggest features',
     icon: MessageSquare,
     iconColor: 'text-rose-600 dark:text-rose-400',
     iconBg: 'bg-rose-50 dark:bg-rose-950/60 border-rose-200/40 dark:border-rose-900/40',
@@ -105,14 +87,14 @@ const RESOURCE_ITEMS: ResourceItem[] = [
     action: ({ navigate }) => navigate('/feedback')
   },
   {
-    id: 'about',
-    title: 'About MD Writer',
-    desc: 'Mission, architecture & privacy',
-    icon: Info,
-    iconColor: 'text-neutral-600 dark:text-neutral-400',
-    iconBg: 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200/40 dark:border-neutral-700/40',
-    path: '/about',
-    action: ({ navigate }) => navigate('/about')
+    id: 'settings',
+    title: 'Settings & Toolbar',
+    desc: 'Customize floating markdown dock & tools',
+    icon: Sliders,
+    iconColor: 'text-sky-600 dark:text-sky-400',
+    iconBg: 'bg-sky-50 dark:bg-sky-950/60 border-sky-200/40 dark:border-sky-900/40',
+    path: '/settings',
+    action: ({ navigate }) => navigate('/settings')
   }
 ];
 
@@ -265,7 +247,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             About
           </button>
 
-          {/* Resources & More Dropdown */}
+          {/* Explore Dropdown */}
           <div ref={resourcesRef} className="relative">
             <button
               onClick={() => setIsResourcesOpen(!isResourcesOpen)}
@@ -277,7 +259,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                   : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
               }`}
             >
-              <span>Resources</span>
+              <span>Explore</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 text-neutral-400 ${isResourcesOpen ? 'rotate-180 text-neutral-900 dark:text-white' : ''}`} />
             </button>
 
@@ -444,10 +426,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             Features
           </button>
 
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              navigate('/about');
+            }}
+            className={`w-full p-2.5 rounded-xl text-left font-semibold text-xs cursor-pointer ${
+              location.pathname === '/about'
+                ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white font-bold'
+                : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
+            }`}
+          >
+            About
+          </button>
+
           {/* Secondary Links Section */}
           <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-1">
             <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-1 py-1">
-              Resources & Updates
+              Explore & Updates
             </div>
 
             {RESOURCE_ITEMS.map((item) => {

@@ -3,18 +3,14 @@ import {
   Link as LinkIcon, 
   List, 
   ListOrdered, 
-  Quote 
+  Quote,
+  Highlighter,
+  CheckSquare,
+  Minus
 } from 'lucide-react';
+import { useToolbarSettingsStore, FormatAction } from '../../../stores/useToolbarSettingsStore';
 
-export type FormatAction = 
-  | 'bold' 
-  | 'italic' 
-  | 'strike' 
-  | 'code' 
-  | 'link' 
-  | 'bullet' 
-  | 'ordered' 
-  | 'quote';
+export type { FormatAction };
 
 export interface DockCoords {
   left: number;
@@ -31,6 +27,79 @@ interface FloatingFormattingDockProps {
   onMouseLeave?: () => void;
 }
 
+export const ACTION_ICON_MAP: Record<FormatAction, { label: string; icon: React.ReactNode; tooltip: string }> = {
+  h1: {
+    label: 'H1',
+    icon: <span className="font-black text-xs font-sans leading-none tracking-tight">H1</span>,
+    tooltip: 'Heading 1 (Ctrl+1)',
+  },
+  h2: {
+    label: 'H2',
+    icon: <span className="font-black text-xs font-sans leading-none tracking-tight">H2</span>,
+    tooltip: 'Heading 2 (Ctrl+2)',
+  },
+  h3: {
+    label: 'H3',
+    icon: <span className="font-black text-xs font-sans leading-none tracking-tight">H3</span>,
+    tooltip: 'Heading 3 (Ctrl+3)',
+  },
+  bold: {
+    label: 'B',
+    icon: <span className="font-black text-xs font-sans leading-none">B</span>,
+    tooltip: 'Bold (Ctrl+B)',
+  },
+  italic: {
+    label: 'I',
+    icon: <span className="italic text-xs font-sans leading-none font-bold">I</span>,
+    tooltip: 'Italic (Ctrl+I)',
+  },
+  strike: {
+    label: 'S',
+    icon: <span className="line-through text-xs font-sans leading-none font-semibold">S</span>,
+    tooltip: 'Strikethrough (~~text~~)',
+  },
+  highlight: {
+    label: 'HL',
+    icon: <Highlighter className="w-3.5 h-3.5" />,
+    tooltip: 'Highlight (==text==)',
+  },
+  code: {
+    label: '</>',
+    icon: <span className="font-sans text-[11px] font-bold tracking-tight leading-none">&lt;/&gt;</span>,
+    tooltip: 'Inline Code / Code Block',
+  },
+  link: {
+    label: 'Link',
+    icon: <LinkIcon className="w-3.5 h-3.5" />,
+    tooltip: 'Insert Link (Ctrl+K)',
+  },
+  quote: {
+    label: 'Quote',
+    icon: <Quote className="w-3.5 h-3.5" />,
+    tooltip: 'Blockquote (> )',
+  },
+  bullet: {
+    label: 'Bullet List',
+    icon: <List className="w-3.5 h-3.5" />,
+    tooltip: 'Bullet List (- )',
+  },
+  ordered: {
+    label: 'Ordered List',
+    icon: <ListOrdered className="w-3.5 h-3.5" />,
+    tooltip: 'Numbered List (1. )',
+  },
+  task: {
+    label: 'Task List',
+    icon: <CheckSquare className="w-3.5 h-3.5" />,
+    tooltip: 'Todo Checkbox (- [ ] )',
+  },
+  hr: {
+    label: 'Divider',
+    icon: <Minus className="w-3.5 h-3.5" />,
+    tooltip: 'Horizontal Rule (---)',
+  },
+};
+
 export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
   onFormat,
   className = '',
@@ -41,57 +110,7 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const shouldShow = Boolean(coords && (isVisible || isHovered));
-
-  const actions: { id: FormatAction; label: string; icon: React.ReactNode; tooltip: string }[] = [
-    {
-      id: 'bold',
-      label: 'B',
-      icon: <span className="font-bold text-xs font-serif leading-none">B</span>,
-      tooltip: 'Bold (Ctrl+B)',
-    },
-    {
-      id: 'italic',
-      label: 'I',
-      icon: <span className="italic text-xs font-serif leading-none font-medium">I</span>,
-      tooltip: 'Italic (Ctrl+I)',
-    },
-    {
-      id: 'strike',
-      label: 'S',
-      icon: <span className="line-through text-xs font-serif leading-none font-medium">S</span>,
-      tooltip: 'Strikethrough (~~text~~)',
-    },
-    {
-      id: 'code',
-      label: '</>',
-      icon: <span className="font-mono text-[11px] font-semibold tracking-tighter leading-none">&lt;/&gt;</span>,
-      tooltip: 'Inline Code / Code Block',
-    },
-    {
-      id: 'link',
-      label: 'Link',
-      icon: <LinkIcon className="w-3.5 h-3.5" />,
-      tooltip: 'Insert Link (Ctrl+K)',
-    },
-    {
-      id: 'bullet',
-      label: 'Bullet List',
-      icon: <List className="w-3.5 h-3.5" />,
-      tooltip: 'Bullet List (- )',
-    },
-    {
-      id: 'ordered',
-      label: 'Ordered List',
-      icon: <ListOrdered className="w-3.5 h-3.5" />,
-      tooltip: 'Numbered List (1. )',
-    },
-    {
-      id: 'quote',
-      label: 'Quote',
-      icon: <Quote className="w-3.5 h-3.5" />,
-      tooltip: 'Blockquote (> )',
-    },
-  ];
+  const { enabledActions } = useToolbarSettingsStore();
 
   if (!coords) return null;
 
@@ -113,31 +132,33 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
       }}
       className={`z-40 transition-all duration-200 ease-out select-none ${
         shouldShow
-          ? 'opacity-100 scale-100 pointer-events-auto shadow-2xl'
+          ? 'opacity-100 scale-100 pointer-events-auto'
           : 'opacity-0 scale-95 pointer-events-none'
       } ${className}`}
     >
-      <div className="flex items-center gap-0.5 sm:gap-1 px-2 py-1 rounded-2xl bg-neutral-900/95 dark:bg-[#141416]/95 text-neutral-300 backdrop-blur-md border border-neutral-800/80 shadow-2xl shadow-black/30">
-        {actions.map((act, index) => (
-          <React.Fragment key={act.id}>
-            {index === 4 && (
-              <div className="h-3.5 w-px bg-neutral-800 mx-0.5" />
-            )}
+      {/* Light & Dark Theme Followed Pristinely */}
+      <div className="flex items-center gap-0.5 sm:gap-1 px-2 py-1 rounded-2xl bg-white/95 dark:bg-[#18181c]/95 text-neutral-700 dark:text-neutral-200 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-xl dark:shadow-2xl dark:shadow-black/50">
+        {enabledActions.map((actionId) => {
+          const act = ACTION_ICON_MAP[actionId];
+          if (!act) return null;
+
+          return (
             <button
+              key={actionId}
               type="button"
               onMouseDown={(e) => {
                 // Prevent blurring the CodeMirror editor selection
                 e.preventDefault();
-                onFormat(act.id);
+                onFormat(actionId);
               }}
               title={act.tooltip}
               aria-label={act.tooltip}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-neutral-300 hover:text-white hover:bg-neutral-800/80 active:scale-95 transition-all cursor-pointer"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/80 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               {act.icon}
             </button>
-          </React.Fragment>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

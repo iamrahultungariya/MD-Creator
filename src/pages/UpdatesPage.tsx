@@ -70,60 +70,59 @@ export const UpdatesPage: React.FC = () => {
             <Layers className="w-3.5 h-3.5 text-neutral-500" />
             <span className="font-mono uppercase tracking-wider text-[11px]">Product Evolution &amp; Changelog</span>
             <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
-            <span className="text-neutral-900 dark:text-neutral-100 font-bold">v0.9.0 Beta Live</span>
+            <span className="text-neutral-900 dark:text-neutral-100 font-bold">v0.9.1 Beta Live</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.08] mb-5">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.1] mb-4 sm:mb-5">
             Crafted for speed. <br className="hidden sm:inline" />
             <span className="text-blue-600 dark:text-blue-500">Refined for focus.</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-8">
+          <p className="text-sm sm:text-base lg:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8">
             Explore every architectural upgrade, performance milestone, and new feature designed to make Markdown writing distraction-free.
           </p>
 
           {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-left">
-            <div className="p-3">
-              <div className="text-xs text-neutral-400 font-medium">Initial Bundle</div>
-              <div className="text-lg font-black text-neutral-950 dark:text-white mt-0.5">31.9 kB</div>
-              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">-98.8% reduction</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-left">
+            <div className="p-2 sm:p-3">
+              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">Initial Bundle</div>
+              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5">31.9 kB</div>
+              <div className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">-98.8% reduction</div>
             </div>
-            <div className="p-3">
-              <div className="text-xs text-neutral-400 font-medium">Image Studio</div>
-              <div className="text-lg font-black text-neutral-950 dark:text-white mt-0.5">WebP Engine</div>
-              <div className="text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-0.5">Paste &amp; compress</div>
+            <div className="p-2 sm:p-3">
+              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">Image Studio</div>
+              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5">WebP Engine</div>
+              <div className="text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-0.5">Paste &amp; compress</div>
             </div>
-            <div className="p-3">
-              <div className="text-xs text-neutral-400 font-medium">KaTeX Studio</div>
-              <div className="text-lg font-black text-neutral-950 dark:text-white mt-0.5">20+ Formulas</div>
-              <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">1-click insert</div>
+            <div className="p-2 sm:p-3">
+              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">KaTeX Studio</div>
+              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5">20+ Formulas</div>
+              <div className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">1-click insert</div>
             </div>
-            <div className="p-3">
-              <div className="text-xs text-neutral-400 font-medium">Universal Style</div>
-              <div className="text-lg font-black text-neutral-950 dark:text-white mt-0.5 flex items-center gap-1.5">
+            <div className="p-2 sm:p-3">
+              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">Universal Style</div>
+              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5 flex items-center gap-1.5">
                 <span>Rich Icons</span>
-                <RichIcon icon="🚀" size={18} />
+                <RichIcon icon="🚀" size={16} />
               </div>
-              <div className="text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">All operating systems</div>
+              <div className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">All platforms</div>
             </div>
           </div>
         </div>
 
         {/* Filter Controls & Search */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-10 pb-4 border-b border-neutral-100 dark:border-neutral-850">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-8 sm:mb-10 pb-4 border-b border-neutral-100 dark:border-neutral-850">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs">
             {[
               { id: 'all', label: 'All Updates' },
-              { id: 'engine', label: 'Architecture & Engine' },
-              { id: 'publishing', label: 'PDF & Export' },
               { id: 'ux', label: 'Editor & Design' },
+              { id: 'publishing', label: 'PDF & Export' },
               { id: 'sync', label: 'Cloud & Offline' }
             ].map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id as UpdateCategory)}
-                className={`px-3.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer whitespace-nowrap text-xs ${
                   activeCategory === cat.id
                     ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -147,18 +146,18 @@ export const UpdatesPage: React.FC = () => {
         </div>
 
         {/* Milestones Timeline */}
-        <div className="relative border-l-2 border-neutral-200/80 dark:border-neutral-800 ml-4 sm:ml-8 space-y-12 pl-6 sm:pl-10">
+        <div className="relative border-l-2 border-neutral-200/80 dark:border-neutral-800 ml-3 sm:ml-8 space-y-8 sm:space-y-12 pl-5 sm:pl-10">
           {filteredMilestones.map((milestone) => {
             const Icon = milestone.icon;
             return (
               <div key={milestone.version} className="relative group">
                 {/* Timeline Node Badge */}
-                <div className={`absolute -left-[37px] sm:-left-[53px] top-0 w-9 h-9 rounded-full border-2 border-white dark:border-neutral-950 flex items-center justify-center shadow-md ${milestone.iconBg} ${milestone.iconColor}`}>
-                  <Icon className="w-4.5 h-4.5" />
+                <div className={`absolute -left-[31px] sm:-left-[53px] top-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-white dark:border-neutral-950 flex items-center justify-center shadow-md ${milestone.iconBg} ${milestone.iconColor}`}>
+                  <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 </div>
 
                 {/* Milestone Container Card */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-neutral-50/70 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all shadow-xs">
+                <div className="p-4 sm:p-6 lg:p-8 rounded-3xl bg-neutral-50/70 dark:bg-neutral-900/50 border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all shadow-xs">
                   {/* Card Header */}
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                     <div className="flex items-center gap-2.5">

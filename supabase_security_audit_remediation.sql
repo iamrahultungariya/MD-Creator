@@ -108,7 +108,8 @@ CREATE POLICY "Users can update own profile"
     WITH CHECK (auth.uid() = id);
 
 -- Safe public view for sharing / author display (excludes email & billing info)
-CREATE OR REPLACE VIEW public.public_profiles WITH (security_invoker = false) AS
+-- security_invoker = true ensures queries execute with permissions and RLS of the querying user
+CREATE OR REPLACE VIEW public.public_profiles WITH (security_invoker = true) AS
     SELECT id, display_name, avatar_url, created_at
     FROM public.profiles;
 

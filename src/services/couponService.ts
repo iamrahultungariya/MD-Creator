@@ -232,17 +232,7 @@ export async function getRemainingWaitlistSeats(): Promise<number> {
   }
 }
 
-/**
- * Generates a unique coupon code in the format EARLYBIRD-XXXXX
- */
-function generateCouponCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let rand = '';
-  for (let i = 0; i < 5; i++) {
-    rand += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `EARLYBIRD-${rand}`;
-}
+
 
 /**
  * Registers an authenticated user for the Earlybird waitlist and issues a unique coupon code.
@@ -285,24 +275,13 @@ export async function joinEarlybirdWaitlist(
     }
   }
 
-  // 2. Offline simulation fallback
-  const couponCode = generateCouponCode();
-  const expiresAt = new Date();
-  expiresAt.setMonth(expiresAt.getMonth() + 6);
-
-  const status: WaitlistStatus = {
-    hasJoined: true,
-    couponCode,
-    status: 'unused',
-    expiresAt: expiresAt.toISOString()
+  // ── No Supabase: honest error — do not simulate fake success ─────────────
+  // Generating a fake coupon code would mislead the user into thinking they've
+  // claimed a real earlybird spot when they have not.
+  return {
+    success: false,
+    error: 'Could not connect to the server. Please check your connection and try again.',
   };
-
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(status));
-    localStorage.setItem('mdwriter_waitlist_email', email);
-  }
-
-  return { success: true, couponCode };
 }
 
 /**
@@ -312,18 +291,26 @@ export async function redeemCouponCode(
   couponCode: string,
   plan: 'monthly' | 'annual' = 'monthly'
 ): Promise<{ success: boolean; message?: string; error?: string; expiresAt?: string }> {
+  // ── Client-side format validation (fast reject before network call) ────
+  const normalised = couponCode.trim().toUpperCase();
+  if (!normalised) {
+    return { success: false, error: 'Please enter a coupon code.' };
+  }
+  // Accepts EARLYBIRD-XXXXX or any reasonable alphanumeric code ≥ 6 chars
+  if (!/^[A-Z0-9][A-Z0-9_-]{5,}$/.test(normalised)) {
+    return { success: false, error: 'Invalid coupon code format. Check and try again.' };
+  }
+
   if (!isSupabaseConfigured() || !supabase) {
-    // Offline simulation
     return {
-      success: true,
-      message: `Pro activated! 1 free month granted offline.`,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      success: false,
+      error: 'Could not connect to the server. Cloud connection is required to redeem a coupon.',
     };
   }
 
   try {
     const { data, error } = await supabase.rpc('redeem_coupon', {
-      p_coupon_code: couponCode.trim().toUpperCase(),
+      p_coupon_code: normalised,
       p_plan: plan
     });
 
@@ -343,7 +330,7 @@ export async function redeemCouponCode(
           const parsed = JSON.parse(cached);
           parsed.status = 'redeemed';
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
