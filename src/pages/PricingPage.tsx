@@ -73,8 +73,8 @@ export const PricingPage: React.FC = () => {
   const proAnnual = region.annualPrice;
   const proDisplayPrice = isAnnual ? proAnnual : proMonthly;
 
-  const teamMonthly = region.regionId === 'IN' ? 799 : 19;
-  const teamAnnual = region.regionId === 'IN' ? 639 : 15.2;
+  const teamMonthly = region.countryCode === 'IN' ? 799 : 19;
+  const teamAnnual = region.countryCode === 'IN' ? 639 : 15.2;
   const teamDisplayPrice = isAnnual ? teamAnnual : teamMonthly;
 
   return (
@@ -179,7 +179,7 @@ export const PricingPage: React.FC = () => {
                   <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">What's Included:</div>
                   {[
                     'Unlimited local Markdown documents',
-                    'Dexie IndexedDB instant offline cache',
+                    'Instant offline-ready writing & fast auto-save',
                     'Live dual-pane split view + Zen mode',
                     'GFM formatting, tables & task lists',
                     'KaTeX LaTeX mathematical formula studio',
@@ -243,7 +243,7 @@ export const PricingPage: React.FC = () => {
                 <div className="space-y-3 mb-8">
                   <div className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Everything in Starter, plus:</div>
                   {[
-                    'Multi-device Supabase Cloud Sync',
+                    'Multi-Device Secure Cloud Sync',
                     'Automatic background cloud backup',
                     'Publication-grade PDF Studio (Custom cover & TOC)',
                     'Full & unlimited blueprint template library',

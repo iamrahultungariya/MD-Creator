@@ -1,4 +1,44 @@
 import DOMPurify from 'dompurify';
+import { defaultSchema, Options as SanitizeOptions } from 'rehype-sanitize';
+
+/**
+ * Custom rehype-sanitize schema for MD Writer.
+ * Strictly forbids event handlers (onerror, onload, onclick), iframe, script, form,
+ * and dangerous protocols while permitting KaTeX, tables, kbd, images, and rich formatting.
+ */
+export const markdownSanitizeSchema: SanitizeOptions = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    '*': [...(defaultSchema.attributes?.['*'] || []), 'className', 'align'],
+    code: [...(defaultSchema.attributes?.code || []), 'className'],
+    span: [...(defaultSchema.attributes?.span || []), 'className', 'data*'],
+    div: [...(defaultSchema.attributes?.div || []), 'className', 'data*'],
+    h1: [...(defaultSchema.attributes?.h1 || []), 'id', 'data*'],
+    h2: [...(defaultSchema.attributes?.h2 || []), 'id', 'data*'],
+    h3: [...(defaultSchema.attributes?.h3 || []), 'id', 'data*'],
+    h4: [...(defaultSchema.attributes?.h4 || []), 'id', 'data*'],
+    h5: [...(defaultSchema.attributes?.h5 || []), 'id', 'data*'],
+    h6: [...(defaultSchema.attributes?.h6 || []), 'id', 'data*'],
+    kbd: ['className'],
+    mark: ['className'],
+    table: ['className'],
+    th: ['align', 'className'],
+    td: ['align', 'className'],
+    input: ['type', 'checked', 'disabled'],
+    img: ['src', 'alt', 'title', 'className', 'loading'],
+    a: ['href', 'title', 'target', 'rel', 'className']
+  },
+  tagNames: [
+    ...(defaultSchema.tagNames || []),
+    'kbd', 'mark', 'sub', 'sup', 'details', 'summary', 'input'
+  ],
+  protocols: {
+    ...defaultSchema.protocols,
+    href: ['http', 'https', 'mailto', 'tel'],
+    src: ['http', 'https', 'data', 'image', 'blob']
+  }
+};
 
 /**
  * Valid HTML tags allowed in MD Writer markdown documents
@@ -28,15 +68,18 @@ DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
 export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   if (!rawMarkdown) return '';
 
-  // 1. Protect code blocks (``` and `) from modification
-  const codeBlocks: string[] = [];
-  let sanitized = rawMarkdown.replace(/(```[\s\S]*?```|`[^`\n]+`)/g, (match) => {
-    const placeholder = `%%CODE_BLOCK_${codeBlocks.length}%%`;
-    codeBlocks.push(match);
+  // 1. Protect code blocks (``` and `) AND math blocks ($$ and $) from modification
+  const protectedBlocks: string[] = [];
+  let sanitized = rawMarkdown.replace(/(```[\s\S]*?```|`[^`\n]+`|\$\$[\s\S]*?\$\$|\$(?!\s)[^\$\n]+(?<!\s)\$)/g, (match) => {
+    const placeholder = `%%PROTECTED_BLOCK_${protectedBlocks.length}%%`;
+    protectedBlocks.push(match);
     return placeholder;
   });
 
-  // 2. Escape mathematical '<' that precedes numbers, symbols, or invalid tag names (<20, <1000, <=, < 1GB)
+  // 2. Convert Markdown highlight syntax ==text== into HTML <mark>text</mark>
+  sanitized = sanitized.replace(/(?<!=)==(?!=)([^=\r\n]+?)(?<!=)==(?!=)/g, '<mark>$1</mark>');
+
+  // 3. Escape mathematical '<' that precedes numbers, symbols, or invalid tag names (<20, <1000, <=, < 1GB)
   sanitized = sanitized.replace(/<(?![a-zA-Z/])/g, '&lt;');
   sanitized = sanitized.replace(/<([a-zA-Z0-9_-]+)([\s>])/g, (match, tagName, after) => {
     const cleanTag = tagName.toLowerCase();
@@ -47,7 +90,7 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   });
 
   // 3. Immediately neutralize phishing tags and active XSS vectors
-  sanitized = sanitized.replace(/<\/?(form|input|button|script|iframe|frame|object|embed|applet|style|link|base|textarea|select)\b[^>]*>/gi, '');
+  sanitized = sanitized.replace(/<\/?(form|input|button|script|iframe|frame|object|embed|applet|style|link|base|textarea|select|svg)\b[^>]*>/gi, '');
 
   // 4. Sanitize dangerous inline CSS (position: fixed, z-index 9999, etc.) from tag style attributes
   sanitized = sanitized.replace(/style\s*=\s*(["'])([\s\S]*?)\1/gi, (_, quote, styleContent) => {
@@ -63,7 +106,7 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   sanitized = DOMPurify.sanitize(sanitized, {
     FORBID_TAGS: [
       'form', 'input', 'button', 'script', 'iframe', 'frame', 'object',
-      'embed', 'applet', 'meta', 'link', 'base', 'textarea', 'select', 'style'
+      'embed', 'applet', 'meta', 'link', 'base', 'textarea', 'select', 'style', 'svg'
     ],
     FORBID_ATTR: [
       'action', 'formaction', 'method', 'target',
@@ -75,12 +118,17 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
     KEEP_CONTENT: true,
   });
 
-  // 6. Fix isolated '>' on its own line when immediately inside or adjacent to parentheses
+  // 6. Restore markdown blockquote markers (DOMPurify converts '>' in text to '&gt;')
+  sanitized = sanitized.replace(/^([ \t]*)(?:&gt;[ \t]?)+/gm, (match) => {
+    return match.replace(/&gt;/g, '>');
+  });
+
+  // 7. Fix isolated '>' on its own line when immediately inside or adjacent to parentheses
   sanitized = sanitized.replace(/\(\s*\n>\s*\n/g, '(&gt; ');
 
-  // 7. Restore code blocks untouched
-  sanitized = sanitized.replace(/%%CODE_BLOCK_(\d+)%%/g, (_, index) => {
-    return codeBlocks[Number(index)] || '';
+  // 8. Restore protected blocks (code fences, inline code, display & inline KaTeX math)
+  sanitized = sanitized.replace(/%%PROTECTED_BLOCK_(\d+)%%/g, (_, index) => {
+    return protectedBlocks[Number(index)] || '';
   });
 
   return sanitized;
@@ -104,28 +152,23 @@ export function cleanAndNormalizeMarkdown(text: string): string {
   });
 
   // 1. Clean fragmented parenthetical metrics:
-  // e.g. "(\n>\n21.7\nms\n>21.7ms)" -> "(>21.7ms)"
   normalized = normalized.replace(/\(\s*\n([>\s\d\w.→≤≥%+-]+)\n\s*([>\s\d\w.→≤≥%+-]+)\s*\)/g, (fullMatch) => {
-    const cleaned = fullMatch
+    return fullMatch
       .replace(/\n+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    return cleaned;
   });
 
-  // 2. Clean isolated symbol lines:
-  // "blur (\n 8 \n px \n → \n 0 \n px \n 8px→0px)" -> "blur (8px → 0px)"
+  // 2. Clean isolated symbol lines
   normalized = normalized.replace(/(\w+)\s*\(\s*\n\s*(\d+)\s*\n\s*(px|ms|rem|em|%)\s*\n\s*→\s*\n\s*(\d+)\s*\n\s*(px|ms|rem|em|%)\s*\n\s*([^)\n]+)\)/g, 
     '$1 ($2$3 → $4$5)'
   );
 
-  // 3. Clean duplicate arrow lines:
-  // e.g. "pnpm test:bench \n → \n → 100% Passed" -> "pnpm test:bench → 100% Passed"
+  // 3. Clean duplicate arrow lines
   normalized = normalized.replace(/\n\s*→\s*\n\s*→/g, ' →');
   normalized = normalized.replace(/\n\s*→\s*\n/g, ' → ');
 
-  // 4. Clean isolated comparison lines:
-  // "me strictly \n ≤ \n 20 \n ≤20 images" -> "me strictly ≤ 20 images"
+  // 4. Clean isolated comparison lines
   normalized = normalized.replace(/\n\s*([≤≥<>]=?)\s*\n\s*(\d+)\s*\n\s*[≤≥<>]=?\s*(\d+)/g, ' $1 $2');
   normalized = normalized.replace(/\n\s*([≤≥<>]=?)\s*\n\s*(\d+)/g, ' $1 $2');
 
@@ -136,3 +179,57 @@ export function cleanAndNormalizeMarkdown(text: string): string {
 
   return normalized;
 }
+
+/**
+ * Validates if an anchor link href is safe against XSS attacks.
+ * Blocks dangerous schemes (javascript:, vbscript:, data:, file:)
+ * while permitting http, https, mailto, tel, and relative anchors.
+ */
+export function isSafeUrl(url?: string | null): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+
+  // Block forbidden schemes (including obfuscated variations like java\0script:)
+  if (/^[\s\x00-\x1f]*(javascript|vbscript|data|file):/i.test(trimmed)) {
+    return false;
+  }
+
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol);
+  } catch {
+    // Relative anchors and path links
+    return /^(#|\/|\.\/|\.\.\/)/.test(trimmed);
+  }
+}
+
+/**
+ * Validates if an image src is safe against XSS and injection attacks.
+ * Allows safe protocols (http, https, blob, image://) and safe data image URLs,
+ * while blocking javascript:, vbscript:, file:, and data:text/html.
+ */
+export function isSafeImageUrl(url?: string | null): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+
+  // Block active executable schemes
+  if (/^[\s\x00-\x1f]*(javascript|vbscript|file):/i.test(trimmed)) {
+    return false;
+  }
+
+  // If data: URL, ensure it is an approved safe image MIME type
+  if (/^[\s\x00-\x1f]*data:/i.test(trimmed)) {
+    return /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);/i.test(trimmed);
+  }
+
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    return ['http:', 'https:', 'blob:', 'image:'].includes(parsed.protocol);
+  } catch {
+    // Relative paths and short IndexedDB identifiers
+    return /^(#|\/|\.\/|\.\.\/|img_)/.test(trimmed);
+  }
+}
+

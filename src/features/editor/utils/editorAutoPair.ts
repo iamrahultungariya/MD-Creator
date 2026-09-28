@@ -9,6 +9,7 @@ const PAIRS: Record<string, string> = {
   '`': '`',
   '*': '*',
   '~': '~',
+  '=': '=',
 };
 
 const CLOSING_CHARS = [')', ']', '}', '"', "'", '`'];

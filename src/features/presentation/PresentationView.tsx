@@ -267,7 +267,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       onMouseMove={handleMouseMove}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className={`fixed inset-0 z-50 flex flex-col select-none overflow-hidden transition-colors duration-300 ${currentTheme.bg} ${currentTheme.text}`}
+      className={`fixed inset-0 z-50 flex flex-col select-none overflow-hidden transition-colors duration-300 ${currentTheme.bg} ${currentTheme.text} ${theme === 'dark' || theme === 'nordic' ? 'dark' : ''}`}
     >
       {/* Top Floating Mini Header (Exit & Slide Jumper) */}
       <div 

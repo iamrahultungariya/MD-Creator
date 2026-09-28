@@ -19,6 +19,103 @@ import {
   cycleColumnAlignment,
   serializeMarkdownTable
 } from '../../utils/markdownTable';
+import { replaceRichIconsInReactNode } from '../../utils/richIcons';
+
+/**
+ * Parses lightweight inline markdown formatting for table cells:
+ * - <kbd>...</kbd>
+ * - **bold**
+ * - *italic*
+ * - `code`
+ * - [text](url)
+ */
+const renderCellContent = (text: string): React.ReactNode => {
+  if (!text) return null;
+
+  // Split text by markdown tokens
+  const tokenRegex = /(<kbd>[\s\S]*?<\/kbd>|\*\*\*[^*]+?\*\*\*|___[^_]+?___|\*\*[^*]+?\*\*|__[^_]+?__|\*[^*]+?\*|(?<!\w)_[^_]+?_(?!\w)|`[^`]+?`|\[[^\]]+?\]\([^)]+?\))/g;
+  const parts = text.split(tokenRegex);
+
+  const rendered = parts.map((part, index) => {
+    if (!part) return null;
+
+    // <kbd>...</kbd>
+    const kbdMatch = part.match(/^<kbd>([\s\S]*?)<\/kbd>$/i);
+    if (kbdMatch) {
+      return (
+        <kbd
+          key={index}
+          className="px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-[11px] text-neutral-800 dark:text-neutral-200 shadow-2xs font-semibold inline-block align-middle"
+        >
+          {kbdMatch[1]}
+        </kbd>
+      );
+    }
+
+    // ***bold italic*** or ___bold italic___
+    if ((part.startsWith('***') && part.endsWith('***') && part.length >= 6) ||
+        (part.startsWith('___') && part.endsWith('___') && part.length >= 6)) {
+      return (
+        <strong key={index} className="font-bold italic text-inherit">
+          {part.slice(3, -3)}
+        </strong>
+      );
+    }
+
+    // **bold** or __bold__
+    if ((part.startsWith('**') && part.endsWith('**') && part.length >= 4) ||
+        (part.startsWith('__') && part.endsWith('__') && part.length >= 4)) {
+      return (
+        <strong key={index} className="font-bold text-inherit">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    // *italic* or _italic_
+    if ((part.startsWith('*') && part.endsWith('*') && part.length >= 2) ||
+        (part.startsWith('_') && part.endsWith('_') && part.length >= 2)) {
+      return (
+        <em key={index} className="italic text-inherit">
+          {part.slice(1, -1)}
+        </em>
+      );
+    }
+
+    // `code`
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      return (
+        <code
+          key={index}
+          className="px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 font-mono text-[11px] border border-neutral-200 dark:border-neutral-700"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+
+    // [text](url)
+    const linkMatch = part.match(/^\[([^\]]+?)\]\(([^)]+?)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={index}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-400 hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    }
+
+    return part;
+  });
+
+  return replaceRichIconsInReactNode(rendered);
+};
 
 interface InteractiveTableOverlayProps {
   table: ParsedTable;
@@ -218,19 +315,23 @@ export const InteractiveTableOverlay: React.FC<InteractiveTableOverlayProps> = (
                         className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white px-1.5 py-0.5 rounded border border-blue-500 font-bold text-[10px] w-full focus:outline-none"
                       />
                     ) : (
-                      <div className="flex items-center justify-between gap-2">
+                      <div className={`flex items-center gap-2 ${align === 'center' ? 'justify-center text-center' : align === 'right' ? 'justify-end text-right' : 'justify-between text-left'}`}>
                         <span 
                           onClick={() => handleStartEdit(-1, cIdx, header)}
                           className="cursor-pointer hover:underline decoration-dashed"
                           title="Click to rename header"
                         >
-                          {header}
+                          {renderCellContent(header)}
                         </span>
                         {isEditable && onTableChange && (
                           <button
                             type="button"
-                            onClick={() => handleCycleAlign(cIdx)}
-                            className="opacity-0 group-hover/th:opacity-80 hover:opacity-100 text-neutral-400 hover:text-neutral-900 dark:hover:text-white p-0.5 rounded cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleCycleAlign(cIdx);
+                            }}
+                            className="opacity-0 group-hover/th:opacity-80 hover:opacity-100 text-neutral-400 hover:text-neutral-900 dark:hover:text-white p-0.5 rounded cursor-pointer shrink-0"
                             title={`Alignment: ${align} (click to cycle)`}
                           >
                             {align === 'center' ? (
@@ -275,8 +376,8 @@ export const InteractiveTableOverlay: React.FC<InteractiveTableOverlayProps> = (
                           className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white px-1.5 py-0.5 rounded border border-blue-500 text-xs w-full focus:outline-none"
                         />
                       ) : (
-                        <div className="flex items-center justify-between gap-1 min-h-[1.5rem]">
-                          <span>{cell || <span className="opacity-30 italic text-[11px]">&lt;empty&gt;</span>}</span>
+                        <div className={`flex items-center gap-1.5 min-h-[1.5rem] ${align === 'center' ? 'justify-center text-center' : align === 'right' ? 'justify-end text-right' : 'justify-between text-left'}`}>
+                          <span>{cell ? renderCellContent(cell) : <span className="opacity-30 italic text-[11px]">&lt;empty&gt;</span>}</span>
                           {isEditable && onTableChange && (
                             <Edit3 className="w-2.5 h-2.5 opacity-0 group-hover/td:opacity-40 text-neutral-400 shrink-0" />
                           )}

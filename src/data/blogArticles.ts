@@ -2,7 +2,9 @@ export type BlogCategory = 'Engineering' | 'Productivity' | 'Guides' | 'Architec
 
 export interface Article {
   id: string;
+  user_id?: string | null;
   title: string;
+  slug?: string;
   excerpt: string;
   category: BlogCategory;
   readTime: string;
@@ -30,26 +32,3 @@ export const CATEGORIES: ('All' | BlogCategory)[] = [
   'Architecture',
   'Design'
 ];
-
-export const LOCAL_STORAGE_KEY = 'md_writer_community_blog_articles_v1';
-
-export const getStoredArticles = (): Article[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch (e) {
-    console.warn('Failed to load stored articles', e);
-    return [];
-  }
-};
-
-export const saveStoredArticles = (articles: Article[]): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(articles));
-  } catch (e) {
-    console.warn('Failed to save stored articles', e);
-  }
-};

@@ -4,10 +4,11 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import 'katex/dist/katex.min.css';
-import { sanitizeMarkdownForPreview } from '../../utils/markdownSanitizer';
+import { sanitizeMarkdownForPreview, isSafeUrl, markdownSanitizeSchema } from '../../utils/markdownSanitizer';
 import { Copy, Check, X, ChevronRight } from 'lucide-react';
 import { MermaidBlock } from './MermaidBlock';
 import { replaceRichIconsInReactNode } from '../../utils/richIcons';
@@ -64,7 +65,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
       {rawFrontmatter && <FrontmatterCard rawYaml={rawFrontmatter} />}
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
-        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex, rehypeHighlight]}
         components={{
           // Headings with stable IDs and scroll-margin for outline synchronization
           h1: ({ children }) => {
@@ -164,6 +165,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                       const taskIndex = allCheckboxes.indexOf(e.currentTarget);
                       if (taskIndex !== -1) {
                         onToggleTask(taskIndex, Boolean(checked));
+                        requestAnimationFrame(() => {
+                          const refreshedRoot = root?.isConnected ? root : document.querySelector('[data-markdown-preview="true"]');
+                          if (refreshedRoot) {
+                            const refreshedCheckboxes = Array.from(refreshedRoot.querySelectorAll('input[type="checkbox"]'));
+                            const target = refreshedCheckboxes[taskIndex] as HTMLInputElement | undefined;
+                            target?.focus({ preventScroll: true });
+                          }
+                        });
                       }
                     }
                   }}
@@ -185,20 +194,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
 
               return (
                 <div 
-                  style={{
-                    borderLeftWidth: '4px',
-                    borderLeftStyle: 'solid',
-                    borderLeftColor: config.borderColor,
-                    backgroundColor: config.backgroundColor,
-                  }}
                   className={`my-4 p-4 rounded-r-2xl border-y border-r border-neutral-200/50 dark:border-neutral-800/50 shadow-xs transition-all ${config.containerClass}`}
                 >
                   <div className="flex items-center gap-2 mb-2 select-none">
                     <div 
-                      style={{
-                        backgroundColor: config.badgeBg,
-                        color: config.badgeColor,
-                      }}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono tracking-wider uppercase shadow-2xs ${config.badgeClass}`}
                     >
                       <IconComp className={`w-3.5 h-3.5 shrink-0 ${config.iconClass}`} />
@@ -219,6 +218,22 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
               </blockquote>
             );
           },
+
+          // Strong & Bold Emphasis
+          strong: ({ children }) => (
+            <strong className="font-bold text-inherit">{children}</strong>
+          ),
+          b: ({ children }) => (
+            <b className="font-bold text-inherit">{children}</b>
+          ),
+
+          // Emphasis & Italic
+          em: ({ children }) => (
+            <em className="italic text-inherit">{children}</em>
+          ),
+          i: ({ children }) => (
+            <i className="italic text-inherit">{children}</i>
+          ),
 
           // Collapsible Accordion (details & summary)
           details: ({ children, ...props }: any) => (
@@ -242,11 +257,21 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
           // Keyboard Badges (<kbd>)
           kbd: ({ children, ...props }: any) => (
             <kbd 
-              className="px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-[11px] text-neutral-800 dark:text-neutral-200 shadow-2xs font-semibold inline-block"
+              className="px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-[11px] text-neutral-800 dark:text-neutral-200 shadow-2xs font-semibold inline-block align-middle"
               {...props}
             >
               {children}
             </kbd>
+          ),
+
+          // Text Highlighting (==highlight== and <mark>)
+          mark: ({ children, ...props }: any) => (
+            <mark 
+              className="bg-amber-200/95 dark:bg-amber-400/35 text-neutral-900 dark:text-amber-100 font-semibold px-1.5 py-0.5 rounded-md shadow-2xs border border-amber-300/50 dark:border-amber-500/30 selection:bg-amber-300"
+              {...props}
+            >
+              {replaceRichIconsInReactNode(children)}
+            </mark>
           ),
 
           // Tables (with Interactive Live Table Studio overlay if editable)
@@ -349,17 +374,30 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             );
           },
 
-          // Links
-          a: ({ href, children }) => (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer nofollow ugc"
-              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-            >
-              {children}
-            </a>
-          ),
+          // Links (Strictly sanitized to block script:, data:, and malicious protocol injection)
+          a: ({ href, children }) => {
+            const safe = isSafeUrl(href);
+            if (!safe) {
+              return (
+                <span 
+                  className="text-neutral-500 line-through cursor-not-allowed select-none opacity-80" 
+                  title="Blocked unsafe link"
+                >
+                  {children}
+                </span>
+              );
+            }
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer nofollow ugc"
+                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                {children}
+              </a>
+            );
+          },
 
           // Custom High-Quality Images & Captions (supports short image:// IndexedDB URLs)
           img: (imgProps: any) => (

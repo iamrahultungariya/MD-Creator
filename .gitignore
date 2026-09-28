@@ -33,3 +33,10 @@ powershell.cmd
 .env
 .env.*
 !.env.example
+
+# Scratch SQL
+/*.sql
+
+# Supabase temporaries
+supabase/.temp
+

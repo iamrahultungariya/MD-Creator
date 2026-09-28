@@ -5,24 +5,19 @@ import { supabase } from '../../lib/supabase';
 import { ReviewSubmissionModal } from './ReviewSubmissionModal';
 import {
   UserReview,
-  getStoredReviews,
-  saveStoredReviews,
   getUserSubmittedReview,
   saveUserSubmittedReview,
 } from '../../services/reviewsStorage';
 
 export type { UserReview };
 export {
-  REVIEWS_STORAGE_KEY,
   USER_REVIEW_KEY,
-  getStoredReviews,
-  saveStoredReviews,
   getUserSubmittedReview,
   saveUserSubmittedReview,
 } from '../../services/reviewsStorage';
 
 export const ReviewsSection: React.FC = () => {
-  const [reviews, setReviews] = useState<UserReview[]>(() => getStoredReviews());
+  const [reviews, setReviews] = useState<UserReview[]>([]);
   const [myReview, setMyReview] = useState<UserReview | null>(() => getUserSubmittedReview());
   const [isEditingInline, setIsEditingInline] = useState(false);
 
@@ -44,10 +39,37 @@ export const ReviewsSection: React.FC = () => {
   const [inlineSubmitting, setInlineSubmitting] = useState(false);
   const [inlineSuccess, setInlineSuccess] = useState(false);
 
-  // Sync reviews to storage
+  // Fetch approved reviews from Supabase directly
   useEffect(() => {
-    saveStoredReviews(reviews);
-  }, [reviews]);
+    async function loadApprovedReviews() {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase
+          .from('community_reviews')
+          .select('*')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) {
+          setReviews(data.map((r: any) => ({
+            id: r.id,
+            user_id: r.user_id,
+            name: r.name,
+            role: r.role,
+            rating: r.rating,
+            date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            content: r.content,
+            verified: Boolean(r.verified),
+            status: r.status,
+            submittedAt: r.created_at,
+          })));
+        }
+      } catch (err) {
+        console.warn('Could not load reviews from Supabase:', err);
+      }
+    }
+    loadApprovedReviews();
+  }, []);
 
   // When myReview exists, populate the editing inputs
   useEffect(() => {
@@ -72,59 +94,57 @@ export const ReviewsSection: React.FC = () => {
     ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length).toFixed(1)
     : '5.0';
 
-  // Handle Review Submission / Update (Single review per user)
+  // Handle Review Submission (Always inserted with status 'pending' per security guide)
   const submitReviewItem = async (
     name: string,
     role: string,
     starRating: number,
     text: string
   ): Promise<UserReview> => {
-    const reviewId = myReview?.id || `rev_${Date.now()}`;
-    const initialSubmittedAt = myReview?.submittedAt || new Date().toISOString();
-    const updatedReview: UserReview = {
-      id: reviewId,
-      name: name.trim(),
-      role: role.trim() || 'Verified Writer',
-      rating: starRating,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      content: text.trim(),
-      verified: true,
-      status: 'approved',
-      submittedAt: initialSubmittedAt,
-    };
-
-    // Replace existing if editing, or prepend if new
-    const updatedList = [
-      updatedReview,
-      ...reviews.filter((r) => r.id !== reviewId),
-    ];
-    setReviews(updatedList);
-    saveStoredReviews(updatedList);
-
-    setMyReview(updatedReview);
-    saveUserSubmittedReview(updatedReview);
-    setIsEditingInline(false);
-
-    // Sync to Supabase
-    try {
-      if (supabase) {
-        await supabase.from('community_reviews').upsert([
-          {
-            id: updatedReview.id,
-            name: updatedReview.name,
-            role: updatedReview.role,
-            rating: updatedReview.rating,
-            content: updatedReview.content,
-            verified: true,
-            status: 'approved',
-          },
-        ]);
-      }
-    } catch {
-      // Local fallback
+    if (!supabase) {
+      throw new Error('Supabase is not configured.');
     }
 
-    return updatedReview;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const currentUserId = sessionData?.session?.user?.id || null;
+
+    const { data, error } = await supabase
+      .from('community_reviews')
+      .insert([
+        {
+          user_id: currentUserId,
+          name: name.trim(),
+          role: role.trim() || 'Verified Writer',
+          rating: starRating,
+          content: text.trim(),
+          verified: false,
+          status: 'pending',
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const submitted: UserReview = {
+      id: data.id,
+      user_id: currentUserId,
+      name: data.name,
+      role: data.role,
+      rating: data.rating,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      content: data.content,
+      verified: false,
+      status: 'pending',
+      submittedAt: data.created_at,
+    };
+
+    setMyReview(submitted);
+    saveUserSubmittedReview(submitted);
+    setIsEditingInline(false);
+    return submitted;
   };
 
   const handleModalSubmit = async (e: React.FormEvent) => {

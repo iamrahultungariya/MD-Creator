@@ -84,7 +84,7 @@ Describe the core user problem this project solves. Why now, and what measurable
 
 ## ⚖️ Decisions Made
 - [x] **Decision 1**: All offline documents remain 100% free with IndexedDB storage.
-- [x] **Decision 2**: Introduce Pro tier waitlist to measure validated commercial demand.
+- [x] **Decision 2**: Keep Beta features unrestricted for active community feedback.
 
 ---
 
@@ -92,8 +92,8 @@ Describe the core user problem this project solves. Why now, and what measurable
 
 | Task | Owner | Due Date | Status |
 | :--- | :--- | :--- | :--- |
-| Deploy updated template library | @rahul | Tomorrow | In Progress |
-| Connect feedback willingness-to-pay field | @rahul | Friday | Planned |
+| Deploy updated template library | @lead | Tomorrow | In Progress |
+| Connect feedback willingness-to-pay field | @dev | Friday | Planned |
 | Audit typography presets for PDF export | @designer | Next Week | Planned |
 `
   },

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Sparkles, X, Check, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
+import { Sparkles, X, Check, ArrowRight, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { joinEarlybirdWaitlist } from '../../services/couponService';
 
 interface ProUpgradeModalProps {
   isOpen: boolean;
@@ -16,34 +15,12 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
   isOpen,
   onClose,
   featureTitle = 'Pro Cloud & Advanced Publishing',
-  featureDescription = 'This power feature is part of MD Writer Pro. Claim one of our 100 Earlybird VIP spots to unlock free Pro access at launch.'
+  featureDescription = 'This power feature is part of MD Writer Pro. All Pro capabilities are completely unlocked and free during our Beta period.'
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [claimedCode, setClaimedCode] = useState<string | null>(null);
 
   if (!isOpen) return null;
-
-  const handleClaimSpot = async () => {
-    if (!user) {
-      navigate('/auth?redirect=/pricing&intent=waitlist');
-      onClose();
-      return;
-    }
-
-    setIsClaiming(true);
-    try {
-      const res = await joinEarlybirdWaitlist(user.id, user.email);
-      if (res.success && res.couponCode) {
-        setClaimedCode(res.couponCode);
-      }
-    } catch (e) {
-      console.warn('Failed to claim spot from modal:', e);
-    } finally {
-      setIsClaiming(false);
-    }
-  };
 
   return (
     <AnimatePresence>
@@ -91,66 +68,43 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
             </p>
           </div>
 
-          {claimedCode ? (
-            <div className="mt-5 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-center space-y-2">
-              <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                <Check className="w-4 h-4" />
-                <span>Earlybird VIP Spot Reserved!</span>
+          <div className="mt-6 space-y-3">
+            <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/60 dark:border-neutral-700/60 space-y-2 text-xs text-neutral-700 dark:text-neutral-300">
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Multi-device cloud synchronization &amp; auto-sync</span>
               </div>
-              <div className="p-2 bg-white dark:bg-neutral-900 rounded-xl font-mono text-sm font-black text-neutral-900 dark:text-white border border-emerald-200/60">
-                {claimedCode}
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Password-protected web publishing &amp; sharing</span>
               </div>
-              <p className="text-[10.5px] text-emerald-600/90 dark:text-emerald-400/90">
-                Reward: 1 month free on Monthly or 2 months free + 20% off on Annual.
-              </p>
-              <button
-                onClick={() => {
-                  onClose();
-                  navigate('/pricing');
-                }}
-                className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer mt-2"
-              >
-                Go to Pricing &amp; Redeem
-              </button>
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Publication-grade PDF Studio &amp; themes</span>
+              </div>
             </div>
-          ) : (
-            <div className="mt-6 space-y-3">
-              <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/60 dark:border-neutral-700/60 space-y-2 text-xs text-neutral-700 dark:text-neutral-300">
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>Limited to strictly 100 Earlybird VIP members</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>1 to 2 free months of full Pro access</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span>Free Starter plan remains 100% offline &amp; free forever</span>
-                </div>
-              </div>
 
-              <button
-                onClick={handleClaimSpot}
-                disabled={isClaiming}
-                className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
-              >
-                <Tag className="w-3.5 h-3.5" />
-                <span>{user ? (isClaiming ? 'Claiming Spot...' : 'Claim 1 of 100 VIP Spots') : 'Sign In to Claim VIP Spot'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+            <button
+              onClick={() => {
+                onClose();
+                navigate(user ? '/pricing' : '/auth?redirect=/pricing');
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
+            >
+              <span>{user ? 'Explore Pro Privileges' : 'Sign In to Unlock Pro'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
 
-              <button
-                onClick={() => {
-                  onClose();
-                  navigate('/pricing');
-                }}
-                className="w-full py-2 text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors cursor-pointer"
-              >
-                View Full Pricing Details
-              </button>
-            </div>
-          )}
+            <button
+              onClick={() => {
+                onClose();
+                navigate('/pricing');
+              }}
+              className="w-full py-2 text-xs font-semibold text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+            >
+              View Full Pricing Details
+            </button>
+          </div>
 
           <div className="mt-4 flex items-center justify-center gap-1.5 text-[10.5px] text-neutral-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />

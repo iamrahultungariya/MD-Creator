@@ -9,7 +9,7 @@ import {
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
 import { MILESTONES, UpdateCategory } from '../data/productUpdates';
-import { renderWithRichIcons, RichIcon } from '../utils/richIcons';
+import { renderWithRichIcons } from '../utils/richIcons';
 import { usePwaInstall } from '../hooks/usePwaInstall';
 import { PwaInstallModal } from '../components/common/PwaInstallModal';
 
@@ -79,35 +79,8 @@ export const UpdatesPage: React.FC = () => {
           </h1>
 
           <p className="text-sm sm:text-base lg:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8">
-            Explore every architectural upgrade, performance milestone, and new feature designed to make Markdown writing distraction-free.
+            Explore new features, improvements, and updates designed to make Markdown writing seamless and distraction-free.
           </p>
-
-          {/* Quick Metrics Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-left">
-            <div className="p-2 sm:p-3">
-              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">Initial Bundle</div>
-              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5">31.9 kB</div>
-              <div className="text-[10px] sm:text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">-98.8% reduction</div>
-            </div>
-            <div className="p-2 sm:p-3">
-              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">Image Studio</div>
-              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5">WebP Engine</div>
-              <div className="text-[10px] sm:text-[11px] text-purple-600 dark:text-purple-400 font-medium mt-0.5">Paste &amp; compress</div>
-            </div>
-            <div className="p-2 sm:p-3">
-              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">KaTeX Studio</div>
-              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5">20+ Formulas</div>
-              <div className="text-[10px] sm:text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-0.5">1-click insert</div>
-            </div>
-            <div className="p-2 sm:p-3">
-              <div className="text-[11px] sm:text-xs text-neutral-400 font-medium">Universal Style</div>
-              <div className="text-base sm:text-lg font-black text-neutral-950 dark:text-white mt-0.5 flex items-center gap-1.5">
-                <span>Rich Icons</span>
-                <RichIcon icon="🚀" size={16} />
-              </div>
-              <div className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">All platforms</div>
-            </div>
-          </div>
         </div>
 
         {/* Filter Controls & Search */}

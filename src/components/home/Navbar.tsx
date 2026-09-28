@@ -184,7 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-nav border-b border-neutral-200/70 dark:border-neutral-800/80 transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-white dark:bg-[#0e0e11] border-b border-neutral-200 dark:border-neutral-800 shadow-2xs dark:shadow-none transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
         {/* Brand Logo & Name */}

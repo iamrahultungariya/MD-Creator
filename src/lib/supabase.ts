@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { db, DocumentMetadata } from '../db';
-import { isLifetimeProEmail, isHolidayFreeProActive } from '../stores/useAuthStore';
+import { isHolidayFreeProActive } from '../stores/useAuthStore';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -42,10 +42,7 @@ export async function isUserProForSync(): Promise<boolean> {
     // 1. Free promo window — all authenticated users get Pro
     if (isHolidayFreeProActive()) return true;
 
-    // 2. Lifetime Pro list from env
-    if (isLifetimeProEmail(session.user.email)) return true;
-
-    // 3. Database subscription tier
+    // 2. Database subscription tier
     const { data: prof } = await supabase
       .from('profiles')
       .select('subscription_tier')

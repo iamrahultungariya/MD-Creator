@@ -20,7 +20,7 @@ MD Writer is architected around a strict **local-first paradigm**:
 - **Browser-Native Storage**: All your documents, outlines, drafts, and settings are saved instantaneously into your browser's persistent **IndexedDB database** (<0.5ms write latency).
 - **Offline Parity**: You can draft, edit, format, and generate publication PDFs completely without an internet connection.
 - **Privacy Standard**: Your written words remain on your machine unless you explicitly choose to authenticate and enable cloud synchronization.
-- **No AI Training**: Your text and intellectual property are never ingested, scraped, or used to train artificial intelligence models.
+- **Absolute Data Privacy**: Your text and intellectual property are stored locally on your device and are never ingested, scraped, or shared with third parties.
 
 ---
 
@@ -61,8 +61,8 @@ Speed up your writing workflow with these universal keyboard shortcuts:
 ## 4.0 Rich Markdown & Formatting Syntax
 
 ### 4.1 Typography & Emphasis
-- **Bold text**: \`**bold text**\` or \`__bold text__\`
-- *Italic text*: \`*italic text*\` or \`_italic text_\`
+- **Bold text** (written as \`**bold text**\` or \`__bold text__\`)
+- *Italic text* (written as \`*italic text*\` or \`_italic text_\`)
 - ~~Strikethrough~~: \`~~strikethrough~~\`
 - ==Highlighted text==: \`==highlighted text==\`
 - \`Inline code\`: Wrap code snippets with backticks \`\`\`code\`\`\`

@@ -115,8 +115,14 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   const [isSyncScrollEnabled, setIsSyncScrollEnabled] = useState(true);
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
-  const isSyncingFromEditorRef = useRef(false);
-  const isSyncingFromPreviewRef = useRef(false);
+  const isScrollingEditorRef = useRef(false);
+  const isScrollingPreviewRef = useRef(false);
+  const isLiveEditingInPreviewRef = useRef(false);
+  const savedPreviewScrollTopRef = useRef<number | null>(null);
+  const scrollEditorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollPreviewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRafRef = useRef<number | null>(null);
+  const previewRafRef = useRef<number | null>(null);
 
   // Reader Mode Eye-Comfort Appearance
   const {
@@ -130,25 +136,31 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   // Instant non-blocking Markdown preview parsing via React 19 interruptible transition
   const deferredPreviewContent = React.useDeferredValue(content);
 
-  // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview)
+  // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview) with 60/120fps rAF
   const handleEditorScroll = useCallback((_e: Event, scrollDOM: HTMLElement) => {
     if (!isSyncScrollEnabled || viewMode !== 'split') return;
-    if (isSyncingFromPreviewRef.current) return;
+    if (isScrollingPreviewRef.current || isLiveEditingInPreviewRef.current) return;
 
-    const preview = previewContainerRef.current;
-    if (!preview) return;
+    isScrollingEditorRef.current = true;
+    if (scrollEditorTimeoutRef.current) clearTimeout(scrollEditorTimeoutRef.current);
+    scrollEditorTimeoutRef.current = setTimeout(() => {
+      isScrollingEditorRef.current = false;
+    }, 100);
 
-    const maxEditor = scrollDOM.scrollHeight - scrollDOM.clientHeight;
-    if (maxEditor <= 0) return;
+    if (editorRafRef.current) cancelAnimationFrame(editorRafRef.current);
+    editorRafRef.current = requestAnimationFrame(() => {
+      const preview = previewContainerRef.current;
+      if (!preview) return;
 
-    const ratio = scrollDOM.scrollTop / maxEditor;
-    const maxPreview = preview.scrollHeight - preview.clientHeight;
+      const maxEditor = scrollDOM.scrollHeight - scrollDOM.clientHeight;
+      if (maxEditor <= 0) return;
 
-    isSyncingFromEditorRef.current = true;
-    preview.scrollTop = ratio * maxPreview;
-    setTimeout(() => {
-      isSyncingFromEditorRef.current = false;
-    }, 60);
+      const ratio = scrollDOM.scrollTop / maxEditor;
+      const maxPreview = preview.scrollHeight - preview.clientHeight;
+      if (maxPreview > 0) {
+        preview.scrollTop = ratio * maxPreview;
+      }
+    });
   }, [isSyncScrollEnabled, viewMode]);
 
   // Synchronized Split-Pane Proportional Scrolling (Preview -> Editor) & Read Mode Progress
@@ -164,22 +176,63 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       return;
     }
 
-    // In Split Mode: sync preview -> editor
+    // In Split Mode: sync preview -> editor with 60/120fps rAF
     if (viewMode === 'split' && isSyncScrollEnabled) {
-      if (isSyncingFromEditorRef.current) return;
+      if (isScrollingEditorRef.current || isLiveEditingInPreviewRef.current) return;
 
-      const maxPrev = prev.scrollHeight - prev.clientHeight;
-      if (maxPrev <= 0) return;
+      isScrollingPreviewRef.current = true;
+      if (scrollPreviewTimeoutRef.current) clearTimeout(scrollPreviewTimeoutRef.current);
+      scrollPreviewTimeoutRef.current = setTimeout(() => {
+        isScrollingPreviewRef.current = false;
+      }, 100);
 
-      const ratio = prev.scrollTop / maxPrev;
+      if (previewRafRef.current) cancelAnimationFrame(previewRafRef.current);
+      previewRafRef.current = requestAnimationFrame(() => {
+        const maxPrev = prev.scrollHeight - prev.clientHeight;
+        if (maxPrev <= 0) return;
 
-      isSyncingFromPreviewRef.current = true;
-      editorRef?.current?.scrollToRatio(ratio);
-      setTimeout(() => {
-        isSyncingFromPreviewRef.current = false;
-      }, 60);
+        const ratio = prev.scrollTop / maxPrev;
+        editorRef?.current?.scrollToRatio(ratio);
+      });
     }
   }, [viewMode, isSyncScrollEnabled, setReadingProgress, editorRef]);
+
+  // Wrapped task toggle preserving preview scroll position
+  const handleToggleTaskWithScrollLock = useCallback((taskIndex: number, currentChecked: boolean) => {
+    if (previewContainerRef.current) {
+      savedPreviewScrollTopRef.current = previewContainerRef.current.scrollTop;
+      isLiveEditingInPreviewRef.current = true;
+    }
+    onToggleTask(taskIndex, currentChecked);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (previewContainerRef.current && savedPreviewScrollTopRef.current !== null) {
+          previewContainerRef.current.scrollTop = savedPreviewScrollTopRef.current;
+        }
+        isLiveEditingInPreviewRef.current = false;
+        savedPreviewScrollTopRef.current = null;
+      });
+    });
+  }, [onToggleTask]);
+
+  // Wrapped content update from preview (e.g. table edits) preserving preview scroll position
+  const handlePreviewContentUpdate = useCallback((newContent: string) => {
+    if (previewContainerRef.current) {
+      savedPreviewScrollTopRef.current = previewContainerRef.current.scrollTop;
+      isLiveEditingInPreviewRef.current = true;
+    }
+    setContent?.(newContent);
+    queueAutoSave?.(newContent, title);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (previewContainerRef.current && savedPreviewScrollTopRef.current !== null) {
+          previewContainerRef.current.scrollTop = savedPreviewScrollTopRef.current;
+        }
+        isLiveEditingInPreviewRef.current = false;
+        savedPreviewScrollTopRef.current = null;
+      });
+    });
+  }, [setContent, queueAutoSave, title]);
 
   // Dedicated formatting helper that works directly with CodeMirror
   const insertFormatting = useCallback(
@@ -245,6 +298,24 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         text: `**bold text**`,
         selectOffset: 2,
         selectLength: 9,
+      };
+    });
+  }, [insertFormatting]);
+
+  // Insert highlight syntax at cursor without scroll jumping
+  const handleInsertHighlight = useCallback(() => {
+    insertFormatting((selected) => {
+      if (selected) {
+        return {
+          text: `==${selected}==`,
+          selectOffset: 2,
+          selectLength: selected.length,
+        };
+      }
+      return {
+        text: `==highlighted text==`,
+        selectOffset: 2,
+        selectLength: 16,
       };
     });
   }, [insertFormatting]);
@@ -522,11 +593,8 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
             <MarkdownPreview 
               content={deferredPreviewContent} 
-              onToggleTask={onToggleTask}
-              onUpdateContent={(newContent) => {
-                setContent?.(newContent);
-                queueAutoSave?.(newContent, title);
-              }}
+              onToggleTask={handleToggleTaskWithScrollLock}
+              onUpdateContent={viewMode === 'read' ? undefined : handlePreviewContentUpdate}
               className={viewMode === 'read' ? `${readerFontClass} ${readerSizeClass}` : undefined}
             />
           </div>
@@ -537,6 +605,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       {viewMode !== 'read' && (
         <MobileEditorToolbar
           onInsertBold={handleInsertBold}
+          onInsertHighlight={handleInsertHighlight}
           onInsertLink={handleInsertLink}
           onOpenImageModal={onOpenImageModal || (() => {})}
           onTriggerSlash={() => setIsSlashMenuOpen((prev) => !prev)}

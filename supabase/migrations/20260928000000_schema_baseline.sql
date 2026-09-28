@@ -1,5 +1,5 @@
 -- ==============================================================================
--- MD Writer — Supabase Database Schema V2 (Production Ready & Migration-Safe)
+-- MD Writer ΓÇö Supabase Database Schema V2 (Production Ready & Migration-Safe)
 -- Run this script in your Supabase Project: SQL Editor -> New Query -> Run
 -- ==============================================================================
 
@@ -335,7 +335,7 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created

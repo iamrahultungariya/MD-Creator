@@ -132,7 +132,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
           <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-            <span>Local Storage • No Data Selling • No AI Training</span>
+            <span>Local Storage • No Data Selling • Zero Tracking</span>
           </div>
         </div>
 
@@ -166,10 +166,10 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">3.0</span>
-                  <span>Strict Non-Use in AI / LLM Model Training</span>
+                  <span>Data Sovereignty & Zero Model Training</span>
                 </h3>
                 <p>
-                  We recognize that writers, researchers, engineers, and creators trust MD Writer with intellectual property, proprietary code, novel drafts, and personal notes. We explicitly commit that <strong>no user text, markdown files, exported artifacts, or revisions are ever used to train, fine-tune, or benchmark artificial intelligence models</strong>.
+                  We recognize that writers, researchers, engineers, and creators trust MD Writer with intellectual property, proprietary code, novel drafts, and personal notes. We explicitly commit that <strong>we do not use your documents to train machine-learning models</strong>, and no user text, markdown files, exported artifacts, or revisions are ever ingested, scraped, shared, or monetized by third parties.
                 </p>
               </div>
 

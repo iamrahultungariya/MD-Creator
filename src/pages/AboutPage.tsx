@@ -114,7 +114,7 @@ export const AboutPage: React.FC = () => {
                 MD Writer integrates high-performance KaTeX typesetting for mathematical expressions, responsive Mermaid.js diagrams for architectural workflows, and an instant slash command studio to insert complex visual structures effortlessly.
               </p>
               <p>
-                There are no intrusive notification popups, no AI-generated rainbow gradients, and no unsolicited widgets competing for your attention. Just clean typography and a responsive canvas.
+                There are no intrusive notification popups, no distracting neon gradients, and no unsolicited widgets competing for your attention. Just clean typography and a responsive canvas.
               </p>
             </div>
 

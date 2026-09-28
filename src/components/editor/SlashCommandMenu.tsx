@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   GitBranch,
   Image as ImageIcon,
+  Highlighter,
   Command
 } from 'lucide-react';
 
@@ -92,6 +93,14 @@ export const COMMANDS: CommandItem[] = [
     icon: Quote,
     shortcut: '>',
     insertSnippet: '> Write your quotation or insight here.\n'
+  },
+  {
+    id: 'highlight',
+    title: 'Text Highlight',
+    description: 'Highlight key passage (==text==)',
+    icon: Highlighter,
+    shortcut: '/hl',
+    insertSnippet: '==highlighted text=='
   },
   {
     id: 'table-builder',

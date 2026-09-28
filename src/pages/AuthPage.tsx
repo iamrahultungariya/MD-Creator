@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lock, Mail, User, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Lock, Mail, User, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
-import { isSupabaseConfigured } from '../lib/supabase';
 
 export const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -11,9 +10,8 @@ export const AuthPage: React.FC = () => {
   const [name, setName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { signIn, signUp, demoSignIn, isLoading } = useAuthStore();
+  const { signIn, signUp, isLoading } = useAuthStore();
   const navigate = useNavigate();
-  const hasSupabase = isSupabaseConfigured();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +43,6 @@ export const AuthPage: React.FC = () => {
         setFormError(res.error || 'Failed to sign up.');
       }
     }
-  };
-
-  // Calls demoSignIn with no args — name/email come from env vars
-  const handleQuickDemo = () => {
-    demoSignIn();
-    navigate('/documents');
   };
 
 
@@ -189,20 +181,6 @@ export const AuthPage: React.FC = () => {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Demo Mode Action */}
-        <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-neutral-800 text-center">
-          <p className="text-xs text-neutral-400 mb-3">
-            {hasSupabase ? 'Want to test without credentials?' : 'Running without live Supabase keys?'}
-          </p>
-          <button
-            onClick={handleQuickDemo}
-            className="w-full py-2.5 px-4 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Continue as Demo User</span>
-          </button>
-        </div>
 
       </div>
 

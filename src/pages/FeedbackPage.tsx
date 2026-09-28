@@ -391,7 +391,7 @@ export const FeedbackPage: React.FC = () => {
                 <div>
                   <input
                     type="text"
-                    placeholder="Which specific feature would you pay for most? (e.g., Live Team Sync, PDF Covers, AI Copilot)"
+                    placeholder="Which specific feature would you pay for most? (e.g., Live Team Sync, PDF Custom Themes, Advanced Outlines)"
                     value={monetizationFeature}
                     onChange={(e) => setMonetizationFeature(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"

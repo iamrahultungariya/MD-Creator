@@ -21,7 +21,7 @@ export const PublicDocumentPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
 
   const [doc, setDoc] = useState<PublicDocumentView | null>(null);
-  const [status, setStatus] = useState<'loading' | 'ok' | 'not_found' | 'password_required' | 'invalid_password'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ok' | 'not_found' | 'password_required' | 'invalid_password' | 'rate_limited'>('loading');
   const [password, setPassword] = useState('');
   const [theme, setTheme] = useState<'default' | 'paper' | 'sepia' | 'nordic' | 'dark'>('default');
   const [isCopied, setIsCopied] = useState(false);
@@ -129,7 +129,7 @@ export const PublicDocumentPage: React.FC = () => {
   }
 
   // 2. Password Prompt
-  if (status === 'password_required' || status === 'invalid_password') {
+  if (status === 'password_required' || status === 'invalid_password' || status === 'rate_limited') {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200">
         <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-6">
@@ -161,6 +161,13 @@ export const PublicDocumentPage: React.FC = () => {
               <div className="flex items-center gap-2 text-rose-500 text-xs">
                 <ShieldAlert className="w-4 h-4 shrink-0" />
                 <span>Incorrect passphrase. Please try again.</span>
+              </div>
+            )}
+
+            {status === 'rate_limited' && (
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-xs">
+                <ShieldAlert className="w-4 h-4 shrink-0" />
+                <span>Too many attempts. Please wait 10 minutes before retrying.</span>
               </div>
             )}
 

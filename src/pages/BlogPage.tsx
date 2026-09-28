@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Search, 
   BookOpen, 
@@ -18,18 +18,13 @@ import {
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
 import { useAuthStore } from '../stores/useAuthStore';
+import { supabase } from '../lib/supabase';
 import { 
   BlogCategory, 
   Article, 
   CATEGORIES, 
-  getStoredArticles, 
-  saveStoredArticles 
 } from '../data/blogArticles';
-import { 
-  UserReview, 
-  getStoredReviews, 
-  saveStoredReviews 
-} from '../components/home/ReviewsSection';
+import { UserReview } from '../components/home/ReviewsSection';
 import { BlogCreateModal } from '../components/blog/BlogCreateModal';
 import { BlogReaderModal } from '../components/blog/BlogReaderModal';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
@@ -40,11 +35,11 @@ const MarkdownPreview = React.lazy(() =>
 
 export const BlogPage: React.FC = () => {
   const { user } = useAuthStore();
-  const isAdmin = isCurrentUserAdmin(user?.email);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Articles & Reviews state loaded from local/persistent cache
-  const [articles, setArticles] = useState<Article[]>(() => getStoredArticles());
-  const [reviews, setReviews] = useState<UserReview[]>(() => getStoredReviews());
+  // Articles & Reviews state loaded directly from Supabase
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [reviews, setReviews] = useState<UserReview[]>([]);
 
   // Navigation & Filter state
   const [selectedCategory, setSelectedCategory] = useState<'All' | BlogCategory>('All');
@@ -67,6 +62,76 @@ export const BlogPage: React.FC = () => {
     setFeedbackToast(msg);
     setTimeout(() => setFeedbackToast(null), 4000);
   };
+
+  // Authoritative admin verification via Supabase database
+  useEffect(() => {
+    if (user?.id) {
+      isCurrentUserAdmin(user.id).then(setIsAdmin);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user?.id]);
+
+  // Load articles and reviews directly from Supabase tables
+  const loadContent = useCallback(async () => {
+    if (!supabase) return;
+
+    try {
+      const [artRes, revRes] = await Promise.all([
+        supabase
+          .from('blog_articles')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('community_reviews')
+          .select('*')
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (artRes.data) {
+        setArticles(artRes.data.map((a: any) => ({
+          id: a.id,
+          user_id: a.user_id,
+          title: a.title,
+          slug: a.slug,
+          excerpt: a.excerpt,
+          category: a.category,
+          readTime: a.read_time,
+          date: new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          author: {
+            name: a.author_name,
+            role: a.author_role,
+            avatar: a.author_avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(a.author_name)}`,
+          },
+          content: a.content,
+          featured: Boolean(a.featured),
+          status: a.status,
+          submittedAt: a.created_at,
+        })));
+      }
+
+      if (revRes.data) {
+        setReviews(revRes.data.map((r: any) => ({
+          id: r.id,
+          user_id: r.user_id,
+          name: r.name,
+          role: r.role,
+          rating: r.rating,
+          date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          content: r.content,
+          verified: Boolean(r.verified),
+          status: r.status,
+          submittedAt: r.created_at,
+        })));
+      }
+    } catch (err) {
+      console.warn('Could not load blog/reviews data:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadContent();
+  }, [loadContent]);
 
   // Filtered published articles for public readers
   const publishedArticles = useMemo(() => {
@@ -91,44 +156,73 @@ export const BlogPage: React.FC = () => {
     });
   }, [publishedArticles, selectedCategory, searchQuery]);
 
-  // Submission handler
-  const handlePublishArticle = (e: React.FormEvent) => {
+  // Submission handler (Direct to Supabase, fails loudly)
+  const handlePublishArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) {
       setFormError('Please provide both an article title and content.');
       return;
     }
 
+    if (!supabase) {
+      setFormError('Supabase is not configured.');
+      return;
+    }
+
     const wordCount = newContent.trim().split(/\s+/).length;
     const calculatedReadTime = `${Math.max(1, Math.ceil(wordCount / 180))} min read`;
-
-    // Admin submissions are auto-published; regular submissions enter pending queue
     const initialStatus = isAdmin ? 'published' : 'pending';
+    const targetSlug = newTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 36) + '-' + Math.random().toString(36).substring(2, 6);
 
-    const newArticle: Article = {
-      id: `article-${Date.now()}`,
-      title: newTitle.trim(),
-      excerpt: newExcerpt.trim() || newContent.trim().slice(0, 140) + '...',
-      category: newCategory,
-      readTime: calculatedReadTime,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      author: {
-        name: newAuthorName.trim() || user?.displayName || 'Community Author',
-        role: newAuthorRole.trim() || 'Writer',
-        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+    const { data, error } = await supabase.from('blog_articles').insert([
+      {
+        user_id: user?.id || null,
+        title: newTitle.trim(),
+        slug: targetSlug,
+        excerpt: newExcerpt.trim() || newContent.trim().slice(0, 140) + '...',
+        category: newCategory,
+        content: newContent,
+        author_name: newAuthorName.trim() || user?.displayName || 'Community Author',
+        author_role: newAuthorRole.trim() || 'Writer',
+        author_avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
           newAuthorName.trim() || user?.displayName || 'Author'
         )}`,
+        read_time: calculatedReadTime,
+        featured: false,
+        status: initialStatus,
+      }
+    ]).select().single();
+
+    if (error) {
+      setFormError(`Failed to submit article: ${error.message}`);
+      return;
+    }
+
+    const newArticle: Article = {
+      id: data.id,
+      user_id: data.user_id,
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt,
+      category: data.category,
+      readTime: data.read_time,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      author: {
+        name: data.author_name,
+        role: data.author_role,
+        avatar: data.author_avatar,
       },
-      content: newContent,
+      content: data.content,
       isUserCreated: true,
-      status: initialStatus,
-      submittedAt: new Date().toISOString(),
-      userEmail: user?.email,
+      status: data.status,
+      submittedAt: data.created_at,
     };
 
-    const updated = [newArticle, ...articles];
-    setArticles(updated);
-    saveStoredArticles(updated);
+    setArticles((prev) => [newArticle, ...prev]);
 
     // Reset Form
     setNewTitle('');
@@ -145,59 +239,113 @@ export const BlogPage: React.FC = () => {
     }
   };
 
-  // Moderation Handlers: Articles
-  const handleApproveArticle = (articleId: string) => {
-    const updated = articles.map((art) =>
-      art.id === articleId ? { ...art, status: 'published' as const } : art
+  // Moderation Handlers: Articles (Supabase DB updates)
+  const handleApproveArticle = async (articleId: string) => {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from('blog_articles')
+      .update({ status: 'published' })
+      .eq('id', articleId);
+
+    if (error) {
+      showToast(`⚠️ Failed to approve article: ${error.message}`);
+      return;
+    }
+
+    setArticles((prev) =>
+      prev.map((art) => (art.id === articleId ? { ...art, status: 'published' as const } : art))
     );
-    setArticles(updated);
-    saveStoredArticles(updated);
     showToast('✅ Article approved and published live.');
   };
 
-  const handleRejectArticle = (articleId: string) => {
-    const updated = articles.map((art) =>
-      art.id === articleId ? { ...art, status: 'rejected' as const } : art
+  const handleRejectArticle = async (articleId: string) => {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from('blog_articles')
+      .update({ status: 'rejected' })
+      .eq('id', articleId);
+
+    if (error) {
+      showToast(`⚠️ Failed to reject article: ${error.message}`);
+      return;
+    }
+
+    setArticles((prev) =>
+      prev.map((art) => (art.id === articleId ? { ...art, status: 'rejected' as const } : art))
     );
-    setArticles(updated);
-    saveStoredArticles(updated);
     showToast('⚠️ Article marked as rejected.');
   };
 
-  const handleDeleteArticle = (articleId: string) => {
+  const handleDeleteArticle = async (articleId: string) => {
+    if (!supabase) return;
     if (window.confirm('Delete this article record permanently?')) {
-      const updated = articles.filter((art) => art.id !== articleId);
-      setArticles(updated);
-      saveStoredArticles(updated);
+      const { error } = await supabase
+        .from('blog_articles')
+        .delete()
+        .eq('id', articleId);
+
+      if (error) {
+        showToast(`⚠️ Failed to delete article: ${error.message}`);
+        return;
+      }
+
+      setArticles((prev) => prev.filter((art) => art.id !== articleId));
       if (activeArticle?.id === articleId) setActiveArticle(null);
       showToast('🗑️ Article deleted.');
     }
   };
 
-  // Moderation Handlers: Reviews
-  const handleApproveReview = (reviewId: string) => {
-    const updated = reviews.map((rev) =>
-      rev.id === reviewId ? { ...rev, status: 'approved' as const } : rev
+  // Moderation Handlers: Reviews (Supabase DB updates)
+  const handleApproveReview = async (reviewId: string) => {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from('community_reviews')
+      .update({ status: 'approved' })
+      .eq('id', reviewId);
+
+    if (error) {
+      showToast(`⚠️ Failed to approve review: ${error.message}`);
+      return;
+    }
+
+    setReviews((prev) =>
+      prev.map((rev) => (rev.id === reviewId ? { ...rev, status: 'approved' as const } : rev))
     );
-    setReviews(updated);
-    saveStoredReviews(updated);
     showToast('✅ Community review approved for homepage display.');
   };
 
-  const handleRejectReview = (reviewId: string) => {
-    const updated = reviews.map((rev) =>
-      rev.id === reviewId ? { ...rev, status: 'rejected' as const } : rev
+  const handleRejectReview = async (reviewId: string) => {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from('community_reviews')
+      .update({ status: 'rejected' })
+      .eq('id', reviewId);
+
+    if (error) {
+      showToast(`⚠️ Failed to reject review: ${error.message}`);
+      return;
+    }
+
+    setReviews((prev) =>
+      prev.map((rev) => (rev.id === reviewId ? { ...rev, status: 'rejected' as const } : rev))
     );
-    setReviews(updated);
-    saveStoredReviews(updated);
     showToast('⚠️ Community review marked as rejected.');
   };
 
-  const handleDeleteReview = (reviewId: string) => {
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!supabase) return;
     if (window.confirm('Delete this review record permanently?')) {
-      const updated = reviews.filter((rev) => rev.id !== reviewId);
-      setReviews(updated);
-      saveStoredReviews(updated);
+      const { error } = await supabase
+        .from('community_reviews')
+        .delete()
+        .eq('id', reviewId);
+
+      if (error) {
+        showToast(`⚠️ Failed to delete review: ${error.message}`);
+        return;
+      }
+
+      setReviews((prev) => prev.filter((rev) => rev.id !== reviewId));
       showToast('🗑️ Review deleted.');
     }
   };
@@ -405,7 +553,7 @@ export const BlogPage: React.FC = () => {
 
         {/* Public Hero Section */}
         <section className="pt-16 pb-10 sm:pt-20 sm:pb-14 text-center max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 mb-5 shadow-2xs">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 text-xs font-semibold text-amber-900 dark:text-amber-300 mb-5 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Community Editorial</span>
           </div>

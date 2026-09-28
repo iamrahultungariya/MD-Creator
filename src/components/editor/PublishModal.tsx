@@ -57,7 +57,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         if (record && record.is_public) {
           setPublishedRecord(record);
           setCustomSlug(record.slug);
-          setEnablePassword(Boolean(record.password_hash));
+          setEnablePassword(Boolean(record.is_password_protected));
         } else {
           setPublishedRecord(null);
           setCustomSlug(generateSlug(title));
@@ -102,7 +102,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         user_id: '',
         slug: res.slug,
         is_public: true,
-        password_hash: enablePassword ? 'hash' : null,
+        is_password_protected: enablePassword,
         view_count: publishedRecord?.view_count || 0,
         published_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

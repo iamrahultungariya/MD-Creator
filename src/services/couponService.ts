@@ -1,303 +1,104 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export interface RegionalPricing {
-  regionId: 'US' | 'IN' | 'SEA' | 'ROW';
-  regionName: string;
-  currencyCode: string;
+  countryCode: string;
+  countryName: string;
+  currency: string;
   currencySymbol: string;
   monthlyPrice: number;
-  annualPrice: number; // per month when billed annually
-  annualBilledTotal: number;
-  savingsPercent: number;
-  note: string;
+  annualPrice: number;
 }
 
 export const REGIONAL_PRICING_MAP: Record<string, RegionalPricing> = {
-  US: {
-    regionId: 'US',
-    regionName: 'United States & Global',
-    currencyCode: 'USD',
-    currencySymbol: '$',
-    monthlyPrice: 8,
-    annualPrice: 6.4,
-    annualBilledTotal: 76.8,
-    savingsPercent: 20,
-    note: 'Standard Global Tier'
-  },
   IN: {
-    regionId: 'IN',
-    regionName: 'India (PPP Discount)',
-    currencyCode: 'INR',
+    countryCode: 'IN',
+    countryName: 'India',
+    currency: 'INR',
     currencySymbol: '₹',
-    monthlyPrice: 299,
-    annualPrice: 239,
-    annualBilledTotal: 2868,
-    savingsPercent: 20,
-    note: '~55% PPP discount applied'
+    monthlyPrice: 399,
+    annualPrice: 299,
   },
-  SEA: {
-    regionId: 'SEA',
-    regionName: 'SEA / LATAM / Africa',
-    currencyCode: 'USD',
+  US: {
+    countryCode: 'US',
+    countryName: 'United States',
+    currency: 'USD',
     currencySymbol: '$',
-    monthlyPrice: 4,
-    annualPrice: 3.2,
-    annualBilledTotal: 38.4,
-    savingsPercent: 20,
-    note: '50% Regional PPP parity'
+    monthlyPrice: 9,
+    annualPrice: 7,
   },
-  ROW: {
-    regionId: 'ROW',
-    regionName: 'Rest of World',
-    currencyCode: 'USD',
-    currencySymbol: '$',
+  GB: {
+    countryCode: 'GB',
+    countryName: 'United Kingdom',
+    currency: 'GBP',
+    currencySymbol: '£',
     monthlyPrice: 8,
-    annualPrice: 6.4,
-    annualBilledTotal: 76.8,
-    savingsPercent: 20,
-    note: 'Standard Global Tier'
-  }
+    annualPrice: 6,
+  },
+  EU: {
+    countryCode: 'EU',
+    countryName: 'European Union',
+    currency: 'EUR',
+    currencySymbol: '€',
+    monthlyPrice: 9,
+    annualPrice: 7,
+  },
+  CA: {
+    countryCode: 'CA',
+    countryName: 'Canada',
+    currency: 'CAD',
+    currencySymbol: 'CA$',
+    monthlyPrice: 12,
+    annualPrice: 9,
+  },
+  AU: {
+    countryCode: 'AU',
+    countryName: 'Australia',
+    currency: 'AUD',
+    currencySymbol: 'A$',
+    monthlyPrice: 14,
+    annualPrice: 10,
+  },
 };
 
 /**
- * Fast client-side detection of region using browser Intl timezone with zero latency.
+ * Detects user region via browser timezone heuristics.
  */
 export function detectUserRegion(): RegionalPricing {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    if (tz.includes('Calcutta') || tz.includes('Kolkata') || tz.includes('India')) {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timeZone.startsWith('Asia/Calcutta') || timeZone.startsWith('Asia/Kolkata')) {
       return REGIONAL_PRICING_MAP.IN;
     }
-    if (
-      tz.includes('Jakarta') ||
-      tz.includes('Bangkok') ||
-      tz.includes('Manila') ||
-      tz.includes('Saigon') ||
-      tz.includes('Kuala_Lumpur') ||
-      tz.includes('Sao_Paulo') ||
-      tz.includes('Buenos_Aires') ||
-      tz.includes('Lagos') ||
-      tz.includes('Nairobi') ||
-      tz.includes('Cairo')
-    ) {
-      return REGIONAL_PRICING_MAP.SEA;
+    if (timeZone.startsWith('Europe/London')) {
+      return REGIONAL_PRICING_MAP.GB;
     }
-  } catch (e) {
+    if (timeZone.startsWith('Europe/')) {
+      return REGIONAL_PRICING_MAP.EU;
+    }
+    if (timeZone.startsWith('America/Toronto') || timeZone.startsWith('America/Vancouver')) {
+      return REGIONAL_PRICING_MAP.CA;
+    }
+    if (timeZone.startsWith('Australia/')) {
+      return REGIONAL_PRICING_MAP.AU;
+    }
+  } catch {
     // fallback to US
   }
   return REGIONAL_PRICING_MAP.US;
 }
 
-export interface WaitlistStatus {
-  hasJoined: boolean;
-  couponCode?: string | null;
-  status?: string;
-  expiresAt?: string | null;
-}
-
-const LOCAL_STORAGE_KEY = 'mdwriter_waitlist_status_v2';
-
 /**
- * Checks if the user has already joined the waitlist.
- * Queries Supabase DB on first load and caches in localStorage so the user never sees
- * the "join" button repeatedly.
- */
-export async function checkUserWaitlistStatus(userId?: string | null, email?: string | null): Promise<WaitlistStatus> {
-  // 1. Check local storage cache first for instant UI response
-  if (typeof window !== 'undefined') {
-    const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached) as WaitlistStatus;
-        if (parsed.hasJoined) return parsed;
-      } catch (e) {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-      }
-    }
-  }
-
-  if (!userId || !isSupabaseConfigured() || !supabase) {
-    // Fallback: check legacy email key
-    if (typeof window !== 'undefined') {
-      const legacyEmail = localStorage.getItem('mdwriter_waitlist_email');
-      if (legacyEmail && email && legacyEmail.toLowerCase() === email.toLowerCase()) {
-        const status: WaitlistStatus = { hasJoined: true, couponCode: null, status: 'registered' };
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(status));
-        return status;
-      }
-    }
-    return { hasJoined: false };
-  }
-
-  try {
-    // 2. Call the hardened Supabase RPC helper (uses auth session directly)
-    const { data, error } = await supabase.rpc('check_user_waitlist_status');
-    if (!error && data) {
-      const result: WaitlistStatus = {
-        hasJoined: Boolean(data.has_joined),
-        couponCode: data.coupon_code || null,
-        status: data.status,
-        expiresAt: data.expires_at || null
-      };
-
-      if (typeof window !== 'undefined' && result.hasJoined) {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(result));
-      }
-      return result;
-    }
-
-    // 3. Direct table query fallback: coupon_redemptions
-    const { data: couponData } = await supabase
-      .from('coupon_redemptions')
-      .select('coupon_code, status, expires_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .maybeSingle();
-
-    if (couponData) {
-      const result: WaitlistStatus = {
-        hasJoined: true,
-        couponCode: couponData.coupon_code,
-        status: couponData.status,
-        expiresAt: couponData.expires_at
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(result));
-      }
-      return result;
-    }
-
-    // 4. Check public.waitlist table by email if user has joined via waitlist form
-    if (email) {
-      const { data: waitlistRecord } = await supabase
-        .from('waitlist')
-        .select('email, plan')
-        .eq('email', email.trim().toLowerCase())
-        .maybeSingle();
-
-      if (waitlistRecord) {
-        const result: WaitlistStatus = {
-          hasJoined: true,
-          couponCode: null,
-          status: 'registered'
-        };
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(result));
-        }
-        return result;
-      }
-    }
-  } catch (err) {
-    console.warn('[Waitlist] Failed to check status from DB:', err);
-  }
-
-  // Not joined in database - store false in localStorage so UI is deterministic
-  const notJoinedResult: WaitlistStatus = { hasJoined: false };
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(notJoinedResult));
-  }
-  return notJoinedResult;
-}
-
-/**
- * Returns the count of remaining VIP Earlybird seats out of 100 based on real database records.
- */
-export async function getRemainingWaitlistSeats(): Promise<number> {
-  const TOTAL_SEATS = 100;
-  if (!isSupabaseConfigured() || !supabase) {
-    if (typeof window !== 'undefined') {
-      const localEmail = localStorage.getItem('mdwriter_waitlist_email');
-      return localEmail ? 99 : 100;
-    }
-    return 100;
-  }
-
-  try {
-    // 1. Query real exact count from public.waitlist table
-    const { count: waitlistCount } = await supabase
-      .from('waitlist')
-      .select('*', { count: 'exact', head: true });
-
-    // 2. Query real exact count from public.coupon_redemptions table
-    const { count: couponCount } = await supabase
-      .from('coupon_redemptions')
-      .select('*', { count: 'exact', head: true });
-
-    // Take the actual claimed count from real DB records
-    const actualClaimed = Math.max(waitlistCount ?? 0, couponCount ?? 0);
-    return Math.max(0, TOTAL_SEATS - actualClaimed);
-  } catch (e) {
-    console.warn('[Waitlist] Failed to fetch real seats count from DB:', e);
-    return 100;
-  }
-}
-
-
-
-/**
- * Registers an authenticated user for the Earlybird waitlist and issues a unique coupon code.
- */
-export async function joinEarlybirdWaitlist(
-  _userId: string,
-  email: string
-): Promise<{ success: boolean; couponCode?: string; error?: string }> {
-  // 1. If Supabase is configured, use secure server-side atomic procedure
-  if (isSupabaseConfigured() && supabase) {
-    try {
-      const { data, error } = await supabase.rpc('join_waitlist');
-
-      if (error) {
-        return { success: false, error: error.message };
-      }
-
-      if (!data?.success) {
-        return { success: false, error: data?.error || 'Failed to claim waitlist spot.' };
-      }
-
-      const assignedCode = data.coupon_code;
-      const expiresAt = data.expires_at || new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString();
-
-      const status: WaitlistStatus = {
-        hasJoined: true,
-        couponCode: assignedCode,
-        status: data.status || 'unused',
-        expiresAt
-      };
-
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(status));
-        localStorage.setItem('mdwriter_waitlist_email', email);
-      }
-
-      return { success: true, couponCode: assignedCode };
-    } catch (err: any) {
-      console.warn('[Coupon] RPC error, falling back:', err);
-    }
-  }
-
-  // ── No Supabase: honest error — do not simulate fake success ─────────────
-  // Generating a fake coupon code would mislead the user into thinking they've
-  // claimed a real earlybird spot when they have not.
-  return {
-    success: false,
-    error: 'Could not connect to the server. Please check your connection and try again.',
-  };
-}
-
-/**
- * Redeems a coupon code using the atomic stored procedure.
+ * Redeems a promotional coupon code using the atomic stored procedure.
  */
 export async function redeemCouponCode(
   couponCode: string,
   plan: 'monthly' | 'annual' = 'monthly'
 ): Promise<{ success: boolean; message?: string; error?: string; expiresAt?: string }> {
-  // ── Client-side format validation (fast reject before network call) ────
   const normalised = couponCode.trim().toUpperCase();
   if (!normalised) {
     return { success: false, error: 'Please enter a coupon code.' };
   }
-  // Accepts EARLYBIRD-XXXXX or any reasonable alphanumeric code ≥ 6 chars
-  if (!/^[A-Z0-9][A-Z0-9_-]{5,}$/.test(normalised)) {
+  if (!/^[A-Z0-9][A-Z0-9_-]{3,}$/.test(normalised)) {
     return { success: false, error: 'Invalid coupon code format. Check and try again.' };
   }
 
@@ -320,20 +121,6 @@ export async function redeemCouponCode(
 
     if (!data?.success) {
       return { success: false, error: data?.error || 'Failed to redeem coupon code.' };
-    }
-
-    // Invalidate local waitlist cache to reflect redeemed status
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          parsed.status = 'redeemed';
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(parsed));
-        } catch {
-          // ignore
-        }
-      }
     }
 
     return {

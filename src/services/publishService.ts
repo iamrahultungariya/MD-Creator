@@ -14,7 +14,7 @@ export interface PublishedRecord {
   user_id: string;
   slug: string;
   is_public: boolean;
-  password_hash: string | null;
+  is_password_protected?: boolean;
   view_count: number;
   published_at: string;
   updated_at: string;
@@ -35,17 +35,6 @@ export interface PublicDocumentView {
 }
 
 /**
- * Computes SHA-256 hex string for client-side password hashing
- */
-export async function hashPassword(password: string): Promise<string> {
-  const enc = new TextEncoder();
-  const data = enc.encode(password.trim());
-  const hashBuf = await crypto.subtle.digest('SHA-256', data);
-  const hashArr = Array.from(new Uint8Array(hashBuf));
-  return hashArr.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-/**
  * Generates a clean URL slug from title + random token
  */
 export function generateSlug(title: string): string {
@@ -61,7 +50,7 @@ export function generateSlug(title: string): string {
 }
 
 /**
- * Fetches current publication status for a given document
+ * Fetches current publication status for a given document (owner only)
  */
 export async function getDocumentPublishStatus(docId: string): Promise<PublishedRecord | null> {
   if (!supabase) return null;
@@ -72,7 +61,7 @@ export async function getDocumentPublishStatus(docId: string): Promise<Published
 
     const { data, error } = await supabase
       .from('published_documents')
-      .select('*')
+      .select('id, document_id, user_id, slug, is_public, view_count, published_at, updated_at')
       .eq('document_id', docId)
       .eq('user_id', session.user.id)
       .maybeSingle();
@@ -85,7 +74,8 @@ export async function getDocumentPublishStatus(docId: string): Promise<Published
 }
 
 /**
- * Publishes or updates a document to the web
+ * Publishes or updates a document to the web.
+ * Never stores client-side hashes; passwords are set via secure server-side RPC.
  */
 export async function publishDocument(
   docId: string,
@@ -141,28 +131,34 @@ export async function publishDocument(
       targetSlug = targetSlug.replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
     }
 
-    // 4. Compute password hash if provided
-    let passwordHash: string | null = null;
-    if (options.password && options.password.trim()) {
-      passwordHash = await hashPassword(options.password);
-    }
-
-    // 5. Upsert published document record scoped to this user
-    //    Conflict key is (document_id, user_id) — slugs are unique per-user, not globally.
-    const { error: pubError } = await supabase.from('published_documents').upsert(
+    // 4. Upsert published document record scoped to this user
+    // Note: password_hash is NEVER handled or calculated client-side
+    const { data: pubData, error: pubError } = await supabase.from('published_documents').upsert(
       {
         document_id: docId,
         user_id: userId,
         slug: targetSlug,
         is_public: true,
-        password_hash: passwordHash,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'document_id,user_id' }
-    );
+    ).select('id').maybeSingle();
 
     if (pubError) {
       return { success: false, slug: '', url: '', error: pubError.message };
+    }
+
+    // 5. If password was specified, set it securely via server RPC
+    const publishedId = pubData?.id;
+    if (publishedId && options.password !== undefined) {
+      const pwd = options.password.trim();
+      const { error: pwdErr } = await supabase.rpc('set_publish_password', {
+        p_published_id: publishedId,
+        p_password: pwd || null,
+      });
+      if (pwdErr) {
+        console.warn('Server set_publish_password RPC notice:', pwdErr.message);
+      }
     }
 
     const publicUrl = `${window.location.origin}/p/${targetSlug}`;
@@ -195,84 +191,72 @@ export async function unpublishDocument(docId: string): Promise<boolean> {
 }
 
 /**
- * Fetches a public document by its slug for unauthenticated public viewers
+ * Fetches a public document by its slug for unauthenticated public viewers.
+ * Strictly uses server-side RPC (get_published_document) with zero client-side password hash leakage.
  */
 export async function getPublicDocumentBySlug(
   slug: string,
   providedPassword?: string
-): Promise<{ doc: PublicDocumentView | null; status: 'ok' | 'not_found' | 'password_required' | 'invalid_password' }> {
+): Promise<{
+  doc: PublicDocumentView | null;
+  status: 'ok' | 'not_found' | 'password_required' | 'invalid_password' | 'rate_limited';
+}> {
   if (!supabase) {
     return { doc: null, status: 'not_found' };
   }
 
   try {
-    // 1. Query published document record
-    const { data: pubRecord, error } = await supabase
-      .from('published_documents')
-      .select('id, document_id, user_id, slug, is_public, password_hash, view_count, published_at, updated_at')
-      .eq('slug', slug)
-      .eq('is_public', true)
-      .maybeSingle();
+    const cleanSlug = slug.trim().toLowerCase();
 
-    if (error || !pubRecord) {
+    // 1. Invoke server-side RPC to fetch document without exposing password hashes
+    const { data, error } = await supabase.rpc('get_published_document', {
+      p_slug: cleanSlug,
+      p_password: providedPassword ? providedPassword.trim() : null,
+    });
+
+    if (error || !data) {
       return { doc: null, status: 'not_found' };
     }
 
-    // 2. Check password protection
-    if (pubRecord.password_hash) {
-      if (!providedPassword) {
-        return { doc: null, status: 'password_required' };
-      }
-      const hashedProvided = await hashPassword(providedPassword);
-      if (hashedProvided !== pubRecord.password_hash) {
-        return { doc: null, status: 'invalid_password' };
-      }
+    const status = data.status;
+
+    if (status === 'not_found') {
+      return { doc: null, status: 'not_found' };
     }
 
-    // 3. Fetch title and content
-    const [docRes, contentRes] = await Promise.all([
-      supabase.from('documents').select('title').eq('id', pubRecord.document_id).maybeSingle(),
-      supabase.from('document_contents').select('content').eq('id', pubRecord.document_id).maybeSingle(),
-    ]);
+    if (status === 'password_required') {
+      return { doc: null, status: 'password_required' };
+    }
 
-    const title = docRes.data?.title || 'Published Document';
-    const content = contentRes.data?.content || '';
+    if (status === 'wrong_password' || status === 'invalid_password') {
+      return { doc: null, status: 'invalid_password' };
+    }
 
-    // Atomically increment view count — avoids read-modify-write race condition
-    // under concurrent page loads. The RPC does: UPDATE ... SET view_count = view_count + 1
-    const sb = supabase; // capture for closure
-    void (async () => {
-      try {
-        const { error } = await sb.rpc('increment_view_count', { p_id: pubRecord.id });
-        if (error) {
-          // Graceful fallback if the RPC isn't deployed yet
-          await sb
-            .from('published_documents')
-            .update({ view_count: (pubRecord.view_count || 0) + 1 })
-            .eq('id', pubRecord.id);
-        }
-      } catch {
-        // Non-blocking — don't let view count failures affect page load
-      }
-    })();
+    if (status === 'rate_limited') {
+      return { doc: null, status: 'rate_limited' };
+    }
 
+    if (status === 'ok' && data.document) {
+      const d = data.document;
+      return {
+        status: 'ok',
+        doc: {
+          slug: d.slug || cleanSlug,
+          title: d.title || 'Published Document',
+          content: d.content || '',
+          authorName: d.author_name || d.authorName,
+          publishedAt: d.published_at || d.publishedAt || new Date().toISOString(),
+          updatedAt: d.updated_at || d.updatedAt || new Date().toISOString(),
+          viewCount: d.view_count || d.viewCount || 1,
+          isPasswordProtected: Boolean(d.is_password_protected ?? d.isPasswordProtected),
+          allowCopyMarkdown: d.allow_copy_markdown ?? true,
+          showReadingStats: d.show_reading_stats ?? true,
+          theme: d.theme || 'default',
+        },
+      };
+    }
 
-
-    return {
-      status: 'ok',
-      doc: {
-        slug: pubRecord.slug,
-        title,
-        content,
-        publishedAt: pubRecord.published_at,
-        updatedAt: pubRecord.updated_at,
-        viewCount: (pubRecord.view_count || 0) + 1,
-        isPasswordProtected: Boolean(pubRecord.password_hash),
-        allowCopyMarkdown: true,
-        showReadingStats: true,
-        theme: 'default',
-      },
-    };
+    return { doc: null, status: 'not_found' };
   } catch (err) {
     console.error('Failed to fetch public document:', err);
     return { doc: null, status: 'not_found' };

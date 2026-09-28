@@ -7,7 +7,10 @@ import {
   keymap,
   placeholder as cmPlaceholder,
   drawSelection,
-  ViewUpdate
+  ViewUpdate,
+  MatchDecorator,
+  Decoration,
+  ViewPlugin
 } from '@codemirror/view';
 import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown';
@@ -17,6 +20,27 @@ import { closeBrackets } from '@codemirror/autocomplete';
 import { useThemeStore } from '../../../stores/useThemeStore';
 import { getThemeExtensions } from '../utils/codeMirrorThemes';
 import { createTableKeybindings } from '../../../utils/editorTableKeymap';
+
+// CodeMirror live highlight marker decorator for ==highlight== syntax
+const highlightDecorator = new MatchDecorator({
+  regexp: /(?<!=)==(?!=)([^=\r\n]+?)(?<!=)==(?!=)/g,
+  decoration: Decoration.mark({ class: 'cm-md-highlight' }),
+});
+
+const highlightViewPlugin = ViewPlugin.fromClass(
+  class {
+    decorations;
+    constructor(view: EditorView) {
+      this.decorations = highlightDecorator.createDeco(view);
+    }
+    update(update: ViewUpdate) {
+      this.decorations = highlightDecorator.updateDeco(update, this.decorations);
+    }
+  },
+  {
+    decorations: (v) => v.decorations,
+  }
+);
 
 export interface CodeMirrorEditorHandle {
   focus: () => void;
@@ -386,6 +410,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         EditorView.contentAttributes.of({ autocorrect: 'on', spellcheck: 'true' }),
         keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
         markdown(),
+        highlightViewPlugin,
         EditorView.lineWrapping,
         domEventHandlers,
         updateListener,

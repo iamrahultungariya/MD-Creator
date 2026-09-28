@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Bold, 
+  Highlighter,
   Link2, 
   Image as ImageIcon, 
   MoreHorizontal, 
@@ -18,6 +19,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 interface MobileEditorToolbarProps {
   onInsertBold: () => void;
+  onInsertHighlight?: () => void;
   onInsertLink: () => void;
   onOpenImageModal: () => void;
   onTriggerSlash: () => void;
@@ -33,6 +35,7 @@ interface MobileEditorToolbarProps {
 
 export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
   onInsertBold,
+  onInsertHighlight,
   onInsertLink,
   onOpenImageModal,
   onTriggerSlash,
@@ -62,6 +65,20 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           <Bold className="w-4 h-4" />
           <span className="text-[9px] font-bold">Bold</span>
         </button>
+
+        {/* 2. Highlight */}
+        {onInsertHighlight && (
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onInsertHighlight}
+            className="p-2.5 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer"
+            title="Highlight (==text==)"
+          >
+            <Highlighter className="w-4 h-4" />
+            <span className="text-[9px] font-bold">HL</span>
+          </button>
+        )}
 
         {/* 2. Link */}
         <button

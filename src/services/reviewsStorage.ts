@@ -1,5 +1,6 @@
 export interface UserReview {
   id: string;
+  user_id?: string | null;
   name: string;
   role: string;
   rating: number;
@@ -10,29 +11,7 @@ export interface UserReview {
   submittedAt?: string;
 }
 
-export const REVIEWS_STORAGE_KEY = 'md_writer_community_reviews';
 export const USER_REVIEW_KEY = 'md_writer_user_submitted_review';
-
-export const getStoredReviews = (): UserReview[] => {
-  try {
-    const raw = localStorage.getItem(REVIEWS_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch {
-    // Fallback
-  }
-  return [];
-};
-
-export const saveStoredReviews = (reviews: UserReview[]): void => {
-  try {
-    localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(reviews));
-  } catch {
-    // Ignore quota errors
-  }
-};
 
 export const getUserSubmittedReview = (): UserReview | null => {
   try {

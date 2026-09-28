@@ -12,7 +12,7 @@ import {
   Sparkles,
   SlidersHorizontal
 } from 'lucide-react';
-import { useAuthStore, isUserPro, isLifetimeProEmail } from '../../stores/useAuthStore';
+import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { createNewDocument } from '../../db';
 import { useConfirm } from '../../stores/useConfirmStore';
@@ -106,12 +106,12 @@ export const ProfileDropdown: React.FC = () => {
               {isUserPro(user) ? (
                 <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  {isLifetimeProEmail(user.email) ? 'Pro Lifetime' : 'Pro (Free 2026 Pass)'}
+                  {user.subscriptionTier === 'pro' || user.subscriptionTier === 'team' ? 'Pro Member' : 'Pro Beta Pass'}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  {user.isDemoUser ? 'Demo Account' : 'Free Writer'}
+                  Free Writer
                 </span>
               )}
               <span className="text-[10px] text-neutral-400">
