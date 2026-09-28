@@ -233,7 +233,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'nav-home',
       title: 'Go to Home Landing Page',
       category: 'Navigation',
-      description: 'Return to MD Creator feature showcase',
+      description: 'Return to MD Writer feature showcase',
       icon: ExternalLink,
       iconColor: 'text-neutral-500 bg-neutral-100 dark:bg-neutral-800',
       shortcut: 'Home',

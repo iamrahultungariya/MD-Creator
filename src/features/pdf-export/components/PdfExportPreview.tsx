@@ -210,7 +210,7 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                 </div>
                 <div className="text-right">
                   <div className="text-[11px] uppercase tracking-wider text-neutral-500 font-bold">Engine</div>
-                  <div className="text-xs font-mono text-neutral-600">MD Creator Studio v2</div>
+                  <div className="text-xs font-mono text-neutral-600">MD Writer Studio v2</div>
                 </div>
               </div>
             </div>
@@ -316,7 +316,7 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                   {/* Running Footer with accurate Page X of Y */}
                   {includePageNumbers && (
                     <div className="pdf-running-footer flex items-center justify-between text-[10px] text-neutral-500 border-t border-neutral-200 pt-3 mt-auto font-mono shrink-0">
-                      <span>Published with MD Creator</span>
+                      <span>Published with MD Writer</span>
                       <span className="font-semibold text-neutral-700">Page {pageNum} of {totalBodyPages}</span>
                     </div>
                   )}
@@ -368,7 +368,7 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
 
               {includePageNumbers && (
                 <div className="pdf-running-footer flex items-center justify-between text-[10px] text-neutral-500 border-t border-neutral-200 pt-3 mt-auto font-mono shrink-0">
-                  <span>Published with MD Creator</span>
+                  <span>Published with MD Writer</span>
                   <span className="font-semibold text-neutral-700">Page 1 of 1</span>
                 </div>
               )}

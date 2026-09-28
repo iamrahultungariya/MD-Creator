@@ -15,7 +15,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icon.svg'],
+      includeAssets: ['favicon.svg', 'icon.svg', 'logo.webp'],
       manifest: {
         name: 'MD Writer — Markdown Editor',
         short_name: 'MD Writer',
@@ -28,16 +28,22 @@ export default defineConfig({
         scope: '/',
         icons: [
           {
-            src: '/icon.svg',
+            src: '/logo.webp',
             sizes: '192x192 512x512',
-            type: 'image/svg+xml',
+            type: 'image/webp',
             purpose: 'any'
+          },
+          {
+            src: '/logo.webp',
+            sizes: '192x192 512x512',
+            type: 'image/webp',
+            purpose: 'maskable'
           },
           {
             src: '/icon.svg',
             sizes: '192x192 512x512',
             type: 'image/svg+xml',
-            purpose: 'maskable'
+            purpose: 'any'
           }
         ]
       },
@@ -46,7 +52,7 @@ export default defineConfig({
         enabled: false,
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2,woff,ttf}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {

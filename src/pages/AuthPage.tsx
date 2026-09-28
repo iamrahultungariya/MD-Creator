@@ -70,9 +70,11 @@ export const AuthPage: React.FC = () => {
         
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-10 h-10 rounded-xl bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 font-black text-xl mb-3 shadow-md">
-            M
-          </div>
+          <img 
+            src="/logo.webp" 
+            alt="MD Writer Logo" 
+            className="w-12 h-12 rounded-2xl object-contain mb-3 shadow-md" 
+          />
           <h2 className="text-2xl font-black tracking-tight text-neutral-950 dark:text-white">
             {mode === 'signin' ? 'Welcome back to MD Writer' : 'Create your MD Writer account'}
           </h2>

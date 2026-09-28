@@ -32,7 +32,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   const [includeCoverPage, setIncludeCoverPage] = useState<boolean>(false);
   const [coverSubtitle, setCoverSubtitle] = useState<string>('Technical Architecture & Specifications');
   const [coverAuthor, setCoverAuthor] = useState<string>('Engineering Team');
-  const [coverOrg, setCoverOrg] = useState<string>('MD Creator Publishing');
+  const [coverOrg, setCoverOrg] = useState<string>('MD Writer Publishing');
 
   const [includeToc, setIncludeToc] = useState<boolean>(false);
   const [includePageNumbers, setIncludePageNumbers] = useState<boolean>(true);

@@ -330,7 +330,7 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
         isOpen={isProModalOpen}
         onClose={() => setIsProModalOpen(false)}
         featureTitle="Multi-Device Cloud Sync"
-        featureDescription="Real-time multi-device cloud synchronization automatically syncs and backs up your documents to Supabase PostgreSQL. Available in MD Creator Pro."
+        featureDescription="Real-time multi-device cloud synchronization automatically syncs and backs up your documents to Supabase PostgreSQL. Available in MD Writer Pro."
       />
     </footer>
   );

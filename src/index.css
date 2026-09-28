@@ -756,3 +756,77 @@ body {
   color: #64748b !important;
   border-color: #e2e8f0 !important;
 }
+
+/* ==========================================================================
+   Luxury Fountain Pen Writing Loader Animations
+   ========================================================================== */
+.pen-writing-path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: writeStrokeAnimation 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+}
+
+.pen-writing-nib {
+  offset-path: path("M 16 48 C 22 48, 26 16, 38 16 C 46 16, 49 38, 56 42 C 63 38, 66 16, 78 16 C 88 16, 92 48, 98 48 C 108 48, 126 48, 152 48");
+  offset-rotate: 0deg;
+  animation: movePenAnimation 2.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+  will-change: offset-distance, transform, opacity;
+}
+
+@keyframes writeStrokeAnimation {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  3% {
+    opacity: 1;
+  }
+  68% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  82% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  92% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+}
+
+@keyframes movePenAnimation {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+    transform: scale(0.92) translate(-2px, -3px);
+  }
+  4% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  68% {
+    offset-distance: 100%;
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  78% {
+    offset-distance: 100%;
+    opacity: 1;
+    transform: scale(1.06) translate(5px, -8px);
+  }
+  88% {
+    opacity: 0;
+    transform: scale(1.06) translate(8px, -12px);
+  }
+  100% {
+    offset-distance: 0%;
+    opacity: 0;
+    transform: scale(0.92) translate(-2px, -3px);
+  }
+}

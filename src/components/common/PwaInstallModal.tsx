@@ -90,9 +90,11 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
 
         {/* Header with App Logo */}
         <div className="flex items-center gap-3.5 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center font-black text-xl shadow-md shrink-0">
-            M
-          </div>
+          <img 
+            src="/logo.webp" 
+            alt="MD Writer Logo" 
+            className="w-12 h-12 rounded-2xl object-contain shadow-md shrink-0" 
+          />
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-black tracking-tight text-neutral-950 dark:text-white">

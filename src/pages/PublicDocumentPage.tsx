@@ -197,7 +197,7 @@ export const PublicDocumentPage: React.FC = () => {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md transition-colors"
           >
             <PenTool className="w-4 h-4" />
-            <span>Open MD-Creator</span>
+            <span>Open MD Writer</span>
           </Link>
         </div>
       </div>
@@ -216,10 +216,12 @@ export const PublicDocumentPage: React.FC = () => {
           to="/"
           className="flex items-center gap-2 text-xs font-semibold text-neutral-900 dark:text-white hover:opacity-80 transition-opacity"
         >
-          <div className="w-6 h-6 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center font-bold text-xs font-mono shadow-xs">
-            MD
-          </div>
-          <span className="hidden sm:inline font-mono tracking-tight">MD-Creator</span>
+          <img 
+            src="/logo.webp" 
+            alt="MD Writer Logo" 
+            className="w-6 h-6 rounded-lg object-contain shadow-xs" 
+          />
+          <span className="hidden sm:inline font-bold tracking-tight">MD Writer</span>
         </Link>
 
         {/* Reader Theme Controls & Actions */}
@@ -314,7 +316,7 @@ export const PublicDocumentPage: React.FC = () => {
 
       {/* Reader Footer */}
       <footer className={`py-8 text-center text-xs opacity-60 border-t ${currentTheme.border} font-mono select-none`}>
-        <p>Published with MD-Creator • Fast, offline-first Markdown workstation</p>
+        <p>Published with MD Writer • Fast, offline-first Markdown workstation</p>
       </footer>
     </div>
   );

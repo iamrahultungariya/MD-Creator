@@ -19,9 +19,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
           
           {/* Brand Info */}
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 font-black text-sm">
-              M
-            </div>
+            <img 
+              src="/logo.webp" 
+              alt="MD Writer Logo" 
+              className="w-7 h-7 rounded-lg object-contain shadow-xs" 
+            />
             <div>
               <span className="font-bold text-sm text-neutral-900 dark:text-white">
                 MD Writer

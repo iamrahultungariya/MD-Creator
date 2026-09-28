@@ -187,14 +187,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
     <header className="sticky top-0 z-50 w-full glass-nav border-b border-neutral-200/70 dark:border-neutral-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
-        {/* Brand Monogram & Name */}
+        {/* Brand Logo & Name */}
         <div 
           onClick={handleBrandClick} 
           className="flex items-center gap-2.5 cursor-pointer group select-none shrink-0"
         >
-          <div className="w-8 h-8 rounded-xl bg-neutral-950 dark:bg-white flex items-center justify-center text-white dark:text-neutral-950 font-black text-base tracking-wider shadow-xs group-hover:scale-105 transition-transform">
-            M
-          </div>
+          <img 
+            src="/logo.webp" 
+            alt="MD Writer Logo" 
+            className="w-8 h-8 rounded-xl object-contain shadow-xs group-hover:scale-105 transition-transform" 
+          />
           <span className="font-bold text-base sm:text-lg text-neutral-950 dark:text-white tracking-tight">
             MD Writer
           </span>
