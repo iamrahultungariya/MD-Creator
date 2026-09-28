@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   BookOpen, 
@@ -8,12 +9,7 @@ import {
   Plus, 
   Trash2, 
   ShieldCheck, 
-  Sparkles, 
-  Check, 
-  AlertCircle,
-  Eye,
-  Star,
-  MessageSquare
+  Sparkles
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
@@ -24,7 +20,6 @@ import {
   Article, 
   CATEGORIES, 
 } from '../data/blogArticles';
-import { UserReview } from '../components/home/ReviewsSection';
 import { BlogCreateModal } from '../components/blog/BlogCreateModal';
 import { BlogReaderModal } from '../components/blog/BlogReaderModal';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
@@ -34,18 +29,17 @@ const MarkdownPreview = React.lazy(() =>
 );
 
 export const BlogPage: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Articles & Reviews state loaded directly from Supabase
+  // Articles state loaded directly from Supabase
   const [articles, setArticles] = useState<Article[]>([]);
-  const [reviews, setReviews] = useState<UserReview[]>([]);
 
   // Navigation & Filter state
   const [selectedCategory, setSelectedCategory] = useState<'All' | BlogCategory>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
-  const [adminTab, setAdminTab] = useState<'articles' | 'reviews'>('articles');
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   // Creation Modal State
@@ -72,21 +66,15 @@ export const BlogPage: React.FC = () => {
     }
   }, [user?.id]);
 
-  // Load articles and reviews directly from Supabase tables
+  // Load articles directly from Supabase tables
   const loadContent = useCallback(async () => {
     if (!supabase) return;
 
     try {
-      const [artRes, revRes] = await Promise.all([
-        supabase
-          .from('blog_articles')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('community_reviews')
-          .select('*')
-          .order('created_at', { ascending: false })
-      ]);
+      const artRes = await supabase
+        .from('blog_articles')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (artRes.data) {
         setArticles(artRes.data.map((a: any) => ({
@@ -109,23 +97,8 @@ export const BlogPage: React.FC = () => {
           submittedAt: a.created_at,
         })));
       }
-
-      if (revRes.data) {
-        setReviews(revRes.data.map((r: any) => ({
-          id: r.id,
-          user_id: r.user_id,
-          name: r.name,
-          role: r.role,
-          rating: r.rating,
-          date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          content: r.content,
-          verified: Boolean(r.verified),
-          status: r.status,
-          submittedAt: r.created_at,
-        })));
-      }
     } catch (err) {
-      console.warn('Could not load blog/reviews data:', err);
+      console.warn('Could not load blog articles:', err);
     }
   }, []);
 
@@ -141,10 +114,6 @@ export const BlogPage: React.FC = () => {
   const pendingArticles = useMemo(() => {
     return articles.filter((art) => art.status === 'pending');
   }, [articles]);
-
-  const pendingReviews = useMemo(() => {
-    return reviews.filter((rev) => rev.status === 'pending');
-  }, [reviews]);
 
   const filteredArticles = useMemo(() => {
     return publishedArticles.filter((art) => {
@@ -239,43 +208,6 @@ export const BlogPage: React.FC = () => {
     }
   };
 
-  // Moderation Handlers: Articles (Supabase DB updates)
-  const handleApproveArticle = async (articleId: string) => {
-    if (!supabase) return;
-    const { error } = await supabase
-      .from('blog_articles')
-      .update({ status: 'published' })
-      .eq('id', articleId);
-
-    if (error) {
-      showToast(`⚠️ Failed to approve article: ${error.message}`);
-      return;
-    }
-
-    setArticles((prev) =>
-      prev.map((art) => (art.id === articleId ? { ...art, status: 'published' as const } : art))
-    );
-    showToast('✅ Article approved and published live.');
-  };
-
-  const handleRejectArticle = async (articleId: string) => {
-    if (!supabase) return;
-    const { error } = await supabase
-      .from('blog_articles')
-      .update({ status: 'rejected' })
-      .eq('id', articleId);
-
-    if (error) {
-      showToast(`⚠️ Failed to reject article: ${error.message}`);
-      return;
-    }
-
-    setArticles((prev) =>
-      prev.map((art) => (art.id === articleId ? { ...art, status: 'rejected' as const } : art))
-    );
-    showToast('⚠️ Article marked as rejected.');
-  };
-
   const handleDeleteArticle = async (articleId: string) => {
     if (!supabase) return;
     if (window.confirm('Delete this article record permanently?')) {
@@ -295,61 +227,6 @@ export const BlogPage: React.FC = () => {
     }
   };
 
-  // Moderation Handlers: Reviews (Supabase DB updates)
-  const handleApproveReview = async (reviewId: string) => {
-    if (!supabase) return;
-    const { error } = await supabase
-      .from('community_reviews')
-      .update({ status: 'approved' })
-      .eq('id', reviewId);
-
-    if (error) {
-      showToast(`⚠️ Failed to approve review: ${error.message}`);
-      return;
-    }
-
-    setReviews((prev) =>
-      prev.map((rev) => (rev.id === reviewId ? { ...rev, status: 'approved' as const } : rev))
-    );
-    showToast('✅ Community review approved for homepage display.');
-  };
-
-  const handleRejectReview = async (reviewId: string) => {
-    if (!supabase) return;
-    const { error } = await supabase
-      .from('community_reviews')
-      .update({ status: 'rejected' })
-      .eq('id', reviewId);
-
-    if (error) {
-      showToast(`⚠️ Failed to reject review: ${error.message}`);
-      return;
-    }
-
-    setReviews((prev) =>
-      prev.map((rev) => (rev.id === reviewId ? { ...rev, status: 'rejected' as const } : rev))
-    );
-    showToast('⚠️ Community review marked as rejected.');
-  };
-
-  const handleDeleteReview = async (reviewId: string) => {
-    if (!supabase) return;
-    if (window.confirm('Delete this review record permanently?')) {
-      const { error } = await supabase
-        .from('community_reviews')
-        .delete()
-        .eq('id', reviewId);
-
-      if (error) {
-        showToast(`⚠️ Failed to delete review: ${error.message}`);
-        return;
-      }
-
-      setReviews((prev) => prev.filter((rev) => rev.id !== reviewId));
-      showToast('🗑️ Review deleted.');
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
       <Navbar />
@@ -363,190 +240,26 @@ export const BlogPage: React.FC = () => {
       )}
 
       <main className="flex-1">
-        {/* Admin Moderation Panel (Exclusive to authenticated Admin) */}
+        {/* Admin Notification Strip */}
         {isAdmin && (
-          <section className="bg-neutral-900 text-white border-b border-neutral-800 py-6 px-4 sm:px-6">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-neutral-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-                        Editorial &amp; Moderation Desk
-                      </h2>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
-                        Admin Session
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-400">
-                      Manage community submissions before they are surfaced to the public.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Desk Switcher */}
-                <div className="flex items-center gap-2 bg-neutral-800/80 p-1 rounded-xl">
-                  <button
-                    onClick={() => setAdminTab('articles')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      adminTab === 'articles'
-                        ? 'bg-white text-neutral-950 shadow-xs'
-                        : 'text-neutral-400 hover:text-white'
-                    }`}
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    <span>Blog Articles</span>
-                    {pendingArticles.length > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[10px] font-bold">
-                        {pendingArticles.length}
-                      </span>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => setAdminTab('reviews')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      adminTab === 'reviews'
-                        ? 'bg-white text-neutral-950 shadow-xs'
-                        : 'text-neutral-400 hover:text-white'
-                    }`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>User Reviews</span>
-                    {pendingReviews.length > 0 && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-black text-[10px] font-bold">
-                        {pendingReviews.length}
-                      </span>
-                    )}
-                  </button>
-                </div>
+          <section className="bg-neutral-900 border-b border-neutral-800 py-3 px-4 sm:px-6">
+            <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-amber-400">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span className="font-bold text-white">Editorial Admin Mode:</span>
+                <span className="text-neutral-300">
+                  {pendingArticles.length > 0
+                    ? `${pendingArticles.length} pending community article(s) waiting for moderation`
+                    : 'All submitted articles are up to date'}
+                </span>
               </div>
-
-              {/* Submissions Panel Body */}
-              {adminTab === 'articles' ? (
-                <div>
-                  {pendingArticles.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-neutral-400">
-                      ✨ No pending blog submissions waiting for review.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {pendingArticles.map((art) => (
-                        <div
-                          key={art.id}
-                          className="p-4 rounded-2xl bg-neutral-800/60 border border-neutral-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-700 text-neutral-300 font-mono">
-                                {art.category}
-                              </span>
-                              <span className="text-xs text-neutral-400">{art.date}</span>
-                              <span className="text-neutral-500">•</span>
-                              <span className="text-xs text-neutral-300 font-medium">
-                                By {art.author.name} ({art.author.role})
-                              </span>
-                            </div>
-                            <h4 className="text-sm font-bold text-white truncate">{art.title}</h4>
-                            <p className="text-xs text-neutral-400 line-clamp-1 mt-0.5">{art.excerpt}</p>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              onClick={() => setActiveArticle(art)}
-                              className="px-3 py-1.5 rounded-xl border border-neutral-700 hover:bg-neutral-700 text-xs text-neutral-300 flex items-center gap-1 cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Preview</span>
-                            </button>
-                            <button
-                              onClick={() => handleApproveArticle(art.id)}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              <span>Publish</span>
-                            </button>
-                            <button
-                              onClick={() => handleRejectArticle(art.id)}
-                              className="px-3 py-1.5 rounded-xl bg-amber-600/80 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer"
-                            >
-                              <AlertCircle className="w-3.5 h-3.5" />
-                              <span>Reject</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteArticle(art.id)}
-                              className="p-1.5 rounded-xl text-neutral-500 hover:text-red-400 hover:bg-neutral-700/60 transition-colors cursor-pointer"
-                              title="Delete permanently"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  {pendingReviews.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-neutral-400">
-                      ✨ No pending community reviews waiting for moderation.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {pendingReviews.map((rev) => (
-                        <div
-                          key={rev.id}
-                          className="p-4 rounded-2xl bg-neutral-800/60 border border-neutral-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                        >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <div className="flex text-amber-400">
-                                {Array.from({ length: rev.rating }).map((_, i) => (
-                                  <Star key={i} className="w-3 h-3 fill-amber-400" />
-                                ))}
-                              </div>
-                              <span className="text-xs font-bold text-white">{rev.name}</span>
-                              <span className="text-neutral-500">•</span>
-                              <span className="text-xs text-neutral-400">{rev.role}</span>
-                              <span className="text-neutral-500">•</span>
-                              <span className="text-xs text-neutral-500">{rev.date}</span>
-                            </div>
-                            <p className="text-xs text-neutral-300 italic">&ldquo;{rev.content}&rdquo;</p>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              onClick={() => handleApproveReview(rev.id)}
-                              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              <span>Approve</span>
-                            </button>
-                            <button
-                              onClick={() => handleRejectReview(rev.id)}
-                              className="px-3 py-1.5 rounded-xl bg-amber-600/80 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1 cursor-pointer"
-                            >
-                              <AlertCircle className="w-3.5 h-3.5" />
-                              <span>Reject</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteReview(rev.id)}
-                              className="p-1.5 rounded-xl text-neutral-500 hover:text-red-400 hover:bg-neutral-700/60 transition-colors cursor-pointer"
-                              title="Delete permanently"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              <button
+                onClick={() => navigate('/admin')}
+                className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs self-start sm:self-auto"
+              >
+                <span>Open Admin Panel</span>
+                <span className="text-neutral-900 font-extrabold">→</span>
+              </button>
             </div>
           </section>
         )}

@@ -16,14 +16,24 @@ import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { createNewDocument } from '../../db';
 import { useConfirm } from '../../stores/useConfirmStore';
+import { isCurrentUserAdmin } from '../../utils/adminAuth';
 
 export const ProfileDropdown: React.FC = () => {
   const { user, signOut } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
   const hasSupabase = isSupabaseConfigured();
+
+  useEffect(() => {
+    if (user?.id) {
+      isCurrentUserAdmin(user.id).then(setIsAdmin);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user?.id]);
 
   // Close when clicking outside
   useEffect(() => {
@@ -162,6 +172,19 @@ export const ProfileDropdown: React.FC = () => {
               <SlidersHorizontal className="w-4 h-4 text-purple-500" />
               <span>Settings &amp; Toolbar</span>
             </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/admin');
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer border border-amber-500/25 mt-1"
+              >
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
+                <span>Admin Panel</span>
+              </button>
+            )}
           </div>
 
           {/* Storage Telemetry Summary */}

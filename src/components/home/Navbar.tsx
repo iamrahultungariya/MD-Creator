@@ -12,7 +12,8 @@ import {
   Sliders, 
   Menu, 
   X,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -20,6 +21,7 @@ import { ProfileDropdown } from '../auth/ProfileDropdown';
 import { PwaInstallButton } from '../common/PwaInstallButton';
 import { openBuyCoffeeModal } from '../../utils/coffeeModalEvents';
 import { BmcCoffeeCupIcon } from '../common/BuyMeCoffeeButton';
+import { isCurrentUserAdmin } from '../../utils/adminAuth';
 
 interface NavbarProps {
   onOpenTemplates?: () => void;
@@ -103,11 +105,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
   const location = useLocation();
   const { isDark, toggleTheme } = useThemeStore();
   const { user } = useAuthStore();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const resourcesRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      isCurrentUserAdmin(user.id).then(setIsAdmin);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user?.id]);
 
   // Close menus on route changes
   useEffect(() => {
@@ -341,6 +352,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             )}
           </button>
 
+          {/* Admin Desk Quick Link */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/admin')}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-xs"
+              title="Open Admin Moderation Panel"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              <span>Admin Desk</span>
+            </button>
+          )}
+
           {/* Profile Dropdown OR Sign In / Get Started */}
           {user ? (
             <ProfileDropdown />
@@ -468,6 +491,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                 </button>
               );
             })}
+
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  navigate('/admin');
+                }}
+                className="w-full text-left p-2.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-2.5 cursor-pointer mt-1"
+              >
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
+                <span>Admin Moderation Panel</span>
+              </button>
+            )}
           </div>
 
           {/* PWA Install Button inside Mobile Drawer */}

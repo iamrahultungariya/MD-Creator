@@ -20,6 +20,7 @@ const FeaturesPage = React.lazy(() => import('./pages/FeaturesPage').then((m) =>
 const AboutPage = React.lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const PublicDocumentPage = React.lazy(() => import('./pages/PublicDocumentPage').then((m) => ({ default: m.PublicDocumentPage })));
+const AdminPage = React.lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 
 // Lazy-loaded global utility modals
 const GlobalConfirmDialog = React.lazy(() =>
@@ -61,6 +62,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/feedback" element={<PageTransition><FeedbackPage /></PageTransition>} />
       <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
       <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
+      <Route path="/admin" element={<PageTransition><AdminPage /></PageTransition>} />
       <Route path="/p/:slug" element={<PageTransition><PublicDocumentPage /></PageTransition>} />
       <Route path="/share/:slug" element={<PageTransition><PublicDocumentPage /></PageTransition>} />
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -125,7 +125,18 @@ export const FeedbackPage: React.FC = () => {
     setIsSubmitting(true);
     setErrorMessage(null);
 
+    let currentUserId: string | null = null;
+    try {
+      if (supabase) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        currentUserId = sessionData?.session?.user?.id || null;
+      }
+    } catch {
+      // Offline fallback
+    }
+
     const feedbackPayload = {
+      user_id: currentUserId,
       category,
       sentiment,
       subject: subject.trim() || `${category.toUpperCase()} submission`,
@@ -136,6 +147,7 @@ export const FeedbackPage: React.FC = () => {
       willingness_to_pay: willingnessToPay || null,
       paid_feature_request: monetizationFeature.trim() || null,
       system_info: includeSystemInfo ? getSystemInfo() : null,
+      status: 'new',
       created_at: new Date().toISOString()
     };
 
