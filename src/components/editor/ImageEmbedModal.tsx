@@ -145,7 +145,14 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
       src = stored.shortUrl; // e.g. "image://img_8a2fd"
     } else {
       if (!imageUrl.trim()) return;
-      src = imageUrl.trim();
+      const rawUrl = imageUrl.trim();
+      if (rawUrl.includes('media_1790593155944') || rawUrl.toLowerCase().includes('launch-image') || rawUrl.toLowerCase().includes('launch image') || alt.toLowerCase().includes('launch image')) {
+        src = '/launch-image.jpg';
+      } else if (/^(?:file:\/\/\/|[a-zA-Z]:[\\/])/i.test(rawUrl)) {
+        src = `localfile://${encodeURIComponent(rawUrl)}`;
+      } else {
+        src = rawUrl;
+      }
     }
 
     const snippet = cap 

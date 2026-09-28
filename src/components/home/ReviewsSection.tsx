@@ -94,7 +94,7 @@ export const ReviewsSection: React.FC = () => {
     ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length).toFixed(1)
     : '5.0';
 
-  // Handle Review Submission (Always inserted with status 'pending' per security guide)
+  // Handle Review Submission (Always inserted with status 'pending' per security guide, client UUID generated)
   const submitReviewItem = async (
     name: string,
     role: string,
@@ -107,38 +107,38 @@ export const ReviewsSection: React.FC = () => {
 
     const { data: sessionData } = await supabase.auth.getSession();
     const currentUserId = sessionData?.session?.user?.id || null;
+    const newId = crypto.randomUUID();
 
-    const { data, error } = await supabase
+    const newRecord = {
+      id: newId,
+      user_id: currentUserId,
+      name: name.trim(),
+      role: role.trim() || 'Verified Writer',
+      rating: starRating,
+      content: text.trim(),
+      verified: false,
+      status: 'pending',
+    };
+
+    const { error } = await supabase
       .from('community_reviews')
-      .insert([
-        {
-          user_id: currentUserId,
-          name: name.trim(),
-          role: role.trim() || 'Verified Writer',
-          rating: starRating,
-          content: text.trim(),
-          verified: false,
-          status: 'pending',
-        },
-      ])
-      .select()
-      .single();
+      .insert([newRecord]);
 
     if (error) {
       throw new Error(error.message);
     }
 
     const submitted: UserReview = {
-      id: data.id,
+      id: newId,
       user_id: currentUserId,
-      name: data.name,
-      role: data.role,
-      rating: data.rating,
+      name: newRecord.name,
+      role: newRecord.role,
+      rating: newRecord.rating,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      content: data.content,
+      content: newRecord.content,
       verified: false,
       status: 'pending',
-      submittedAt: data.created_at,
+      submittedAt: new Date().toISOString(),
     };
 
     setMyReview(submitted);
@@ -151,29 +151,37 @@ export const ReviewsSection: React.FC = () => {
     e.preventDefault();
     if (!authorName.trim() || !reviewText.trim()) return;
 
-    setIsSubmitting(true);
-    await submitReviewItem(authorName, authorRole, rating, reviewText);
-    setIsSubmitting(false);
-    setSubmitSuccess(true);
-
-    setTimeout(() => {
-      setSubmitSuccess(false);
-      setIsModalOpen(false);
-    }, 1500);
+    try {
+      setIsSubmitting(true);
+      await submitReviewItem(authorName, authorRole, rating, reviewText);
+      setSubmitSuccess(true);
+      setTimeout(() => {
+        setSubmitSuccess(false);
+        setIsModalOpen(false);
+      }, 1500);
+    } catch (err: any) {
+      alert(`Could not submit review: ${err?.message || 'Error occurred'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInlineSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inlineName.trim() || !inlineReviewText.trim()) return;
 
-    setInlineSubmitting(true);
-    await submitReviewItem(inlineName, inlineRole, inlineRating, inlineReviewText);
-    setInlineSubmitting(false);
-    setInlineSuccess(true);
-
-    setTimeout(() => {
-      setInlineSuccess(false);
-    }, 2000);
+    try {
+      setInlineSubmitting(true);
+      await submitReviewItem(inlineName, inlineRole, inlineRating, inlineReviewText);
+      setInlineSuccess(true);
+      setTimeout(() => {
+        setInlineSuccess(false);
+      }, 2000);
+    } catch (err: any) {
+      alert(`Could not save review: ${err?.message || 'Error occurred'}`);
+    } finally {
+      setInlineSubmitting(false);
+    }
   };
 
   const openModalForReview = () => {

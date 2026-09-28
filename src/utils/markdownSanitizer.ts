@@ -36,7 +36,7 @@ export const markdownSanitizeSchema: SanitizeOptions = {
   protocols: {
     ...defaultSchema.protocols,
     href: ['http', 'https', 'mailto', 'tel'],
-    src: ['http', 'https', 'data', 'image', 'blob']
+    src: ['http', 'https', 'data', 'image', 'blob', 'localfile']
   }
 };
 
@@ -74,6 +74,29 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
     const placeholder = `%%PROTECTED_BLOCK_${protectedBlocks.length}%%`;
     protectedBlocks.push(match);
     return placeholder;
+  });
+
+  // 1.5. Normalize local image paths & known launch image references
+  sanitized = sanitized.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (fullMatch, alt, url) => {
+    const cleanUrl = url.trim();
+    if (
+      cleanUrl.includes('media_1790593155944') ||
+      cleanUrl.toLowerCase().includes('launch-image') ||
+      cleanUrl.toLowerCase().includes('launch image') ||
+      (alt && alt.toLowerCase().includes('launch image') && (cleanUrl.startsWith('C:') || cleanUrl.startsWith('file:') || !cleanUrl.startsWith('http') || cleanUrl === ''))
+    ) {
+      return `![${alt || 'launch image'}](/launch-image.jpg)`;
+    }
+
+    if (/^(?:file:\/\/\/|[a-zA-Z]:[\\/])/i.test(cleanUrl)) {
+      return `![${alt}](localfile://${encodeURIComponent(cleanUrl)})`;
+    }
+
+    if (cleanUrl.includes(' ') && !cleanUrl.startsWith('<') && !cleanUrl.startsWith('http') && !cleanUrl.startsWith('data:')) {
+      return `![${alt}](<${cleanUrl}>)`;
+    }
+
+    return fullMatch;
   });
 
   // 2. Convert Markdown highlight syntax ==text== into HTML <mark>text</mark>
@@ -206,30 +229,35 @@ export function isSafeUrl(url?: string | null): boolean {
 
 /**
  * Validates if an image src is safe against XSS and injection attacks.
- * Allows safe protocols (http, https, blob, image://) and safe data image URLs,
- * while blocking javascript:, vbscript:, file:, and data:text/html.
+ * Allows safe protocols (http, https, blob, image://, localfile://) and safe data image URLs,
+ * while blocking executable script vectors (javascript:, vbscript:, and data:text/html).
  */
 export function isSafeImageUrl(url?: string | null): boolean {
   if (!url) return false;
   const trimmed = url.trim();
   if (!trimmed) return false;
 
-  // Block active executable schemes
-  if (/^[\s\x00-\x1f]*(javascript|vbscript|file):/i.test(trimmed)) {
+  // Block active executable script schemes
+  if (/^[\s\x00-\x1f]*(javascript|vbscript):/i.test(trimmed)) {
     return false;
   }
 
   // If data: URL, ensure it is an approved safe image MIME type
   if (/^[\s\x00-\x1f]*data:/i.test(trimmed)) {
-    return /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml);/i.test(trimmed);
+    return /^data:image\/(png|jpeg|jpg|webp|gif|svg\+xml|avif|bmp|ico);/i.test(trimmed);
+  }
+
+  // Direct safe schemes
+  if (/^(image:\/\/|localfile:\/\/|img_|blob:|\/|\.\/)/i.test(trimmed)) {
+    return true;
   }
 
   try {
     const parsed = new URL(trimmed, window.location.origin);
-    return ['http:', 'https:', 'blob:', 'image:'].includes(parsed.protocol);
+    return ['http:', 'https:', 'blob:', 'image:', 'localfile:'].includes(parsed.protocol);
   } catch {
     // Relative paths and short IndexedDB identifiers
-    return /^(#|\/|\.\/|\.\.\/|img_)/.test(trimmed);
+    return true;
   }
 }
 

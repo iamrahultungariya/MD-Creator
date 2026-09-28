@@ -135,7 +135,9 @@ export const FeedbackPage: React.FC = () => {
       // Offline fallback
     }
 
+    const newId = crypto.randomUUID();
     const feedbackPayload = {
+      id: newId,
       user_id: currentUserId,
       category,
       sentiment,
@@ -148,26 +150,28 @@ export const FeedbackPage: React.FC = () => {
       paid_feature_request: monetizationFeature.trim() || null,
       system_info: includeSystemInfo ? getSystemInfo() : null,
       status: 'new',
-      created_at: new Date().toISOString()
     };
 
     try {
-      // Attempt Supabase insert if client configured
+      // Attempt Supabase insert directly to feedbacks table
       if (supabase) {
         const { error } = await supabase.from('feedbacks').insert([feedbackPayload]);
         if (error) {
-          console.warn('Supabase feedback insert skipped (offline or table absent), saving to local queue:', error);
+          console.error('Supabase feedback insert error:', error);
+          setErrorMessage(`Could not submit feedback: ${error.message}`);
+          setIsSubmitting(false);
+          return;
         }
       }
-    } catch (err) {
-      console.warn('Offline feedback submission stored locally:', err);
+    } catch (err: any) {
+      console.error('Feedback submission exception:', err);
+      setErrorMessage(`Error submitting feedback: ${err?.message || 'Network error'}`);
+      setIsSubmitting(false);
+      return;
     }
 
-    // Always succeed gracefully for user experience
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 600);
+    setIsSubmitting(false);
+    setIsSubmitted(true);
   };
 
   const handleReset = () => {

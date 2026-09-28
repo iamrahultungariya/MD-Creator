@@ -19,6 +19,7 @@ import {
   BlogCategory, 
   Article, 
   CATEGORIES, 
+  DEFAULT_ARTICLES,
 } from '../data/blogArticles';
 import { BlogCreateModal } from '../components/blog/BlogCreateModal';
 import { BlogReaderModal } from '../components/blog/BlogReaderModal';
@@ -33,8 +34,8 @@ export const BlogPage: React.FC = () => {
   const { user } = useAuthStore();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Articles state loaded directly from Supabase
-  const [articles, setArticles] = useState<Article[]>([]);
+  // Articles state initialized with rich defaults, updated from Supabase
+  const [articles, setArticles] = useState<Article[]>(DEFAULT_ARTICLES);
 
   // Navigation & Filter state
   const [selectedCategory, setSelectedCategory] = useState<'All' | BlogCategory>('All');
@@ -76,8 +77,8 @@ export const BlogPage: React.FC = () => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (artRes.data) {
-        setArticles(artRes.data.map((a: any) => ({
+      if (artRes.data && artRes.data.length > 0) {
+        const fetched: Article[] = artRes.data.map((a: any) => ({
           id: a.id,
           user_id: a.user_id,
           title: a.title,
@@ -95,7 +96,11 @@ export const BlogPage: React.FC = () => {
           featured: Boolean(a.featured),
           status: a.status,
           submittedAt: a.created_at,
-        })));
+        }));
+        const fetchedIds = new Set(fetched.map((f) => f.id));
+        setArticles([...fetched, ...DEFAULT_ARTICLES.filter((d) => !fetchedIds.has(d.id))]);
+      } else {
+        setArticles(DEFAULT_ARTICLES);
       }
     } catch (err) {
       console.warn('Could not load blog articles:', err);
@@ -125,7 +130,7 @@ export const BlogPage: React.FC = () => {
     });
   }, [publishedArticles, selectedCategory, searchQuery]);
 
-  // Submission handler (Direct to Supabase, fails loudly)
+  // Submission handler (Direct to Supabase, generates UUID on client to avoid RLS 42501 error)
   const handlePublishArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) {
@@ -140,31 +145,33 @@ export const BlogPage: React.FC = () => {
 
     const wordCount = newContent.trim().split(/\s+/).length;
     const calculatedReadTime = `${Math.max(1, Math.ceil(wordCount / 180))} min read`;
-    const initialStatus = isAdmin ? 'published' : 'pending';
+    const initialStatus: 'published' | 'pending' = isAdmin ? 'published' : 'pending';
     const targetSlug = newTitle
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 36) + '-' + Math.random().toString(36).substring(2, 6);
 
-    const { data, error } = await supabase.from('blog_articles').insert([
-      {
-        user_id: user?.id || null,
-        title: newTitle.trim(),
-        slug: targetSlug,
-        excerpt: newExcerpt.trim() || newContent.trim().slice(0, 140) + '...',
-        category: newCategory,
-        content: newContent,
-        author_name: newAuthorName.trim() || user?.displayName || 'Community Author',
-        author_role: newAuthorRole.trim() || 'Writer',
-        author_avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-          newAuthorName.trim() || user?.displayName || 'Author'
-        )}`,
-        read_time: calculatedReadTime,
-        featured: false,
-        status: initialStatus,
-      }
-    ]).select().single();
+    const newId = crypto.randomUUID();
+    const newArticleRecord = {
+      id: newId,
+      user_id: user?.id || null,
+      title: newTitle.trim(),
+      slug: targetSlug,
+      excerpt: newExcerpt.trim() || newContent.trim().slice(0, 140) + '...',
+      category: newCategory,
+      content: newContent,
+      author_name: newAuthorName.trim() || user?.displayName || 'Community Author',
+      author_role: newAuthorRole.trim() || 'Writer',
+      author_avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+        newAuthorName.trim() || user?.displayName || 'Author'
+      )}`,
+      read_time: calculatedReadTime,
+      featured: false,
+      status: initialStatus,
+    };
+
+    const { error } = await supabase.from('blog_articles').insert([newArticleRecord]);
 
     if (error) {
       setFormError(`Failed to submit article: ${error.message}`);
@@ -172,23 +179,23 @@ export const BlogPage: React.FC = () => {
     }
 
     const newArticle: Article = {
-      id: data.id,
-      user_id: data.user_id,
-      title: data.title,
-      slug: data.slug,
-      excerpt: data.excerpt,
-      category: data.category,
-      readTime: data.read_time,
+      id: newId,
+      user_id: newArticleRecord.user_id,
+      title: newArticleRecord.title,
+      slug: newArticleRecord.slug,
+      excerpt: newArticleRecord.excerpt,
+      category: newArticleRecord.category,
+      readTime: newArticleRecord.read_time,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       author: {
-        name: data.author_name,
-        role: data.author_role,
-        avatar: data.author_avatar,
+        name: newArticleRecord.author_name,
+        role: newArticleRecord.author_role,
+        avatar: newArticleRecord.author_avatar,
       },
-      content: data.content,
+      content: newArticleRecord.content,
       isUserCreated: true,
-      status: data.status,
-      submittedAt: data.created_at,
+      status: newArticleRecord.status,
+      submittedAt: new Date().toISOString(),
     };
 
     setArticles((prev) => [newArticle, ...prev]);

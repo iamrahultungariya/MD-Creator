@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { resolveImageSrc, getCachedImageSrc } from '../../services/imageStorageService';
-import { isSafeImageUrl } from '../../utils/markdownSanitizer';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Maximize2, 
+  Copy, 
+  Check, 
+  Download, 
+  UploadCloud, 
+  ImageIcon, 
+  AlertCircle, 
+  Sparkles
+} from 'lucide-react';
+import { resolveImageSrc, getCachedImageSrc, storeOptimizedImage } from '../../services/imageStorageService';
 
 export interface MarkdownImageProps {
   src?: string;
@@ -17,7 +26,11 @@ export const MarkdownImage: React.FC<MarkdownImageProps> = ({
   onOpenLightbox,
   ...props
 }) => {
-  // Strip any injected event handlers from props (e.g. onerror, onload, onclick)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Clean custom event handler props
   const cleanProps: Record<string, any> = {};
   for (const [key, value] of Object.entries(props)) {
     if (!key.toLowerCase().startsWith('on')) {
@@ -30,83 +43,253 @@ export const MarkdownImage: React.FC<MarkdownImageProps> = ({
     return <img src={src} alt={alt} {...cleanProps} />;
   }
 
-  // Strictly block unsafe URLs (javascript:, vbscript:, data:text/html, etc.)
-  if (!isSafeImageUrl(src)) {
-    return (
-      <figure className="my-3 inline-block max-w-full">
-        <div className="p-3 rounded-xl border border-dashed border-rose-300 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
-          <span>⚠️ Blocked unsafe image source: {alt || 'untrusted URL scheme'}</span>
-        </div>
-      </figure>
-    );
-  }
+  // Check if referencing launch-image asset
+  const isLaunchImageRef = 
+    src?.includes('media_1790593155944') ||
+    src?.includes('launch-image') ||
+    src?.includes('launch image') ||
+    alt?.toLowerCase().includes('launch image');
+
+  const initialSrc = isLaunchImageRef ? '/launch-image.jpg' : src;
 
   const [resolvedSrc, setResolvedSrc] = useState<string>(() => {
-    return getCachedImageSrc(src) || src;
+    if (isLaunchImageRef) return '/launch-image.jpg';
+    return getCachedImageSrc(initialSrc) || initialSrc;
   });
+
   const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (src.startsWith('image://') || src.startsWith('img_')) {
-      return !getCachedImageSrc(src);
+    if (initialSrc.startsWith('image://') || initialSrc.startsWith('img_')) {
+      return !getCachedImageSrc(initialSrc);
     }
     return false;
   });
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (!src) return;
-    if (src.startsWith('image://') || src.startsWith('img_')) {
+    if (isLaunchImageRef) {
+      setResolvedSrc('/launch-image.jpg');
+      setIsLoading(false);
+      setLoadError(null);
+      return;
+    }
+
+    if (!initialSrc) return;
+
+    if (initialSrc.startsWith('image://') || initialSrc.startsWith('img_')) {
       let isMounted = true;
-      resolveImageSrc(src).then((res) => {
+      resolveImageSrc(initialSrc).then((res) => {
         if (isMounted) {
           setResolvedSrc(res);
           setIsLoading(false);
+          setLoadError(null);
         }
       });
       return () => {
         isMounted = false;
       };
     } else {
-      setResolvedSrc(src);
+      setResolvedSrc(initialSrc);
+      setIsLoading(false);
+      setLoadError(null);
+    }
+  }, [initialSrc, isLaunchImageRef]);
+
+  // Handle local file embed
+  const handleLocalFileSelect = async (file: File) => {
+    try {
+      setIsLoading(true);
+      const stored = await storeOptimizedImage(file, file.name);
+      setResolvedSrc(stored.dataUrl);
+      setLoadError(null);
+      setIsLoading(false);
+    } catch (err: any) {
+      setLoadError(err?.message || 'Failed to process local image');
       setIsLoading(false);
     }
-  }, [src]);
+  };
 
-  if (isLoading) {
+  const handleCopyMarkdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const tag = title ? `![${alt || 'Image'}](${resolvedSrc} "${title}")` : `![${alt || 'Image'}](${resolvedSrc})`;
+    navigator.clipboard.writeText(tag);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const a = document.createElement('a');
+    a.href = resolvedSrc;
+    a.download = alt?.replace(/[^a-zA-Z0-9_-]/g, '_') || 'document-image.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  // Strictly block dangerous executable XSS scripts (javascript:, vbscript:)
+  if (/^[\s\x00-\x1f]*(javascript|vbscript):/i.test(src) || (src.startsWith('data:') && !src.startsWith('data:image/'))) {
     return (
-      <figure className="my-5 inline-block max-w-full">
-        <div className="w-64 h-36 rounded-2xl bg-neutral-100 dark:bg-neutral-800 animate-pulse flex items-center justify-center text-xs text-neutral-400 border border-neutral-200 dark:border-neutral-800">
-          Loading image...
+      <figure className="my-5 block max-w-full">
+        <div className="p-4 rounded-2xl border border-dashed border-rose-300 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/30 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2.5 shadow-xs">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+          <span>⚠️ Blocked dangerous script URI: {alt || 'Untrusted executable scheme'}</span>
         </div>
       </figure>
     );
   }
 
+  // If local file path or unresolved local disk reference
+  const isLocalFilePath = src.startsWith('localfile://') || /^(?:file:\/\/\/|[a-zA-Z]:[\\/])/i.test(src) || (!resolvedSrc && !isLaunchImageRef);
+
+  if ((isLocalFilePath || loadError) && !isLaunchImageRef) {
+    const rawLocalName = src.startsWith('localfile://') ? decodeURIComponent(src.replace('localfile://', '')) : (alt || 'Local Image');
+
+    return (
+      <figure className="my-6 block max-w-2xl mx-auto">
+        <div 
+          onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+          onDragLeave={() => setIsDraggingOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDraggingOver(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file) handleLocalFileSelect(file);
+          }}
+          className={`relative p-6 sm:p-7 rounded-2xl border-2 border-dashed transition-all text-center flex flex-col items-center justify-center gap-3.5 backdrop-blur-xs ${
+            isDraggingOver 
+              ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 ring-4 ring-blue-500/10' 
+              : 'border-neutral-300 dark:border-neutral-700 bg-neutral-50/70 dark:bg-neutral-900/50 hover:border-neutral-400 dark:hover:border-neutral-600 shadow-xs'
+          }`}
+        >
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            accept="image/*" 
+            className="hidden" 
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleLocalFileSelect(file);
+            }} 
+          />
+          
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-2xs">
+            <UploadCloud className="w-6 h-6 animate-pulse" />
+          </div>
+
+          <div className="max-w-md">
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <span className="px-2 py-0.5 rounded-md bg-neutral-200/80 dark:bg-neutral-800 text-[10px] font-bold font-mono tracking-wider uppercase text-neutral-600 dark:text-neutral-300">
+                Local Image Source
+              </span>
+            </div>
+            <h4 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+              {alt || rawLocalName.split(/[\\/]/).pop() || 'Unlinked Image'}
+            </h4>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">
+              Browser security sandboxing blocks direct reads from your hard drive (<code className="px-1 py-0.5 bg-neutral-200/70 dark:bg-neutral-800 rounded font-mono text-[11px]">C:\</code> or <code className="px-1 py-0.5 bg-neutral-200/70 dark:bg-neutral-800 rounded font-mono text-[11px]">file:///</code>). 
+              Click below or drag your image here to embed it with zero latency.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="mt-1 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>Choose Image File to Embed</span>
+          </button>
+        </div>
+      </figure>
+    );
+  }
+
+  // Loading skeleton placeholder
+  if (isLoading) {
+    return (
+      <figure className="my-6 block max-w-full">
+        <div className="w-full max-w-2xl mx-auto h-64 rounded-2xl bg-neutral-100/90 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-800/90 animate-pulse flex flex-col items-center justify-center gap-2 text-neutral-400 select-none">
+          <ImageIcon className="w-7 h-7 opacity-40 animate-bounce" />
+          <span className="text-xs font-semibold">Loading image preview...</span>
+        </div>
+      </figure>
+    );
+  }
+
+  // Premium, publication-grade image preview layout
   return (
-    <figure className="my-5 inline-block max-w-full">
-      <img
-        src={resolvedSrc}
-        alt={alt || 'Embedded Markdown image'}
-        title={title}
-        loading="lazy"
-        onClick={() => onOpenLightbox({ src: resolvedSrc, alt, title })}
-        className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-sm max-w-full h-auto max-h-[550px] object-contain cursor-zoom-in hover:opacity-95 transition-all bg-neutral-50 dark:bg-neutral-900"
-        onError={(e) => {
-          const target = e.currentTarget;
-          target.style.display = 'none';
-          const parent = target.parentElement;
-          if (parent && !parent.querySelector('.img-error-fallback')) {
-            const fallback = document.createElement('div');
-            fallback.className = 'img-error-fallback p-3 rounded-xl border border-dashed border-rose-300 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2';
-            const span = document.createElement('span');
-            span.textContent = `⚠️ Could not load image: ${alt || src}`;
-            fallback.appendChild(span);
-            parent.appendChild(fallback);
-          }
-        }}
-        {...cleanProps}
-      />
-      {title && (
-        <figcaption className="text-center text-xs text-neutral-500 dark:text-neutral-400 mt-2 italic">
-          {title}
+    <figure className="my-6 block max-w-full group">
+      {/* Outer framing card */}
+      <div className="relative rounded-2xl border border-neutral-200/80 dark:border-neutral-800/90 bg-neutral-50/60 dark:bg-neutral-900/50 p-1.5 sm:p-2 shadow-xs hover:shadow-xl dark:hover:shadow-black/50 transition-all duration-300 backdrop-blur-xs overflow-hidden">
+        
+        {/* Inner Media Canvas */}
+        <div className="relative overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center min-h-[140px]">
+          <img
+            src={resolvedSrc}
+            alt={alt || 'Document preview image'}
+            title={title}
+            loading="lazy"
+            onClick={() => onOpenLightbox({ src: resolvedSrc, alt, title })}
+            className="w-full h-auto max-h-[620px] object-contain rounded-xl cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.01] block select-none"
+            onError={() => {
+              if (isLaunchImageRef && resolvedSrc !== '/launch-image.jpg') {
+                setResolvedSrc('/launch-image.jpg');
+              } else {
+                setLoadError('Image could not be rendered from source.');
+              }
+            }}
+            {...cleanProps}
+          />
+
+          {/* Floating Glassmorphism Quick Action Toolbar on Hover */}
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-1 bg-neutral-950/80 dark:bg-neutral-900/90 backdrop-blur-md px-2 py-1 rounded-xl border border-white/10 shadow-xl text-white text-xs select-none pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => onOpenLightbox({ src: resolvedSrc, alt, title })}
+              title="Expand image in Fullscreen Lightbox"
+              className="p-1 rounded-lg hover:bg-white/20 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-medium hidden sm:inline">Zoom</span>
+            </button>
+            <div className="w-px h-3 bg-white/20 mx-0.5"></div>
+            <button
+              type="button"
+              onClick={handleCopyMarkdown}
+              title="Copy Markdown image syntax"
+              className="p-1 rounded-lg hover:bg-white/20 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              {isCopied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-[11px] font-medium text-emerald-400">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-medium hidden sm:inline">Copy</span>
+                </>
+              )}
+            </button>
+            <div className="w-px h-3 bg-white/20 mx-0.5"></div>
+            <button
+              type="button"
+              onClick={handleDownload}
+              title="Download image file"
+              className="p-1 rounded-lg hover:bg-white/20 transition-colors cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Styled Publication Caption */}
+      {(title || alt) && (
+        <figcaption className="mt-2.5 text-center text-xs text-neutral-500 dark:text-neutral-400 font-medium flex items-center justify-center gap-1.5 select-text">
+          <Sparkles className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+          <span>{title || alt}</span>
         </figcaption>
       )}
     </figure>

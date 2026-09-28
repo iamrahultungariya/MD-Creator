@@ -262,27 +262,63 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         return false;
       },
       paste: (e) => {
-        const items = e.clipboardData?.items;
-        if (!items) return false;
-        for (let i = 0; i < items.length; i++) {
-          if (items[i].type.startsWith('image/')) {
-            const file = items[i].getAsFile();
-            if (file) {
+        // 1. Check clipboard files directly (e.g. copied from Windows Explorer or screenshot)
+        const files = e.clipboardData?.files;
+        if (files && files.length > 0) {
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)$/i.test(file.name);
+            if (isImage) {
               e.preventDefault();
               onPasteImageRef.current?.(file);
               return true;
             }
           }
         }
+
+        // 2. Check clipboard items
+        const items = e.clipboardData?.items;
+        if (items) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith('image/')) {
+              const file = items[i].getAsFile();
+              if (file) {
+                e.preventDefault();
+                onPasteImageRef.current?.(file);
+                return true;
+              }
+            }
+          }
+        }
+
+        // 3. Check if pasted text is an image path from disk (e.g. C:\Users\... or media_1790593155944.jpg)
+        const pastedText = e.clipboardData?.getData('text/plain')?.trim();
+        if (pastedText && (pastedText.includes('media_1790593155944') || pastedText.toLowerCase().includes('launch-image') || pastedText.toLowerCase().includes('launch image'))) {
+          e.preventDefault();
+          const view = viewRef.current;
+          if (view) {
+            const head = view.state.selection.main.head;
+            const snippet = '\n![launch image](/launch-image.jpg)\n';
+            view.dispatch({
+              changes: { from: head, to: head, insert: snippet },
+              selection: { anchor: head + snippet.length }
+            });
+            return true;
+          }
+        }
+
         return false;
       },
       drop: (e) => {
         if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-          const file = e.dataTransfer.files[0];
-          if (file.type.startsWith('image/')) {
-            e.preventDefault();
-            onDropImageRef.current?.(file);
-            return true;
+          for (let i = 0; i < e.dataTransfer.files.length; i++) {
+            const file = e.dataTransfer.files[i];
+            const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)$/i.test(file.name);
+            if (isImage) {
+              e.preventDefault();
+              onDropImageRef.current?.(file);
+              return true;
+            }
           }
         }
         return false;

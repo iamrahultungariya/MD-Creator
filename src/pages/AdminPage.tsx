@@ -15,7 +15,7 @@ import {
   Article, 
   UserReview 
 } from '../types/admin';
-import { BlogCategory } from '../data/blogArticles';
+import { BlogCategory, DEFAULT_ARTICLES } from '../data/blogArticles';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminStatsCards } from '../components/admin/AdminStatsCards';
 import { AdminBlogsTab } from '../components/admin/AdminBlogsTab';
@@ -43,7 +43,7 @@ export const AdminPage: React.FC = () => {
 
   // Admin Dashboard State
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<Article[]>(DEFAULT_ARTICLES);
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -145,34 +145,36 @@ export const AdminPage: React.FC = () => {
             .order('created_at', { ascending: false })
         ]);
 
-        if (artRes?.data) {
-          setArticles(
-            artRes.data.map((a: any) => ({
-              id: a.id,
-              user_id: a.user_id,
-              title: a.title,
-              slug: a.slug,
-              excerpt: a.excerpt,
-              category: a.category,
-              readTime: a.read_time,
-              date: new Date(a.created_at).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              }),
-              author: {
-                name: a.author_name,
-                role: a.author_role,
-                avatar:
-                  a.author_avatar ||
-                  `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(a.author_name)}`,
-              },
-              content: a.content,
-              featured: Boolean(a.featured),
-              status: a.status,
-              submittedAt: a.created_at,
-            }))
-          );
+        if (artRes?.data && artRes.data.length > 0) {
+          const dbArticles: Article[] = artRes.data.map((a: any) => ({
+            id: a.id,
+            user_id: a.user_id,
+            title: a.title,
+            slug: a.slug,
+            excerpt: a.excerpt,
+            category: a.category,
+            readTime: a.read_time,
+            date: new Date(a.created_at).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+            author: {
+              name: a.author_name,
+              role: a.author_role,
+              avatar:
+                a.author_avatar ||
+                `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(a.author_name)}`,
+            },
+            content: a.content,
+            featured: Boolean(a.featured),
+            status: a.status,
+            submittedAt: a.created_at,
+          }));
+          const dbIds = new Set(dbArticles.map((d) => d.id));
+          setArticles([...dbArticles, ...DEFAULT_ARTICLES.filter((d) => !dbIds.has(d.id))]);
+        } else {
+          setArticles(DEFAULT_ARTICLES);
         }
 
         if (revRes?.data) {
@@ -256,14 +258,22 @@ export const AdminPage: React.FC = () => {
   // Blog Moderation Handlers
   const handleApproveBlog = async (articleId: string) => {
     if (supabase) {
-      const { error } = await supabase
-        .from('blog_articles')
-        .update({ status: 'published' })
-        .eq('id', articleId);
+      // Try direct RPC first (SECURITY DEFINER, instant 1-click execution)
+      const { error: rpcError } = await supabase.rpc('admin_approve_blog', {
+        p_article_id: articleId,
+      });
 
-      if (error) {
-        showToast(`⚠️ Failed to approve blog: ${error.message}`);
-        return;
+      if (rpcError) {
+        // Fallback to direct table update
+        const { error } = await supabase
+          .from('blog_articles')
+          .update({ status: 'published' })
+          .eq('id', articleId);
+
+        if (error) {
+          showToast(`⚠️ Failed to approve blog: ${error.message}`);
+          return;
+        }
       }
     }
 
@@ -275,14 +285,20 @@ export const AdminPage: React.FC = () => {
 
   const handleRejectBlog = async (articleId: string) => {
     if (supabase) {
-      const { error } = await supabase
-        .from('blog_articles')
-        .update({ status: 'rejected' })
-        .eq('id', articleId);
+      const { error: rpcError } = await supabase.rpc('admin_reject_blog', {
+        p_article_id: articleId,
+      });
 
-      if (error) {
-        showToast(`⚠️ Failed to reject blog: ${error.message}`);
-        return;
+      if (rpcError) {
+        const { error } = await supabase
+          .from('blog_articles')
+          .update({ status: 'rejected' })
+          .eq('id', articleId);
+
+        if (error) {
+          showToast(`⚠️ Failed to reject blog: ${error.message}`);
+          return;
+        }
       }
     }
 
@@ -337,14 +353,20 @@ export const AdminPage: React.FC = () => {
   // Review Moderation Handlers
   const handleApproveReview = async (reviewId: string) => {
     if (supabase) {
-      const { error } = await supabase
-        .from('community_reviews')
-        .update({ status: 'approved' })
-        .eq('id', reviewId);
+      const { error: rpcError } = await supabase.rpc('admin_approve_review', {
+        p_review_id: reviewId,
+      });
 
-      if (error) {
-        showToast(`⚠️ Failed to approve review: ${error.message}`);
-        return;
+      if (rpcError) {
+        const { error } = await supabase
+          .from('community_reviews')
+          .update({ status: 'approved' })
+          .eq('id', reviewId);
+
+        if (error) {
+          showToast(`⚠️ Failed to approve review: ${error.message}`);
+          return;
+        }
       }
     }
 
@@ -356,14 +378,20 @@ export const AdminPage: React.FC = () => {
 
   const handleRejectReview = async (reviewId: string) => {
     if (supabase) {
-      const { error } = await supabase
-        .from('community_reviews')
-        .update({ status: 'rejected' })
-        .eq('id', reviewId);
+      const { error: rpcError } = await supabase.rpc('admin_reject_review', {
+        p_review_id: reviewId,
+      });
 
-      if (error) {
-        showToast(`⚠️ Failed to reject review: ${error.message}`);
-        return;
+      if (rpcError) {
+        const { error } = await supabase
+          .from('community_reviews')
+          .update({ status: 'rejected' })
+          .eq('id', reviewId);
+
+        if (error) {
+          showToast(`⚠️ Failed to reject review: ${error.message}`);
+          return;
+        }
       }
     }
 
@@ -417,14 +445,21 @@ export const AdminPage: React.FC = () => {
   // Feedback Handlers
   const handleUpdateFeedbackStatus = async (id: string, newStatus: FeedbackStatus) => {
     if (supabase) {
-      const { error } = await supabase
-        .from('feedbacks')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', id);
+      const { error: rpcError } = await supabase.rpc('admin_update_feedback_status', {
+        p_feedback_id: id,
+        p_status: newStatus,
+      });
 
-      if (error) {
-        showToast(`⚠️ Error updating feedback: ${error.message}`);
-        return;
+      if (rpcError) {
+        const { error } = await supabase
+          .from('feedbacks')
+          .update({ status: newStatus, updated_at: new Date().toISOString() })
+          .eq('id', id);
+
+        if (error) {
+          showToast(`⚠️ Error updating feedback: ${error.message}`);
+          return;
+        }
       }
     }
 
