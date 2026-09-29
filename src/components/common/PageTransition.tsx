@@ -9,9 +9,10 @@ interface PageTransitionProps {
 export const PageTransition: React.FC<PageTransitionProps> = ({ children, className = '' }) => {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
       className={`w-full min-h-[calc(100vh-4rem)] ${className}`}
     >
       {children}

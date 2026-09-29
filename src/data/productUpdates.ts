@@ -31,8 +31,34 @@ export interface UpdateMilestone {
 
 export const MILESTONES: UpdateMilestone[] = [
   {
-    version: 'v0.9.1 Beta',
+    version: 'v0.9.2 Beta',
     isLatest: true,
+    date: 'October 2026',
+    title: 'Platform Polish, Smooth Animations, Refined Contrast & Design Harmony',
+    category: 'ux',
+    categoryLabel: 'Polish & Design',
+    summary: 'MD Writer v0.9.2 Beta brings platform polish, smoother animations, crisp text selection in dark mode, and a more focused writing experience.',
+    icon: Layers,
+    iconColor: 'text-neutral-900 dark:text-neutral-100',
+    iconBg: 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
+    highlights: [
+      { type: 'improved', text: 'Social Links: Direct link to creator on X (@rahultungariya_) with clean branding.' },
+      { type: 'improved', text: 'Review Cards: Hovering over a card smoothly expands it so you can read full testimonials.' },
+      { type: 'new', text: 'Document Card Focus: Hovering over any document highlights it while softening adjacent cards.' },
+      { type: 'new', text: 'Smoother Pinning: Pinned documents glide naturally into place at the top of your list or grid.' },
+      { type: 'improved', text: 'Document Transitions: Fluid enter and exit transitions between your library and editor.' },
+      { type: 'perf', text: 'Flicker-Free Navigation: Instant, smooth page navigation while keeping typing completely lag-free.' },
+      { type: 'improved', text: 'Distraction-Free Canvas: Removed donation buttons and popups for a clean writing space.' },
+      { type: 'improved', text: 'Fluid Drawers & FAQ: Collapsible menus, drawers, and FAQs expand and collapse with smooth motion.' },
+      { type: 'improved', text: 'Refined Profile Menu: Clean, modern account dropdown with quick storage status.' },
+      { type: 'new', text: 'Duplicate Document: Quickly duplicate any document directly from your library.' },
+      { type: 'fix', text: 'Text Selection Contrast: Fixed unreadable text selection in dark mode and editor.' },
+      { type: 'new', text: 'Release Notifications: Gentle, non-intrusive alert when a new update is ready.' }
+    ]
+  },
+  {
+    version: 'v0.9.1 Beta',
+    isLatest: false,
     date: 'October 2026',
     title: 'Streamlined Navigation, Active Mode Selector, Customizable Formatting Toolbar, Community Reviews & PDF Studio',
     category: 'ux',

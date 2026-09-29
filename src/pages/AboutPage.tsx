@@ -6,12 +6,10 @@ import {
   Cpu, 
   Printer, 
   Terminal, 
-  ArrowRight,
-  Heart
+  ArrowRight
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
-import { openBuyCoffeeModal } from '../utils/coffeeModalEvents';
 
 export const AboutPage: React.FC = () => {
   const navigate = useNavigate();
@@ -121,17 +119,10 @@ export const AboutPage: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500 dark:text-neutral-400">
                 <Terminal className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
-                <span>Version 0.9.0 Beta • Open Web Platform</span>
+                <span>Version 0.9.2 Beta • Open Web Platform</span>
               </div>
 
               <div className="flex items-center gap-3">
-                <button
-                  onClick={openBuyCoffeeModal}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Heart className="w-3.5 h-3.5 text-rose-500" />
-                  <span>Support Project</span>
-                </button>
                 <button
                   onClick={() => navigate('/editor')}
                   className="px-5 py-2 rounded-xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 text-xs font-bold hover:bg-neutral-800 dark:hover:bg-neutral-100 flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"

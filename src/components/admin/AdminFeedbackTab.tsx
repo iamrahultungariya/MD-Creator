@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bug, 
   Lightbulb, 
@@ -11,7 +12,6 @@ import {
   DollarSign, 
   CheckCircle2, 
   ChevronDown,
-  ChevronUp,
   Archive
 } from 'lucide-react';
 import { FeedbackItem, FeedbackStatus, FeedbackCategory, FeedbackPriority } from '../../types/admin';
@@ -361,48 +361,59 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
                       onClick={() => setExpandedId(isExpanded ? null : fb.id)}
                       className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 font-semibold transition-colors cursor-pointer"
                     >
-                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                       <span>{isExpanded ? 'Hide Diagnostics & Survey' : 'View Client Device & Survey Info'}</span>
                     </button>
 
-                    {isExpanded && (
-                      <div className="mt-2.5 p-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-xs space-y-2 animate-in fade-in duration-100">
-                        {fb.system_info && (
-                          <div className="space-y-1">
-                            <div className="font-semibold text-neutral-300 flex items-center gap-1.5 text-[11px]">
-                              <Monitor className="w-3.5 h-3.5 text-blue-400" />
-                              <span>Client Telemetry</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10px] text-neutral-400 font-mono bg-neutral-900/60 p-2 rounded-xl">
-                              <div>OS / Platform: {fb.system_info.platform || 'Unknown'}</div>
-                              <div>Resolution: {fb.system_info.screenResolution || 'Unknown'}</div>
-                              <div>App Version: {fb.system_info.appVersion || 'Unknown'}</div>
-                              <div>Language: {fb.system_info.language || 'Unknown'}</div>
-                              <div className="col-span-full truncate">Browser: {fb.system_info.userAgent}</div>
-                            </div>
-                          </div>
-                        )}
+                    <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          key="diagnostics-content"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.28, ease: [0.04, 0.62, 0.23, 0.98] }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-2.5 p-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-xs space-y-2">
+                            {fb.system_info && (
+                              <div className="space-y-1">
+                                <div className="font-semibold text-neutral-300 flex items-center gap-1.5 text-[11px]">
+                                  <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                                  <span>Client Telemetry</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10px] text-neutral-400 font-mono bg-neutral-900/60 p-2 rounded-xl">
+                                  <div>OS / Platform: {fb.system_info.platform || 'Unknown'}</div>
+                                  <div>Resolution: {fb.system_info.screenResolution || 'Unknown'}</div>
+                                  <div>App Version: {fb.system_info.appVersion || 'Unknown'}</div>
+                                  <div>Language: {fb.system_info.language || 'Unknown'}</div>
+                                  <div className="col-span-full truncate">Browser: {fb.system_info.userAgent}</div>
+                                </div>
+                              </div>
+                            )}
 
-                        {(fb.willingness_to_pay || fb.paid_feature_request) && (
-                          <div className="pt-2 border-t border-neutral-800 space-y-1">
-                            <div className="font-semibold text-neutral-300 flex items-center gap-1.5 text-[11px]">
-                              <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>Monetization &amp; Feature Survey</span>
-                            </div>
-                            {fb.willingness_to_pay && (
-                              <div className="text-[11px] text-neutral-400">
-                                Willingness to Pay: <strong className="text-emerald-400">{fb.willingness_to_pay}</strong>
-                              </div>
-                            )}
-                            {fb.paid_feature_request && (
-                              <div className="text-[11px] text-neutral-400">
-                                Paid Feature Desired: <span className="text-neutral-200">{fb.paid_feature_request}</span>
+                            {(fb.willingness_to_pay || fb.paid_feature_request) && (
+                              <div className="pt-2 border-t border-neutral-800 space-y-1">
+                                <div className="font-semibold text-neutral-300 flex items-center gap-1.5 text-[11px]">
+                                  <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>Monetization &amp; Feature Survey</span>
+                                </div>
+                                {fb.willingness_to_pay && (
+                                  <div className="text-[11px] text-neutral-400">
+                                    Willingness to Pay: <strong className="text-emerald-400">{fb.willingness_to_pay}</strong>
+                                  </div>
+                                )}
+                                {fb.paid_feature_request && (
+                                  <div className="text-[11px] text-neutral-400">
+                                    Paid Feature Desired: <span className="text-neutral-200">{fb.paid_feature_request}</span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
-                    )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
 

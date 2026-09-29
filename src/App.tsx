@@ -1,11 +1,14 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './stores/useAuthStore';
 import { useConfirmStore } from './stores/useConfirmStore';
 import { useToolbarSettingsStore } from './stores/useToolbarSettingsStore';
 import { PageLoader } from './components/common/PageLoader';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { PageTransition } from './components/common/PageTransition';
+import { WhatsNewToast } from './components/common/WhatsNewToast';
+import { UpdateChangelogModal } from './components/common/UpdateChangelogModal';
 
 // Lazy-loaded route chunks
 const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -29,9 +32,6 @@ const GlobalConfirmDialog = React.lazy(() =>
 const CommandPaletteModal = React.lazy(() =>
   import('./components/common/CommandPaletteModal').then((m) => ({ default: m.CommandPaletteModal }))
 );
-const BuyCoffeeModal = React.lazy(() =>
-  import('./components/common/BuyCoffeeModal').then((m) => ({ default: m.BuyCoffeeModal }))
-);
 const ToolbarSettingsModal = React.lazy(() =>
   import('./components/editor/ToolbarSettingsModal').then((m) => ({ default: m.ToolbarSettingsModal }))
 );
@@ -43,30 +43,34 @@ const AppRoutes: React.FC = () => {
   // STRICT REQUIREMENT: Zero animations on editor typing canvas (0ms typing latency)
   if (isEditor) {
     return (
-      <Routes location={location} key="editor-routes">
-        <Route path="/editor" element={<EditorPage />} />
-        <Route path="/editor/:id" element={<EditorPage />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location} key="editor-routes">
+          <Route path="/editor" element={<EditorPage />} />
+          <Route path="/editor/:id" element={<EditorPage />} />
+        </Routes>
+      </Suspense>
     );
   }
 
   return (
-    <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
-      <Route path="/documents" element={<PageTransition><DocumentsPage /></PageTransition>} />
-      <Route path="/pricing" element={<PageTransition><PricingPage /></PageTransition>} />
-      <Route path="/blog" element={<PageTransition><BlogPage /></PageTransition>} />
-      <Route path="/updates" element={<PageTransition><UpdatesPage /></PageTransition>} />
-      <Route path="/features" element={<PageTransition><FeaturesPage /></PageTransition>} />
-      <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
-      <Route path="/feedback" element={<PageTransition><FeedbackPage /></PageTransition>} />
-      <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
-      <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
-      <Route path="/admin" element={<PageTransition><AdminPage /></PageTransition>} />
-      <Route path="/p/:slug" element={<PageTransition><PublicDocumentPage /></PageTransition>} />
-      <Route path="/share/:slug" element={<PageTransition><PublicDocumentPage /></PageTransition>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader />}><HomePage /></Suspense></PageTransition>} />
+        <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense></PageTransition>} />
+        <Route path="/pricing" element={<PageTransition><Suspense fallback={<PageLoader />}><PricingPage /></Suspense></PageTransition>} />
+        <Route path="/blog" element={<PageTransition><Suspense fallback={<PageLoader />}><BlogPage /></Suspense></PageTransition>} />
+        <Route path="/updates" element={<PageTransition><Suspense fallback={<PageLoader />}><UpdatesPage /></Suspense></PageTransition>} />
+        <Route path="/features" element={<PageTransition><Suspense fallback={<PageLoader />}><FeaturesPage /></Suspense></PageTransition>} />
+        <Route path="/about" element={<PageTransition><Suspense fallback={<PageLoader />}><AboutPage /></Suspense></PageTransition>} />
+        <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense></PageTransition>} />
+        <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></PageTransition>} />
+        <Route path="/settings" element={<PageTransition><Suspense fallback={<PageLoader />}><SettingsPage /></Suspense></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></PageTransition>} />
+        <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+        <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 
@@ -75,14 +79,7 @@ export const App: React.FC = () => {
   const { isOpen: isConfirmOpen } = useConfirmStore();
   const { isOpen: isToolbarSettingsOpen } = useToolbarSettingsStore();
   const cmd = useCommandPalette();
-  const [isCoffeeOpen, setIsCoffeeOpen] = useState(false);
-
-  // Global listener for Buy Me a Coffee modal trigger
-  useEffect(() => {
-    const handleOpenCoffee = () => setIsCoffeeOpen(true);
-    window.addEventListener('open-buy-coffee', handleOpenCoffee);
-    return () => window.removeEventListener('open-buy-coffee', handleOpenCoffee);
-  }, []);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   // Defer non-critical storage initialization and session checks until idle
   useEffect(() => {
@@ -118,13 +115,6 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Buy Me a Coffee Modal */}
-      {isCoffeeOpen && (
-        <Suspense fallback={null}>
-          <BuyCoffeeModal isOpen={isCoffeeOpen} onClose={() => setIsCoffeeOpen(false)} />
-        </Suspense>
-      )}
-
       {/* Floating Toolbar Settings Modal */}
       {isToolbarSettingsOpen && (
         <Suspense fallback={null}>
@@ -132,9 +122,11 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      <Suspense fallback={<PageLoader />}>
-        <AppRoutes />
-      </Suspense>
+      {/* 0.9.2 Beta What's New Toast & Modal */}
+      <WhatsNewToast onOpenModal={() => setIsUpdateModalOpen(true)} />
+      <UpdateChangelogModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
+
+      <AppRoutes />
     </BrowserRouter>
   );
 };

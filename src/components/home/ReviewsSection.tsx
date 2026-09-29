@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Star, MessageSquarePlus, CheckCircle, Send, Sparkles, Pencil, Lock, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { APP_VERSION_LABEL } from '../../config/version';
 
 import { ReviewSubmissionModal } from './ReviewSubmissionModal';
+import { ReviewCardItem } from './ReviewCardItem';
 import {
   UserReview,
   getUserSubmittedReview,
   saveUserSubmittedReview,
+  DEFAULT_COMMUNITY_REVIEWS,
 } from '../../services/reviewsStorage';
 
 export type { UserReview };
@@ -14,6 +17,7 @@ export {
   USER_REVIEW_KEY,
   getUserSubmittedReview,
   saveUserSubmittedReview,
+  DEFAULT_COMMUNITY_REVIEWS,
 } from '../../services/reviewsStorage';
 
 export const ReviewsSection: React.FC = () => {
@@ -86,12 +90,13 @@ export const ReviewsSection: React.FC = () => {
     }
   }, [myReview]);
 
-  // Approved reviews for the community feed
+  // Approved reviews for the community feed (falls back to curated community feedback if offline/empty)
   const approvedReviews = reviews.filter((r) => r.status === 'approved');
-  const displayedReviews = approvedReviews.slice(0, 5);
+  const feedReviews = approvedReviews.length > 0 ? approvedReviews : DEFAULT_COMMUNITY_REVIEWS;
+  const displayedReviews = feedReviews.slice(0, 5);
 
-  const averageRating = approvedReviews.length > 0
-    ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length).toFixed(1)
+  const averageRating = feedReviews.length > 0
+    ? (feedReviews.reduce((acc, r) => acc + r.rating, 0) / feedReviews.length).toFixed(1)
     : '5.0';
 
   // Handle Review Submission (Always inserted with status 'pending' per security guide, client UUID generated)
@@ -257,7 +262,7 @@ export const ReviewsSection: React.FC = () => {
             ) : (
               <div className="flex items-center gap-2.5 mt-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-medium">
                 <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200/60 dark:border-blue-900/60">
-                  Beta 0.9.1
+                  {APP_VERSION_LABEL}
                 </span>
                 <span>Early Community Feedback • Share your experience with our team</span>
               </div>
@@ -265,7 +270,7 @@ export const ReviewsSection: React.FC = () => {
           </div>
 
           {/* Action button in header when reviews exist */}
-          {approvedReviews.length > 0 && (
+          {displayedReviews.length > 0 && (
             <div>
               {myReview ? (
                 isEditLocked ? (
@@ -295,95 +300,21 @@ export const ReviewsSection: React.FC = () => {
           )}
         </div>
 
-        {/* Dynamic Display */}
-        {approvedReviews.length > 0 ? (
+        {/* Dynamic Display with Floating Hover Cards */}
+        {displayedReviews.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedReviews.map((rev, idx) => {
-              const isMine = myReview?.id === rev.id;
-              return (
-                <div
-                  key={rev.id}
-                  className={`p-6 rounded-2xl bg-white dark:bg-neutral-900 border shadow-xs hover:shadow-md transition-all flex flex-col justify-between ${
-                    isMine
-                      ? 'border-neutral-900 dark:border-white ring-1 ring-neutral-900 dark:ring-white'
-                      : 'border-neutral-200/90 dark:border-neutral-800'
-                  } ${idx === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
-                >
-                  <div>
-                    {/* Star Rating & Badge */}
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-1 text-amber-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3.5 h-3.5 ${
-                              i < rev.rating
-                                ? 'fill-amber-400 text-amber-400'
-                                : 'text-neutral-300 dark:text-neutral-700'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isMine && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white font-bold">
-                            Your Review
-                          </span>
-                        )}
-                        {rev.verified && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                            <CheckCircle className="w-3 h-3" />
-                            <span>Verified</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Review Quote */}
-                    <p className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed font-normal">
-                      &ldquo;{rev.content}&rdquo;
-                    </p>
-                  </div>
-
-                  {/* Author Info */}
-                  <div className="pt-4 mt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-xs text-neutral-900 dark:text-white">
-                        {rev.name}
-                      </div>
-                      <div className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                        {rev.role}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-neutral-400 font-mono">
-                        {rev.date}
-                      </span>
-                      {isMine && (
-                        <div className="flex items-center gap-1">
-                          {!isEditLocked && (
-                            <button
-                              onClick={openModalForReview}
-                              className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
-                              title={`Edit your review (${remainingMinutes}m remaining)`}
-                            >
-                              <Pencil className="w-3 h-3" />
-                            </button>
-                          )}
-                          <button
-                            onClick={handleDeleteMyReview}
-                            className="p-1 rounded-md text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-                            title="Delete your review permanently"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {displayedReviews.map((rev, idx) => (
+              <ReviewCardItem
+                key={rev.id}
+                rev={rev}
+                idx={idx}
+                isMine={myReview?.id === rev.id}
+                isEditLocked={isEditLocked}
+                remainingMinutes={remainingMinutes}
+                openModalForReview={openModalForReview}
+                handleDeleteMyReview={handleDeleteMyReview}
+              />
+            ))}
           </div>
         ) : (
           /* When approvedReviews === 0: Either show User's submitted review or the interactive form */

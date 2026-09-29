@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
   Plus, 
@@ -10,7 +11,10 @@ import {
   List,
   LayoutTemplate,
   Trash,
-  FolderTree
+  FolderTree,
+  Copy,
+  X,
+  Loader2
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
@@ -44,6 +48,10 @@ export const DocumentsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
+  const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
+  const [cloneToast, setCloneToast] = useState<{ title: string; id: string } | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -58,12 +66,28 @@ export const DocumentsPage: React.FC = () => {
   const togglePinMutation = useTogglePin();
   const { data: allTags = ['All'] } = useAllDocumentTags();
 
+  // Auto-dismiss clone notification toast
+  useEffect(() => {
+    if (cloneToast) {
+      const timer = setTimeout(() => setCloneToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [cloneToast]);
+
   const handleCreateNew = async () => {
-    const id = await createDocMutation.mutateAsync({
-      title: 'Untitled Document.md',
-      content: '# Untitled Document\n\nStart writing with Markdown...'
-    });
-    navigate(`/editor/${id}`);
+    if (isCreatingNew) return;
+    setIsCreatingNew(true);
+    try {
+      const id = await createDocMutation.mutateAsync({
+        title: 'Untitled Document.md',
+        content: '# Untitled Document\n\nStart writing with Markdown...'
+      });
+      navigate(`/editor/${id}`);
+    } catch (err) {
+      console.error('Failed to create new document', err);
+    } finally {
+      setIsCreatingNew(false);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,9 +119,11 @@ export const DocumentsPage: React.FC = () => {
   const handleDuplicate = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
+      const doc = documents.find((d) => d.id === id);
       const newId = await duplicateDocMutation.mutateAsync(id);
       if (newId) {
-        navigate(`/editor/${newId}`);
+        const copyTitle = doc ? `${doc.title} (Copy)` : 'Document (Copy)';
+        setCloneToast({ title: copyTitle, id: newId });
       }
     } catch (err) {
       console.error('Failed to duplicate doc', err);
@@ -228,10 +254,20 @@ export const DocumentsPage: React.FC = () => {
 
             <button
               onClick={handleCreateNew}
-              className="justify-center px-4 py-2.5 sm:py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+              disabled={isCreatingNew}
+              className="justify-center px-4 py-2.5 sm:py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
             >
-              <Plus className="w-4 h-4" />
-              <span>New Document</span>
+              {isCreatingNew ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Creating...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>New Document</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -374,43 +410,84 @@ export const DocumentsPage: React.FC = () => {
             {currentTab === 'active' && (
               <button
                 onClick={handleCreateNew}
-                className="px-5 py-2.5 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md"
+                disabled={isCreatingNew}
+                className="px-5 py-2.5 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-75"
               >
-                <Plus className="w-4 h-4" />
-                <span>Create Document</span>
+                {isCreatingNew ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Create Document</span>
+                  </>
+                )}
               </button>
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          /* Grid View */
+          /* Grid View with Scoped Layout IDs and Spring Physics */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {documents.map((doc) => (
-              <DocumentGridCard
+              <motion.div
                 key={doc.id}
-                doc={doc}
-                currentTab={currentTab}
-                onOpen={(id) => navigate(`/editor/${id}`)}
-                onDuplicate={handleDuplicate}
-                onTogglePin={handleTogglePin}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-              />
+                layout="position"
+                layoutId={`grid-${doc.id}`}
+                transition={{
+                  type: 'spring',
+                  stiffness: 220,
+                  damping: 24,
+                  mass: 0.8
+                }}
+                className="h-full"
+              >
+                <DocumentGridCard
+                  doc={doc}
+                  currentTab={currentTab}
+                  isHovered={hoveredDocId === doc.id}
+                  isAnyHovered={Boolean(hoveredDocId)}
+                  onMouseEnter={() => setHoveredDocId(doc.id)}
+                  onMouseLeave={() => setHoveredDocId(null)}
+                  onOpen={(id) => navigate(`/editor/${id}`)}
+                  onDuplicate={handleDuplicate}
+                  onTogglePin={handleTogglePin}
+                  onDelete={handleDelete}
+                  onRestore={handleRestore}
+                />
+              </motion.div>
             ))}
           </div>
         ) : (
-          /* List View */
+          /* List View with Scoped Layout IDs and Vertical Spring Motion */
           <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800">
             {documents.map((doc) => (
-              <DocumentListItem
+              <motion.div
                 key={doc.id}
-                doc={doc}
-                currentTab={currentTab}
-                onOpen={(id) => navigate(`/editor/${id}`)}
-                onDuplicate={handleDuplicate}
-                onTogglePin={handleTogglePin}
-                onDelete={handleDelete}
-                onRestore={handleRestore}
-              />
+                layout="position"
+                layoutId={`list-${doc.id}`}
+                transition={{
+                  type: 'spring',
+                  stiffness: 260,
+                  damping: 26,
+                  mass: 0.7
+                }}
+              >
+                <DocumentListItem
+                  doc={doc}
+                  currentTab={currentTab}
+                  isHovered={hoveredDocId === doc.id}
+                  isAnyHovered={Boolean(hoveredDocId)}
+                  onMouseEnter={() => setHoveredDocId(doc.id)}
+                  onMouseLeave={() => setHoveredDocId(null)}
+                  onOpen={(id) => navigate(`/editor/${id}`)}
+                  onDuplicate={handleDuplicate}
+                  onTogglePin={handleTogglePin}
+                  onDelete={handleDelete}
+                  onRestore={handleRestore}
+                />
+              </motion.div>
             ))}
           </div>
         )}
@@ -419,6 +496,36 @@ export const DocumentsPage: React.FC = () => {
       </main>
 
       <Footer onOpenUpdates={() => navigate('/updates')} />
+
+      {/* Duplicate In-Place Notification Toast */}
+      <AnimatePresence>
+        {cloneToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed bottom-6 right-6 z-50 bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-neutral-800 dark:border-neutral-200 text-xs"
+          >
+            <Copy className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
+            <span className="truncate max-w-xs">
+              Document duplicated as <strong>"{cloneToast.title}"</strong>
+            </span>
+            <button
+              onClick={() => navigate(`/editor/${cloneToast.id}`)}
+              className="ml-1 px-2.5 py-1 rounded-lg bg-white/20 dark:bg-black/10 hover:bg-white/30 dark:hover:bg-black/20 font-bold transition-colors cursor-pointer shrink-0"
+            >
+              Open in Editor
+            </button>
+            <button
+              onClick={() => setCloneToast(null)}
+              className="p-1 hover:opacity-75 transition-opacity cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Markdown Templates Library Modal */}
       {isTemplatesOpen && (

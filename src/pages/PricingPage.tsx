@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
   Sparkles, 
@@ -8,7 +9,8 @@ import {
   Cloud, 
   Users,
   Tag,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
@@ -27,6 +29,19 @@ export const PricingPage: React.FC = () => {
   // Regional & Currency State
   const [region] = useState<RegionalPricing>(detectUserRegion);
   const [isAnnual, setIsAnnual] = useState(true);
+
+  // Toast Notification State for In-Progress Features
+  const [toastInfo, setToastInfo] = useState<{
+    title: string;
+    desc?: string;
+    type?: 'pro' | 'sales';
+  } | null>(null);
+
+  useEffect(() => {
+    if (!toastInfo) return;
+    const timer = setTimeout(() => setToastInfo(null), 4500);
+    return () => clearTimeout(timer);
+  }, [toastInfo]);
 
   // Coupon Redemption State
   const [redeemInput, setRedeemInput] = useState('');
@@ -261,10 +276,16 @@ export const PricingPage: React.FC = () => {
               </div>
 
               <button
-                onClick={() => navigate('/editor')}
+                onClick={() => {
+                  setToastInfo({
+                    type: 'pro',
+                    title: 'Pro Subscriptions in Implementation Phase',
+                    desc: 'Checkout is currently in active development. All Pro features are completely unlocked and free during Beta.'
+                  });
+                }}
                 className="w-full py-3.5 px-4 rounded-xl text-xs font-bold tracking-tight transition-all flex items-center justify-center gap-2 cursor-pointer bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 shadow-md hover:shadow-lg"
               >
-                <span>{user ? 'Pro Unlocked • Start Writing' : 'Get Started with Pro'}</span>
+                <span>{user ? 'Pro Unlocked • Free During Beta' : 'Get Started with Pro'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -315,7 +336,13 @@ export const PricingPage: React.FC = () => {
               </div>
 
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => {
+                  setToastInfo({
+                    type: 'sales',
+                    title: 'Team & Studio Licensing in Development',
+                    desc: 'Enterprise onboarding is currently being finalized. Reach out to @rahultungariya_ on X for early team access.'
+                  });
+                }}
                 className="w-full py-3.5 px-4 rounded-xl text-xs font-bold tracking-tight transition-all flex items-center justify-center gap-2 cursor-pointer bg-neutral-100 hover:bg-neutral-200 text-neutral-800 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-200"
               >
                 <span>Contact Sales</span>
@@ -372,6 +399,48 @@ export const PricingPage: React.FC = () => {
 
         {/* FAQ Accordion Section */}
         <PricingFaqSection />
+
+        {/* Implementation Phase Toast Notification */}
+        <AnimatePresence>
+          {toastInfo && (
+            <motion.aside
+              initial={{ opacity: 0, y: 24, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              role="status"
+              aria-live="polite"
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100vw-2rem)] sm:w-auto bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 border border-neutral-800 dark:border-neutral-200 rounded-2xl shadow-2xl p-3.5 sm:px-4 sm:py-3.5 flex items-start sm:items-center gap-3 backdrop-blur-md"
+            >
+              <div className="w-8 h-8 rounded-xl bg-white/10 dark:bg-neutral-100 flex items-center justify-center shrink-0">
+                {toastInfo.type === 'sales' ? (
+                  <Users className="w-4 h-4 text-blue-400 dark:text-blue-600" />
+                ) : (
+                  <Sparkles className="w-4 h-4 text-amber-400 dark:text-amber-600" />
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0 pr-1">
+                <p className="font-semibold text-xs text-white dark:text-neutral-950">
+                  {toastInfo.title}
+                </p>
+                {toastInfo.desc && (
+                  <p className="text-[11px] text-neutral-400 dark:text-neutral-600 mt-0.5 leading-relaxed">
+                    {toastInfo.desc}
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={() => setToastInfo(null)}
+                aria-label="Dismiss notification"
+                className="w-7 h-7 rounded-lg text-neutral-400 hover:text-white dark:hover:text-neutral-900 hover:bg-white/10 dark:hover:bg-neutral-100 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </motion.aside>
+          )}
+        </AnimatePresence>
       </main>
 
       <Footer />

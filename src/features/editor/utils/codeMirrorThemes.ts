@@ -30,8 +30,8 @@ export const proseTheme = EditorView.theme({
     borderLeftColor: '#2563eb',
     borderLeftWidth: '2.5px',
   },
-  '&.cm-focused .cm-selectionBackground, ::selection': {
-    backgroundColor: 'rgba(59, 130, 246, 0.22) !important',
+  '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+    backgroundColor: 'var(--selection-bg, #2563eb) !important',
   },
   '.cm-activeLine': {
     backgroundColor: 'transparent',
@@ -60,8 +60,8 @@ export const darkProseTheme = EditorView.theme(
     '.cm-cursor': {
       borderLeftColor: '#60a5fa',
     },
-    '&.cm-focused .cm-selectionBackground, ::selection': {
-      backgroundColor: 'rgba(96, 165, 250, 0.25) !important',
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+      backgroundColor: 'var(--selection-bg, #3b82f6) !important',
     },
     '.cm-gutters': {
       color: '#6b7280',

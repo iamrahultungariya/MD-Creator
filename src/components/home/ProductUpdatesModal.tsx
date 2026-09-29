@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { MILESTONES, UpdateCategory } from '../../data/productUpdates';
 import { renderWithRichIcons } from '../../utils/richIcons';
+import { APP_VERSION_LABEL } from '../../config/version';
 
 interface ProductUpdatesModalProps {
   isOpen: boolean;
@@ -65,13 +66,17 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md overflow-hidden">
+      <div 
+        onClick={onClose}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/70 backdrop-blur-sm overflow-y-auto"
+      >
         <motion.div 
-          initial={{ opacity: 0, scale: 0.96, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 8 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-          className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-2xl flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100"
+          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          className="relative w-full max-w-4xl max-h-[82vh] my-auto bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200/80 dark:border-neutral-800 shadow-2xl flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100"
         >
           {/* Header Bar */}
           <div className="px-6 py-5 border-b border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-950/40 flex items-center justify-between shrink-0">
@@ -82,10 +87,10 @@ export const ProductUpdatesModal: React.FC<ProductUpdatesModalProps> = ({ isOpen
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-base sm:text-lg font-black tracking-tight text-neutral-950 dark:text-white">
-                    What's New & Release Timeline
+                    What's New &amp; Release Timeline
                   </h2>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs">
-                    v0.9.1 Beta Live
+                    {APP_VERSION_LABEL} Live
                   </span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">

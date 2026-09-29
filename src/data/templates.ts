@@ -362,7 +362,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Embed Image Studio**: HTML5 Canvas WebP compression with offline persistence.
 - **Minimalist Decluttered Navbar**: Clean primary navigation with spacious Resources dropdown.
 - **Dedicated Feedback Channel**: Built-in category selector, sentiment scale, and bug diagnostics.
-- **Buy Me a Coffee Supporter Modal**: Multi-tier supporter contribution flow.
+- **Fluid Motion & Typography Refinements**: High-contrast dark mode selection and smooth spring animations.
 
 ### Performance
 - **Zero-Blocking First Paint**: Code-split global modals, reducing initial JS entry to 19 kB.

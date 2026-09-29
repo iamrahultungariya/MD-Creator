@@ -5,6 +5,10 @@ import { DocumentMetadata } from '../../db';
 interface DocumentGridCardProps {
   doc: DocumentMetadata;
   currentTab: 'active' | 'trash';
+  isHovered?: boolean;
+  isAnyHovered?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   onOpen: (id: string) => void;
   onDuplicate: (e: React.MouseEvent, id: string) => void;
   onTogglePin: (e: React.MouseEvent, id: string) => void;
@@ -15,14 +19,22 @@ interface DocumentGridCardProps {
 export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
   doc,
   currentTab,
+  isHovered = false,
+  isAnyHovered = false,
+  onMouseEnter,
+  onMouseLeave,
   onOpen,
   onDuplicate,
   onTogglePin,
   onDelete,
   onRestore,
 }) => {
+  const isDimmed = isAnyHovered && !isHovered;
+
   return (
     <div
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onClick={() => {
         if (currentTab === 'trash') {
           onRestore({ stopPropagation: () => {} } as any, doc.id);
@@ -30,19 +42,27 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
           onOpen(doc.id);
         }
       }}
-      className={`group relative p-6 rounded-2xl bg-white dark:bg-neutral-900 border shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-        currentTab === 'trash'
-          ? 'border-red-200/50 dark:border-red-950/50 opacity-80 hover:opacity-100'
-          : 'border-neutral-200/80 dark:border-neutral-800/80 hover:border-neutral-400 dark:hover:border-neutral-600'
+      className={`group relative p-6 rounded-2xl bg-white dark:bg-neutral-900 border cursor-pointer flex flex-col justify-between transition-all duration-200 ${
+        isDimmed ? 'opacity-55' : 'opacity-100'
+      } ${
+        isHovered
+          ? 'ring-1 ring-blue-500/40 dark:ring-blue-400/40 shadow-xl shadow-blue-500/5 dark:shadow-blue-400/5 scale-[1.015] -translate-y-1 border-blue-400/60 dark:border-blue-500/60 z-10'
+          : currentTab === 'trash'
+          ? 'border-red-200/50 dark:border-red-950/50 shadow-xs'
+          : 'border-neutral-200/80 dark:border-neutral-800/80 shadow-xs'
       }`}
     >
       <div>
         {/* Card Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform ${
+              isHovered ? 'scale-105' : ''
+            } ${
               currentTab === 'trash'
                 ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
+                : isHovered
+                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
             }`}>
               <FileText className="w-4 h-4" />
@@ -58,25 +78,25 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
               <>
                 <button
                   onClick={(e) => onDuplicate(e, doc.id)}
-                  className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                  className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                   title="Duplicate / Clone document"
                 >
                   <Copy className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={(e) => onTogglePin(e, doc.id)}
-                  className={`p-1 rounded-md transition-colors cursor-pointer ${
+                  className={`p-1 rounded-md transition-all cursor-pointer ${
                     doc.isPinned
-                      ? 'text-amber-500'
-                      : 'text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+                      ? 'text-amber-500 dark:text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.45)]'
+                      : 'text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                   }`}
                   title={doc.isPinned ? 'Unpin' : 'Pin to top'}
                 >
-                  <Pin className={`w-3.5 h-3.5 ${doc.isPinned ? 'fill-current' : ''}`} />
+                  <Pin className={`w-3.5 h-3.5 transition-transform ${doc.isPinned ? 'fill-current rotate-12 scale-110' : ''}`} />
                 </button>
                 <button
                   onClick={(e) => onDelete(e, doc.id, doc.title)}
-                  className="p-1 rounded-md text-neutral-400 hover:text-red-500 transition-colors cursor-pointer"
+                  className="p-1 rounded-md text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
                   title="Move to Recycle Bin"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -94,7 +114,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
                 </button>
                 <button
                   onClick={(e) => onDelete(e, doc.id, doc.title)}
-                  className="p-1 rounded-md text-neutral-400 hover:text-red-500 transition-colors cursor-pointer"
+                  className="p-1 rounded-md text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
                   title="Permanently delete forever"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

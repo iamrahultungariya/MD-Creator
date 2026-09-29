@@ -1,16 +1,15 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Columns, PenTool, Eye, ArrowUpDown } from 'lucide-react';
+import { PenTool, Eye, ArrowUpDown } from 'lucide-react';
 import { ViewMode } from '../types';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
-import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
 import { MobileEditorToolbar } from './MobileEditorToolbar';
 import { storeOptimizedImage } from '../../../services/imageStorageService';
 import { FindReplaceBar } from './FindReplaceBar';
 import { useReaderAppearance } from '../hooks/useReaderAppearance';
-import { ReaderArticleHeader } from './ReaderArticleHeader';
 import { WritingModeCanvas } from './WritingModeCanvas';
 import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
 import { PresentationView } from '../../presentation/PresentationView';
+import { EditorPreviewPane } from './EditorPreviewPane';
 
 interface EditorWorkspaceProps {
   viewMode: ViewMode;
@@ -546,59 +545,22 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         </div>
 
         {/* Right Pane: Live Rendered Preview or Dedicated Reader Canvas */}
-        <div
-          ref={previewContainerRef}
+        <EditorPreviewPane
+          previewContainerRef={previewContainerRef}
           onScroll={handlePreviewScroll}
-          className={`preview-pane-container flex-col h-full min-h-0 overflow-y-auto overflow-x-hidden transition-colors duration-200 ${
-            viewMode === 'read'
-              ? `w-full flex ${readerThemeClasses}`
-              : `bg-white dark:bg-neutral-950 flex ${
-                  viewMode === 'split'
-                    ? `w-full md:w-1/2 ${isPreviewVisibleOnMobile ? 'flex' : 'hidden md:flex'}`
-                    : 'w-full'
-                }`
-          }`}
-        >
-          {/* Preview Sub-header - Only displayed in Split mode (hidden in Read mode) */}
-          {viewMode === 'split' && (
-            <div className="hidden md:flex px-5 py-2 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 items-center justify-between text-xs text-neutral-500 select-none no-print">
-              <span className="flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
-                <Columns className="w-3.5 h-3.5" />
-                <span>Live Rendered Preview</span>
-              </span>
-              <span className="text-[11px] text-neutral-400 font-mono">
-                GFM + KaTeX Math + Highlights
-              </span>
-            </div>
-          )}
-
-          {/* Rendered Document Canvas */}
-          <div
-            className={`flex-1 transition-all duration-150 break-words min-h-0 max-w-full ${
-              viewMode === 'read'
-                ? `px-3.5 sm:px-8 md:px-10 pb-20 sm:pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
-                : 'p-4 sm:p-8 md:p-10'
-            }`}
-          >
-            {/* Elegant Editorial Article Header in Read Mode */}
-            {viewMode === 'read' && (
-              <ReaderArticleHeader
-                title={title}
-                readingStats={{
-                  words: wordCount,
-                  readingTime: typeof readingTime === 'number' ? `${readingTime} min read` : String(readingTime),
-                }}
-              />
-            )}
-
-            <MarkdownPreview 
-              content={deferredPreviewContent} 
-              onToggleTask={handleToggleTaskWithScrollLock}
-              onUpdateContent={viewMode === 'read' ? undefined : handlePreviewContentUpdate}
-              className={viewMode === 'read' ? `${readerFontClass} ${readerSizeClass}` : undefined}
-            />
-          </div>
-        </div>
+          viewMode={viewMode}
+          readerThemeClasses={readerThemeClasses}
+          readerWidthClass={readerWidthClass}
+          readerFontClass={readerFontClass}
+          readerSizeClass={readerSizeClass}
+          isPreviewVisibleOnMobile={isPreviewVisibleOnMobile}
+          title={title}
+          wordCount={wordCount}
+          readingTime={readingTime}
+          deferredPreviewContent={deferredPreviewContent}
+          onToggleTask={handleToggleTaskWithScrollLock}
+          onUpdateContent={viewMode === 'read' ? undefined : handlePreviewContentUpdate}
+        />
       </div>
 
       {/* Mobile Sticky Bottom Accessory Toolbar - Hidden in Read mode */}

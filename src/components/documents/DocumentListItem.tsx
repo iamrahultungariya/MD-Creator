@@ -5,6 +5,10 @@ import { DocumentMetadata } from '../../db';
 interface DocumentListItemProps {
   doc: DocumentMetadata;
   currentTab: 'active' | 'trash';
+  isHovered?: boolean;
+  isAnyHovered?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   onOpen: (id: string) => void;
   onDuplicate: (e: React.MouseEvent, id: string) => void;
   onTogglePin: (e: React.MouseEvent, id: string) => void;
@@ -15,14 +19,22 @@ interface DocumentListItemProps {
 export const DocumentListItem: React.FC<DocumentListItemProps> = ({
   doc,
   currentTab,
+  isHovered = false,
+  isAnyHovered = false,
+  onMouseEnter,
+  onMouseLeave,
   onOpen,
   onDuplicate,
   onTogglePin,
   onDelete,
   onRestore,
 }) => {
+  const isDimmed = isAnyHovered && !isHovered;
+
   return (
     <div
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onClick={() => {
         if (currentTab === 'trash') {
           onRestore({ stopPropagation: () => {} } as any, doc.id);
@@ -30,12 +42,20 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
           onOpen(doc.id);
         }
       }}
-      className="p-4 flex items-center justify-between hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors cursor-pointer"
+      className={`p-4 flex items-center justify-between transition-all duration-200 cursor-pointer ${
+        isDimmed ? 'opacity-55' : 'opacity-100'
+      } ${
+        isHovered
+          ? 'bg-blue-50/30 dark:bg-blue-950/20 shadow-xs border-l-2 border-l-blue-500'
+          : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
+      }`}
     >
       <div className="flex items-center gap-3.5 min-w-0 pr-4">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
           currentTab === 'trash'
             ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
+            : isHovered
+            ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400'
             : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
         }`}>
           <FileText className="w-4 h-4" />
@@ -46,7 +66,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
               {doc.title}
             </span>
             {doc.isPinned && currentTab === 'active' && (
-              <Pin className="w-3 h-3 text-amber-500 fill-current shrink-0" />
+              <Pin className="w-3 h-3 text-amber-500 fill-current shrink-0 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]" />
             )}
           </div>
           <p className="text-xs text-neutral-400 truncate max-w-lg mt-0.5">
@@ -63,21 +83,25 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
             <>
               <button
                 onClick={(e) => onDuplicate(e, doc.id)}
-                className="p-1.5 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                className="p-1.5 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors cursor-pointer"
                 title="Duplicate / Clone document"
               >
                 <Copy className="w-4 h-4" />
               </button>
               <button
                 onClick={(e) => onTogglePin(e, doc.id)}
-                className="p-1.5 hover:text-amber-500 transition-colors cursor-pointer"
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                  doc.isPinned
+                    ? 'text-amber-500 hover:text-amber-600'
+                    : 'hover:text-amber-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
                 title={doc.isPinned ? 'Unpin' : 'Pin to top'}
               >
                 <Pin className={`w-4 h-4 ${doc.isPinned ? 'fill-current text-amber-500' : ''}`} />
               </button>
               <button
                 onClick={(e) => onDelete(e, doc.id, doc.title)}
-                className="p-1.5 hover:text-red-500 transition-colors cursor-pointer"
+                className="p-1.5 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-md transition-colors cursor-pointer"
                 title="Move to Recycle Bin"
               >
                 <Trash2 className="w-4 h-4" />
@@ -95,7 +119,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
               </button>
               <button
                 onClick={(e) => onDelete(e, doc.id, doc.title)}
-                className="p-1.5 hover:text-red-500 transition-colors cursor-pointer"
+                className="p-1.5 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-md transition-colors cursor-pointer"
                 title="Permanently delete forever"
               >
                 <Trash2 className="w-4 h-4" />

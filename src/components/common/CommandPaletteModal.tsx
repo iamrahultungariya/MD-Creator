@@ -13,13 +13,11 @@ import {
   ArrowRight,
   ExternalLink,
   Download,
-  Coffee,
   MessageSquare,
 } from 'lucide-react';
 import { db, DocumentMetadata, createNewDocument } from '../../db';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
-import { openBuyCoffeeModal } from '../../utils/coffeeModalEvents';
 
 interface CommandPaletteModalProps {
   isOpen: boolean;
@@ -166,20 +164,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         },
       });
     }
-
-    list.push({
-      id: 'action-buy-coffee',
-      title: 'Buy Me a Coffee',
-      category: 'Community & Support',
-      description: 'Support independent, privacy-first markdown tooling',
-      icon: Coffee,
-      iconColor: 'text-amber-500 bg-amber-50 dark:bg-amber-950/50',
-      shortcut: '☕',
-      perform: () => {
-        onClose();
-        openBuyCoffeeModal();
-      },
-    });
 
     list.push({
       id: 'action-feedback',

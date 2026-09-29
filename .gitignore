@@ -40,3 +40,7 @@ powershell.cmd
 # Supabase temporaries
 supabase/.temp
 
+# Graphify outputs and cache
+graphify-out/
+
+

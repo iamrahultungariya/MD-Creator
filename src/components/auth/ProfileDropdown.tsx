@@ -4,12 +4,9 @@ import {
   FileText, 
   Plus, 
   LogOut, 
-  Database, 
-  Cloud, 
   ChevronDown, 
   ShieldCheck,
   FolderOpen,
-  Sparkles,
   SlidersHorizontal
 } from 'lucide-react';
 import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
@@ -86,68 +83,60 @@ export const ProfileDropdown: React.FC = () => {
         <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 max-w-[100px] truncate hidden sm:inline">
           {user.displayName}
         </span>
-        <ChevronDown className="w-3.5 h-3.5 text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-colors" />
+        <ChevronDown className={`w-3.5 h-3.5 text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Floating Profile Popup Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/50 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
           
           {/* User Info Header */}
-          <div className="p-3 bg-neutral-50 dark:bg-neutral-950/60 rounded-xl mb-1.5 border border-neutral-100 dark:border-neutral-800/80">
+          <div className="p-3 bg-neutral-50/80 dark:bg-neutral-950/50 rounded-xl mb-1.5 border border-neutral-100 dark:border-neutral-800/80">
             <div className="flex items-center gap-3 mb-2">
               <img
                 src={user.avatarUrl}
                 alt={user.displayName}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-neutral-200 dark:ring-neutral-700"
+                className="w-10 h-10 rounded-full object-cover ring-1 ring-neutral-300 dark:ring-neutral-700"
               />
               <div className="overflow-hidden">
                 <div className="font-bold text-sm text-neutral-900 dark:text-white truncate">
                   {user.displayName}
                 </div>
-                <div className="text-xs text-neutral-500 truncate">
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
                   {user.email}
                 </div>
               </div>
             </div>
 
             {/* Plan / Status Badge */}
-            <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-800 text-[11px]">
-              {isUserPro(user) ? (
-                <span className="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  {user.subscriptionTier === 'pro' || user.subscriptionTier === 'team' ? 'Pro Member' : 'Pro Beta Pass'}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Free Writer
-                </span>
-              )}
-              <span className="text-[10px] text-neutral-400">
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-200/60 dark:border-neutral-800 text-xs">
+              <span className="font-medium text-neutral-500 dark:text-neutral-400">
+                {isUserPro(user) ? 'Pro Member' : 'Free Account'}
+              </span>
+              <span className="text-[10px] font-mono text-neutral-400">
                 {hasSupabase ? 'Cloud Synced' : 'Offline Cache'}
               </span>
             </div>
           </div>
 
-          {/* Navigation Links */}
+          {/* Navigation Links - Unified Monochrome Aesthetic */}
           <div className="space-y-0.5 text-xs text-neutral-700 dark:text-neutral-300">
             <button
               onClick={() => {
                 setIsOpen(false);
                 navigate('/documents');
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
-              <FolderOpen className="w-4 h-4 text-neutral-500" />
+              <FolderOpen className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>My Documents</span>
             </button>
 
             <button
               onClick={handleCreateNew}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
-              <Plus className="w-4 h-4 text-blue-500" />
+              <Plus className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>New Document</span>
             </button>
 
@@ -156,9 +145,9 @@ export const ProfileDropdown: React.FC = () => {
                 setIsOpen(false);
                 navigate('/editor');
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
-              <FileText className="w-4 h-4 text-emerald-500" />
+              <FileText className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>Open Editor</span>
             </button>
 
@@ -167,9 +156,9 @@ export const ProfileDropdown: React.FC = () => {
                 setIsOpen(false);
                 navigate('/settings');
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 transition-colors cursor-pointer"
+              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
-              <SlidersHorizontal className="w-4 h-4 text-purple-500" />
+              <SlidersHorizontal className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>Settings &amp; Toolbar</span>
             </button>
 
@@ -179,27 +168,34 @@ export const ProfileDropdown: React.FC = () => {
                   setIsOpen(false);
                   navigate('/admin');
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-semibold flex items-center gap-2.5 transition-colors cursor-pointer border border-amber-500/25 mt-1"
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center justify-between transition-colors cursor-pointer group"
               >
-                <ShieldCheck className="w-4 h-4 text-amber-500" />
-                <span>Admin Panel</span>
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
+                  <span className="font-medium text-neutral-800 dark:text-neutral-200">Admin Desk</span>
+                </div>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                  Panel
+                </span>
               </button>
             )}
           </div>
 
-          {/* Storage Telemetry Summary */}
-          <div className="my-1.5 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 text-[11px] text-neutral-500 dark:text-neutral-400 space-y-1">
+          {/* Storage Telemetry Summary - Clean Micro Status */}
+          <div className="my-1.5 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-950/40 text-[11px] text-neutral-500 dark:text-neutral-400 space-y-1.5 border border-neutral-100 dark:border-neutral-800/60">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <Database className="w-3 h-3 text-emerald-500" /> Dexie Cache
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500" />
+                <span>IndexedDB Vault</span>
               </span>
-              <span className="font-semibold text-neutral-700 dark:text-neutral-300">Instant</span>
+              <span className="font-mono text-neutral-600 dark:text-neutral-300">Instant</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <Cloud className="w-3 h-3 text-sky-500" /> Supabase Cloud
+              <span className="flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${hasSupabase ? 'bg-neutral-700 dark:bg-neutral-300' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
+                <span>Cloud Sync</span>
               </span>
-              <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+              <span className="font-mono text-neutral-600 dark:text-neutral-300">
                 {hasSupabase ? 'Active' : 'Offline'}
               </span>
             </div>
@@ -209,9 +205,9 @@ export const ProfileDropdown: React.FC = () => {
           <div className="pt-1 border-t border-neutral-100 dark:border-neutral-800">
             <button
               onClick={handleSignOut}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center gap-2.5 transition-colors cursor-pointer text-xs font-semibold"
+              className="w-full text-left px-3 py-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/70 dark:hover:bg-rose-950/30 flex items-center gap-2.5 transition-colors cursor-pointer text-xs font-semibold group"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 text-neutral-400 group-hover:text-rose-500 transition-colors" />
               <span>Sign Out</span>
             </button>
           </div>
