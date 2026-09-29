@@ -19,11 +19,15 @@ import {
   BlogCategory, 
   Article, 
   CATEGORIES, 
-  DEFAULT_ARTICLES,
 } from '../data/blogArticles';
 import { BlogCreateModal } from '../components/blog/BlogCreateModal';
 import { BlogReaderModal } from '../components/blog/BlogReaderModal';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
+
+const isUuid = (id?: string | null): boolean => {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
 
 const MarkdownPreview = React.lazy(() =>
   import('../components/editor/MarkdownPreview').then((m) => ({ default: m.MarkdownPreview }))
@@ -34,8 +38,8 @@ export const BlogPage: React.FC = () => {
   const { user } = useAuthStore();
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Articles state initialized with rich defaults, updated from Supabase
-  const [articles, setArticles] = useState<Article[]>(DEFAULT_ARTICLES);
+  // Articles state initialized with empty list, loaded authoritative from Supabase
+  const [articles, setArticles] = useState<Article[]>([]);
 
   // Navigation & Filter state
   const [selectedCategory, setSelectedCategory] = useState<'All' | BlogCategory>('All');
@@ -97,13 +101,13 @@ export const BlogPage: React.FC = () => {
           status: a.status,
           submittedAt: a.created_at,
         }));
-        const fetchedIds = new Set(fetched.map((f) => f.id));
-        setArticles([...fetched, ...DEFAULT_ARTICLES.filter((d) => !fetchedIds.has(d.id))]);
+        setArticles(fetched);
       } else {
-        setArticles(DEFAULT_ARTICLES);
+        setArticles([]);
       }
     } catch (err) {
       console.warn('Could not load blog articles:', err);
+      setArticles([]);
     }
   }, []);
 
@@ -218,14 +222,16 @@ export const BlogPage: React.FC = () => {
   const handleDeleteArticle = async (articleId: string) => {
     if (!supabase) return;
     if (window.confirm('Delete this article record permanently?')) {
-      const { error } = await supabase
-        .from('blog_articles')
-        .delete()
-        .eq('id', articleId);
+      if (isUuid(articleId)) {
+        const { error } = await supabase
+          .from('blog_articles')
+          .delete()
+          .eq('id', articleId);
 
-      if (error) {
-        showToast(`⚠️ Failed to delete article: ${error.message}`);
-        return;
+        if (error) {
+          showToast(`⚠️ Failed to delete article: ${error.message}`);
+          return;
+        }
       }
 
       setArticles((prev) => prev.filter((art) => art.id !== articleId));

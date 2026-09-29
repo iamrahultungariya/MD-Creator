@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquarePlus, CheckCircle, Send, Sparkles, Pencil, Lock } from 'lucide-react';
+import { Star, MessageSquarePlus, CheckCircle, Send, Sparkles, Pencil, Lock, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 import { ReviewSubmissionModal } from './ReviewSubmissionModal';
@@ -204,6 +204,24 @@ export const ReviewsSection: React.FC = () => {
   const isEditLocked = Boolean(myReview && elapsedMinutes > 45);
   const remainingMinutes = Math.max(0, Math.ceil(45 - elapsedMinutes));
 
+  const handleDeleteMyReview = async () => {
+    if (!window.confirm('Delete your review permanently?')) return;
+    if (
+      myReview &&
+      supabase &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(myReview.id)
+    ) {
+      try {
+        await supabase.from('community_reviews').delete().eq('id', myReview.id);
+      } catch (err) {
+        console.warn('Could not delete review from db:', err);
+      }
+    }
+    saveUserSubmittedReview(null);
+    setMyReview(null);
+    setIsEditingInline(false);
+  };
+
   return (
     <section className="py-20 sm:py-24 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-black/20 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -341,14 +359,25 @@ export const ReviewsSection: React.FC = () => {
                       <span className="text-[10px] text-neutral-400 font-mono">
                         {rev.date}
                       </span>
-                      {isMine && !isEditLocked && (
-                        <button
-                          onClick={openModalForReview}
-                          className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
-                          title={`Edit your review (${remainingMinutes}m remaining)`}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </button>
+                      {isMine && (
+                        <div className="flex items-center gap-1">
+                          {!isEditLocked && (
+                            <button
+                              onClick={openModalForReview}
+                              className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+                              title={`Edit your review (${remainingMinutes}m remaining)`}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                          )}
+                          <button
+                            onClick={handleDeleteMyReview}
+                            className="p-1 rounded-md text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                            title="Delete your review permanently"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -367,25 +396,35 @@ export const ReviewsSection: React.FC = () => {
                     <CheckCircle className="w-3.5 h-3.5" />
                     <span>Your Beta Feedback</span>
                   </div>
-                  {isEditLocked ? (
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs font-medium border border-neutral-200 dark:border-neutral-700">
-                      <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                      <span>Review Locked (45m window closed)</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                        Editable for {remainingMinutes}m
-                      </span>
-                      <button
-                        onClick={() => setIsEditingInline(true)}
-                        className="px-3.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        <span>Edit Review</span>
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isEditLocked ? (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs font-medium border border-neutral-200 dark:border-neutral-700">
+                        <Lock className="w-3.5 h-3.5 text-neutral-400" />
+                        <span>Review Locked (45m)</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                          Editable for {remainingMinutes}m
+                        </span>
+                        <button
+                          onClick={() => setIsEditingInline(true)}
+                          className="px-3.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span>Edit Review</span>
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={handleDeleteMyReview}
+                      className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                      title="Delete your review permanently"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

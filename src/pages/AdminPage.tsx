@@ -15,7 +15,7 @@ import {
   Article, 
   UserReview 
 } from '../types/admin';
-import { BlogCategory, DEFAULT_ARTICLES } from '../data/blogArticles';
+import { BlogCategory } from '../data/blogArticles';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminStatsCards } from '../components/admin/AdminStatsCards';
 import { AdminBlogsTab } from '../components/admin/AdminBlogsTab';
@@ -24,6 +24,11 @@ import { AdminFeedbackTab } from '../components/admin/AdminFeedbackTab';
 import { AdminAccessDenied } from '../components/admin/AdminAccessDenied';
 import { BlogReaderModal } from '../components/blog/BlogReaderModal';
 import { BlogCreateModal } from '../components/blog/BlogCreateModal';
+
+const isUuid = (id?: string | null): boolean => {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
 
 const MarkdownPreview = React.lazy(() =>
   import('../components/editor/MarkdownPreview').then((m) => ({ default: m.MarkdownPreview }))
@@ -43,7 +48,7 @@ export const AdminPage: React.FC = () => {
 
   // Admin Dashboard State
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
-  const [articles, setArticles] = useState<Article[]>(DEFAULT_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -171,10 +176,9 @@ export const AdminPage: React.FC = () => {
             status: a.status,
             submittedAt: a.created_at,
           }));
-          const dbIds = new Set(dbArticles.map((d) => d.id));
-          setArticles([...dbArticles, ...DEFAULT_ARTICLES.filter((d) => !dbIds.has(d.id))]);
+          setArticles(dbArticles);
         } else {
-          setArticles(DEFAULT_ARTICLES);
+          setArticles([]);
         }
 
         if (revRes?.data) {
@@ -257,7 +261,7 @@ export const AdminPage: React.FC = () => {
 
   // Blog Moderation Handlers
   const handleApproveBlog = async (articleId: string) => {
-    if (supabase) {
+    if (supabase && isUuid(articleId)) {
       // Try direct RPC first (SECURITY DEFINER, instant 1-click execution)
       const { error: rpcError } = await supabase.rpc('admin_approve_blog', {
         p_article_id: articleId,
@@ -284,7 +288,7 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleRejectBlog = async (articleId: string) => {
-    if (supabase) {
+    if (supabase && isUuid(articleId)) {
       const { error: rpcError } = await supabase.rpc('admin_reject_blog', {
         p_article_id: articleId,
       });
@@ -313,7 +317,7 @@ export const AdminPage: React.FC = () => {
       return;
     }
 
-    if (supabase) {
+    if (supabase && isUuid(articleId)) {
       const { error } = await supabase
         .from('blog_articles')
         .delete()
@@ -332,7 +336,7 @@ export const AdminPage: React.FC = () => {
 
   const handleToggleFeaturedBlog = async (articleId: string, currentFeatured: boolean) => {
     const nextFeatured = !currentFeatured;
-    if (supabase) {
+    if (supabase && isUuid(articleId)) {
       const { error } = await supabase
         .from('blog_articles')
         .update({ featured: nextFeatured })
@@ -352,7 +356,7 @@ export const AdminPage: React.FC = () => {
 
   // Review Moderation Handlers
   const handleApproveReview = async (reviewId: string) => {
-    if (supabase) {
+    if (supabase && isUuid(reviewId)) {
       const { error: rpcError } = await supabase.rpc('admin_approve_review', {
         p_review_id: reviewId,
       });
@@ -377,7 +381,7 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleRejectReview = async (reviewId: string) => {
-    if (supabase) {
+    if (supabase && isUuid(reviewId)) {
       const { error: rpcError } = await supabase.rpc('admin_reject_review', {
         p_review_id: reviewId,
       });
@@ -406,7 +410,7 @@ export const AdminPage: React.FC = () => {
       return;
     }
 
-    if (supabase) {
+    if (supabase && isUuid(reviewId)) {
       const { error } = await supabase
         .from('community_reviews')
         .delete()
@@ -424,7 +428,7 @@ export const AdminPage: React.FC = () => {
 
   const handleToggleVerifiedReview = async (reviewId: string, currentVerified: boolean) => {
     const nextVerified = !currentVerified;
-    if (supabase) {
+    if (supabase && isUuid(reviewId)) {
       const { error } = await supabase
         .from('community_reviews')
         .update({ verified: nextVerified })
@@ -444,7 +448,7 @@ export const AdminPage: React.FC = () => {
 
   // Feedback Handlers
   const handleUpdateFeedbackStatus = async (id: string, newStatus: FeedbackStatus) => {
-    if (supabase) {
+    if (supabase && isUuid(id)) {
       const { error: rpcError } = await supabase.rpc('admin_update_feedback_status', {
         p_feedback_id: id,
         p_status: newStatus,
@@ -474,7 +478,7 @@ export const AdminPage: React.FC = () => {
       return;
     }
 
-    if (supabase) {
+    if (supabase && isUuid(id)) {
       const { error } = await supabase
         .from('feedbacks')
         .delete()
