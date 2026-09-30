@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
+import { motion, useMotionValue, useMotionTemplate } from 'framer-motion';
 import { Star, CheckCircle, Pencil, Trash2 } from 'lucide-react';
 import { UserReview } from '../../services/reviewsStorage';
 
@@ -9,6 +9,10 @@ export interface ReviewCardItemProps {
   isMine: boolean;
   isEditLocked: boolean;
   remainingMinutes: number;
+  isHovered?: boolean;
+  isAnyHovered?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   openModalForReview: () => void;
   handleDeleteMyReview: () => void;
 }
@@ -19,19 +23,51 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
   isMine,
   isEditLocked,
   remainingMinutes,
+  isHovered = false,
+  isAnyHovered = false,
+  onMouseEnter,
+  onMouseLeave,
   openModalForReview,
   handleDeleteMyReview,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const isDimmed = isAnyHovered && !isHovered;
+
+  const mouseX = useMotionValue(-1000);
+  const mouseY = useMotionValue(-1000);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top } = e.currentTarget.getBoundingClientRect();
+    mouseX.set(e.clientX - left);
+    mouseY.set(e.clientY - top);
+  };
+
+  const borderBackground = useMotionTemplate`
+    radial-gradient(
+      320px circle at ${mouseX}px ${mouseY}px,
+      rgba(245, 158, 11, 0.4),
+      transparent 80%
+    )
+  `;
+
+  const surfaceBackground = useMotionTemplate`
+    radial-gradient(
+      400px circle at ${mouseX}px ${mouseY}px,
+      rgba(245, 158, 11, 0.035),
+      transparent 70%
+    )
+  `;
 
   return (
-    <div className={`relative ${idx === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}>
+    <div
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onMouseMove={handleMouseMove}
+      className={`group relative select-none ${idx === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+    >
       <motion.div
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         animate={{
-          scale: isHovered ? 1.035 : 1,
-          y: isHovered ? -5 : 0,
+          scale: isHovered ? 1.025 : 1,
+          y: isHovered ? -6 : 0,
         }}
         transition={{
           type: 'spring',
@@ -43,9 +79,11 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
           zIndex: isHovered ? 30 : 1,
           transformOrigin: 'center center',
         }}
-        className={`relative h-full p-6 sm:p-7 rounded-2xl bg-white dark:bg-neutral-900 border flex flex-col justify-between break-words transition-shadow duration-300 ${
+        className={`relative h-full p-6 sm:p-8 rounded-2xl bg-white/95 dark:bg-[#121217]/95 backdrop-blur-xl border flex flex-col justify-between break-words transition-all duration-200 overflow-hidden active:scale-[0.99] ${
+          isDimmed ? 'opacity-65' : 'opacity-100'
+        } ${
           isHovered
-            ? 'shadow-2xl shadow-neutral-950/15 dark:shadow-black/75 border-neutral-300 dark:border-neutral-700 ring-1 ring-neutral-950/5 dark:ring-white/10'
+            ? 'shadow-2xl shadow-neutral-950/15 dark:shadow-black/75 border-neutral-300 dark:border-neutral-700'
             : 'shadow-xs border-neutral-200/90 dark:border-neutral-800'
         } ${
           isMine
@@ -53,9 +91,31 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
             : ''
         }`}
       >
-        {/* Top Section: Rating, Badges & Full Review Quote */}
-        <div className="flex flex-col flex-1">
-          <div className="flex items-center justify-between mb-4">
+        {/* Dynamic Mouse-Following 1.25px Border Glow */}
+        <motion.div
+          className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+          style={{
+            background: borderBackground,
+            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            maskComposite: 'exclude',
+            WebkitMaskComposite: 'xor',
+            padding: '1.25px',
+          }}
+        />
+
+        {/* Dynamic Mouse-Following Surface Glow */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+          style={{
+            background: surfaceBackground,
+          }}
+        />
+
+        {/* Content Container */}
+        <div className="relative z-10 flex flex-col flex-1">
+          {/* Top Section: Rating, Badges & Full Review Quote */}
+          <div className="flex items-center justify-between mb-4 gap-2">
             <div className="flex items-center gap-1.5 text-amber-400">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
@@ -81,7 +141,7 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
               {rev.verified && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
                   <CheckCircle className="w-3.5 h-3.5" />
-                  <span>Verified Writer</span>
+                  <span>Verified</span>
                 </span>
               )}
             </div>
@@ -93,7 +153,7 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
         </div>
 
         {/* Bottom Section: Author Info & Controls */}
-        <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
+        <div className="relative z-10 pt-4 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold text-xs flex items-center justify-center border border-neutral-200 dark:border-neutral-700 shadow-2xs shrink-0">
               {rev.name.charAt(0).toUpperCase()}

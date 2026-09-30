@@ -223,6 +223,8 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           isOpen={isTemplatesOpen}
           onClose={onCloseTemplates}
           onSelectTemplate={onSelectTemplate}
+          currentDocTitle={title}
+          hasExistingContent={Boolean(content && content.trim().length > 0)}
         />
       )}
 

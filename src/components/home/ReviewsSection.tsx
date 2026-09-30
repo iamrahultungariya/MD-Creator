@@ -9,7 +9,6 @@ import {
   UserReview,
   getUserSubmittedReview,
   saveUserSubmittedReview,
-  DEFAULT_COMMUNITY_REVIEWS,
 } from '../../services/reviewsStorage';
 
 export type { UserReview };
@@ -17,13 +16,13 @@ export {
   USER_REVIEW_KEY,
   getUserSubmittedReview,
   saveUserSubmittedReview,
-  DEFAULT_COMMUNITY_REVIEWS,
 } from '../../services/reviewsStorage';
 
 export const ReviewsSection: React.FC = () => {
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [myReview, setMyReview] = useState<UserReview | null>(() => getUserSubmittedReview());
   const [isEditingInline, setIsEditingInline] = useState(false);
+  const [hoveredReviewId, setHoveredReviewId] = useState<string | null>(null);
 
   // Modal State for subsequent reviews
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,13 +89,12 @@ export const ReviewsSection: React.FC = () => {
     }
   }, [myReview]);
 
-  // Approved reviews for the community feed (falls back to curated community feedback if offline/empty)
+  // Real approved reviews from Supabase (no pre-defined fake reviews)
   const approvedReviews = reviews.filter((r) => r.status === 'approved');
-  const feedReviews = approvedReviews.length > 0 ? approvedReviews : DEFAULT_COMMUNITY_REVIEWS;
-  const displayedReviews = feedReviews.slice(0, 5);
+  const displayedReviews = approvedReviews.slice(0, 5);
 
-  const averageRating = feedReviews.length > 0
-    ? (feedReviews.reduce((acc, r) => acc + r.rating, 0) / feedReviews.length).toFixed(1)
+  const averageRating = approvedReviews.length > 0
+    ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length).toFixed(1)
     : '5.0';
 
   // Handle Review Submission (Always inserted with status 'pending' per security guide, client UUID generated)
@@ -311,6 +309,10 @@ export const ReviewsSection: React.FC = () => {
                 isMine={myReview?.id === rev.id}
                 isEditLocked={isEditLocked}
                 remainingMinutes={remainingMinutes}
+                isHovered={hoveredReviewId === rev.id}
+                isAnyHovered={Boolean(hoveredReviewId)}
+                onMouseEnter={() => setHoveredReviewId(rev.id)}
+                onMouseLeave={() => setHoveredReviewId(null)}
                 openModalForReview={openModalForReview}
                 handleDeleteMyReview={handleDeleteMyReview}
               />
