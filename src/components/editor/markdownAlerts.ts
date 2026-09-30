@@ -224,3 +224,81 @@ export const extractAlertInfo = (children: React.ReactNode): { config: AlertCall
 
   return { config, content: remainingChildren };
 };
+
+export const getAlertThemeClasses = (config: AlertCalloutConfig, forceTheme?: 'light' | 'dark') => {
+  if (forceTheme === 'light') {
+    switch (config.type) {
+      case 'note':
+        return {
+          container: 'bg-blue-50/90 text-blue-950 border-l-4 border-l-blue-600 border-y border-r border-blue-200/50',
+          badge: 'bg-blue-100 text-blue-800 border border-blue-200',
+          icon: 'text-blue-600',
+        };
+      case 'tip':
+        return {
+          container: 'bg-emerald-50/90 text-emerald-950 border-l-4 border-l-emerald-600 border-y border-r border-emerald-200/50',
+          badge: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+          icon: 'text-emerald-600',
+        };
+      case 'warning':
+        return {
+          container: 'bg-amber-50/90 text-amber-950 border-l-4 border-l-amber-600 border-y border-r border-amber-200/50',
+          badge: 'bg-amber-100 text-amber-800 border border-amber-200',
+          icon: 'text-amber-600',
+        };
+      case 'important':
+        return {
+          container: 'bg-purple-50/90 text-purple-950 border-l-4 border-l-purple-600 border-y border-r border-purple-200/50',
+          badge: 'bg-purple-100 text-purple-800 border border-purple-200',
+          icon: 'text-purple-600',
+        };
+      case 'caution':
+        return {
+          container: 'bg-rose-50/90 text-rose-950 border-l-4 border-l-rose-600 border-y border-r border-rose-200/50',
+          badge: 'bg-rose-100 text-rose-800 border border-rose-200',
+          icon: 'text-rose-600',
+        };
+    }
+  } else if (forceTheme === 'dark') {
+    switch (config.type) {
+      case 'note':
+        return {
+          container: 'bg-blue-950/40 text-blue-100 border-l-4 border-l-blue-500 border-y border-r border-blue-800/50',
+          badge: 'bg-blue-900/60 text-blue-300 border border-blue-700/80',
+          icon: 'text-blue-400',
+        };
+      case 'tip':
+        return {
+          container: 'bg-emerald-950/40 text-emerald-100 border-l-4 border-l-emerald-500 border-y border-r border-emerald-800/50',
+          badge: 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/80',
+          icon: 'text-emerald-400',
+        };
+      case 'warning':
+        return {
+          container: 'bg-amber-950/40 text-amber-100 border-l-4 border-l-amber-500 border-y border-r border-amber-800/50',
+          badge: 'bg-amber-900/60 text-amber-300 border border-amber-700/80',
+          icon: 'text-amber-400',
+        };
+      case 'important':
+        return {
+          container: 'bg-purple-950/40 text-purple-100 border-l-4 border-l-purple-500 border-y border-r border-purple-800/50',
+          badge: 'bg-purple-900/60 text-purple-300 border border-purple-700/80',
+          icon: 'text-purple-400',
+        };
+      case 'caution':
+        return {
+          container: 'bg-rose-950/40 text-rose-100 border-l-4 border-l-rose-500 border-y border-r border-rose-800/50',
+          badge: 'bg-rose-900/60 text-rose-300 border border-rose-700/80',
+          icon: 'text-rose-400',
+        };
+    }
+  }
+
+  // Standard responsive with dark: classes
+  return {
+    container: `${config.containerClass} border-y border-r border-neutral-200/50 dark:border-neutral-800/50`,
+    badge: config.badgeClass,
+    icon: config.iconClass,
+  };
+};
+

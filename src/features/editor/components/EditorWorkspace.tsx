@@ -59,6 +59,7 @@ interface EditorWorkspaceProps {
   showLineNumbers?: boolean;
   mobileTab?: 'edit' | 'preview';
   onSelectMobileTab?: (tab: 'edit' | 'preview') => void;
+  onToast?: (message: string) => void;
 }
 
 export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
@@ -107,6 +108,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
   showLineNumbers = false,
   mobileTab: propMobileTab,
   onSelectMobileTab,
+  onToast,
 }) => {
   const [internalMobileTab, setInternalMobileTab] = useState<'edit' | 'preview'>('edit');
   const mobileTab = propMobileTab !== undefined ? propMobileTab : internalMobileTab;
@@ -130,6 +132,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
     readerSizeClass,
     readerWidthClass,
     setReadingProgress,
+    isReaderDark,
   } = useReaderAppearance();
 
   // Instant non-blocking Markdown preview parsing via React 19 interruptible transition
@@ -384,6 +387,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
         slashQuery={slashQuery}
         onInsertSnippet={onInsertSnippet}
         onSlashTrigger={onSlashTrigger}
+        onToast={onToast}
       />
     );
   }
@@ -515,6 +519,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               }}
               editorRef={editorRef}
               onKeyDown={onKeyDown}
+              onToast={onToast}
               className="flex-1 w-full"
             />
 
@@ -553,6 +558,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           readerWidthClass={readerWidthClass}
           readerFontClass={readerFontClass}
           readerSizeClass={readerSizeClass}
+          isReaderDark={isReaderDark}
           isPreviewVisibleOnMobile={isPreviewVisibleOnMobile}
           title={title}
           wordCount={wordCount}

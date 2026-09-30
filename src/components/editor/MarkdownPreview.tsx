@@ -13,21 +13,53 @@ import { Copy, Check, X, ChevronRight } from 'lucide-react';
 import { MermaidBlock } from './MermaidBlock';
 import { replaceRichIconsInReactNode } from '../../utils/richIcons';
 import { FrontmatterCard } from './FrontmatterCard';
-import { extractTextFromReactNode, toHeadingSlug, extractAlertInfo } from './markdownAlerts';
+import { extractTextFromReactNode, toHeadingSlug, extractAlertInfo, getAlertThemeClasses } from './markdownAlerts';
 import { MarkdownImage } from './MarkdownImage';
 import { findAllTablesInDocument, replaceTableInDocument, ParsedTable } from '../../utils/markdownTable';
 import { InteractiveTableOverlay } from './InteractiveTableOverlay';
+import { LinkHoverCard } from './LinkHoverCard';
 
 interface MarkdownPreviewProps {
   content: string;
   onToggleTask?: (taskIndex: number, currentChecked: boolean) => void;
   onUpdateContent?: (newContent: string) => void;
   className?: string;
+  forceTheme?: 'light' | 'dark';
 }
 
-export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ content, onToggleTask, onUpdateContent, className }) => {
+export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ content, onToggleTask, onUpdateContent, className, forceTheme }) => {
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [activeLightboxImage, setActiveLightboxImage] = useState<{ src: string; alt?: string; title?: string } | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<{ url: string; rect: DOMRect } | null>(null);
+
+  const linkHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linkCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLinkMouseEnter = (href: string, e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (linkCloseTimeoutRef.current) clearTimeout(linkCloseTimeoutRef.current);
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (linkHoverTimeoutRef.current) clearTimeout(linkHoverTimeoutRef.current);
+    linkHoverTimeoutRef.current = setTimeout(() => {
+      setHoveredLink({ url: href, rect });
+    }, 180);
+  };
+
+  const handleLinkMouseLeave = () => {
+    if (linkHoverTimeoutRef.current) clearTimeout(linkHoverTimeoutRef.current);
+    linkCloseTimeoutRef.current = setTimeout(() => {
+      setHoveredLink(null);
+    }, 200);
+  };
+
+  const handleCardMouseEnter = () => {
+    if (linkCloseTimeoutRef.current) clearTimeout(linkCloseTimeoutRef.current);
+  };
+
+  const handleCardMouseLeave = () => {
+    linkCloseTimeoutRef.current = setTimeout(() => {
+      setHoveredLink(null);
+    }, 150);
+  };
 
   // React 18/19 interruptible deferred value: markdown AST & KaTeX processing runs in background transitions
   // and will yield immediately to keystrokes and typing
@@ -191,16 +223,17 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             if (alertData) {
               const { config, content: alertContent } = alertData;
               const IconComp = config.icon;
+              const themeStyles = getAlertThemeClasses(config, forceTheme);
 
               return (
                 <div 
-                  className={`my-4 p-4 rounded-r-2xl border-y border-r border-neutral-200/50 dark:border-neutral-800/50 shadow-xs transition-all ${config.containerClass}`}
+                  className={`my-4 p-4 rounded-r-2xl shadow-xs transition-all ${themeStyles.container}`}
                 >
                   <div className="flex items-center gap-2 mb-2 select-none">
                     <div 
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono tracking-wider uppercase shadow-2xs ${config.badgeClass}`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold font-mono tracking-wider uppercase shadow-2xs ${themeStyles.badge}`}
                     >
-                      <IconComp className={`w-3.5 h-3.5 shrink-0 ${config.iconClass}`} />
+                      <IconComp className={`w-3.5 h-3.5 shrink-0 ${themeStyles.icon}`} />
                       <span>{config.title}</span>
                     </div>
                   </div>
@@ -213,7 +246,13 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
 
             // Standard Quote
             return (
-              <blockquote className="border-l-4 border-current/25 bg-current/5 p-4 my-3.5 rounded-r-2xl text-inherit italic shadow-2xs">
+              <blockquote className={`border-l-4 border-current/25 ${
+                forceTheme === 'light'
+                  ? 'bg-neutral-100 text-neutral-800'
+                  : forceTheme === 'dark'
+                  ? 'bg-neutral-800/40 text-neutral-200'
+                  : 'bg-current/5 text-inherit'
+              } p-4 my-3.5 rounded-r-2xl italic shadow-2xs`}>
                 {replaceRichIconsInReactNode(children)}
               </blockquote>
             );
@@ -294,8 +333,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             }
 
             return (
-              <div className="overflow-x-auto my-5 rounded-xl border border-current/20 shadow-2xs max-w-full">
-                <table className="min-w-full w-max text-left text-xs divide-y divide-current/15">
+              <div className="table-wrapper-responsive overflow-x-auto my-5 rounded-xl border border-current/20 shadow-2xs max-w-full">
+                <table className="min-w-full w-full text-left text-xs divide-y divide-current/15">
                   {children}
                 </table>
               </div>
@@ -307,7 +346,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             </thead>
           ),
           th: ({ children }) => (
-            <th className="px-4 py-2.5 font-bold border-b border-current/20 whitespace-nowrap text-inherit">
+            <th className="px-4 py-2.5 font-bold border-b border-current/20 text-inherit">
               {children}
             </th>
           ),
@@ -316,6 +355,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
               {children}
             </td>
           ),
+
+          // Eliminate redundant wrapper <pre> from react-markdown so our custom code block has no outer duplicate box
+          pre: ({ children }: any) => <>{children}</>,
 
           // Code blocks, Inline Code & Mermaid Diagrams
           code: ({ className, children, ...props }) => {
@@ -337,19 +379,37 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
 
             // Interactive Mermaid Diagram
             if (match && match[1] === 'mermaid') {
-              return <MermaidBlock chart={rawCode} />;
+              return <MermaidBlock chart={rawCode} forceTheme={forceTheme} />;
             }
 
+            const codeContainerClass = forceTheme === 'light'
+              ? 'border-neutral-200 bg-neutral-50/80'
+              : forceTheme === 'dark'
+              ? 'border-neutral-800 bg-[#121215]'
+              : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#121215]';
+
+            const codeHeaderClass = forceTheme === 'light'
+              ? 'bg-neutral-100/90 border-b border-neutral-200 text-neutral-500'
+              : forceTheme === 'dark'
+              ? 'bg-[#1a1a1f] border-b border-neutral-800 text-neutral-400'
+              : 'bg-neutral-100/90 dark:bg-[#1a1a1f] border-b border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400';
+
+            const preTextClass = forceTheme === 'light'
+              ? 'text-neutral-800'
+              : forceTheme === 'dark'
+              ? 'text-neutral-200'
+              : 'text-neutral-800 dark:text-neutral-200';
+
             return (
-              <div className="relative my-4 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-[#121215] shadow-2xs group transition-colors">
+              <div className={`relative my-4 rounded-xl overflow-hidden border ${codeContainerClass} shadow-2xs group transition-colors`}>
                 {/* Code Header Bar */}
-                <div className="flex items-center justify-between px-3.5 py-1.5 bg-neutral-100/90 dark:bg-[#1a1a1f] border-b border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 font-mono select-none transition-colors">
-                  <span className="text-neutral-500 dark:text-neutral-400 uppercase tracking-wider text-[10px] font-semibold">
+                <div className={`flex items-center justify-between px-3.5 py-1.5 ${codeHeaderClass} text-[11px] font-mono select-none transition-colors`}>
+                  <span className="uppercase tracking-wider text-[10px] font-semibold">
                     {match ? match[1] : 'code'}
                   </span>
                   <button
                     onClick={() => handleCopyCode(rawCode, codeId)}
-                    className="flex items-center gap-1 text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors cursor-pointer"
+                    className="no-print flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     {copiedCodeId === codeId ? (
                       <>
@@ -365,7 +425,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                   </button>
                 </div>
                 {/* Code Body */}
-                <pre className="p-4 overflow-x-auto whitespace-pre max-w-full text-[12px] font-mono-code leading-relaxed text-neutral-800 dark:text-neutral-200">
+                <pre className={`p-4 overflow-x-auto whitespace-pre max-w-full text-[12px] font-mono-code leading-relaxed ${preTextClass}`}>
                   <code className={className} {...props}>
                     {children}
                   </code>
@@ -374,7 +434,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             );
           },
 
-          // Links (Strictly sanitized to block script:, data:, and malicious protocol injection)
+          // Links (Strictly sanitized + Adaptive Multi-Tier Hover Link Preview)
           a: ({ href, children }) => {
             const safe = isSafeUrl(href);
             if (!safe) {
@@ -392,7 +452,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer nofollow ugc"
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                onMouseEnter={(e) => href && handleLinkMouseEnter(href, e)}
+                onMouseLeave={handleLinkMouseLeave}
+                className="text-blue-600 dark:text-blue-400 hover:underline font-medium inline transition-colors"
               >
                 {children}
               </a>
@@ -440,6 +502,18 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             )}
           </div>
         </div>
+      )}
+
+      {/* Adaptive Multi-Tier Hover Link Preview Card */}
+      {hoveredLink && (
+        <LinkHoverCard
+          url={hoveredLink.url}
+          targetRect={hoveredLink.rect}
+          isOpen={Boolean(hoveredLink)}
+          onMouseEnter={handleCardMouseEnter}
+          onMouseLeave={handleCardMouseLeave}
+          onClose={() => setHoveredLink(null)}
+        />
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
-import { FontFamily, MarginSize, PageSize, PdfPreset, TocItem } from '../types';
+import { FontFamily, MarginSize, PageSize, PdfPreset, PdfTheme, TocItem } from '../types';
 
 interface PdfExportPreviewProps {
   zoomLevel: number;
@@ -19,6 +19,7 @@ interface PdfExportPreviewProps {
   tableOfContents: TocItem[];
   includePageNumbers: boolean;
   documentContent: string;
+  pdfTheme?: PdfTheme;
 }
 
 export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
@@ -38,7 +39,9 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
   tableOfContents,
   includePageNumbers,
   documentContent,
+  pdfTheme = 'light',
 }) => {
+  const isDarkPdf = pdfTheme === 'dark';
   const currentFontFamilyCss =
     fontFamily === 'serif'
       ? 'font-serif'
@@ -116,7 +119,7 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
     // Delay slightly to let KaTeX formulas, highlight.js, and typography compute layouts
     const timer = setTimeout(paginateContent, 75);
     return () => clearTimeout(timer);
-  }, [documentContent, pageSize, margins, fontFamily, preset, includePageNumbers]);
+  }, [documentContent, pageSize, margins, fontFamily, preset, includePageNumbers, pdfTheme]);
 
   return (
     <div 
@@ -127,15 +130,21 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
       <div
         ref={measureRef}
         aria-hidden="true"
-        className={`fixed -left-[9999px] top-0 ${maxSheetWidth} ${marginPaddingClass} ${currentFontFamilyCss} opacity-0 pointer-events-none z-[-9999]`}
+        className={`fixed -left-[9999px] top-0 ${maxSheetWidth} ${marginPaddingClass} ${currentFontFamilyCss} opacity-0 pointer-events-none z-[-9999] ${
+          isDarkPdf ? 'pdf-theme-dark' : 'pdf-theme-light'
+        }`}
         style={{ width: pageSize === 'letter' ? '816px' : '794px' }}
       >
         <div
-          className={`prose prose-neutral max-w-none text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712] prose-table:w-full prose-table:table-auto prose-td:text-[#111827] prose-td:break-words prose-th:text-[#030712] prose-th:break-words ${
-            preset === 'technical' ? 'prose-headings:font-mono' : ''
-          }`}
+          className={`${
+            isDarkPdf ? 'prose prose-invert text-[#f3f4f6]' : 'prose prose-neutral text-[#111827]'
+          } max-w-none ${preset === 'technical' ? 'prose-headings:font-mono' : ''}`}
         >
-          <MarkdownPreview content={documentContent} className="text-[#111827] text-sm" />
+          <MarkdownPreview 
+            content={documentContent} 
+            className={isDarkPdf ? 'text-[#f3f4f6] text-sm' : 'text-[#111827] text-sm'} 
+            forceTheme={isDarkPdf ? 'dark' : 'light'}
+          />
         </div>
       </div>
 
@@ -162,24 +171,26 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
             <div
               id="pdf-render-cover"
               data-pdf-sheet="true"
-              className={`pdf-paper-sheet bg-white text-neutral-900 rounded-sm shadow-xl p-10 sm:p-14 ${minSheetHeight} w-full flex flex-col justify-between relative overflow-hidden border border-neutral-200 ${currentFontFamilyCss}`}
+              className={`pdf-paper-sheet ${
+                isDarkPdf ? 'bg-[#121215] text-white border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+              } rounded-sm shadow-xl p-10 sm:p-14 ${minSheetHeight} w-full flex flex-col justify-between relative overflow-hidden border ${currentFontFamilyCss}`}
               style={{ borderTop: `12px solid ${accentColor}` }}
             >
               {/* Watermark in Canvas */}
               {watermarkText && (
                 <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                  <span className="text-7xl font-black text-neutral-200 tracking-widest uppercase rotate-[-35deg] opacity-40">
+                  <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-40`}>
                     {watermarkText}
                   </span>
                 </div>
               )}
 
               {/* Top Org Banner */}
-              <div className="flex items-center justify-between border-b border-neutral-200 pb-4 shrink-0">
-                <span className="text-xs font-bold uppercase tracking-widest text-neutral-500">
+              <div className={`flex items-center justify-between border-b ${isDarkPdf ? 'border-neutral-800' : 'border-neutral-200'} pb-4 shrink-0`}>
+                <span className={`text-xs font-bold uppercase tracking-widest ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'}`}>
                   {coverOrg || 'Technical Publication'}
                 </span>
-                <span className="text-xs font-mono text-neutral-500">
+                <span className={`text-xs font-mono ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'}`}>
                   {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                 </span>
               </div>
@@ -192,25 +203,25 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                 >
                   {preset.toUpperCase()} SPECIFICATION
                 </div>
-                <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-neutral-950 leading-tight">
+                <h1 className={`text-4xl sm:text-5xl font-black tracking-tight leading-tight ${isDarkPdf ? 'text-white' : 'text-neutral-950'}`}>
                   {documentTitle}
                 </h1>
                 {coverSubtitle && (
-                  <p className="text-lg text-neutral-600 font-medium leading-relaxed">
+                  <p className={`text-lg font-medium leading-relaxed ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-600'}`}>
                     {coverSubtitle}
                   </p>
                 )}
               </div>
 
               {/* Bottom Author Strip */}
-              <div className="border-t border-neutral-200 pt-6 flex items-center justify-between shrink-0">
+              <div className={`border-t ${isDarkPdf ? 'border-neutral-800' : 'border-neutral-200'} pt-6 flex items-center justify-between shrink-0`}>
                 <div>
-                  <div className="text-[11px] uppercase tracking-wider text-neutral-500 font-bold">Author</div>
-                  <div className="text-sm font-bold text-neutral-900">{coverAuthor || 'Engineering Team'}</div>
+                  <div className={`text-[11px] uppercase tracking-wider font-bold ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'}`}>Author</div>
+                  <div className={`text-sm font-bold ${isDarkPdf ? 'text-neutral-100' : 'text-neutral-900'}`}>{coverAuthor || 'Engineering Team'}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[11px] uppercase tracking-wider text-neutral-500 font-bold">Engine</div>
-                  <div className="text-xs font-mono text-neutral-600">MD Writer Studio v2</div>
+                  <div className={`text-[11px] uppercase tracking-wider font-bold ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'}`}>Engine</div>
+                  <div className={`text-xs font-mono ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-600'}`}>MD Writer Studio v2</div>
                 </div>
               </div>
             </div>
@@ -230,14 +241,16 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
             <div
               id="pdf-render-toc"
               data-pdf-sheet="true"
-              className={`pdf-paper-sheet bg-white text-neutral-900 rounded-sm shadow-xl p-12 ${minSheetHeight} w-full relative border border-neutral-200 ${currentFontFamilyCss}`}
+              className={`pdf-paper-sheet ${
+                isDarkPdf ? 'bg-[#121215] text-neutral-100 border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+              } rounded-sm shadow-xl p-12 ${minSheetHeight} w-full relative border ${currentFontFamilyCss}`}
               style={{ borderLeft: `6px solid ${accentColor}` }}
             >
-              <div className="flex items-center justify-between border-b border-neutral-200 pb-3 mb-8">
-                <h2 className="text-xl font-bold tracking-tight text-neutral-950">
+              <div className={`flex items-center justify-between border-b ${isDarkPdf ? 'border-neutral-800' : 'border-neutral-200'} pb-3 mb-8`}>
+                <h2 className={`text-xl font-bold tracking-tight ${isDarkPdf ? 'text-white' : 'text-neutral-950'}`}>
                   Table of Contents
                 </h2>
-                <span className="text-xs font-mono text-neutral-500">{documentTitle}</span>
+                <span className={`text-xs font-mono ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'}`}>{documentTitle}</span>
               </div>
 
               <div className="space-y-3">
@@ -246,15 +259,15 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                     key={idx}
                     className={`flex items-baseline justify-between text-xs py-1 ${
                       item.level === 1
-                        ? 'font-bold text-neutral-950 border-b border-neutral-200 pb-1 mt-3'
+                        ? (isDarkPdf ? 'font-bold text-white border-b border-neutral-800 pb-1 mt-3' : 'font-bold text-neutral-950 border-b border-neutral-200 pb-1 mt-3')
                         : item.level === 2
-                        ? 'pl-4 text-neutral-700 font-medium'
-                        : 'pl-8 text-neutral-600'
+                        ? (isDarkPdf ? 'pl-4 text-neutral-300 font-medium' : 'pl-4 text-neutral-700 font-medium')
+                        : (isDarkPdf ? 'pl-8 text-neutral-400' : 'pl-8 text-neutral-600')
                     }`}
                   >
                     <span className="truncate pr-4">{item.title}</span>
-                    <div className="flex-1 border-b border-dotted border-neutral-300 mx-2" />
-                    <span className="font-mono text-[11px] font-semibold text-neutral-500 min-w-[20px] text-right">{idx + 1}</span>
+                    <div className={`flex-1 border-b border-dotted ${isDarkPdf ? 'border-neutral-700' : 'border-neutral-300'} mx-2`} />
+                    <span className={`font-mono text-[11px] font-semibold ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'} min-w-[20px] text-right`}>{idx + 1}</span>
                   </div>
                 ))}
               </div>
@@ -282,12 +295,14 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                 <div
                   id={`pdf-render-body-page-${pageIdx}`}
                   data-pdf-sheet="true"
-                  className={`pdf-paper-sheet bg-white text-neutral-900 rounded-sm shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border border-neutral-200 ${currentFontFamilyCss}`}
+                  className={`pdf-paper-sheet ${
+                    isDarkPdf ? 'bg-[#121215] text-neutral-100 border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+                  } rounded-sm shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border ${currentFontFamilyCss}`}
                 >
                   {/* Watermark in Canvas */}
                   {watermarkText && (
                     <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                      <span className="text-7xl font-black text-neutral-200 tracking-widest uppercase rotate-[-35deg] opacity-30">
+                      <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-30`}>
                         {watermarkText}
                       </span>
                     </div>
@@ -295,7 +310,7 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
 
                   {/* Running Header */}
                   {includePageNumbers && (
-                    <div className="pdf-running-header flex items-center justify-between text-[11px] text-neutral-500 border-b border-neutral-200 pb-3 mb-6 font-mono shrink-0">
+                    <div className={`pdf-running-header flex items-center justify-between text-[11px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-b pb-3 mb-6 font-mono shrink-0`}>
                       <span className="truncate max-w-[65%]">{documentTitle}</span>
                       <span className="shrink-0">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                     </div>
@@ -303,7 +318,9 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
 
                   {/* Document Body for this page */}
                   <div
-                    className={`prose prose-neutral max-w-none flex-1 text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712] prose-table:w-full prose-table:table-auto prose-td:text-[#111827] prose-td:break-words prose-th:text-[#030712] prose-th:break-words ${
+                    className={`${
+                      isDarkPdf ? 'prose prose-invert text-[#f3f4f6] prose-headings:text-white prose-p:text-[#f3f4f6] prose-li:text-[#f3f4f6] prose-strong:text-white' : 'prose prose-neutral text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712]'
+                    } max-w-none flex-1 prose-table:w-full prose-table:table-auto prose-td:break-words prose-th:break-words ${
                       preset === 'technical' ? 'prose-headings:font-mono' : ''
                     }`}
                     style={{
@@ -315,9 +332,9 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
 
                   {/* Running Footer with accurate Page X of Y */}
                   {includePageNumbers && (
-                    <div className="pdf-running-footer flex items-center justify-between text-[10px] text-neutral-500 border-t border-neutral-200 pt-3 mt-auto font-mono shrink-0">
+                    <div className={`pdf-running-footer flex items-center justify-between text-[10px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-t pt-3 mt-auto font-mono shrink-0`}>
                       <span>Published with MD Writer</span>
-                      <span className="font-semibold text-neutral-700">Page {pageNum} of {totalBodyPages}</span>
+                      <span className={`font-semibold ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-700'}`}>Page {pageNum} of {totalBodyPages}</span>
                     </div>
                   )}
                 </div>
@@ -337,25 +354,29 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
             <div
               id="pdf-render-body"
               data-pdf-sheet="true"
-              className={`pdf-paper-sheet bg-white text-neutral-900 rounded-sm shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border border-neutral-200 ${currentFontFamilyCss}`}
+              className={`pdf-paper-sheet ${
+                isDarkPdf ? 'bg-[#121215] text-neutral-100 border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+              } rounded-sm shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border ${currentFontFamilyCss}`}
             >
               {watermarkText && (
                 <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                  <span className="text-7xl font-black text-neutral-200 tracking-widest uppercase rotate-[-35deg] opacity-30">
+                  <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-30`}>
                     {watermarkText}
                   </span>
                 </div>
               )}
 
               {includePageNumbers && (
-                <div className="pdf-running-header flex items-center justify-between text-[11px] text-neutral-500 border-b border-neutral-200 pb-3 mb-6 font-mono shrink-0">
+                <div className={`pdf-running-header flex items-center justify-between text-[11px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-b pb-3 mb-6 font-mono shrink-0`}>
                   <span className="truncate max-w-[65%]">{documentTitle}</span>
                   <span className="shrink-0">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                 </div>
               )}
 
               <div
-                className={`prose prose-neutral max-w-none flex-1 text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712] prose-table:w-full prose-table:table-auto prose-td:text-[#111827] prose-td:break-words prose-th:text-[#030712] prose-th:break-words ${
+                className={`${
+                  isDarkPdf ? 'prose prose-invert text-[#f3f4f6] prose-headings:text-white prose-p:text-[#f3f4f6] prose-li:text-[#f3f4f6] prose-strong:text-white' : 'prose prose-neutral text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712]'
+                } max-w-none flex-1 prose-table:w-full prose-table:table-auto prose-td:break-words prose-th:break-words ${
                   preset === 'technical' ? 'prose-headings:font-mono' : ''
                 }`}
                 style={{
@@ -363,13 +384,17 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                   ['--tw-prose-headings' as any]: preset === 'corporate' ? accentColor : undefined,
                 }}
               >
-                <MarkdownPreview content={documentContent} className="text-[#111827] text-sm" />
+                <MarkdownPreview 
+                  content={documentContent} 
+                  className={isDarkPdf ? "text-[#f3f4f6] text-sm" : "text-[#111827] text-sm"} 
+                  forceTheme={isDarkPdf ? 'dark' : 'light'}
+                />
               </div>
 
               {includePageNumbers && (
-                <div className="pdf-running-footer flex items-center justify-between text-[10px] text-neutral-500 border-t border-neutral-200 pt-3 mt-auto font-mono shrink-0">
+                <div className={`pdf-running-footer flex items-center justify-between text-[10px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-t pt-3 mt-auto font-mono shrink-0`}>
                   <span>Published with MD Writer</span>
-                  <span className="font-semibold text-neutral-700">Page 1 of 1</span>
+                  <span className={`font-semibold ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-700'}`}>Page 1 of 1</span>
                 </div>
               )}
             </div>

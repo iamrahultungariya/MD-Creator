@@ -101,10 +101,10 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
     { id: 'xl', label: 'XL', px: '21px' },
   ];
 
-  const COLUMN_WIDTHS: { id: ReaderColumnWidth; label: string; desc: string }[] = [
-    { id: 'focused', label: 'Focused', desc: '576px' },
-    { id: 'standard', label: 'Standard', desc: '896px' },
-    { id: 'wide', label: 'Wide', desc: '1152px' },
+  const COLUMN_WIDTHS: { id: ReaderColumnWidth; label: string; desc: string; persona: string }[] = [
+    { id: 'focused', label: 'Zen Prose', desc: '680px', persona: 'Distraction-free' },
+    { id: 'standard', label: 'Classic Doc', desc: '896px', persona: 'Balanced Specs' },
+    { id: 'wide', label: 'Engineering', desc: '1360px', persona: 'Data & Diagrams' },
   ];
 
   const handleStepFontSize = (delta: number) => {
@@ -234,11 +234,16 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
           </div>
         </div>
 
-        {/* 4. Column Width */}
+        {/* 4. Persona Column Width */}
         <div>
-          <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-2">
-            Reading Width
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">
+              Reading Persona & Canvas
+            </label>
+            <span className="text-[10px] font-mono text-neutral-400">
+              {COLUMN_WIDTHS.find((w) => w.id === columnWidth)?.desc}
+            </span>
+          </div>
           <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60 text-xs">
             {COLUMN_WIDTHS.map((w) => {
               const isSelected = columnWidth === w.id;
@@ -246,13 +251,17 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={w.id}
                   onClick={() => setColumnWidth(w.id)}
-                  className={`py-1.5 px-2 rounded-lg transition-all cursor-pointer text-center ${
+                  className={`py-2 px-1.5 rounded-lg transition-all cursor-pointer text-center flex flex-col items-center justify-center ${
                     isSelected
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white font-medium'
                   }`}
+                  title={`${w.label} (${w.desc}) - ${w.persona}`}
                 >
-                  {w.label}
+                  <span className="text-[11px] font-semibold leading-tight">{w.label}</span>
+                  <span className={`text-[9px] mt-0.5 ${isSelected ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                    {w.persona}
+                  </span>
                 </button>
               );
             })}

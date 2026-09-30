@@ -12,6 +12,7 @@ interface EditorPreviewPaneProps {
   readerWidthClass: string;
   readerFontClass: string;
   readerSizeClass: string;
+  isReaderDark?: boolean;
   isPreviewVisibleOnMobile: boolean;
   title: string;
   wordCount?: number;
@@ -29,6 +30,7 @@ export const EditorPreviewPane: React.FC<EditorPreviewPaneProps> = ({
   readerWidthClass,
   readerFontClass,
   readerSizeClass,
+  isReaderDark,
   isPreviewVisibleOnMobile,
   title,
   wordCount,
@@ -88,6 +90,7 @@ export const EditorPreviewPane: React.FC<EditorPreviewPaneProps> = ({
           onToggleTask={onToggleTask}
           onUpdateContent={onUpdateContent}
           className={viewMode === 'read' ? `${readerFontClass} ${readerSizeClass}` : undefined}
+          forceTheme={viewMode === 'read' ? (isReaderDark ? 'dark' : 'light') : undefined}
         />
       </div>
     </div>

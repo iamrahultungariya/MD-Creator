@@ -10,77 +10,65 @@ interface UpdateChangelogModalProps {
 }
 
 const SHORT_HIGHLIGHTS = [
-  { id: 1, title: 'Updated Social Links', desc: 'Direct link to the creator on X (@rahultungariya_) with clean handles.' },
-  { id: 2, title: 'Expanded Review Cards', desc: 'Hovering over a review card smoothly expands it so you can read the full feedback.' },
-  { id: 3, title: 'Card Focus on Hover', desc: 'Hovering over any document highlights it while softening adjacent cards.' },
-  { id: 4, title: 'Smoother Pinning', desc: 'Pinned documents now glide smoothly into position instead of jumping abruptly.' },
-  { id: 5, title: 'Seamless Transitions', desc: 'Opening and closing documents transitions naturally between your library and editor.' },
-  { id: 6, title: 'Flicker-Free Navigation', desc: 'Moving between pages is instant and smooth, keeping editor typing completely lag-free.' },
-  { id: 7, title: 'Distraction-Free Canvas', desc: 'Removed donation buttons and popups for a clean, uninterrupted writing experience.' },
-  { id: 8, title: 'Fluid Drawers & FAQ', desc: 'Collapsible menus, sidebars, and FAQs expand and collapse with natural motion.' },
-  { id: 9, title: 'Refined Profile Menu', desc: 'Clean, modern account dropdown with quick storage status and simple icons.' },
-  { id: 10, title: 'Duplicate Documents', desc: 'Quickly create a copy of any document right from your library and open it right away.' },
-  { id: 11, title: 'Clear Text Selection', desc: 'Selected text is now crisp and easy to read in both light and dark modes.' },
-  { id: 12, title: 'Release Notifications', desc: 'A subtle, quiet notice lets you know whenever a new release is available.' },
+  { id: 1, title: 'Silky Theme Switching', desc: 'Switching between Light and Dark mode is now fluid and easy on your eyes.' },
+  { id: 2, title: 'Smart Table Paste', desc: 'Copy data from Excel, Google Sheets, or websites and paste directly into neat tables.' },
+  { id: 3, title: 'Flawless PDF & Print', desc: 'Clean paper export with vibrant code colors, no double boxes, and wide tables that fit.' },
+  { id: 4, title: 'Crystal-Clear Diagrams', desc: 'Flowcharts and diagrams are sharp and easy to read in dark mode, matching your paper.' },
+  { id: 5, title: 'Instant Link Previews', desc: 'Hover over any link in preview to see a helpful card with website icon and platform info.' },
+  { id: 6, title: 'Clean Writing Canvas', desc: 'Enjoy a pure, distraction-free writing space without overlapping buttons or clutter.' },
+  { id: 7, title: 'Refined Callouts & Notes', desc: 'Tips, warnings, and notes look elegant on screen and print cleanly on paper.' },
+  { id: 8, title: 'Fluid Document Cards', desc: 'Browsing and opening documents from your library is smooth and responsive.' },
 ];
 
 const DETAILED_NOTES = [
   {
-    category: 'Visual Design & Reading',
+    category: 'Visuals & Atmosphere',
     items: [
       {
-        title: 'High-Contrast Text Selection',
-        detail: 'Selected text now consistently renders with crisp contrast across both light and dark themes, making highlighting and editing much easier on the eyes.'
+        title: 'Smooth Theme Switching',
+        detail: 'Switching between Light and Dark mode is now seamless and comfortable, with no harsh flashes or sudden jumps.'
       },
       {
-        title: 'Minimal Account Dropdown',
-        detail: 'Redesigned the profile dropdown with a clean, cohesive monochrome palette and clear storage indicators.'
+        title: 'Readable Diagrams in Any Light',
+        detail: 'Flowcharts, mind maps, and diagrams automatically match your reading paper tone and remain crystal clear in dark mode.'
       },
       {
-        title: 'Document Card Focus',
-        detail: 'Hovering over any document card highlights it while gently softening surrounding items for effortless browsing.'
-      },
-      {
-        title: 'Expandable Review Cards',
-        detail: 'Review cards expand on hover with comfortable padding and clear typography so you can read full testimonials without cramped text.'
+        title: 'Refined Notes & Callouts',
+        detail: 'Important tips, notes, and warnings now feature soft, balanced colors that look great on screen and print beautifully on paper.'
       }
     ]
   },
   {
-    category: 'Motion & Responsiveness',
+    category: 'Writing & Productivity',
     items: [
       {
-        title: 'Smooth Document Pinning',
-        detail: 'Pinning and unpinning documents now animates smoothly into place in both list and grid views.'
+        title: 'Smart Table Paste',
+        detail: 'Paste data directly from Excel, Google Sheets, or websites. It instantly formats into a tidy table, and you can undo with a single click if needed.'
       },
       {
-        title: 'Fluid Drawers & Accordions',
-        detail: 'FAQ sections, metadata drawers, and panels open and close with silky smooth transitions.'
+        title: 'Instant Link Previews',
+        detail: 'Hover over any link in your preview to view a neat card showing the website icon and recognized platform badge.'
       },
       {
-        title: 'Instant, Flicker-Free Navigation',
-        detail: 'Switching between pages feels instant with zero blank flashes, while writing in the editor remains completely lag-free.'
+        title: 'Distraction-Free Writing Canvas',
+        detail: 'A clean, uncluttered writing canvas with smooth navigation so you can focus entirely on your words.'
       }
     ]
   },
   {
-    category: 'Workflows & Features',
+    category: 'Export & Publishing',
     items: [
       {
-        title: 'In-Library Document Duplication',
-        detail: 'Duplicate documents directly from your library with a single click, keeping your workflow quick and organized.'
+        title: 'Clean PDF & Print Export',
+        detail: 'Export your documents with pure paper backgrounds, no dark boxes behind code snippets, and full color highlights.'
       },
       {
-        title: 'Distraction-Free Workspace',
-        detail: 'Removed donation prompts and extra popups to give you a clean, focused markdown writing environment.'
+        title: 'Scroll-Free Print Tables',
+        detail: 'Wide and long tables wrap naturally onto the page when exporting to PDF or printing, without unwanted scrollbars.'
       },
       {
-        title: 'Quiet Update Notices',
-        detail: 'Receive gentle, non-intrusive notifications whenever an update is available so you stay current without interruptions.'
-      },
-      {
-        title: 'Creator Social Links',
-        detail: 'Easily connect with the creator on X (@rahultungariya_) for discussions, feedback, and updates.'
+        title: 'Fluid Library Cards',
+        detail: 'Navigating your document library feels faster and smoother, with gentle highlights on the document you are focusing on.'
       }
     ]
   }
@@ -131,7 +119,7 @@ export const UpdateChangelogModal: React.FC<UpdateChangelogModalProps> = ({ isOp
                   </span>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Smoother animations, refined contrast, and design polish
+                  Smooth themes, smart tables, and flawless publishing
                 </p>
               </div>
             </div>

@@ -5,6 +5,7 @@ import {
   FontFamily, 
   PageSize, 
   MarginSize, 
+  PdfTheme,
   ExportPdfModalProps, 
   TocItem 
 } from '../types';
@@ -20,6 +21,9 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
 }) => {
   // Mobile Tab State ('preview' | 'settings')
   const [mobileTab, setMobileTab] = useState<'preview' | 'settings'>('preview');
+
+  // Document Theme Isolation ('light' | 'dark', defaults to 'light')
+  const [pdfTheme, setPdfTheme] = useState<PdfTheme>('light');
 
   // Preset & Typography state
   const [preset, setPreset] = useState<PdfPreset>('editorial');
@@ -112,6 +116,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
       await exportDirectPdf({
         documentTitle,
         pageSize,
+        pdfTheme,
         onProgress: (percent, message) => {
           setDownloadProgress({ percent, message });
         },
@@ -122,7 +127,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
       setIsDownloading(false);
       setDownloadProgress(null);
     }
-  }, [documentTitle, pageSize, isDownloading]);
+  }, [documentTitle, pageSize, pdfTheme, isDownloading]);
 
   // System Print PDF trigger (Opens native browser print dialog)
   const handlePrintPdf = useCallback(() => {
@@ -340,6 +345,8 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
             <PdfExportSidebar
               preset={preset}
               onSelectPreset={handleSelectPreset}
+              pdfTheme={pdfTheme}
+              onChangePdfTheme={setPdfTheme}
               fontFamily={fontFamily}
               onChangeFontFamily={setFontFamily}
               accentColor={accentColor}
@@ -369,6 +376,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
           <div className={`h-full min-h-0 flex-1 ${mobileTab === 'preview' ? 'flex' : 'hidden'} lg:flex overflow-hidden`}>
             <PdfExportPreview
               zoomLevel={zoomLevel}
+              pdfTheme={pdfTheme}
               includeCoverPage={includeCoverPage}
               coverOrg={coverOrg}
               preset={preset}

@@ -31,8 +31,30 @@ export interface UpdateMilestone {
 
 export const MILESTONES: UpdateMilestone[] = [
   {
-    version: 'v0.9.2 Beta',
+    version: 'v0.9.3 Beta',
     isLatest: true,
+    date: 'October 2026',
+    title: 'Smooth Theme Switching, Smart Table Paste, Crystal Diagrams & Flawless PDF Export',
+    category: 'ux',
+    categoryLabel: 'Refinements & Tools',
+    summary: 'MD Writer v0.9.3 Beta brings silky-smooth theme switching, automatic conversion of copied spreadsheet data into clean tables, crystal-clear diagrams in dark mode, flawless paper export, and helpful link previews.',
+    icon: Layers,
+    iconColor: 'text-blue-600 dark:text-blue-400',
+    iconBg: 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800/80',
+    highlights: [
+      { type: 'improved', text: 'Silky Theme Switching: Switching between Light and Dark mode is now fluid, gentle on your eyes, and free of flickering.' },
+      { type: 'new', text: 'Smart Table Paste: Copy data from Excel, Google Sheets, or websites and paste it directly into your document—it automatically turns into a neat table with easy undo.' },
+      { type: 'improved', text: 'Flawless PDF & Print: Clean paper export with vibrant code colors, no double boxes, and wide tables that fit on the page without scrollbars.' },
+      { type: 'improved', text: 'Crystal-Clear Diagrams: Flowcharts and diagrams stay sharp and easy to read in dark mode, and blend naturally with your reading paper.' },
+      { type: 'new', text: 'Instant Link Previews: Hover over any link in your preview to see a helpful card with website icon and platform preview.' },
+      { type: 'improved', text: 'Distraction-Free Writing: Clean writing canvas with zero clutter and effortless navigation.' },
+      { type: 'improved', text: 'Refined Callouts & Notes: Tips, warnings, and notes look elegant on screen and print cleanly on paper.' },
+      { type: 'perf', text: 'Fluid Document Cards: Faster, more responsive experience when browsing, searching, and opening documents.' }
+    ]
+  },
+  {
+    version: 'v0.9.2 Beta',
+    isLatest: false,
     date: 'October 2026',
     title: 'Platform Polish, Smooth Animations, Refined Contrast & Design Harmony',
     category: 'ux',

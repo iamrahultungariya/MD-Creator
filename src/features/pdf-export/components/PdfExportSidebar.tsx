@@ -9,13 +9,16 @@ import {
   Briefcase, 
   Feather, 
   Sliders, 
-  Check 
+  Check,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { 
   PdfPreset, 
   FontFamily, 
   PageSize, 
   MarginSize, 
+  PdfTheme,
   ACCENT_COLORS, 
   TocItem 
 } from '../types';
@@ -23,6 +26,8 @@ import {
 interface PdfExportSidebarProps {
   preset: PdfPreset;
   onSelectPreset: (preset: PdfPreset) => void;
+  pdfTheme: PdfTheme;
+  onChangePdfTheme: (theme: PdfTheme) => void;
   fontFamily: FontFamily;
   onChangeFontFamily: (font: FontFamily) => void;
   accentColor: string;
@@ -59,6 +64,8 @@ const PRESET_OPTIONS = [
 export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
   preset,
   onSelectPreset,
+  pdfTheme,
+  onChangePdfTheme,
   fontFamily,
   onChangeFontFamily,
   accentColor,
@@ -88,6 +95,43 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
       data-pdf-studio-sidebar="true"
       className="w-full h-full min-h-0 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 overflow-y-auto pdf-studio-scroll-container p-4 sm:p-5 space-y-5 sm:space-y-6 text-xs"
     >
+      {/* Section 0: Document Theme (Isolated Paper Light vs Midnight Dark) */}
+      <div className="space-y-2">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Sun className="w-3.5 h-3.5 text-amber-500" />
+            <span>Document Theme</span>
+          </span>
+          <span className="text-[10px] font-mono text-neutral-400 font-normal">Theme Isolation</span>
+        </label>
+        <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80">
+          <button
+            type="button"
+            onClick={() => onChangePdfTheme('light')}
+            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              pdfTheme === 'light'
+                ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
+                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+            }`}
+          >
+            <Sun className="w-3.5 h-3.5 text-amber-500" />
+            <span>Paper Light</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangePdfTheme('dark')}
+            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              pdfTheme === 'dark'
+                ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
+                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+            }`}
+          >
+            <Moon className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Midnight Dark</span>
+          </button>
+        </div>
+      </div>
+
       {/* Section 1: Themes & Presets */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">

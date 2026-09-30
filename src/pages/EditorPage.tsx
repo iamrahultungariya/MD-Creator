@@ -359,6 +359,7 @@ export const EditorPage: React.FC = () => {
         wordsWrittenInSprint={sprint.wordsWritten}
         onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
         editorRef={editorRef}
+        onToast={showToast}
       />
 
       {/* Telemetry Status Bar - Hidden in Read mode and on mobile (< md) to maximize reading area */}

@@ -53,6 +53,39 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Smooth View Transitions for Theme Toggle (Zero-Jank Cross-Fade) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 240ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+
+@keyframes theme-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Universal thin scrollbar for Firefox and standard engines */
 * {
   scrollbar-width: thin;
@@ -307,6 +340,49 @@ article mark,
   }
 }
 
+/* Reading Persona System (Aa Popover width options): Zen Prose, Classic Doc, Engineering */
+.reader-mode-zen.prose-container,
+.reader-mode-zen {
+  font-size: 18px !important;
+  line-height: 2 !important;
+}
+.reader-mode-zen p,
+.reader-mode-zen li {
+  font-size: 18px !important;
+  line-height: 2 !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.reader-mode-classic.prose-container,
+.reader-mode-classic {
+  font-size: 15.5px !important;
+  line-height: 1.75 !important;
+}
+.reader-mode-classic p,
+.reader-mode-classic li {
+  font-size: 15.5px !important;
+  line-height: 1.75 !important;
+}
+
+.reader-mode-engineering.prose-container,
+.reader-mode-engineering {
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+}
+.reader-mode-engineering p,
+.reader-mode-engineering li {
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+}
+.reader-mode-engineering table {
+  font-size: 13px !important;
+}
+.reader-mode-engineering pre {
+  font-size: 12.5px !important;
+}
+
+
 /* Scoped layout isolation to prevent styling bleed */
 .prose-container {
   contain: layout style;
@@ -474,6 +550,131 @@ article mark,
 .dark .hljs-function { color: #a78bfa; }
 
 /* ==============================================================================
+   HIGH-CONTRAST & PAPER-ADAPTIVE MERMAID DIAGRAM ENGINE
+   Guarantees 100% legibility in Dark Mode, Light Mode, and all Reading Paper Tones
+   ============================================================================== */
+.mermaid-render-container {
+  color: inherit !important;
+}
+
+.mermaid-render-container svg {
+  max-width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* In Dark Mode & Dark Reading Paper Themes: Ensure node text and labels are crisp, high-contrast, fully readable */
+.dark .mermaid-render-container text,
+.dark .mermaid-render-container .nodeLabel,
+.dark .mermaid-render-container span.nodeLabel,
+.dark .mermaid-render-container .label,
+.dark .mermaid-render-container .label text,
+.dark .mermaid-render-container .label foreignObject div,
+.dark .mermaid-render-container .label foreignObject span,
+[class*="bg-[#111114]"] .mermaid-render-container text,
+[class*="bg-[#111114]"] .mermaid-render-container .nodeLabel,
+[class*="bg-[#111114]"] .mermaid-render-container span.nodeLabel,
+[class*="bg-[#111114]"] .mermaid-render-container .label foreignObject div,
+[class*="bg-[#27211C]"] .mermaid-render-container text,
+[class*="bg-[#27211C]"] .mermaid-render-container .nodeLabel,
+[class*="bg-[#27211C]"] .mermaid-render-container span.nodeLabel,
+[class*="bg-[#27211C]"] .mermaid-render-container .label foreignObject div,
+[class*="bg-[#1E2530]"] .mermaid-render-container text,
+[class*="bg-[#1E2530]"] .mermaid-render-container .nodeLabel,
+[class*="bg-[#1E2530]"] .mermaid-render-container span.nodeLabel,
+[class*="bg-[#1E2530]"] .mermaid-render-container .label foreignObject div,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container text,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container .nodeLabel,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container span.nodeLabel,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container .label foreignObject div {
+  color: #f8fafc !important;
+  fill: #f8fafc !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
+}
+
+/* Dark Mode Node Background & Outline */
+.dark .mermaid-render-container .node rect,
+.dark .mermaid-render-container .node circle,
+.dark .mermaid-render-container .node ellipse,
+.dark .mermaid-render-container .node polygon,
+.dark .mermaid-render-container .node path,
+[class*="bg-[#111114]"] .mermaid-render-container .node rect,
+[class*="bg-[#27211C]"] .mermaid-render-container .node rect,
+[class*="bg-[#1E2530]"] .mermaid-render-container .node rect,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container .node rect {
+  fill: #1e293b !important;
+  stroke: #64748b !important;
+  stroke-width: 1.75px !important;
+}
+
+/* Dark Mode Edge Paths & Arrows */
+.dark .mermaid-render-container .edgePath path,
+.dark .mermaid-render-container .flowchart-link,
+[class*="bg-[#111114]"] .mermaid-render-container .edgePath path,
+[class*="bg-[#27211C]"] .mermaid-render-container .edgePath path,
+[class*="bg-[#1E2530]"] .mermaid-render-container .edgePath path,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container .edgePath path {
+  stroke: #94a3b8 !important;
+  stroke-width: 2px !important;
+}
+
+.dark .mermaid-render-container marker path,
+.dark .mermaid-render-container .marker,
+[class*="bg-[#111114]"] .mermaid-render-container marker path,
+[class*="bg-[#27211C]"] .mermaid-render-container marker path,
+[class*="bg-[#1E2530]"] .mermaid-render-container marker path,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container marker path {
+  fill: #94a3b8 !important;
+  stroke: #94a3b8 !important;
+}
+
+/* Dark Mode Edge Label Badges */
+.dark .mermaid-render-container .edgeLabel,
+.dark .mermaid-render-container .edgeLabel rect,
+[class*="bg-[#111114]"] .mermaid-render-container .edgeLabel,
+[class*="bg-[#27211C]"] .mermaid-render-container .edgeLabel,
+[class*="bg-[#1E2530]"] .mermaid-render-container .edgeLabel,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container .edgeLabel {
+  background-color: #0f172a !important;
+  fill: #0f172a !important;
+}
+.dark .mermaid-render-container .edgeLabel span,
+[class*="bg-[#111114]"] .mermaid-render-container .edgeLabel span,
+[class*="bg-[#27211C]"] .mermaid-render-container .edgeLabel span,
+[class*="bg-[#1E2530]"] .mermaid-render-container .edgeLabel span,
+[class*="bg-[#0B0C0E]"] .mermaid-render-container .edgeLabel span {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+}
+
+/* Light Reading Paper Themes (Warm Sepia, Nordic Slate, Clean Paper) */
+[class*="bg-[#FBF0D9]"] .mermaid-render-container .node rect,
+[class*="bg-[#F1F5F9]"] .mermaid-render-container .node rect {
+  fill: #ffffff !important;
+  stroke: #94a3b8 !important;
+  stroke-width: 1.5px !important;
+}
+
+[class*="bg-[#FBF0D9]"] .mermaid-render-container text,
+[class*="bg-[#FBF0D9]"] .mermaid-render-container .nodeLabel,
+[class*="bg-[#FBF0D9]"] .mermaid-render-container span.nodeLabel {
+  color: #382e25 !important;
+  fill: #382e25 !important;
+  font-weight: 600 !important;
+}
+
+[class*="bg-[#F1F5F9]"] .mermaid-render-container text,
+[class*="bg-[#F1F5F9]"] .mermaid-render-container .nodeLabel,
+[class*="bg-[#F1F5F9]"] .mermaid-render-container span.nodeLabel {
+  color: #1e293b !important;
+  fill: #1e293b !important;
+  font-weight: 600 !important;
+}
+
+/* ==============================================================================
    60FPS HARDWARE-ACCELERATED ANIMATION SYSTEM
    Utilizes only composited GPU properties (transform, opacity, filter)
    Ensures zero main-thread blockage and ultra-low load on older devices
@@ -539,6 +740,12 @@ article mark,
   @page {
     margin: 20mm 15mm;
     size: A4 portrait;
+  }
+
+  /* Force exact color reproduction and proper document background */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Force pure white background and neutral dark text on whole page */
@@ -623,8 +830,16 @@ article mark,
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
+  }
+
+  .pdf-paper-sheet.pdf-theme-light {
     background-color: #ffffff !important;
     color: #111827 !important;
+  }
+
+  .pdf-paper-sheet.pdf-theme-dark {
+    background-color: #121215 !important;
+    color: #e2e8f0 !important;
   }
 
   .pdf-paper-sheet:last-child {
@@ -644,46 +859,163 @@ article mark,
     overflow: visible !important;
   }
 
-  /* Force all children inside preview to be print-friendly */
-  .preview-pane-container * {
+  /* Typography formatting for print */
+  .preview-pane-container p,
+  .preview-pane-container li,
+  .preview-pane-container h1,
+  .preview-pane-container h2,
+  .preview-pane-container h3,
+  .preview-pane-container h4,
+  .preview-pane-container h5,
+  .preview-pane-container h6 {
     color: #111827 !important;
-    background-color: transparent !important;
-    border-color: #e5e7eb !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
   }
 
   /* Clean Code blocks in print */
   .preview-pane-container pre,
-  .preview-pane-container code {
+  .preview-pane-container [class*="bg-neutral-50/80"],
+  .preview-pane-container [class*="dark:bg-[#121215]"] {
     background-color: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
-    color: #0f172a !important;
-    font-size: 11px !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
   }
 
-  /* Clean Blockquotes in print */
+  .preview-pane-container [class*="bg-neutral-100/90"],
+  .preview-pane-container [class*="dark:bg-[#1a1a1f]"] {
+    background-color: #f1f5f9 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+  }
+
+  .preview-pane-container pre code {
+    color: #0f172a !important;
+    font-size: 11px !important;
+  }
+
+  /* Preserve high-contrast syntax highlighting token colors in print */
+  .preview-pane-container .hljs-keyword, 
+  .preview-pane-container .hljs-selector-tag { color: #4338ca !important; font-weight: 600; }
+  .preview-pane-container .hljs-string, 
+  .preview-pane-container .hljs-title { color: #059669 !important; }
+  .preview-pane-container .hljs-comment { color: #64748b !important; font-style: italic; }
+  .preview-pane-container .hljs-number, 
+  .preview-pane-container .hljs-literal { color: #d97706 !important; }
+  .preview-pane-container .hljs-attr, 
+  .preview-pane-container .hljs-variable { color: #0284c7 !important; }
+  .preview-pane-container .hljs-function { color: #7c3aed !important; }
+
+  /* Clean Blockquotes & Callout Alerts in print */
   .preview-pane-container blockquote {
     background-color: #f8fafc !important;
     border-left: 3px solid #0284c7 !important;
     padding: 8px 12px !important;
+    color: #1e293b !important;
   }
 
-  /* Clean Tables in print */
+  /* Callout alert cards in print */
+  .preview-pane-container [class*="bg-blue-50"],
+  .preview-pane-container [class*="bg-blue-950"] {
+    background-color: #eff6ff !important;
+    color: #1e3a8a !important;
+    border-left-color: #2563eb !important;
+  }
+  .preview-pane-container [class*="bg-blue-100"],
+  .preview-pane-container [class*="bg-blue-900"] {
+    background-color: #dbeafe !important;
+    color: #1e40af !important;
+  }
+
+  .preview-pane-container [class*="bg-emerald-50"],
+  .preview-pane-container [class*="bg-emerald-950"] {
+    background-color: #ecfdf5 !important;
+    color: #064e3b !important;
+    border-left-color: #059669 !important;
+  }
+  .preview-pane-container [class*="bg-emerald-100"],
+  .preview-pane-container [class*="bg-emerald-900"] {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+  }
+
+  .preview-pane-container [class*="bg-amber-50"],
+  .preview-pane-container [class*="bg-amber-950"] {
+    background-color: #fef3c7 !important;
+    color: #78350f !important;
+    border-left-color: #d97706 !important;
+  }
+  .preview-pane-container [class*="bg-amber-100"],
+  .preview-pane-container [class*="bg-amber-900"] {
+    background-color: #fde68a !important;
+    color: #92400e !important;
+  }
+
+  .preview-pane-container [class*="bg-purple-50"],
+  .preview-pane-container [class*="bg-purple-950"] {
+    background-color: #f5f3ff !important;
+    color: #581c87 !important;
+    border-left-color: #7c3aed !important;
+  }
+  .preview-pane-container [class*="bg-purple-100"],
+  .preview-pane-container [class*="bg-purple-900"] {
+    background-color: #ede9fe !important;
+    color: #5b21b6 !important;
+  }
+
+  .preview-pane-container [class*="bg-rose-50"],
+  .preview-pane-container [class*="bg-rose-950"] {
+    background-color: #fff1f2 !important;
+    color: #881337 !important;
+    border-left-color: #e11d48 !important;
+  }
+  .preview-pane-container [class*="bg-rose-100"],
+  .preview-pane-container [class*="bg-rose-900"] {
+    background-color: #ffe4e6 !important;
+    color: #9f1239 !important;
+  }
+
+  /* Diagrams in print */
+  .preview-pane-container .mermaid-render-container {
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  .preview-pane-container .mermaid-render-container button,
+  .preview-pane-container .mermaid-render-container .no-print,
+  .mermaid-render-container button,
+  .mermaid-render-container .no-print {
+    display: none !important;
+  }
+
+  /* Clean Tables in print - No scrollbars, force word wrapping */
+  .preview-pane-container .table-wrapper-responsive,
+  .preview-pane-container .overflow-x-auto,
+  .preview-pane-container div:has(> table) {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    max-width: 100% !important;
+  }
+
   .preview-pane-container table {
     border-collapse: collapse !important;
     width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
   }
 
   .preview-pane-container th {
     background-color: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
     font-weight: bold !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
   }
 
   .preview-pane-container td {
     border: 1px solid #e2e8f0 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
   }
 
   /* Smart page breaks */
@@ -728,115 +1060,474 @@ article mark,
 }
 
 /* ==========================================================================
-   DOCUMENT PRINT & PDF STUDIO - ISOLATED PAPER SHEET STYLING
-   Enforces high-contrast print typography on paper sheets even when the
-   entire application is operating in Dark Mode.
+   DOCUMENT PRINT & PDF STUDIO - ISOLATED DOCUMENT THEMES (LIGHT & DARK)
+   Completely isolates document rendering so that when app is in Dark Mode,
+   Paper Light does not inherit dark callouts or kbd boxes; and Midnight Dark
+   provides a seamless, luxury obsidian presentation.
    ========================================================================== */
+
+/* Base Sheet Configuration */
 .pdf-paper-sheet {
+  border-radius: 0;
+  box-sizing: border-box;
+  overflow: visible !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. PAPER LIGHT PDF THEME
+   -------------------------------------------------------------------------- */
+.pdf-paper-sheet.pdf-theme-light {
   background-color: #ffffff !important;
   color: #111827 !important;
   color-scheme: light !important;
 }
 
-/* Base text elements */
-.pdf-paper-sheet,
-.pdf-paper-sheet .prose,
-.pdf-paper-sheet [data-markdown-preview="true"],
-.pdf-paper-sheet [data-markdown-preview="true"] *,
-.pdf-paper-sheet .prose * {
+.pdf-paper-sheet.pdf-theme-light,
+.pdf-paper-sheet.pdf-theme-light .prose,
+.pdf-paper-sheet.pdf-theme-light [data-markdown-preview="true"],
+.pdf-paper-sheet.pdf-theme-light .prose * {
   color: #111827;
 }
 
-/* Headings */
-.pdf-paper-sheet h1,
-.pdf-paper-sheet h2,
-.pdf-paper-sheet h3,
-.pdf-paper-sheet h4,
-.pdf-paper-sheet h5,
-.pdf-paper-sheet h6,
-.pdf-paper-sheet strong,
-.pdf-paper-sheet b {
-  color: #030712 !important;
+.pdf-paper-sheet.pdf-theme-light h1,
+.pdf-paper-sheet.pdf-theme-light h2,
+.pdf-paper-sheet.pdf-theme-light h3,
+.pdf-paper-sheet.pdf-theme-light h4,
+.pdf-paper-sheet.pdf-theme-light h5,
+.pdf-paper-sheet.pdf-theme-light h6,
+.pdf-paper-sheet.pdf-theme-light strong,
+.pdf-paper-sheet.pdf-theme-light b {
+  color: #0f172a !important;
 }
 
-/* Paragraphs & Lists */
-.pdf-paper-sheet p,
-.pdf-paper-sheet li {
-  color: #111827 !important;
+.pdf-paper-sheet.pdf-theme-light p,
+.pdf-paper-sheet.pdf-theme-light li {
+  color: #334155 !important;
 }
 
-/* Table styling in PDF preview */
-.pdf-paper-sheet table {
+/* Light Theme Callouts (Neutralizing Tailwind dark:* classes inside light sheet) */
+.pdf-paper-sheet.pdf-theme-light [class*="bg-blue-50"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-blue-950"] {
+  background-color: rgba(239, 246, 255, 0.95) !important;
+  color: #1e3a8a !important;
+  border-left-color: #2563eb !important;
+  border-top-color: #dbeafe !important;
+  border-right-color: #dbeafe !important;
+  border-bottom-color: #dbeafe !important;
+}
+.pdf-paper-sheet.pdf-theme-light [class*="bg-blue-100"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-blue-900"] {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+  border-color: #bfdbfe !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light [class*="bg-emerald-50"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-emerald-950"] {
+  background-color: rgba(236, 253, 245, 0.95) !important;
+  color: #064e3b !important;
+  border-left-color: #059669 !important;
+  border-top-color: #d1fae5 !important;
+  border-right-color: #d1fae5 !important;
+  border-bottom-color: #d1fae5 !important;
+}
+.pdf-paper-sheet.pdf-theme-light [class*="bg-emerald-100"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-emerald-900"] {
+  background-color: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light [class*="bg-amber-50"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-amber-950"] {
+  background-color: rgba(254, 243, 199, 0.95) !important;
+  color: #78350f !important;
+  border-left-color: #d97706 !important;
+  border-top-color: #fde68a !important;
+  border-right-color: #fde68a !important;
+  border-bottom-color: #fde68a !important;
+}
+.pdf-paper-sheet.pdf-theme-light [class*="bg-amber-100"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-amber-900"] {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fde68a !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light [class*="bg-purple-50"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-purple-950"] {
+  background-color: rgba(245, 243, 255, 0.95) !important;
+  color: #581c87 !important;
+  border-left-color: #7c3aed !important;
+  border-top-color: #ede9fe !important;
+  border-right-color: #ede9fe !important;
+  border-bottom-color: #ede9fe !important;
+}
+.pdf-paper-sheet.pdf-theme-light [class*="bg-purple-100"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-purple-900"] {
+  background-color: #ede9fe !important;
+  color: #5b21b6 !important;
+  border-color: #ddd6fe !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light [class*="bg-rose-50"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-rose-950"] {
+  background-color: rgba(255, 241, 242, 0.95) !important;
+  color: #881337 !important;
+  border-left-color: #e11d48 !important;
+  border-top-color: #ffe4e6 !important;
+  border-right-color: #ffe4e6 !important;
+  border-bottom-color: #ffe4e6 !important;
+}
+.pdf-paper-sheet.pdf-theme-light [class*="bg-rose-100"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-rose-900"] {
+  background-color: #ffe4e6 !important;
+  color: #9f1239 !important;
+  border-color: #fecdd3 !important;
+}
+
+/* Light Theme Keyboard Shortcuts (<kbd>) & Highlighting (<mark>) */
+.pdf-paper-sheet.pdf-theme-light kbd {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08) !important;
+}
+.pdf-paper-sheet.pdf-theme-light mark {
+  background-color: #fef08a !important;
+  color: #854d0e !important;
+  border: 1px solid #fde047 !important;
+}
+
+/* Light Theme Code Blocks */
+.pdf-paper-sheet.pdf-theme-light pre,
+.pdf-paper-sheet.pdf-theme-light [class*="bg-neutral-50/80"],
+.pdf-paper-sheet.pdf-theme-light [class*="dark:bg-[#121215]"] {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light [class*="bg-neutral-100/90"],
+.pdf-paper-sheet.pdf-theme-light [class*="dark:bg-[#1a1a1f]"] {
+  background-color: #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light pre code {
+  color: #0f172a !important;
+  background-color: transparent !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light code:not(pre code) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Light Theme Syntax Highlighting */
+.pdf-paper-sheet.pdf-theme-light .hljs-keyword, 
+.pdf-paper-sheet.pdf-theme-light .hljs-selector-tag { color: #4338ca !important; font-weight: 600; }
+.pdf-paper-sheet.pdf-theme-light .hljs-string, 
+.pdf-paper-sheet.pdf-theme-light .hljs-title { color: #059669 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-comment { color: #64748b !important; font-style: italic; }
+.pdf-paper-sheet.pdf-theme-light .hljs-number, 
+.pdf-paper-sheet.pdf-theme-light .hljs-literal { color: #d97706 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-attr, 
+.pdf-paper-sheet.pdf-theme-light .hljs-variable { color: #0284c7 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-function { color: #7c3aed !important; }
+
+/* Light Theme Tables - Force Wrapping, Prevent Scrollbars */
+.pdf-paper-sheet.pdf-theme-light .table-wrapper-responsive,
+.pdf-paper-sheet.pdf-theme-light .overflow-x-auto,
+.pdf-paper-sheet.pdf-theme-light div:has(> table) {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  max-width: 100% !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light table {
   color: #111827 !important;
   border-collapse: collapse !important;
   width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+  border: 1px solid #e2e8f0 !important;
   margin: 1rem 0 !important;
 }
 
-.pdf-paper-sheet thead {
+.pdf-paper-sheet.pdf-theme-light thead {
   background-color: #f8fafc !important;
 }
 
-.pdf-paper-sheet th {
+.pdf-paper-sheet.pdf-theme-light th {
   color: #0f172a !important;
   background-color: #f8fafc !important;
   border-bottom: 2px solid #cbd5e1 !important;
   font-weight: 700 !important;
   padding: 0.5rem 0.75rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
-.pdf-paper-sheet td {
-  color: #1e293b !important;
+.pdf-paper-sheet.pdf-theme-light td {
+  color: #334155 !important;
   border-top: 1px solid #e2e8f0 !important;
   padding: 0.5rem 0.75rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
-/* Code blocks in PDF preview */
-.pdf-paper-sheet pre {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 0.5rem !important;
-}
-
-.pdf-paper-sheet pre code {
-  color: #0f172a !important;
-  background-color: transparent !important;
-}
-
-.pdf-paper-sheet code:not(pre code) {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
-  padding: 0.15rem 0.35rem !important;
-  border-radius: 0.25rem !important;
-}
-
-/* Code Header */
-.pdf-paper-sheet [class*="bg-neutral-100/90"],
-.pdf-paper-sheet [class*="dark:bg-[#1a1a1f]"] {
-  background-color: #f1f5f9 !important;
-  border-bottom-color: #e2e8f0 !important;
-  color: #64748b !important;
-}
-
-.pdf-paper-sheet [class*="dark:bg-[#121215]"] {
-  background-color: #f8fafc !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* Standard blockquotes */
-.pdf-paper-sheet blockquote:not([class*="callout-alert"]) {
+/* Light Theme Blockquotes & Diagrams */
+.pdf-paper-sheet.pdf-theme-light blockquote:not([class*="callout-alert"]) {
   color: #334155 !important;
   background-color: #f8fafc !important;
   border-left: 4px solid #94a3b8 !important;
 }
 
-/* Running Header & Footer */
-.pdf-paper-sheet .pdf-running-header,
-.pdf-paper-sheet .pdf-running-footer {
+.pdf-paper-sheet.pdf-theme-light .mermaid-render-container,
+.pdf-paper-sheet.pdf-theme-light div:has(> .mermaid-render-container) {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.pdf-paper-sheet.pdf-theme-light .pdf-running-header,
+.pdf-paper-sheet.pdf-theme-light .pdf-running-footer {
   color: #64748b !important;
   border-color: #e2e8f0 !important;
+}
+
+
+/* --------------------------------------------------------------------------
+   2. MIDNIGHT DARK PDF THEME
+   -------------------------------------------------------------------------- */
+.pdf-paper-sheet.pdf-theme-dark {
+  background-color: #121215 !important;
+  color: #e2e8f0 !important;
+  color-scheme: dark !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark,
+.pdf-paper-sheet.pdf-theme-dark .prose,
+.pdf-paper-sheet.pdf-theme-dark [data-markdown-preview="true"],
+.pdf-paper-sheet.pdf-theme-dark .prose * {
+  color: #e2e8f0;
+}
+
+.pdf-paper-sheet.pdf-theme-dark h1,
+.pdf-paper-sheet.pdf-theme-dark h2,
+.pdf-paper-sheet.pdf-theme-dark h3,
+.pdf-paper-sheet.pdf-theme-dark h4,
+.pdf-paper-sheet.pdf-theme-dark h5,
+.pdf-paper-sheet.pdf-theme-dark h6,
+.pdf-paper-sheet.pdf-theme-dark strong,
+.pdf-paper-sheet.pdf-theme-dark b {
+  color: #f8fafc !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark p,
+.pdf-paper-sheet.pdf-theme-dark li {
+  color: #cbd5e1 !important;
+}
+
+/* Dark Theme Callouts */
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-50"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-950"] {
+  background-color: rgba(30, 58, 138, 0.28) !important;
+  color: #dbeafe !important;
+  border-left-color: #3b82f6 !important;
+  border-top-color: rgba(59, 130, 246, 0.3) !important;
+  border-right-color: rgba(59, 130, 246, 0.3) !important;
+  border-bottom-color: rgba(59, 130, 246, 0.3) !important;
+}
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-100"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-900"] {
+  background-color: rgba(30, 58, 138, 0.5) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-emerald-50"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-emerald-950"] {
+  background-color: rgba(6, 78, 59, 0.28) !important;
+  color: #d1fae5 !important;
+  border-left-color: #10b981 !important;
+  border-top-color: rgba(16, 185, 129, 0.3) !important;
+  border-right-color: rgba(16, 185, 129, 0.3) !important;
+  border-bottom-color: rgba(16, 185, 129, 0.3) !important;
+}
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-emerald-100"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-emerald-900"] {
+  background-color: rgba(6, 78, 59, 0.5) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-amber-50"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-amber-950"] {
+  background-color: rgba(120, 53, 15, 0.28) !important;
+  color: #fef3c7 !important;
+  border-left-color: #f59e0b !important;
+  border-top-color: rgba(245, 158, 11, 0.3) !important;
+  border-right-color: rgba(245, 158, 11, 0.3) !important;
+  border-bottom-color: rgba(245, 158, 11, 0.3) !important;
+}
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-amber-100"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-amber-900"] {
+  background-color: rgba(120, 53, 15, 0.5) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-purple-50"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-purple-950"] {
+  background-color: rgba(88, 28, 135, 0.28) !important;
+  color: #f3e8ff !important;
+  border-left-color: #a855f7 !important;
+  border-top-color: rgba(168, 85, 247, 0.3) !important;
+  border-right-color: rgba(168, 85, 247, 0.3) !important;
+  border-bottom-color: rgba(168, 85, 247, 0.3) !important;
+}
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-purple-100"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-purple-900"] {
+  background-color: rgba(88, 28, 135, 0.5) !important;
+  color: #d8b4fe !important;
+  border-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-rose-50"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-rose-950"] {
+  background-color: rgba(136, 19, 55, 0.28) !important;
+  color: #ffe4e6 !important;
+  border-left-color: #f43f5e !important;
+  border-top-color: rgba(244, 63, 94, 0.3) !important;
+  border-right-color: rgba(244, 63, 94, 0.3) !important;
+  border-bottom-color: rgba(244, 63, 94, 0.3) !important;
+}
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-rose-100"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-rose-900"] {
+  background-color: rgba(136, 19, 55, 0.5) !important;
+  color: #fda4af !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
+}
+
+/* Dark Theme Keyboard Shortcuts (<kbd>) & Highlighting (<mark>) */
+.pdf-paper-sheet.pdf-theme-dark kbd {
+  background-color: #1e1e24 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3) !important;
+}
+.pdf-paper-sheet.pdf-theme-dark mark {
+  background-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fef08a !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Dark Theme Code Blocks */
+.pdf-paper-sheet.pdf-theme-dark pre,
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-neutral-50/80"],
+.pdf-paper-sheet.pdf-theme-dark [class*="dark:bg-[#121215]"] {
+  background-color: #18181c !important;
+  border: 1px solid #27272a !important;
+  border-radius: 8px !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-neutral-100/90"],
+.pdf-paper-sheet.pdf-theme-dark [class*="dark:bg-[#1a1a1f]"] {
+  background-color: #202025 !important;
+  border-bottom: 1px solid #27272a !important;
+  color: #94a3b8 !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark pre code {
+  color: #f1f5f9 !important;
+  background-color: transparent !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark code:not(pre code) {
+  background-color: #1e1e24 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #27272a !important;
+}
+
+/* Dark Theme Syntax Highlighting */
+.pdf-paper-sheet.pdf-theme-dark .hljs-keyword, 
+.pdf-paper-sheet.pdf-theme-dark .hljs-selector-tag { color: #818cf8 !important; font-weight: 600; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-string, 
+.pdf-paper-sheet.pdf-theme-dark .hljs-title { color: #34d399 !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-comment { color: #9ca3af !important; font-style: italic; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-number, 
+.pdf-paper-sheet.pdf-theme-dark .hljs-literal { color: #fbbf24 !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-attr, 
+.pdf-paper-sheet.pdf-theme-dark .hljs-variable { color: #38bdf8 !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-function { color: #a78bfa !important; }
+
+/* Dark Theme Tables - Force Wrapping, Prevent Scrollbars */
+.pdf-paper-sheet.pdf-theme-dark .table-wrapper-responsive,
+.pdf-paper-sheet.pdf-theme-dark .overflow-x-auto,
+.pdf-paper-sheet.pdf-theme-dark div:has(> table) {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  max-width: 100% !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark table {
+  color: #e2e8f0 !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto !important;
+  border: 1px solid #27272a !important;
+  margin: 1rem 0 !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark thead {
+  background-color: #1a1a20 !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark th {
+  color: #f8fafc !important;
+  background-color: #1a1a20 !important;
+  border-bottom: 2px solid #334155 !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 0.75rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark td {
+  color: #cbd5e1 !important;
+  border-top: 1px solid #27272a !important;
+  padding: 0.5rem 0.75rem !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Dark Theme Blockquotes & Diagrams */
+.pdf-paper-sheet.pdf-theme-dark blockquote:not([class*="callout-alert"]) {
+  color: #cbd5e1 !important;
+  background-color: #18181c !important;
+  border-left: 4px solid #475569 !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark .mermaid-render-container,
+.pdf-paper-sheet.pdf-theme-dark div:has(> .mermaid-render-container) {
+  background-color: #18181c !important;
+  border-color: #27272a !important;
+  color: #f1f5f9 !important;
+}
+
+.pdf-paper-sheet.pdf-theme-dark .pdf-running-header,
+.pdf-paper-sheet.pdf-theme-dark .pdf-running-footer {
+  color: #94a3b8 !important;
+  border-color: #27272a !important;
 }
 
 /* ==========================================================================

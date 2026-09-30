@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Check, 
   Clock, 
   Flame, 
   CloudOff, 
-  ListTree,
-  ArrowLeft
+  ListTree
 } from 'lucide-react';
 import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
 import { SlashCommandMenu } from '../../../components/editor/SlashCommandMenu';
@@ -39,6 +37,7 @@ interface WritingModeCanvasProps {
   onInsertSnippet: (snippet: string) => void;
   onKeyDown?: (e: KeyboardEvent) => boolean | void;
   onSlashTrigger?: (query: string, pos: number) => void;
+  onToast?: (message: string) => void;
 }
 
 export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
@@ -67,8 +66,8 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
   slashQuery,
   onInsertSnippet,
   onSlashTrigger,
+  onToast,
 }) => {
-  const navigate = useNavigate();
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
   const [dockCoords, setDockCoords] = useState<DockCoords | null>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -381,26 +380,8 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
         onMouseLeave={handleDockMouseLeave}
       />
 
-      {/* Sleek Floating History Back Button */}
-      <div className="fixed top-4 left-4 z-40">
-        <button
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate('/documents');
-            }
-          }}
-          className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/90 dark:bg-neutral-900/90 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white border border-neutral-200/80 dark:border-neutral-800 backdrop-blur-md shadow-sm flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-all active:scale-95 group"
-          title="Back to Previous Page (History Back)"
-        >
-          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span className="hidden sm:inline">Back</span>
-        </button>
-      </div>
-
-      {/* Integrated Document Title Header with Generous Screen Spacing */}
-      <div className="w-full max-w-4xl mx-auto px-4 sm:px-12 md:px-16 pt-14 sm:pt-20 pb-2 sm:pb-3 shrink-0">
+      {/* Integrated Document Title Header */}
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-12 md:px-16 pt-6 sm:pt-10 pb-2 sm:pb-3 shrink-0 transition-all duration-200">
         <input
           ref={titleInputRef}
           type="text"
@@ -421,10 +402,10 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
         />
       </div>
 
-      {/* CodeMirror 6 Virtualized Document Writing Area with Dimmed Line Numbers */}
+      {/* CodeMirror 6 Virtualized Document Writing Area */}
       <div 
         onPointerDown={notifyUserActivity}
-        className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative"
+        className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative transition-all duration-200"
       >
         <CodeMirrorEditor
           value={content}
@@ -432,12 +413,13 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           onCursorChange={notifyUserActivity}
           onScroll={notifyUserActivity}
           onSlashTrigger={handleSlashTrigger}
-          showLineNumbers={true} // Clean dimmed paper line numbers per redesign mockup
+          showLineNumbers={true}
           placeholder="Write your thoughts, ideas, specs or story... (Type / for quick actions)"
           onPasteImage={onPasteImage}
           onDropImage={onDropImage}
           editorRef={editorRef}
           onKeyDown={handleEditorKeyDown}
+          onToast={onToast}
           className="h-full w-full"
           autoFocus
         />
@@ -460,7 +442,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
       {/* Floating Ambient Writer Dock (Bottom Pill) */}
       <div 
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-300 pointer-events-auto ${
-          !isToolbarVisible ? 'opacity-25 hover:opacity-100' : 'opacity-100'
+          !isToolbarVisible ? 'opacity-80 hover:opacity-100' : 'opacity-100'
         }`}
       >
         <div className="flex items-center gap-2 sm:gap-3 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-xl text-xs select-none">

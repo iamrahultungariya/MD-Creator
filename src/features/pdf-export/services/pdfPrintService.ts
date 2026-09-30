@@ -1,10 +1,11 @@
 import { jsPDF } from 'jspdf';
 import { toJpeg } from 'html-to-image';
-import { FontFamily, MarginSize, PageSize } from '../types';
+import { FontFamily, MarginSize, PageSize, PdfTheme } from '../types';
 
 export interface DirectPdfOptions {
   documentTitle: string;
   pageSize: PageSize;
+  pdfTheme?: PdfTheme;
   onProgress?: (progress: number, message: string) => void;
 }
 
@@ -84,7 +85,7 @@ export async function exportDirectPdf(options: DirectPdfOptions): Promise<void> 
       const imgData = await toJpeg(sheet, {
         quality: 0.95,
         pixelRatio: 2,
-        backgroundColor: '#ffffff',
+        backgroundColor: options.pdfTheme === 'dark' ? '#121215' : '#ffffff',
         skipFonts: true,
         filter: (node) => {
           if (node instanceof HTMLElement && node.classList.contains('pdf-page-indicator')) {

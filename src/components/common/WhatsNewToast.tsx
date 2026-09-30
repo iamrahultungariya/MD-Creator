@@ -62,7 +62,7 @@ export const WhatsNewToast: React.FC<WhatsNewToastProps> = ({ onOpenModal }) => 
               </span>
             </div>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
-              Fluid spring motion, contrast &amp; polish
+              Smooth themes, smart tables &amp; crystal diagrams
             </p>
           </div>
 

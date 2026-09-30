@@ -32,6 +32,18 @@ const getInitialTheme = (): ThemeMode => {
   return 'light';
 };
 
+const runWithViewTransition = (callback: () => void) => {
+  if (
+    typeof document !== 'undefined' &&
+    'startViewTransition' in document &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    (document as any).startViewTransition(callback);
+  } else {
+    callback();
+  }
+};
+
 export const useThemeStore = create<ThemeState>((set, get) => {
   const initialTheme = getInitialTheme();
   const initialIsDark = initialTheme === 'system' ? getSystemPrefersDark() : initialTheme === 'dark';
@@ -45,16 +57,20 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     setTheme: (theme: ThemeMode) => {
       const isDark = theme === 'system' ? getSystemPrefersDark() : theme === 'dark';
       localStorage.setItem('md-writer-theme', theme);
-      applyThemeClass(isDark);
-      set({ theme, isDark });
+      runWithViewTransition(() => {
+        applyThemeClass(isDark);
+        set({ theme, isDark });
+      });
     },
     toggleTheme: () => {
       const { isDark } = get();
       const nextIsDark = !isDark;
       const newTheme: ThemeMode = nextIsDark ? 'dark' : 'light';
       localStorage.setItem('md-writer-theme', newTheme);
-      applyThemeClass(nextIsDark);
-      set({ theme: newTheme, isDark: nextIsDark });
+      runWithViewTransition(() => {
+        applyThemeClass(nextIsDark);
+        set({ theme: newTheme, isDark: nextIsDark });
+      });
     }
   };
 });

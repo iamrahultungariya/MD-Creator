@@ -2,6 +2,7 @@ export type PdfPreset = 'editorial' | 'technical' | 'academic' | 'corporate' | '
 export type FontFamily = 'sans' | 'serif' | 'mono';
 export type PageSize = 'a4' | 'letter';
 export type MarginSize = 'compact' | 'normal' | 'wide';
+export type PdfTheme = 'light' | 'dark';
 
 export interface AccentColor {
   id: string;
@@ -43,4 +44,5 @@ export interface PdfConfigState {
   includeToc: boolean;
   includePageNumbers: boolean;
   watermarkText: string;
+  pdfTheme: PdfTheme;
 }

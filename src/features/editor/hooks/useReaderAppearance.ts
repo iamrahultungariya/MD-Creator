@@ -61,14 +61,19 @@ export function useReaderAppearance() {
   const readerWidthClass = useMemo(() => {
     switch (readerColumnWidth) {
       case 'focused':
-        return 'max-w-xl mx-auto w-full';
+        return 'reader-mode-zen max-w-2xl mx-auto w-full';
       case 'wide':
-        return 'max-w-6xl mx-auto w-full';
+        return 'reader-mode-engineering max-w-[96%] xl:max-w-7xl mx-auto w-full';
       case 'standard':
       default:
-        return 'max-w-4xl mx-auto w-full';
+        return 'reader-mode-classic max-w-4xl mx-auto w-full';
     }
   }, [readerColumnWidth]);
+
+  const isReaderDark = useMemo(() => {
+    if (readerTheme === 'midnight') return true;
+    return isDark;
+  }, [readerTheme, isDark]);
 
   return {
     readerTheme,
@@ -81,5 +86,6 @@ export function useReaderAppearance() {
     readerSizeClass,
     readerWidthClass,
     isDark,
+    isReaderDark,
   };
 }

@@ -20,6 +20,7 @@ import { closeBrackets } from '@codemirror/autocomplete';
 import { useThemeStore } from '../../../stores/useThemeStore';
 import { getThemeExtensions } from '../utils/codeMirrorThemes';
 import { createTableKeybindings } from '../../../utils/editorTableKeymap';
+import { extractMarkdownTableFromClipboard } from '../../../utils/clipboardTableParser';
 
 // CodeMirror live highlight marker decorator for ==highlight== syntax
 const highlightDecorator = new MatchDecorator({
@@ -74,6 +75,7 @@ export interface CodeMirrorEditorProps {
   onPasteImage?: (file: File) => void;
   onDropImage?: (file: File) => void;
   onKeyDown?: (e: KeyboardEvent) => boolean | void;
+  onToast?: (message: string) => void;
   editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
 }
 
@@ -90,6 +92,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   onPasteImage,
   onDropImage,
   onKeyDown,
+  onToast,
   editorRef,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -118,6 +121,8 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   onDropImageRef.current = onDropImage;
   const onKeyDownRef = useRef(onKeyDown);
   onKeyDownRef.current = onKeyDown;
+  const onToastRef = useRef(onToast);
+  onToastRef.current = onToast;
 
   // Buffer & debounce keystrokes so React state is not updated on every single keypress
   const changeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -303,6 +308,23 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
               changes: { from: head, to: head, insert: snippet },
               selection: { anchor: head + snippet.length }
             });
+            return true;
+          }
+        }
+
+        // 4. Smart Clipboard: Auto-convert Excel / Google Sheets / HTML tables to Markdown Pipe Table
+        const tableMarkdown = extractMarkdownTableFromClipboard(e.clipboardData);
+        if (tableMarkdown) {
+          e.preventDefault();
+          const view = viewRef.current;
+          if (view) {
+            const main = view.state.selection.main;
+            const snippet = '\n\n' + tableMarkdown + '\n\n';
+            view.dispatch({
+              changes: { from: main.from, to: main.to, insert: snippet },
+              selection: { anchor: main.from + snippet.length }
+            });
+            onToastRef.current?.('📊 Converted table from clipboard (Press Ctrl+Z to undo)');
             return true;
           }
         }

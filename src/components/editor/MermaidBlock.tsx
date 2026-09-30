@@ -4,6 +4,7 @@ import { GitBranch, AlertCircle, Copy, Check, Loader2 } from 'lucide-react';
 
 interface MermaidBlockProps {
   chart: string;
+  forceTheme?: 'light' | 'dark';
 }
 
 // Module-level cache to ensure identical diagrams are compiled at most ONCE per session
@@ -31,10 +32,11 @@ const cleanupMermaidArtifacts = () => {
   }
 };
 
-const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
+const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart, forceTheme }) => {
   const { isDark } = useThemeStore();
+  const effectiveIsDark = forceTheme ? forceTheme === 'dark' : isDark;
   const trimmedChart = chart.trim();
-  const cacheKey = `${isDark ? 'dark' : 'light'}::${trimmedChart}`;
+  const cacheKey = `${effectiveIsDark ? 'dark' : 'light'}::${trimmedChart}`;
 
   // Initialize immediately from cache if available (0ms latency, zero compilation)
   const [svgContent, setSvgContent] = useState<string>(() => mermaidSvgCache.get(cacheKey) || '');
@@ -68,7 +70,52 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
         const mermaid = await getMermaid();
         mermaid.initialize({
           startOnLoad: false,
-          theme: isDark ? 'dark' : 'default',
+          theme: effectiveIsDark ? 'dark' : 'default',
+          themeVariables: effectiveIsDark ? {
+            darkMode: true,
+            background: 'transparent',
+            primaryColor: '#1e293b',
+            primaryTextColor: '#f8fafc',
+            primaryBorderColor: '#64748b',
+            lineColor: '#cbd5e1',
+            secondaryColor: '#1e1b4b',
+            tertiaryColor: '#1e293b',
+            mainBkg: '#1e293b',
+            nodeBorder: '#64748b',
+            clusterBkg: '#0f172a',
+            clusterBorder: '#334155',
+            defaultLinkColor: '#cbd5e1',
+            titleColor: '#f8fafc',
+            edgeLabelBackground: '#1e293b',
+            nodeTextColor: '#f8fafc',
+            actorTextColor: '#f8fafc',
+            actorBkg: '#1e293b',
+            actorBorder: '#64748b',
+            signalColor: '#cbd5e1',
+            signalTextColor: '#f8fafc',
+          } : {
+            darkMode: false,
+            background: 'transparent',
+            primaryColor: '#ffffff',
+            primaryTextColor: '#0f172a',
+            primaryBorderColor: '#94a3b8',
+            lineColor: '#475569',
+            secondaryColor: '#f1f5f9',
+            tertiaryColor: '#ffffff',
+            mainBkg: '#ffffff',
+            nodeBorder: '#94a3b8',
+            clusterBkg: '#f8fafc',
+            clusterBorder: '#cbd5e1',
+            defaultLinkColor: '#475569',
+            titleColor: '#0f172a',
+            edgeLabelBackground: '#ffffff',
+            nodeTextColor: '#0f172a',
+            actorTextColor: '#0f172a',
+            actorBkg: '#ffffff',
+            actorBorder: '#94a3b8',
+            signalColor: '#334155',
+            signalTextColor: '#0f172a',
+          },
           securityLevel: 'strict',
           fontFamily: 'inherit',
           suppressErrorRendering: true,
@@ -104,7 +151,7 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
       isCancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [cacheKey, trimmedChart, isDark, svgContent]);
+  }, [cacheKey, trimmedChart, effectiveIsDark, svgContent]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(chart);
@@ -137,10 +184,10 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
   }
 
   return (
-    <div className="my-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 p-4 sm:p-6 overflow-hidden flex flex-col items-center group relative shadow-2xs transition-colors select-none">
+    <div className="my-4 rounded-2xl border border-current/15 bg-current/[0.03] text-inherit p-4 sm:p-6 overflow-hidden flex flex-col items-center group relative shadow-2xs transition-colors select-none">
       {/* Header Bar with Live Status */}
-      <div className="w-full flex items-center justify-between text-[11px] text-neutral-400 mb-3 pb-2 border-b border-neutral-100 dark:border-neutral-800">
-        <div className="flex items-center gap-2 font-mono text-[10px] text-neutral-500 uppercase tracking-wider">
+      <div className="w-full flex items-center justify-between text-[11px] opacity-75 mb-3 pb-2 border-b border-current/10 no-print">
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-inherit">
           <GitBranch className="w-3.5 h-3.5 text-indigo-500" />
           <span>Interactive Flowchart</span>
           {isDebouncing && (
@@ -152,7 +199,7 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+          className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
           title="Copy Mermaid source"
         >
           {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
@@ -177,8 +224,8 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart }) => {
   );
 };
 
-// Strict React.memo comparison: if chart string is identical, SKIP re-rendering completely
+// Strict React.memo comparison: if chart string & forceTheme are identical, SKIP re-rendering completely
 export const MermaidBlock = React.memo(
   MermaidBlockComponent,
-  (prev, next) => prev.chart.trim() === next.chart.trim()
+  (prev, next) => prev.chart.trim() === next.chart.trim() && prev.forceTheme === next.forceTheme
 );
