@@ -53,8 +53,28 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2,woff,ttf}'],
+        globIgnores: [
+          '**/vendor-mermaid*',
+          '**/vendor-pdf*',
+          '**/vendor-docx*',
+          '**/vendor-katex*',
+          '**/clipRender.worker*',
+          '**/*KaTeX_*',
+          '**/*.map'
+        ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
+          {
+            urlPattern: /.*(vendor-(mermaid|pdf|docx|media-encoders|katex)|KaTeX_).*\.(js|woff2|woff|ttf)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'heavy-dynamic-chunks',
+              expiration: {
+                maxEntries: 40,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'StaleWhileRevalidate',
@@ -86,6 +106,8 @@ export default defineConfig({
     }
   },
   build: {
+    target: 'es2022',
+    cssCodeSplit: true,
     chunkSizeWarningLimit: 4000,
     rollupOptions: {
       output: {
@@ -105,6 +127,12 @@ export default defineConfig({
             }
             if (id.includes('katex')) {
               return 'vendor-katex';
+            }
+            if (id.includes('@codemirror') || id.includes('codemirror')) {
+              return 'vendor-codemirror';
+            }
+            if (id.includes('mp4-muxer') || id.includes('gifenc')) {
+              return 'vendor-media-encoders';
             }
             if (
               id.includes('react-markdown') ||

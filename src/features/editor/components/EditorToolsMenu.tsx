@@ -11,6 +11,7 @@ import {
   Timer,
   FileX,
   Trash2,
+  Film,
 } from 'lucide-react';
 
 interface EditorToolsMenuProps {
@@ -18,6 +19,8 @@ interface EditorToolsMenuProps {
   setIsOpen: (val: boolean | ((prev: boolean) => boolean)) => void;
   onBeforeOpen?: () => void;
   onOpenPdfStudio: () => void;
+  onOpenClipStudio?: () => void;
+  isAdmin?: boolean;
   onOpenOutline: () => void;
   onOpenTableBuilder: () => void;
   onOpenImageModal?: () => void;
@@ -33,6 +36,8 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
   setIsOpen,
   onBeforeOpen,
   onOpenPdfStudio,
+  onOpenClipStudio,
+  isAdmin,
   onOpenOutline,
   onOpenTableBuilder,
   onOpenImageModal,
@@ -91,6 +96,32 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 Ctrl+P
               </kbd>
             </button>
+
+            {isAdmin && onOpenClipStudio && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenClipStudio();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Film className="w-4 h-4 text-sky-500" />
+                  <div>
+                    <div className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                      <span>Social Clip Studio</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                        Admin
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Auto-zoom Reels, Threads &amp; X clips</div>
+                  </div>
+                </div>
+                <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">
+                  Ctrl+Alt+R
+                </kbd>
+              </button>
+            )}
 
             <button
               onClick={() => {

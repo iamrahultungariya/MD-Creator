@@ -43,6 +43,9 @@ const PublishModal = React.lazy(() =>
 const LocalFolderDrawer = React.lazy(() =>
   import('../../../components/editor/LocalFolderDrawer').then((m) => ({ default: m.LocalFolderDrawer }))
 );
+const ClipStudioModal = React.lazy(() =>
+  import('../../clip-studio/components/ClipStudioModal').then((m) => ({ default: m.ClipStudioModal }))
+);
 
 interface EditorModalsContainerProps {
   docId: string;
@@ -93,6 +96,8 @@ interface EditorModalsContainerProps {
   onCloseLocalFolder?: () => void;
   onOpenLocalFolder?: () => void;
   onSelectLocalFile?: (fileHandle: FileSystemFileHandle, fileName: string, content: string) => void;
+  isClipStudioOpen?: boolean;
+  onCloseClipStudio?: () => void;
 }
 
 export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React.memo(({
@@ -144,6 +149,8 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   onCloseLocalFolder,
   onOpenLocalFolder,
   onSelectLocalFile,
+  isClipStudioOpen = false,
+  onCloseClipStudio,
 }) => {
   return (
     <Suspense fallback={null}>
@@ -271,6 +278,15 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           onClose={onCloseLocalFolder || (() => {})}
           onSelectFile={onSelectLocalFile || (() => {})}
           activeFileName={title}
+        />
+      )}
+
+      {isClipStudioOpen && (
+        <ClipStudioModal
+          isOpen={isClipStudioOpen}
+          onClose={onCloseClipStudio || (() => {})}
+          title={title}
+          content={content}
         />
       )}
     </Suspense>

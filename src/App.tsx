@@ -7,10 +7,14 @@ import { useToolbarSettingsStore } from './stores/useToolbarSettingsStore';
 import { PageLoader } from './components/common/PageLoader';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { PageTransition } from './components/common/PageTransition';
-import { WhatsNewToast } from './components/common/WhatsNewToast';
-import { UpdateChangelogModal } from './components/common/UpdateChangelogModal';
 
 // Lazy-loaded route chunks
+const WhatsNewToast = React.lazy(() =>
+  import('./components/common/WhatsNewToast').then((m) => ({ default: m.WhatsNewToast }))
+);
+const UpdateChangelogModal = React.lazy(() =>
+  import('./components/common/UpdateChangelogModal').then((m) => ({ default: m.UpdateChangelogModal }))
+);
 const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const EditorPage = React.lazy(() => import('./pages/EditorPage').then((m) => ({ default: m.EditorPage })));
 const DocumentsPage = React.lazy(() => import('./pages/DocumentsPage').then((m) => ({ default: m.DocumentsPage })));
@@ -123,8 +127,12 @@ export const App: React.FC = () => {
       )}
 
       {/* 0.9.2 Beta What's New Toast & Modal */}
-      <WhatsNewToast onOpenModal={() => setIsUpdateModalOpen(true)} />
-      <UpdateChangelogModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
+      <Suspense fallback={null}>
+        <WhatsNewToast onOpenModal={() => setIsUpdateModalOpen(true)} />
+        {isUpdateModalOpen && (
+          <UpdateChangelogModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
+        )}
+      </Suspense>
 
       <AppRoutes />
     </BrowserRouter>

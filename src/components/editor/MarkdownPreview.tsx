@@ -10,7 +10,6 @@ import rehypeHighlight from 'rehype-highlight';
 import 'katex/dist/katex.min.css';
 import { sanitizeMarkdownForPreview, isSafeUrl, markdownSanitizeSchema } from '../../utils/markdownSanitizer';
 import { Copy, Check, X, ChevronRight } from 'lucide-react';
-import { MermaidBlock } from './MermaidBlock';
 import { replaceRichIconsInReactNode } from '../../utils/richIcons';
 import { FrontmatterCard } from './FrontmatterCard';
 import { extractTextFromReactNode, toHeadingSlug, extractAlertInfo, getAlertThemeClasses } from './markdownAlerts';
@@ -18,6 +17,15 @@ import { MarkdownImage } from './MarkdownImage';
 import { findAllTablesInDocument, replaceTableInDocument, ParsedTable } from '../../utils/markdownTable';
 import { InteractiveTableOverlay } from './InteractiveTableOverlay';
 import { LinkHoverCard } from './LinkHoverCard';
+
+// Lazy-load heavy 3.44 MB Mermaid engine only on-demand when a diagram exists
+const MermaidBlock = React.lazy(() =>
+  import('./MermaidBlock').then((m) => ({ default: m.MermaidBlock }))
+);
+
+// Static plugin arrays to avoid re-constructing the unified AST processor pipeline on every render/keystroke
+const STATIC_REMARK_PLUGINS: any[] = [remarkGfm, remarkMath, remarkBreaks];
+const STATIC_REHYPE_PLUGINS: any[] = [rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex, rehypeHighlight];
 
 interface MarkdownPreviewProps {
   content: string;
@@ -96,8 +104,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
     >
       {rawFrontmatter && <FrontmatterCard rawYaml={rawFrontmatter} />}
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
-        rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex, rehypeHighlight]}
+        remarkPlugins={STATIC_REMARK_PLUGINS}
+        rehypePlugins={STATIC_REHYPE_PLUGINS}
         components={{
           // Headings with stable IDs and scroll-margin for outline synchronization
           h1: ({ children }) => {
@@ -377,9 +385,20 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
               );
             }
 
-            // Interactive Mermaid Diagram
+            // Interactive Mermaid Diagram (Lazy-loaded on demand)
             if (match && match[1] === 'mermaid') {
-              return <MermaidBlock chart={rawCode} forceTheme={forceTheme} />;
+              return (
+                <React.Suspense
+                  fallback={
+                    <div className="my-4 p-5 rounded-2xl border border-current/15 bg-current/[0.03] text-inherit flex items-center justify-center gap-2 text-xs font-mono">
+                      <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
+                      <span>Loading diagram engine...</span>
+                    </div>
+                  }
+                >
+                  <MermaidBlock chart={rawCode} forceTheme={forceTheme} />
+                </React.Suspense>
+              );
             }
 
             const codeContainerClass = forceTheme === 'light'

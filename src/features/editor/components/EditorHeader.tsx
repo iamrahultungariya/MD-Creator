@@ -35,6 +35,8 @@ interface EditorHeaderProps {
   onOpenSwitcher: () => void;
   onOpenDrawer: () => void;
   onOpenPdfStudio: () => void;
+  onOpenClipStudio?: () => void;
+  isAdmin?: boolean;
   onOpenTableBuilder: () => void;
   onOpenImageModal?: () => void;
   onOpenOutline: () => void;
@@ -85,6 +87,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   onOpenSwitcher,
   onOpenDrawer,
   onOpenPdfStudio,
+  onOpenClipStudio,
+  isAdmin,
   onOpenTableBuilder,
   onOpenImageModal,
   onOpenOutline,
@@ -394,6 +398,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                 setIsModeMenuOpen(false);
               }}
               onOpenPdfStudio={onOpenPdfStudio}
+              onOpenClipStudio={onOpenClipStudio}
+              isAdmin={isAdmin}
               onOpenOutline={onOpenOutline}
               onOpenTableBuilder={onOpenTableBuilder}
               onOpenImageModal={onOpenImageModal}

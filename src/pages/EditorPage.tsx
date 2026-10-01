@@ -12,11 +12,10 @@ import { EditorWorkspace } from '../features/editor/components/EditorWorkspace';
 import { EditorStatusBar } from '../features/editor/components/EditorStatusBar';
 import { EditorModalsContainer } from '../features/editor/components/EditorModalsContainer';
 import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
-import { exportToDocx } from '../features/docx-export/services/docxExportService';
-import { executePdfPrint } from '../features/pdf-export/services/pdfPrintService';
 import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
 import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
 import { writeLocalFile } from '../services/localFolderService';
+import { isCurrentUserAdmin } from '../utils/adminAuth';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +28,11 @@ export const EditorPage: React.FC = () => {
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [findMode, setFindMode] = useState<'find' | 'replace'>('find');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    isCurrentUserAdmin().then(setIsAdmin);
+  }, []);
 
   const showToast = useCallback((msg: string, durationMs = 2500) => {
     setCopyToast(msg);
@@ -84,6 +88,7 @@ export const EditorPage: React.FC = () => {
   const handleExportDocx = useCallback(async () => {
     try {
       showToast('Exporting to Word (.docx)...', 2000);
+      const { exportToDocx } = await import('../features/docx-export/services/docxExportService');
       await exportToDocx(doc.title || 'Untitled', doc.content);
       showToast('Word document (.docx) exported successfully!');
     } catch (err) {
@@ -208,7 +213,7 @@ export const EditorPage: React.FC = () => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault();
         if (modals.isPdfStudioOpen) {
-          executePdfPrint();
+          import('../features/pdf-export/services/pdfPrintService').then((m) => m.executePdfPrint());
         } else {
           modals.setIsPdfStudioOpen(true);
         }
@@ -240,10 +245,18 @@ export const EditorPage: React.FC = () => {
           return 'split';
         });
       }
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        if (isAdmin) {
+          modals.setIsClipStudioOpen(true);
+        } else {
+          showToast('Social Clip Studio is an admin-only feature');
+        }
+      }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [doc, slash.isSlashMenuOpen, modals, setViewMode]);
+  }, [doc, slash.isSlashMenuOpen, modals, setViewMode, isAdmin, showToast]);
 
   // Telemetry computations offloaded to background Web Worker (Bug 1: 5500 LOC crash fix)
   const workerStats = useMarkdownWorker(doc.content);
@@ -294,6 +307,8 @@ export const EditorPage: React.FC = () => {
           onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
           onOpenDrawer={() => modals.setIsDrawerOpen(true)}
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
+          onOpenClipStudio={() => modals.setIsClipStudioOpen(true)}
+          isAdmin={isAdmin}
           onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
           onOpenImageModal={() => modals.setIsImageModalOpen(true)}
           onOpenOutline={() => modals.setIsOutlineOpen(true)}
@@ -446,6 +461,8 @@ export const EditorPage: React.FC = () => {
         onCloseLocalFolder={() => modals.setIsLocalFolderOpen(false)}
         onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
         onSelectLocalFile={handleSelectLocalFile}
+        isClipStudioOpen={modals.isClipStudioOpen}
+        onCloseClipStudio={() => modals.setIsClipStudioOpen(false)}
       />
     </div>
   );
