@@ -350,11 +350,11 @@ export const BentoEditorCard: React.FC = () => {
           {/* Format 8: Insert Link */}
           {activeFormat === 'link' && (
             <div className="w-full flex items-center gap-2 text-xs animate-in fade-in duration-200">
-              <Link2 className="w-3.5 h-3.5 text-blue-500" />
+              <Link2 className="w-3.5 h-3.5 text-brand-500" />
               <a
                 href="#features"
                 onClick={(e) => e.preventDefault()}
-                className="text-blue-600 dark:text-blue-400 underline font-medium text-[11px]"
+                className="text-brand-600 dark:text-brand-400 underline font-medium text-[11px]"
               >
                 [MD Writer Documentation](https://mdwriter.app/docs)
               </a>

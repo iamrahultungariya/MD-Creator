@@ -208,7 +208,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                       }
                     }
                   }}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-0 mr-2 align-middle cursor-pointer accent-neutral-900 dark:accent-white"
+                  className="w-4 h-4 rounded text-brand-600 focus:ring-0 mr-2 align-middle cursor-pointer accent-neutral-900 dark:accent-white"
                   {...props}
                 />
               );
@@ -454,7 +454,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                 rel="noopener noreferrer nofollow ugc"
                 onMouseEnter={(e) => href && handleLinkMouseEnter(href, e)}
                 onMouseLeave={handleLinkMouseLeave}
-                className="text-blue-600 dark:text-blue-400 hover:underline font-medium inline transition-colors"
+                className="text-brand-600 dark:text-brand-400 hover:underline font-medium inline transition-colors"
               >
                 {children}
               </a>

@@ -17,7 +17,8 @@ import {
   GitBranch,
   Image as ImageIcon,
   Highlighter,
-  Command
+  Command,
+  X
 } from 'lucide-react';
 
 export interface CommandItem {
@@ -57,7 +58,7 @@ export const COMMANDS: CommandItem[] = [
   {
     id: 'checklist',
     title: 'Task Checklist',
-    description: 'Interactive todo list item',
+    description: 'Interactive todo item',
     icon: CheckSquare,
     shortcut: '- [ ]',
     insertSnippet: '- [ ] New task\n- [ ] Follow-up task\n'
@@ -65,7 +66,7 @@ export const COMMANDS: CommandItem[] = [
   {
     id: 'bullet-list',
     title: 'Bullet List',
-    description: 'Simple un-ordered list',
+    description: 'Un-ordered list',
     icon: List,
     shortcut: '-',
     insertSnippet: '- List item 1\n- List item 2\n- List item 3\n'
@@ -89,7 +90,7 @@ export const COMMANDS: CommandItem[] = [
   {
     id: 'quote',
     title: 'Blockquote',
-    description: 'Highlighted quote passage',
+    description: 'Highlighted quotation',
     icon: Quote,
     shortcut: '>',
     insertSnippet: '> Write your quotation or insight here.\n'
@@ -105,7 +106,7 @@ export const COMMANDS: CommandItem[] = [
   {
     id: 'table-builder',
     title: 'Visual Table Builder',
-    description: 'Design custom rows & columns in a grid',
+    description: 'Interactive grid designer',
     icon: Table2,
     shortcut: '/table',
     insertSnippet: '__ACTION_OPEN_TABLE_BUILDER__'
@@ -113,55 +114,55 @@ export const COMMANDS: CommandItem[] = [
   {
     id: 'table',
     title: '3x3 Quick Table',
-    description: 'Formatted markdown table',
+    description: 'Markdown pipe table',
     icon: Table2,
     shortcut: 'table',
     insertSnippet: '\n| Column 1 | Column 2 | Column 3 |\n| :--- | :--- | :--- |\n| Alpha | Feature A | Active |\n| Beta | Feature B | Ready |\n| Gamma | Feature C | Done |\n\n'
   },
   {
     id: 'math-studio',
-    title: 'KaTeX Formula Studio',
-    description: 'Predefined formulas library (Calculus, Algebra, Physics, Stats)',
+    title: 'Formula Studio',
+    description: 'KaTeX library presets',
     icon: Sigma,
     shortcut: '/math',
     insertSnippet: '__ACTION_OPEN_MATH_STUDIO__'
   },
   {
     id: 'math',
-    title: 'Raw Math Formula (KaTeX)',
-    description: 'Insert raw LaTeX equation block',
+    title: 'LaTeX Formula',
+    description: 'Raw KaTeX math block',
     icon: Sigma,
     shortcut: '$$',
     insertSnippet: '$$\nE = mc^2\n$$\n'
   },
   {
     id: 'image',
-    title: 'Embed Image Studio',
-    description: 'Upload local image (compressed offline) or enter web URL',
+    title: 'Embed Image',
+    description: 'Upload local or URL',
     icon: ImageIcon,
     shortcut: '/image',
     insertSnippet: '__ACTION_OPEN_IMAGE_MODAL__'
   },
   {
     id: 'callout-note',
-    title: 'Alert Note',
-    description: 'GitHub-style note callout box',
+    title: 'Note Callout',
+    description: 'GitHub-style note box',
     icon: AlertCircle,
     shortcut: '/note',
     insertSnippet: '> [!NOTE]\n> Write your note or key context here.\n'
   },
   {
     id: 'callout-tip',
-    title: 'Alert Tip',
-    description: 'GitHub-style helpful tip callout',
+    title: 'Tip Callout',
+    description: 'Helpful advice callout',
     icon: Lightbulb,
     shortcut: '/tip',
     insertSnippet: '> [!TIP]\n> Write your helpful tip here.\n'
   },
   {
     id: 'callout-warning',
-    title: 'Alert Warning',
-    description: 'GitHub-style cautionary warning',
+    title: 'Warning Callout',
+    description: 'Cautionary callout',
     icon: AlertTriangle,
     shortcut: '/warning',
     insertSnippet: '> [!WARNING]\n> Write your cautionary warning here.\n'
@@ -169,20 +170,26 @@ export const COMMANDS: CommandItem[] = [
   {
     id: 'divider',
     title: 'Divider',
-    description: 'Horizontal rule separator',
+    description: 'Horizontal separator',
     icon: Minus,
     shortcut: '---',
     insertSnippet: '\n---\n\n'
   },
   {
     id: 'mermaid',
-    title: 'Mermaid Flowchart',
-    description: 'Architecture diagram & sequence chart',
+    title: 'Mermaid Diagram',
+    description: 'Architecture flowchart',
     icon: GitBranch,
     shortcut: '/mermaid',
     insertSnippet: '```mermaid\ngraph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Result 1]\n    B -->|No| D[Result 2]\n```\n'
   }
 ];
+
+export interface CaretCoords {
+  left: number;
+  top: number;
+  bottom: number;
+}
 
 interface SlashCommandMenuProps {
   isOpen: boolean;
@@ -190,6 +197,7 @@ interface SlashCommandMenuProps {
   searchQuery: string;
   onSelect: (snippet: string) => void;
   onClose?: () => void;
+  caretCoords?: CaretCoords | null;
 }
 
 export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
@@ -197,7 +205,8 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
   selectedIndex,
   searchQuery,
   onSelect,
-  onClose
+  onClose,
+  caretCoords,
 }) => {
   const activeItemRef = useRef<HTMLDivElement>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
@@ -220,62 +229,75 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 
   if (!isOpen) return null;
 
-  const currentSelected = filteredCommands[selectedIndex % (filteredCommands.length || 1)];
+  // Compute cursor-anchored position
+  const menuWidth = 280;
+  const menuHeight = 260;
+
+  let positionStyle: React.CSSProperties = {};
+  if (caretCoords) {
+    const isTopPlacement = (caretCoords.top - menuHeight) > 55;
+    const top = isTopPlacement ? caretCoords.top - 8 : caretCoords.bottom + 8;
+    const transform = isTopPlacement ? 'translateY(-100%)' : 'translateY(0)';
+    // Clamp left so it never clips on screen borders
+    const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
+    const clampedLeft = Math.max(12, Math.min(windowWidth - menuWidth - 12, caretCoords.left));
+
+    positionStyle = {
+      position: 'fixed',
+      left: `${clampedLeft}px`,
+      top: `${top}px`,
+      transform,
+      width: `${menuWidth}px`,
+    };
+  }
 
   return (
     <div 
       data-slash-menu="true" 
-      className="fixed md:absolute bottom-0 md:bottom-12 left-0 md:left-6 right-0 md:right-auto z-50 md:z-40 w-full md:w-[380px] bg-white dark:bg-[#141415] border-t md:border border-neutral-200/80 dark:border-neutral-800/80 rounded-t-[32px] md:rounded-[28px] shadow-2xl shadow-neutral-950/20 overflow-hidden animate-in slide-in-from-bottom-5 md:zoom-in-95 duration-150 select-none max-h-[80vh] flex flex-col p-4 sm:p-5"
+      style={caretCoords ? positionStyle : undefined}
+      className={`z-50 select-none overflow-hidden rounded-2xl bg-white/95 dark:bg-[#15111E]/95 backdrop-blur-xl border border-neutral-200/90 dark:border-[#2A2338] shadow-2xl shadow-black/25 flex flex-col p-2 animate-in fade-in zoom-in-95 duration-100 ${
+        !caretCoords
+          ? 'fixed bottom-14 left-4 right-4 sm:left-auto sm:right-auto sm:w-[280px] sm:bottom-16 sm:left-6'
+          : ''
+      }`}
     >
-      {/* Top Identity Header (Styled like the reference card avatar + identity) */}
-      <div className="flex items-center justify-between pb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60">
-            <Command className="w-4 h-4" />
+      {/* Sleek Minimal Header */}
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 mb-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="w-5 h-5 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+            <Command className="w-3 h-3" />
           </div>
-          <div>
-            <h3 className="font-bold text-sm text-neutral-950 dark:text-white leading-tight">
-              Insert Block
-            </h3>
-            <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
-              Format, media & components
-            </p>
-          </div>
+          <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 truncate">
+            {searchQuery ? `"${searchQuery}"` : 'Blocks'}
+          </span>
+          <span className="text-[10px] font-mono text-neutral-400 shrink-0">
+            ({filteredCommands.length})
+          </span>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className="hidden sm:inline-flex text-[10px] font-mono text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800/80 px-2 py-0.5 rounded-full">
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[9px] font-mono text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.2 rounded">
             ESC
           </span>
           {onClose && (
             <button
               onClick={onClose}
-              className="p-1 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="p-0.5 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
             >
-              <span className="text-sm font-semibold">✕</span>
+              <X className="w-3 h-3" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Query / Search Filter Row (Clean minimal prompt line) */}
-      <div className="pb-3 pt-1 border-b border-neutral-100 dark:border-neutral-800/80">
-        <div className="text-xs text-neutral-400 dark:text-neutral-500 flex items-center justify-between font-medium">
-          <span>{searchQuery ? `Searching for "${searchQuery}"` : 'Type to search blocks...'}</span>
-          <span className="text-[10px] text-neutral-400 dark:text-neutral-600 font-mono">
-            {filteredCommands.length} blocks
-          </span>
-        </div>
-      </div>
-
-      {/* Commands List */}
+      {/* Commands List - Compact & Contained */}
       <div 
         ref={listContainerRef} 
-        className="max-h-64 overflow-y-auto py-2.5 space-y-1 scroll-smooth pr-1 my-1"
+        className="max-h-56 overflow-y-auto overflow-x-hidden space-y-0.5 pr-0.5 scroll-smooth"
       >
         {filteredCommands.length === 0 ? (
-          <div className="py-8 text-center text-xs text-neutral-400 dark:text-neutral-500">
-            No matching blocks found for "{searchQuery}"
+          <div className="py-6 text-center text-xs text-neutral-400 dark:text-neutral-500">
+            No blocks for "{searchQuery}"
           </div>
         ) : (
           filteredCommands.map((cmd, idx) => {
@@ -288,35 +310,32 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
                 data-selected={isSelected ? 'true' : 'false'}
                 ref={isSelected ? activeItemRef : undefined}
                 onClick={() => onSelect(cmd.insertSnippet)}
-                className={`w-full px-3.5 py-2.5 rounded-2xl flex items-center justify-between transition-all cursor-pointer ${
+                className={`w-full px-2.5 py-1.5 rounded-xl flex items-center justify-between transition-colors cursor-pointer gap-2 ${
                   isSelected
-                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-md font-semibold scale-[1.01]'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
+                    ? 'bg-brand-500 text-white shadow-xs font-medium'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60'
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0 pr-2">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
                     isSelected 
-                      ? 'bg-white/15 text-white dark:bg-neutral-950/15 dark:text-neutral-950' 
-                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                   }`}>
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-3.5 h-3.5" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-xs truncate">{cmd.title}</div>
-                    <div className={`text-[10px] truncate ${
-                      isSelected 
-                        ? 'text-neutral-300 dark:text-neutral-600' 
-                        : 'text-neutral-400 dark:text-neutral-500'
-                    }`}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs truncate leading-tight">{cmd.title}</p>
+                    <p className={`text-[10px] truncate leading-tight ${isSelected ? 'text-white/80' : 'text-neutral-400 dark:text-neutral-500'}`}>
                       {cmd.description}
-                    </div>
+                    </p>
                   </div>
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full shrink-0 transition-colors ${
+
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
                   isSelected 
-                    ? 'bg-white/20 text-white dark:bg-neutral-950/20 dark:text-neutral-900 font-bold' 
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500'
+                    ? 'bg-white/25 text-white' 
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
                 }`}>
                   {cmd.shortcut}
                 </span>
@@ -324,27 +343,6 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
             );
           })
         )}
-      </div>
-
-      {/* Bottom Footer Bar with Navigation Tip & High-Contrast Pill Action Button */}
-      <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between">
-        <div className="text-[11px] text-neutral-400 dark:text-neutral-500 flex items-center gap-2">
-          <span><strong className="text-neutral-700 dark:text-neutral-300 font-semibold">↑ ↓</strong> Navigate</span>
-        </div>
-
-        {/* High Contrast Pill Action Button (Inspired by "Publish" pill in design reference) */}
-        <button
-          type="button"
-          onClick={() => {
-            if (currentSelected) {
-              onSelect(currentSelected.insertSnippet);
-            }
-          }}
-          className="px-4 py-1.5 rounded-full text-xs font-bold tracking-tight shadow-sm transition-all active:scale-95 cursor-pointer bg-neutral-950 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 flex items-center gap-1.5"
-        >
-          <span>Insert</span>
-          <span className="text-[10px] opacity-70 font-mono">↵</span>
-        </button>
       </div>
     </div>
   );

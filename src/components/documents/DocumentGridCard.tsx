@@ -162,7 +162,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
         {/* Monochromatic Tags Pills */}
         {doc.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {doc.tags.slice(0, 3).map((tag) => (
+            {doc.tags.slice(0, 5).map((tag) => (
               <span
                 key={tag}
                 className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60"
@@ -170,6 +170,14 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
                 #{tag}
               </span>
             ))}
+            {doc.tags.length > 5 && (
+              <span
+                title={doc.tags.slice(5).map((t) => `#${t}`).join(', ')}
+                className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/60 dark:border-brand-800/60 cursor-help"
+              >
+                +{doc.tags.length - 5} more
+              </span>
+            )}
           </div>
         )}
 

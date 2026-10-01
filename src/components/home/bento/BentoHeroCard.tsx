@@ -215,7 +215,7 @@ export const BentoHeroCard: React.FC<BentoHeroCardProps> = ({ onOpenTemplates })
                   title={markdown.includes('```typescript') ? 'Remove Code Block' : 'Insert Code Block'}
                   className="p-1 hover:text-neutral-800 dark:hover:text-white transition-colors cursor-pointer"
                 >
-                  <Code className={`w-3.5 h-3.5 ${markdown.includes('```typescript') ? 'text-blue-500' : ''}`} />
+                  <Code className={`w-3.5 h-3.5 ${markdown.includes('```typescript') ? 'text-brand-500' : ''}`} />
                 </button>
                 <button
                   onClick={handleReset}

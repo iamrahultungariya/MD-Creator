@@ -122,8 +122,8 @@ export const FeaturesPage: React.FC = () => {
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               <div className="lg:col-span-6 space-y-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/50">
-                  <Printer className="w-3.5 h-3.5 text-blue-600" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/60 dark:border-brand-900/50">
+                  <Printer className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                   <span>Vector Print Engine v2.4</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
@@ -151,7 +151,7 @@ export const FeaturesPage: React.FC = () => {
                 <div className="pt-2">
                   <button
                     onClick={() => navigate('/editor')}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
                   >
                     <span>Test PDF Studio in Editor</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -189,7 +189,7 @@ export const FeaturesPage: React.FC = () => {
                     <span className="text-emerald-600 dark:text-emerald-400 font-bold">READY TO EXPORT</span>
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-mono font-bold text-blue-600 dark:text-blue-400 block">
+                    <span className="text-[10px] uppercase font-mono font-bold text-brand-600 dark:text-brand-400 block">
                       {pdfPresetPreview.toUpperCase()} PRESET
                     </span>
                     <h4 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white mt-0.5">
@@ -298,7 +298,7 @@ export const FeaturesPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="p-3 sm:p-4 bg-white dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-blue-600 dark:text-blue-400 overflow-x-auto">
+                  <div className="p-3 sm:p-4 bg-white dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-brand-600 dark:text-brand-400 overflow-x-auto">
                     {sampleFormulas[mathCategory].latex}
                   </div>
 
@@ -367,7 +367,7 @@ export const FeaturesPage: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between py-1 border-b border-neutral-100 dark:border-neutral-800/60">
                     <span className="text-neutral-500">Network Requirement</span>
-                    <span className="font-bold text-blue-600 dark:text-blue-400">Zero (Full Offline Support)</span>
+                    <span className="font-bold text-brand-600 dark:text-brand-400">Zero (Full Offline Support)</span>
                   </div>
                   <div className="flex items-center justify-between py-1">
                     <span className="text-neutral-500">Privacy Guarantee</span>

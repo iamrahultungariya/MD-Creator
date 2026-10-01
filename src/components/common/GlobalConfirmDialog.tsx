@@ -78,7 +78,7 @@ export const GlobalConfirmDialog: React.FC = () => {
       case 'info':
       default:
         return (
-          <div className="w-11 h-11 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-900/50 shadow-inner">
+          <div className="w-11 h-11 rounded-2xl bg-brand-100 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-900/50 shadow-inner">
             <Info className="w-5 h-5" />
           </div>
         );

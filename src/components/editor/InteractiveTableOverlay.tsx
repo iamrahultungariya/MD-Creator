@@ -103,7 +103,7 @@ const renderCellContent = (text: string): React.ReactNode => {
           href={linkMatch[2]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 dark:text-blue-400 hover:underline"
+          className="text-brand-600 dark:text-brand-400 hover:underline"
           onClick={(e) => e.stopPropagation()}
         >
           {linkMatch[1]}
@@ -282,7 +282,7 @@ export const InteractiveTableOverlay: React.FC<InteractiveTableOverlayProps> = (
           <button
             type="button"
             onClick={handleCopyMarkdown}
-            className="hover:text-blue-400 px-1 py-0.5 flex items-center gap-0.5 cursor-pointer"
+            className="hover:text-brand-400 px-1 py-0.5 flex items-center gap-0.5 cursor-pointer"
             title="Copy table as Markdown"
           >
             {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -312,7 +312,7 @@ export const InteractiveTableOverlay: React.FC<InteractiveTableOverlayProps> = (
                         onChange={(e) => setCellDraft(e.target.value)}
                         onBlur={handleSaveCell}
                         onKeyDown={handleCellKeyDown}
-                        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white px-1.5 py-0.5 rounded border border-blue-500 font-bold text-[10px] w-full focus:outline-none"
+                        className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white px-1.5 py-0.5 rounded border border-brand-500 font-bold text-[10px] w-full focus:outline-none"
                       />
                     ) : (
                       <div className={`flex items-center gap-2 ${align === 'center' ? 'justify-center text-center' : align === 'right' ? 'justify-end text-right' : 'justify-between text-left'}`}>
@@ -373,7 +373,7 @@ export const InteractiveTableOverlay: React.FC<InteractiveTableOverlayProps> = (
                           onChange={(e) => setCellDraft(e.target.value)}
                           onBlur={handleSaveCell}
                           onKeyDown={handleCellKeyDown}
-                          className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white px-1.5 py-0.5 rounded border border-blue-500 text-xs w-full focus:outline-none"
+                          className="bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white px-1.5 py-0.5 rounded border border-brand-500 text-xs w-full focus:outline-none"
                         />
                       ) : (
                         <div className={`flex items-center gap-1.5 min-h-[1.5rem] ${align === 'center' ? 'justify-center text-center' : align === 'right' ? 'justify-end text-right' : 'justify-between text-left'}`}>

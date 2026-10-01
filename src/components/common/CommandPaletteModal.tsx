@@ -171,7 +171,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       category: 'Community & Support',
       description: 'Report bugs, suggest features, or share thoughts',
       icon: MessageSquare,
-      iconColor: 'text-blue-500 bg-blue-50 dark:bg-blue-950/50',
+      iconColor: 'text-brand-500 bg-brand-50 dark:bg-brand-950/50',
       shortcut: '/feedback',
       perform: () => {
         onClose();
@@ -205,7 +205,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       category: 'Navigation',
       description: 'Browse all offline documents, tags, and stats',
       icon: FolderOpen,
-      iconColor: 'text-blue-500 bg-blue-50 dark:bg-blue-950/50',
+      iconColor: 'text-brand-500 bg-brand-50 dark:bg-brand-950/50',
       shortcut: 'Vault',
       perform: () => {
         navigate('/documents');

@@ -43,7 +43,7 @@ export const UpdatesPage: React.FC = () => {
       case 'perf':
         return 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/80';
       case 'improved':
-        return 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/80';
+        return 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border-brand-200 dark:border-brand-800/80';
       case 'fix':
         return 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800/80';
     }
@@ -75,7 +75,7 @@ export const UpdatesPage: React.FC = () => {
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.1] mb-4 sm:mb-5">
             Crafted for speed. <br className="hidden sm:inline" />
-            <span className="text-blue-600 dark:text-blue-500">Refined for focus.</span>
+            <span className="text-brand-600 dark:text-brand-400">Refined for focus.</span>
           </h1>
 
           <p className="text-sm sm:text-base lg:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl mx-auto mb-6 sm:mb-8">

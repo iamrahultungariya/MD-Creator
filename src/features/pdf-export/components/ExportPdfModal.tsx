@@ -28,7 +28,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   // Preset & Typography state
   const [preset, setPreset] = useState<PdfPreset>('editorial');
   const [fontFamily, setFontFamily] = useState<FontFamily>('sans');
-  const [accentColor, setAccentColor] = useState<string>('#4f46e5');
+  const [accentColor, setAccentColor] = useState<string>('#8257F5');
   const [pageSize, setPageSize] = useState<PageSize>('a4');
   const [margins, setMargins] = useState<MarginSize>('normal');
 
@@ -81,7 +81,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
     setPreset(p);
     if (p === 'editorial') {
       setFontFamily('sans');
-      setAccentColor('#4f46e5');
+      setAccentColor('#8257F5');
       setMargins('normal');
     } else if (p === 'technical') {
       setFontFamily('mono');
@@ -182,12 +182,12 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
       data-pdf-studio-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
     >
-      <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-neutral-900 border-0 sm:border border-neutral-200 dark:border-neutral-800 rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden min-h-0">
+      <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-[#15111E] border-0 sm:border border-neutral-200 dark:border-[#2A2338] rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden min-h-0">
         {/* Studio Top Navigation Bar */}
-        <div data-pdf-studio-navbar="true" className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-950/60 shrink-0">
+        <div data-pdf-studio-navbar="true" className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-200 dark:border-[#2A2338] flex items-center justify-between bg-neutral-50/80 dark:bg-[#100D18]/90 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center shadow-xs shrink-0">
-              <Printer className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+              <Printer className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -195,19 +195,19 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
                   <span className="sm:hidden">PDF Studio</span>
                   <span className="hidden sm:inline">Document Print &amp; PDF Studio</span>
                 </h1>
-                <span className="hidden xs:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shrink-0">
-                  Vector
+                <span className="hidden xs:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shrink-0">
+                  Vector Sharp
                 </span>
               </div>
               <p className="hidden sm:block text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                Publication-grade document printing, styling &amp; PDF generation engine
+                Publication-grade vector printing &amp; PDF export engine
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Desktop Zoom Controls */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-2xs">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-[#1D1829] border border-neutral-200 dark:border-[#2A2338] rounded-xl shadow-2xs">
               <button
                 type="button"
                 onClick={() => setZoomLevel((prev) => Math.max(30, prev - 10))}
@@ -219,7 +219,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               <button
                 type="button"
                 onClick={handleFitWidth}
-                className="font-mono font-semibold px-1 min-w-[42px] text-center text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                className="font-mono font-semibold px-1 min-w-[42px] text-center text-[11px] text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
                 title="Click to Fit Width"
               >
                 {zoomLevel}%
@@ -234,37 +234,38 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               </button>
             </div>
 
+            {/* Primary Vector Print / Save as PDF Button */}
+            <button
+              type="button"
+              onClick={handlePrintPdf}
+              disabled={isDownloading}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
+              title="Print Document or Save as Vector PDF (Ctrl+P / Cmd+P)"
+            >
+              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
+              <span className="hidden xs:inline">Print / Save as PDF</span>
+              <span className="xs:hidden">Print</span>
+            </button>
+
             {/* Direct 1-Click Download PDF Button */}
             <button
               type="button"
               onClick={handleDirectDownload}
               disabled={isDownloading}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
-              title="Save document directly as PDF (Ctrl+S / Cmd+S)"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1D1829] dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-[#2A2338] transition-all hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+              title="Direct File Download (Ctrl+S / Cmd+S)"
             >
               {isDownloading ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-white shrink-0" />
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin text-neutral-500 shrink-0" />
                   <span className="truncate max-w-[100px] sm:max-w-none">{downloadProgress?.message || 'Generating...'}</span>
                 </>
               ) : (
                 <>
                   <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                  <span>Download <span className="hidden xs:inline">PDF</span></span>
+                  <span>Download</span>
                 </>
               )}
-            </button>
-
-            {/* System Print Action Button */}
-            <button
-              type="button"
-              onClick={handlePrintPdf}
-              disabled={isDownloading}
-              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold transition-all hidden md:flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
-              title="Open browser print dialog (Ctrl+P / Cmd+P)"
-            >
-              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-500" />
-              <span>Print</span>
             </button>
 
             {/* Close */}
@@ -322,7 +323,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               <button
                 type="button"
                 onClick={handleFitWidth}
-                className="px-1 font-mono text-[10px] font-bold text-blue-600 dark:text-blue-400 cursor-pointer"
+                className="px-1 font-mono text-[10px] font-bold text-brand-600 dark:text-brand-400 cursor-pointer"
                 title="Click to Fit Width"
               >
                 {zoomLevel}%

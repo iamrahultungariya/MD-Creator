@@ -197,7 +197,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
                 style={{ paddingLeft: `${depth * 14 + 24}px` }}
                 className={`w-full text-left py-1.5 pr-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors ${
                   isActive
-                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold'
+                    ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-semibold'
                     : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
                 }`}
                 title={item.path}
@@ -277,7 +277,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
             </div>
             <button
               onClick={handlePickFolder}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
             >
               <FolderOpen className="w-4 h-4" />
               <span>Choose Local Folder</span>
@@ -309,7 +309,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
                 </button>
                 <button
                   onClick={() => setIsCreatingFile((prev) => !prev)}
-                  className="p-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-xs"
+                  className="p-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white cursor-pointer shadow-xs"
                   title="New Note in Folder"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -325,11 +325,11 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
                     value={newFileName}
                     onChange={(e) => setNewFileName(e.target.value)}
                     placeholder="Note-name.md"
-                    className="flex-1 px-3 py-1.5 rounded-xl border border-blue-500 bg-neutral-50 dark:bg-neutral-800 text-xs font-mono focus:outline-none"
+                    className="flex-1 px-3 py-1.5 rounded-xl border border-brand-500 bg-neutral-50 dark:bg-neutral-800 text-xs font-mono focus:outline-none"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold cursor-pointer"
                   >
                     Create
                   </button>

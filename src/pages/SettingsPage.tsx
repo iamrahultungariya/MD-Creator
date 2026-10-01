@@ -186,9 +186,9 @@ export const SettingsPage: React.FC = () => {
                     title={`Drag to reorder: ${act.tooltip}`}
                     className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing font-sans transition-all ${
                       isDragging
-                        ? 'opacity-40 scale-90 ring-2 ring-blue-500'
+                        ? 'opacity-40 scale-90 ring-2 ring-brand-500'
                         : isOver
-                        ? 'bg-blue-100 dark:bg-blue-950 scale-105 ring-1 ring-blue-400'
+                        ? 'bg-brand-100 dark:bg-brand-950 scale-105 ring-1 ring-brand-400'
                         : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800/80'
                     }`}
                   >
@@ -234,9 +234,9 @@ export const SettingsPage: React.FC = () => {
                     onDragEnd={handleDragEnd}
                     className={`flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-xl bg-white dark:bg-neutral-900 border transition-all select-none cursor-grab active:cursor-grabbing text-xs font-sans ${
                       isDragging
-                        ? 'opacity-40 scale-95 border-blue-400 shadow-md ring-2 ring-blue-500'
+                        ? 'opacity-40 scale-95 border-brand-400 shadow-md ring-2 ring-brand-500'
                         : isOver
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40 ring-1 ring-blue-400'
+                        ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 ring-1 ring-brand-400'
                         : 'border-neutral-200 dark:border-neutral-800 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700'
                     }`}
                   >

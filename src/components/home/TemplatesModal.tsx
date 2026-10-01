@@ -88,7 +88,7 @@ const TemplateSelectorCard: React.FC<TemplateSelectorCardProps> = ({
         isDimmed ? 'opacity-55 scale-[0.99]' : 'opacity-100'
       } ${
         isSelected
-          ? 'bg-neutral-50/90 dark:bg-neutral-800/80 shadow-md ring-2 ring-blue-500/80 dark:ring-blue-400/80'
+          ? 'bg-neutral-50/90 dark:bg-neutral-800/80 shadow-md ring-2 ring-brand-500/80 dark:ring-brand-400/80'
           : 'bg-white/80 dark:bg-neutral-900/80 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/50 border border-neutral-200/90 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
       }`}
     >
@@ -115,14 +115,14 @@ const TemplateSelectorCard: React.FC<TemplateSelectorCardProps> = ({
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${
               isEngineering 
-                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20' 
+                ? 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20' 
                 : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20'
             }`}>
               {isEngineering ? <Terminal className="w-3.5 h-3.5" /> : <Compass className="w-3.5 h-3.5" />}
             </div>
             <span className={`text-[10px] font-bold tracking-wider uppercase font-mono px-2 py-0.5 rounded-full ${
               isEngineering
-                ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40'
+                ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 border border-brand-200/60 dark:border-brand-900/40'
                 : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-900/40'
             }`}>
               {template.badge || template.category}
@@ -130,15 +130,15 @@ const TemplateSelectorCard: React.FC<TemplateSelectorCardProps> = ({
           </div>
 
           {isSelected && (
-            <span className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+            <span className="flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
               Selected
             </span>
           )}
         </div>
 
         <div>
-          <h4 className="font-bold text-xs sm:text-sm text-neutral-900 dark:text-white leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          <h4 className="font-bold text-xs sm:text-sm text-neutral-900 dark:text-white leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
             {template.title}
           </h4>
           <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2 mt-1 leading-relaxed">
@@ -217,7 +217,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/80 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20">
+            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
               <Layers className="w-4 h-4" />
             </div>
             <div>
@@ -225,7 +225,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <h3 className="font-bold text-sm sm:text-base text-neutral-950 dark:text-white">
                   Markdown Blueprint Studio
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold border border-blue-200/50 dark:border-blue-900/40">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold border border-brand-200/50 dark:border-brand-900/40">
                   {MARKDOWN_TEMPLATES.length} Flagship Standards
                 </span>
               </div>
@@ -274,7 +274,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             {/* Quality & Spec Guarantee Box */}
             <div className="mt-auto pt-4 border-t border-neutral-200/60 dark:border-neutral-800/80 space-y-2.5">
               <div className="text-[11px] font-bold text-neutral-600 dark:text-neutral-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                <Sparkles className="w-3.5 h-3.5 text-brand-500" />
                 <span>Blueprint Guarantees</span>
               </div>
               <ul className="text-[11px] text-neutral-500 dark:text-neutral-400 space-y-1.5 font-medium">
@@ -299,7 +299,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             {/* Preview Toolbar */}
             <div className="px-6 py-3.5 border-b border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/30 dark:bg-neutral-900/30 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
-                <FileText className="w-4 h-4 text-blue-500 shrink-0" />
+                <FileText className="w-4 h-4 text-brand-500 shrink-0" />
                 <div className="truncate">
                   <span className="font-bold text-xs sm:text-sm text-neutral-900 dark:text-white truncate">
                     {currentTemplate.title}
@@ -360,7 +360,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
             {/* Document Content Scrollable Canvas */}
             <div className="flex-1 overflow-y-auto p-6 select-text">
               {viewTab === 'preview' ? (
-                <div className="max-w-none prose prose-sm dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-500">
+                <div className="max-w-none prose prose-sm dark:prose-invert prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-500">
                   <MarkdownPreview content={currentTemplate.content} />
                 </div>
               ) : (
@@ -389,7 +389,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <button
                   onClick={() => handleUseTemplate(currentTemplate)}
                   disabled={createDocMutation.isPending}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow cursor-pointer disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow cursor-pointer disabled:opacity-50"
                 >
                   {createDocMutation.isPending ? (
                     <>
@@ -399,7 +399,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   ) : (
                     <>
                       <span>{isEditorMode ? 'Insert into Document' : 'Create Document with Blueprint'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
@@ -449,7 +449,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   </button>
                   <button
                     onClick={() => handleConfirmAction('replace')}
-                    className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs flex items-center justify-between"
+                    className="w-full py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs flex items-center justify-between"
                   >
                     <span>Replace All Content</span>
                     <Check className="w-3.5 h-3.5" />

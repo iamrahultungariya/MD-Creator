@@ -12,10 +12,10 @@ export const PageLoader: React.FC = () => {
           <defs>
             {/* Writing Ink Gradient */}
             <linearGradient id="loaderInkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#3B82F6" />
-              <stop offset="45%" stopColor="#60A5FA" />
-              <stop offset="85%" stopColor="#818CF8" />
-              <stop offset="100%" stopColor="#A5B4FC" />
+              <stop offset="0%" stopColor="#8257F5" />
+              <stop offset="45%" stopColor="#9E7EFF" />
+              <stop offset="85%" stopColor="#BDA8FF" />
+              <stop offset="100%" stopColor="#D9CDFF" />
             </linearGradient>
 
             {/* Ink Tip Glow Filter */}
@@ -78,7 +78,7 @@ export const PageLoader: React.FC = () => {
               <path d="M -4.5 -48 L -3.5 -78 L 3.5 -78 L 4.5 -48 Z" fill="url(#loaderBarrelGrad)" />
               
               {/* Electric Accent Ring */}
-              <rect x="-5" y="-48.5" width="10" height="2.5" rx="0.6" fill="#38BDF8" opacity="0.95" />
+              <rect x="-5" y="-48.5" width="10" height="2.5" rx="0.6" fill="#8257F5" opacity="0.95" />
 
               {/* Pen Grip Section */}
               <path d="M -5 -33 L -4.5 -46 L 4.5 -46 L 5 -33 Z" fill="#0F172A" />
@@ -100,7 +100,7 @@ export const PageLoader: React.FC = () => {
             </g>
 
             {/* Luminous Ink Glow at Pen Tip */}
-            <circle cx="0" cy="0" r="2.2" fill="#60A5FA" filter="url(#loaderTipGlow)" opacity="0.95" />
+            <circle cx="0" cy="0" r="2.2" fill="#9E7EFF" filter="url(#loaderTipGlow)" opacity="0.95" />
           </g>
         </svg>
       </div>

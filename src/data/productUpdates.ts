@@ -39,8 +39,8 @@ export const MILESTONES: UpdateMilestone[] = [
     categoryLabel: 'Refinements & Tools',
     summary: 'MD Writer v0.9.3 Beta brings silky-smooth theme switching, automatic conversion of copied spreadsheet data into clean tables, crystal-clear diagrams in dark mode, flawless paper export, and helpful link previews.',
     icon: Layers,
-    iconColor: 'text-blue-600 dark:text-blue-400',
-    iconBg: 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800/80',
+    iconColor: 'text-brand-600 dark:text-brand-400',
+    iconBg: 'bg-brand-50 dark:bg-brand-950/60 border-brand-200 dark:border-brand-800/80',
     highlights: [
       { type: 'improved', text: 'Silky Theme Switching: Switching between Light and Dark mode is now fluid, gentle on your eyes, and free of flickering.' },
       { type: 'new', text: 'Smart Table Paste: Copy data from Excel, Google Sheets, or websites and paste it directly into your document—it automatically turns into a neat table with easy undo.' },
@@ -190,8 +190,8 @@ export const MILESTONES: UpdateMilestone[] = [
     categoryLabel: 'Vector Publishing',
     summary: 'Transformed document export into an isolated high-resolution vector publishing studio with curated typographic themes, standalone cover pages, auto TOC, and pinned running footers.',
     icon: Printer,
-    iconColor: 'text-blue-500 dark:text-blue-400',
-    iconBg: 'bg-blue-50 dark:bg-blue-950/50 border-blue-200/60 dark:border-blue-900/50',
+    iconColor: 'text-brand-600 dark:text-brand-400',
+    iconBg: 'bg-brand-50 dark:bg-brand-950/50 border-brand-200/60 dark:border-brand-900/50',
     highlights: [
       { type: 'new', text: '5 Curated Typographic Presets: Editorial (Sans), Technical RFC (Mono), Academic (Serif), Corporate, and Swiss Minimalist.' },
       { type: 'new', text: 'Standalone Cover Pages & Table of Contents: Automatically extracts H1–H3 headings with dotted leader tabs.' },

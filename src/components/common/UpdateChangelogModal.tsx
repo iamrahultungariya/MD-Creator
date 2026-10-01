@@ -114,7 +114,7 @@ export const UpdateChangelogModal: React.FC<UpdateChangelogModalProps> = ({ isOp
                   <h2 className="text-base sm:text-lg font-bold text-neutral-950 dark:text-white">
                     What's New in {APP_VERSION_LABEL}
                   </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900">
                     Latest
                   </span>
                 </div>
@@ -166,7 +166,7 @@ export const UpdateChangelogModal: React.FC<UpdateChangelogModalProps> = ({ isOp
                     key={item.id}
                     className="p-3.5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/50 flex items-start gap-3 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                   >
-                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-3 h-3 stroke-[2.5]" />
                     </div>
                     <div>
@@ -194,7 +194,7 @@ export const UpdateChangelogModal: React.FC<UpdateChangelogModalProps> = ({ isOp
                           className="p-4 rounded-2xl border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/40 dark:bg-neutral-900/40"
                         >
                           <div className="font-bold text-xs sm:text-sm text-neutral-900 dark:text-white mb-1.5 flex items-center gap-2">
-                            <Zap className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                            <Zap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
                             <span>{item.title}</span>
                           </div>
                           <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">

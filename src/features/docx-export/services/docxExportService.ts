@@ -169,7 +169,7 @@ export async function exportMarkdownToDocx(options: DocxExportOptions): Promise<
                   borders: {
                     top: { style: BorderStyle.SINGLE, size: 1, color: 'CBD5E1' },
                     bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CBD5E1' },
-                    left: { style: BorderStyle.SINGLE, size: 4, color: '3B82F6' },
+                    left: { style: BorderStyle.SINGLE, size: 4, color: '8257F5' },
                     right: { style: BorderStyle.SINGLE, size: 1, color: 'CBD5E1' },
                   },
                   children: codeLines.map(
@@ -307,7 +307,7 @@ export async function exportMarkdownToDocx(options: DocxExportOptions): Promise<
             new TextRun({
               text: '▌ ',
               bold: true,
-              color: '3B82F6',
+              color: '8257F5',
               font: 'Calibri',
             }),
             ...parseInlineRuns(quoteText, TextRun),

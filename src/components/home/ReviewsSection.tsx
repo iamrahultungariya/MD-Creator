@@ -259,7 +259,7 @@ export const ReviewsSection: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2.5 mt-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-medium">
-                <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200/60 dark:border-blue-900/60">
+                <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 text-xs font-bold border border-brand-200/60 dark:border-brand-900/60">
                   {APP_VERSION_LABEL}
                 </span>
                 <span>Early Community Feedback • Share your experience with our team</span>

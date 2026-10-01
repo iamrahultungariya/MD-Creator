@@ -11,6 +11,7 @@ export interface AccentColor {
 }
 
 export const ACCENT_COLORS: AccentColor[] = [
+  { id: 'brand', name: 'Brand Violet', hex: '#8257F5' },
   { id: 'indigo', name: 'Indigo Blue', hex: '#4f46e5' },
   { id: 'emerald', name: 'Emerald Green', hex: '#059669' },
   { id: 'rose', name: 'Crimson Rose', hex: '#e11d48' },

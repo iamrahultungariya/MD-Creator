@@ -122,7 +122,7 @@ export const DocumentOutlineDrawer: React.FC<DocumentOutlineDrawerProps> = ({
                       <div className="flex items-center gap-2 min-w-0 pr-2">
                         <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded shrink-0 ${
                           item.level === 1 
-                            ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' 
+                            ? 'bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300' 
                             : item.level === 2
                               ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300'
                               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'

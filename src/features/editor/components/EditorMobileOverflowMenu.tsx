@@ -116,7 +116,7 @@ export const EditorMobileOverflowMenu: React.FC<EditorMobileOverflowMenuProps> =
                 }}
                 className="w-full text-left px-2.5 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 text-neutral-700 dark:text-neutral-300 cursor-pointer"
               >
-                <Globe className="w-4 h-4 text-blue-500" />
+                <Globe className="w-4 h-4 text-brand-500" />
                 <span className="font-semibold text-neutral-900 dark:text-white">Publish to Web Link</span>
               </button>
             )}

@@ -132,7 +132,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+            <div className="p-2 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400">
               <Globe className="w-5 h-5" />
             </div>
             <div>
@@ -155,7 +155,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         {/* Content Area */}
         {isLoading ? (
           <div className="py-12 flex flex-col items-center justify-center gap-2 text-neutral-400 text-xs">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
             <span>Checking publication status...</span>
           </div>
         ) : !hasCloud ? (
@@ -219,7 +219,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 value={customSlug}
                 onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
                 placeholder="my-article-slug"
-                className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
 
@@ -236,7 +236,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                   type="checkbox"
                   checked={enablePassword}
                   onChange={(e) => setEnablePassword(e.target.checked)}
-                  className="w-4 h-4 rounded text-blue-600 cursor-pointer accent-blue-600"
+                  className="w-4 h-4 rounded text-brand-600 cursor-pointer accent-brand-600"
                 />
               </div>
 
@@ -246,7 +246,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter secret passphrase for viewers..."
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 font-mono"
                 />
               )}
             </div>
@@ -291,7 +291,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                     type="button"
                     onClick={handlePublish}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
                   >
                     {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Update Live Page</span>
@@ -311,7 +311,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                   type="button"
                   onClick={handlePublish}
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
+                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
                 >
                   {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <Globe className="w-3.5 h-3.5" />

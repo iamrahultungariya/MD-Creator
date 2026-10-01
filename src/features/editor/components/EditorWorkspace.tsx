@@ -545,6 +545,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
               searchQuery={slashQuery}
               onSelect={onInsertSnippet}
               onClose={() => setIsSlashMenuOpen(false)}
+              caretCoords={isSlashMenuOpen && editorRef?.current ? editorRef.current.getCaretCoords() : null}
             />
           </div>
         </div>

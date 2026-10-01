@@ -92,12 +92,12 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
         <div className="p-6 rounded-3xl bg-neutral-900 border border-neutral-800 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-blue-400" />
+              <MessageSquare className="w-4 h-4 text-brand-400" />
               <h3 className="text-sm font-bold text-white">Pending User Reviews</h3>
             </div>
             <button
               onClick={() => onNavigateTab('reviews')}
-              className="text-xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer"
+              className="text-xs text-brand-400 hover:text-brand-300 font-semibold cursor-pointer"
             >
               View All ({stats.pendingReviews}) →
             </button>

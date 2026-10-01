@@ -105,9 +105,9 @@ export const ToolbarSettingsModal: React.FC = () => {
                 onDragEnd={handleDragEnd}
                 className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing transition-all ${
                   draggedIndex === idx 
-                    ? 'opacity-40 scale-90 ring-2 ring-blue-500' 
+                    ? 'opacity-40 scale-90 ring-2 ring-brand-500' 
                     : dragOverIndex === idx 
-                    ? 'bg-blue-100 dark:bg-blue-950 scale-105 ring-1 ring-blue-400' 
+                    ? 'bg-brand-100 dark:bg-brand-950 scale-105 ring-1 ring-brand-400' 
                     : 'bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
                 }`}
                 title={`Drag to reorder: ${actionId}`}
@@ -135,9 +135,9 @@ export const ToolbarSettingsModal: React.FC = () => {
                 className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex items-center justify-between gap-2.5 ${
                   isEnabled
                     ? draggedIndex === activeIndex
-                      ? 'border-blue-400 bg-blue-50/40 dark:bg-blue-950/20 opacity-60 scale-98'
+                      ? 'border-brand-400 bg-brand-50/40 dark:bg-brand-950/20 opacity-60 scale-98'
                       : dragOverIndex === activeIndex
-                      ? 'border-blue-500 bg-blue-50/60 dark:bg-blue-950/40'
+                      ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40'
                       : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/80 shadow-2xs'
                     : 'border-neutral-100 dark:border-neutral-800/40 bg-neutral-50/50 dark:bg-neutral-950/20 opacity-60'
                 }`}

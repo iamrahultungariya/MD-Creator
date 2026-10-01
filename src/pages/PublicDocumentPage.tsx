@@ -122,7 +122,7 @@ export const PublicDocumentPage: React.FC = () => {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#111114] text-neutral-600 dark:text-neutral-400 gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
         <p className="text-xs font-mono">Loading published page...</p>
       </div>
     );
@@ -153,7 +153,7 @@ export const PublicDocumentPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter passphrase..."
-                className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
               />
             </div>
 
@@ -173,7 +173,7 @@ export const PublicDocumentPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-md"
+              className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-md"
             >
               Unlock Page
             </button>
@@ -201,7 +201,7 @@ export const PublicDocumentPage: React.FC = () => {
           </div>
           <Link
             to="/editor"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-md transition-colors"
           >
             <PenTool className="w-4 h-4" />
             <span>Open MD Writer</span>
@@ -245,7 +245,7 @@ export const PublicDocumentPage: React.FC = () => {
                   t === 'sepia' ? 'bg-[#fbf0d9] border-amber-300' :
                   t === 'nordic' ? 'bg-[#181d24] border-blue-400' :
                   'bg-[#090a0d] border-neutral-700'
-                } ${theme === t ? 'ring-2 ring-blue-500 scale-110' : 'opacity-60 hover:opacity-100'}`}
+                } ${theme === t ? 'ring-2 ring-brand-500 scale-110' : 'opacity-60 hover:opacity-100'}`}
                 title={`Reader theme: ${t}`}
               />
             ))}
@@ -274,7 +274,7 @@ export const PublicDocumentPage: React.FC = () => {
           {/* Create Own */}
           <Link
             to="/editor"
-            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+            className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Write in MD</span>

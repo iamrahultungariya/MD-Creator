@@ -120,7 +120,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
             onClick={handleCreateNew}
             className="text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white font-semibold flex items-center gap-1.5 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 text-blue-500" />
+            <Plus className="w-3.5 h-3.5 text-brand-500" />
             <span>New Document</span>
           </button>
 
@@ -176,7 +176,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
                 >
                   <div className="flex items-center gap-3 min-w-0 pr-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isCurrent ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
+                      isCurrent ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400'
                     }`}>
                       <FileText className="w-4 h-4" />
                     </div>
@@ -190,7 +190,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
                           <Pin className="w-3 h-3 text-amber-500 fill-current shrink-0" />
                         )}
                         {isCurrent && (
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 px-1.5 py-0.2 rounded font-medium">
+                          <span className="text-[10px] bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 px-1.5 py-0.2 rounded font-medium">
                             Active
                           </span>
                         )}

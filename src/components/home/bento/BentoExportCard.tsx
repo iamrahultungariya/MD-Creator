@@ -66,7 +66,7 @@ export const BentoExportCard: React.FC<BentoExportCardProps> = ({ onExportClick 
 
         {/* Word / DOCX Card (Right Top) */}
         <div className="absolute z-20 right-10 sm:right-16 top-4 w-22 h-28 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700 shadow-lg p-2.5 flex flex-col items-center justify-center transform rotate-12">
-          <div className="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center font-bold text-xs mb-1.5 shadow-2xs">
+          <div className="w-7 h-7 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xs mb-1.5 shadow-2xs">
             W
           </div>
           <div className="w-10 h-1 bg-neutral-100 dark:bg-neutral-700 rounded-full mt-2" />

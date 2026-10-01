@@ -1,47 +1,77 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-serif: "Literata Variable", Georgia, serif;
+
+  --color-brand-50: #F6F3FF;
+  --color-brand-100: #ECE6FF;
+  --color-brand-200: #D9CDFF;
+  --color-brand-300: #BDA8FF;
+  --color-brand-400: #9E7EFF;
+  --color-brand-500: #8257F5;
+  --color-brand-600: #6D3FE0;
+  --color-brand-700: #5A2FBF;
+  --color-brand-800: #46258F;
+  --color-brand-900: #2F1A63;
+  --color-brand-950: #1C0F3D;
+}
+
 @layer base {
   :root {
-    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-serif: 'Charter', 'Merriweather', 'Georgia', Cambria, 'Times New Roman', serif;
+    --font-sans: "Geist Variable", system-ui, sans-serif;
+    --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+    --font-serif: "Literata Variable", Georgia, serif;
     --font-handwriting: 'Caveat', cursive;
-    --font-mono: 'JetBrains Mono', monospace;
     --font-lexend: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-arial: Arial, Helvetica, -apple-system, sans-serif;
     --font-lato: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-    --selection-bg: #2563eb;
-    --selection-color: #ffffff;
-    --spotlight-border: rgba(37, 99, 235, 0.45);
-    --spotlight-surface: rgba(37, 99, 235, 0.035);
+    --bg: #FBFAFD;
+    --surface: #FFFFFF;
+    --elevated: #F3F0F9;
+    --border: #E7E3F0;
+    --text: #1B1626;
+    --muted: #6B6480;
+
+    --selection-bg: color-mix(in oklab, #8257F5 35%, transparent);
+    --spotlight-border: rgba(130, 87, 245, 0.75);
+    --spotlight-surface: rgba(130, 87, 245, 0.05);
   }
 
   .dark,
   [data-theme='dark'] {
-    --selection-bg: #3b82f6;
-    --selection-color: #ffffff;
-    --spotlight-border: rgba(255, 255, 255, 0.32);
-    --spotlight-surface: rgba(255, 255, 255, 0.04);
+    --bg: #0E0B14;
+    --surface: #15111E;
+    --elevated: #1D1829;
+    --border: #2A2338;
+    --text: #EDEAF5;
+    --muted: #9A93AD;
+
+    --selection-bg: color-mix(in oklab, #8257F5 35%, transparent);
+    --spotlight-border: rgba(158, 126, 255, 0.85);
+    --spotlight-surface: rgba(158, 126, 255, 0.06);
   }
 
   ::selection {
-    background-color: var(--selection-bg) !important;
-    color: var(--selection-color) !important;
+    background-color: color-mix(in oklab, var(--color-brand-500, #8257F5) 35%, transparent) !important;
+    color: inherit !important;
   }
 
   .dark ::selection,
   [data-theme='dark'] ::selection {
-    background-color: var(--selection-bg) !important;
-    color: var(--selection-color) !important;
+    background-color: color-mix(in oklab, var(--color-brand-500, #8257F5) 35%, transparent) !important;
+    color: inherit !important;
   }
 
   *, ::after, ::before {
-    border-color: var(--color-neutral-200, #e5e5e5);
+    border-color: var(--border, var(--color-neutral-200, #e5e5e5));
   }
 
   .dark *, .dark ::after, .dark ::before {
-    border-color: var(--color-neutral-800, #262626);
+    border-color: var(--border, var(--color-neutral-800, #262626));
   }
 }
 
@@ -144,7 +174,7 @@ article mark,
 
 /* GitHub/Obsidian Callout Alerts - Specific Left Accent Borders */
 .callout-alert-note {
-  border-left-color: #2563eb !important;
+  border-left-color: #8257F5 !important;
   border-left-width: 4px !important;
   border-left-style: solid !important;
 }
@@ -226,7 +256,7 @@ article mark,
   white-space: pre-wrap !important;
   word-break: break-word !important;
   padding: 16px 24px 80px 24px !important;
-  caret-color: #2563eb;
+  caret-color: #6D3FE0;
 }
 
 @media (max-width: 640px) {
@@ -240,7 +270,7 @@ article mark,
 }
 
 .dark .cm-content {
-  caret-color: #60a5fa;
+  caret-color: #9E7EFF;
 }
 
 .cm-line {
@@ -270,12 +300,12 @@ article mark,
 
 .cm-activeLineGutter {
   background-color: transparent !important;
-  color: #2563eb !important;
+  color: #6D3FE0 !important;
   font-weight: 600;
 }
 
 .dark .cm-activeLineGutter {
-  color: #60a5fa !important;
+  color: #9E7EFF !important;
 }
 
 .cm-activeLine {
@@ -824,12 +854,57 @@ article mark,
     margin: 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 100vh !important;
+  }
+
+  #pdf-render-cover,
+  #pdf-render-toc {
     page-break-after: always !important;
     break-after: page !important;
+    min-height: 100vh !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
+  }
+
+  #pdf-render-body {
+    page-break-after: auto !important;
+    break-after: auto !important;
+    min-height: auto !important;
+    height: auto !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  .pdf-prose-content {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .pdf-prose-content p,
+  .pdf-prose-content li,
+  .pdf-prose-content blockquote {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  .pdf-prose-content h1,
+  .pdf-prose-content h2,
+  .pdf-prose-content h3,
+  .pdf-prose-content h4,
+  .pdf-prose-content h5,
+  .pdf-prose-content h6 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .pdf-prose-content pre,
+  .pdf-prose-content table,
+  .pdf-prose-content img,
+  .pdf-prose-content .katex-display {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .pdf-paper-sheet.pdf-theme-light {
@@ -840,11 +915,6 @@ article mark,
   .pdf-paper-sheet.pdf-theme-dark {
     background-color: #121215 !important;
     color: #e2e8f0 !important;
-  }
-
-  .pdf-paper-sheet:last-child {
-    page-break-after: auto !important;
-    break-after: auto !important;
   }
 
   /* Maximize and format the preview section */
@@ -913,16 +983,20 @@ article mark,
   }
 
   /* Callout alert cards in print */
+  .preview-pane-container [class*="bg-brand-50"],
+  .preview-pane-container [class*="bg-brand-950"],
   .preview-pane-container [class*="bg-blue-50"],
   .preview-pane-container [class*="bg-blue-950"] {
-    background-color: #eff6ff !important;
-    color: #1e3a8a !important;
-    border-left-color: #2563eb !important;
+    background-color: #F6F3FF !important;
+    color: #1C0F3D !important;
+    border-left-color: #8257F5 !important;
   }
+  .preview-pane-container [class*="bg-brand-100"],
+  .preview-pane-container [class*="bg-brand-900"],
   .preview-pane-container [class*="bg-blue-100"],
   .preview-pane-container [class*="bg-blue-900"] {
-    background-color: #dbeafe !important;
-    color: #1e40af !important;
+    background-color: #ECE6FF !important;
+    color: #5A2FBF !important;
   }
 
   .preview-pane-container [class*="bg-emerald-50"],
@@ -1106,20 +1180,24 @@ article mark,
 }
 
 /* Light Theme Callouts (Neutralizing Tailwind dark:* classes inside light sheet) */
+.pdf-paper-sheet.pdf-theme-light [class*="bg-brand-50"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-brand-950"],
 .pdf-paper-sheet.pdf-theme-light [class*="bg-blue-50"],
 .pdf-paper-sheet.pdf-theme-light [class*="bg-blue-950"] {
-  background-color: rgba(239, 246, 255, 0.95) !important;
-  color: #1e3a8a !important;
-  border-left-color: #2563eb !important;
-  border-top-color: #dbeafe !important;
-  border-right-color: #dbeafe !important;
-  border-bottom-color: #dbeafe !important;
+  background-color: rgba(246, 243, 255, 0.95) !important;
+  color: #1C0F3D !important;
+  border-left-color: #8257F5 !important;
+  border-top-color: #ECE6FF !important;
+  border-right-color: #ECE6FF !important;
+  border-bottom-color: #ECE6FF !important;
 }
+.pdf-paper-sheet.pdf-theme-light [class*="bg-brand-100"],
+.pdf-paper-sheet.pdf-theme-light [class*="bg-brand-900"],
 .pdf-paper-sheet.pdf-theme-light [class*="bg-blue-100"],
 .pdf-paper-sheet.pdf-theme-light [class*="bg-blue-900"] {
-  background-color: #dbeafe !important;
-  color: #1e40af !important;
-  border-color: #bfdbfe !important;
+  background-color: #ECE6FF !important;
+  color: #5A2FBF !important;
+  border-color: #D9CDFF !important;
 }
 
 .pdf-paper-sheet.pdf-theme-light [class*="bg-emerald-50"],
@@ -1335,20 +1413,24 @@ article mark,
 }
 
 /* Dark Theme Callouts */
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-brand-50"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-brand-950"],
 .pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-50"],
 .pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-950"] {
-  background-color: rgba(30, 58, 138, 0.28) !important;
-  color: #dbeafe !important;
-  border-left-color: #3b82f6 !important;
-  border-top-color: rgba(59, 130, 246, 0.3) !important;
-  border-right-color: rgba(59, 130, 246, 0.3) !important;
-  border-bottom-color: rgba(59, 130, 246, 0.3) !important;
+  background-color: rgba(47, 26, 99, 0.28) !important;
+  color: #EDEAF5 !important;
+  border-left-color: #8257F5 !important;
+  border-top-color: rgba(130, 87, 245, 0.3) !important;
+  border-right-color: rgba(130, 87, 245, 0.3) !important;
+  border-bottom-color: rgba(130, 87, 245, 0.3) !important;
 }
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-brand-100"],
+.pdf-paper-sheet.pdf-theme-dark [class*="bg-brand-900"],
 .pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-100"],
 .pdf-paper-sheet.pdf-theme-dark [class*="bg-blue-900"] {
-  background-color: rgba(30, 58, 138, 0.5) !important;
-  color: #93c5fd !important;
-  border-color: rgba(59, 130, 246, 0.4) !important;
+  background-color: rgba(47, 26, 99, 0.5) !important;
+  color: #BDA8FF !important;
+  border-color: rgba(130, 87, 245, 0.4) !important;
 }
 
 .pdf-paper-sheet.pdf-theme-dark [class*="bg-emerald-50"],

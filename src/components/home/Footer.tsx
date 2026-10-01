@@ -54,7 +54,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                   className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">{APP_VERSION_LABEL}</span>
+                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">{APP_VERSION_LABEL}</span>
                 </button>
               ) : (
                 <Link 
@@ -62,7 +62,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                   className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">{APP_VERSION_LABEL}</span>
+                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">{APP_VERSION_LABEL}</span>
                 </Link>
               )}
               <Link to="/about" className="hover:text-neutral-900 dark:hover:text-white transition-colors">

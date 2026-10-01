@@ -216,7 +216,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             title="Switch Active Mode (Ctrl+M or Alt+M)"
             aria-label="Switch Active Workspace Mode"
           >
-            <CurrentModeIcon className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <CurrentModeIcon className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
             <span className="font-bold text-xs sm:text-sm tracking-tight">
               <span className="sm:hidden">{currentModeLabel}</span>
               <span className="hidden sm:inline">{viewMode === 'split' ? 'Split View' : `${currentModeLabel} Mode`}</span>
@@ -253,13 +253,13 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'}`} />
+                        <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-500 dark:text-neutral-400'}`} />
                         <div>
                           <div className="font-semibold">{opt.label}</div>
                           <div className="text-[10px] text-neutral-500 dark:text-neutral-400 font-normal">{opt.desc}</div>
                         </div>
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />}
                     </button>
                   );
                 })}
@@ -300,7 +300,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             {onOpenPublish && (
               <button
                 onClick={onOpenPublish}
-                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95 shrink-0"
+                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95 shrink-0"
                 title="Publish document to a shareable web link"
               >
                 <Globe className="w-3.5 h-3.5" />
@@ -412,7 +412,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             >
               <Info className="w-4 h-4" />
               {docMetadata?.tags?.length ? (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-600" />
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-brand-600" />
               ) : null}
             </button>
 

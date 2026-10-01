@@ -99,7 +99,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
               >
                 <FileCode className="w-3 h-3 text-sky-400" />
                 <span>QuickStart.md</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-500" />
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
               <div className="overflow-y-auto space-y-4">
                 <div className={`flex items-center justify-between pb-3 border-b ${mockupTheme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'}`}>
                   <div className="flex items-center gap-2">
-                    <FolderOpen className="w-4 h-4 text-blue-500" />
+                    <FolderOpen className="w-4 h-4 text-brand-500" />
                     <span className="font-semibold text-xs tracking-tight">Workspace</span>
                   </div>
                   <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md ${mockupTheme === 'dark' ? 'bg-neutral-800/80 text-neutral-400' : 'bg-neutral-100 text-neutral-600'}`}>
@@ -188,7 +188,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <FileText className="w-3.5 h-3.5 text-blue-500" />
+                            <FileText className="w-3.5 h-3.5 text-brand-500" />
                             <span>{doc.title}</span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-mono">
@@ -213,7 +213,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                 <span>Private local vault • 0 network footprint</span>
                 <button
                   onClick={() => setActiveSideTab('write')}
-                  className="text-blue-500 hover:text-blue-400 font-semibold cursor-pointer"
+                  className="text-brand-500 hover:text-brand-400 font-semibold cursor-pointer"
                 >
                   Return to Writing →
                 </button>
@@ -228,7 +228,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                 <div>
                   <div className={`border-b ${mockupTheme === 'dark' ? 'border-neutral-800 text-neutral-400' : 'border-neutral-200 text-neutral-500'} pb-2 mb-4 flex items-center justify-between text-[9px] uppercase tracking-wider font-mono`}>
                     <span>MD WRITER • SPECIFICATION</span>
-                    <span className="text-blue-500 font-bold">VERSION 0.9.1 BETA</span>
+                    <span className="text-brand-500 font-bold">VERSION 0.9.1 BETA</span>
                   </div>
 
                   <h2 className={`text-lg font-bold tracking-tight mb-1 ${mockupTheme === 'dark' ? 'text-white' : 'text-neutral-950'}`}>
@@ -238,8 +238,8 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                     Prepared by: Core Engineering • Status: Verified • Date: September 2026
                   </p>
 
-                  <div className={`space-y-2 text-[11px] leading-relaxed border-l-2 border-blue-500 pl-3 py-1 rounded-r ${
-                    mockupTheme === 'dark' ? 'bg-neutral-800/40 text-neutral-300' : 'bg-blue-50/50 text-neutral-700'
+                  <div className={`space-y-2 text-[11px] leading-relaxed border-l-2 border-brand-500 pl-3 py-1 rounded-r ${
+                    mockupTheme === 'dark' ? 'bg-neutral-800/40 text-neutral-300' : 'bg-brand-50/50 text-neutral-700'
                   }`}>
                     <p className={`font-semibold text-xs ${mockupTheme === 'dark' ? 'text-white' : 'text-neutral-900'}`}>
                       Publication-Grade Vector Typography
@@ -294,7 +294,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
                         }}
                         placeholder="Type markdown here..."
                         className={`w-full h-full resize-none p-3 font-mono-code text-[11px] leading-[19px] bg-transparent outline-none select-text ${
-                          mockupTheme === 'dark' ? 'text-neutral-200 selection:bg-blue-600/40' : 'text-neutral-800 selection:bg-blue-200'
+                          mockupTheme === 'dark' ? 'text-neutral-200 selection:bg-brand-600/40' : 'text-neutral-800 selection:bg-brand-200'
                         }`}
                         spellCheck={false}
                       />
@@ -322,7 +322,7 @@ export const MockupWorkspace: React.FC<MockupWorkspaceProps> = ({
               {/* RIGHT PANE: Markdown Preview */}
               {(viewMode === 'split' || viewMode === 'preview') && (
                 <div className={`h-full overflow-y-auto p-4 select-text ${mockupTheme === 'dark' ? 'bg-[#16161f] text-neutral-100' : 'bg-white text-neutral-900'} ${viewMode === 'preview' ? 'col-span-1 lg:col-span-2' : ''}`}>
-                  <div className={`max-w-none prose prose-sm ${mockupTheme === 'dark' ? 'prose-invert text-neutral-200' : 'text-neutral-900'} prose-headings:font-bold prose-headings:tracking-tight prose-a:text-blue-600`}>
+                  <div className={`max-w-none prose prose-sm ${mockupTheme === 'dark' ? 'prose-invert text-neutral-200' : 'text-neutral-900'} prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600`}>
                     <React.Suspense fallback={
                       <div className="space-y-3 py-2 animate-pulse">
                         <div className="h-5 bg-neutral-200/40 dark:bg-neutral-800/60 rounded w-3/4" />

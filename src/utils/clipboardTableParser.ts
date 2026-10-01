@@ -14,19 +14,10 @@ function cleanTableCell(text: string): string {
 }
 
 /**
- * Attempts to parse an HTML table from clipboard data (e.g. from Excel, Google Sheets, or websites).
+ * Parses an individual <table> DOM element into a ParsedTable structure.
  */
-function parseHtmlTable(html: string): ParsedTable | null {
-  if (!html || !html.toLowerCase().includes('<table')) {
-    return null;
-  }
-
+export function parseTableElement(table: HTMLTableElement): ParsedTable | null {
   try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const table = doc.querySelector('table');
-    if (!table) return null;
-
     const trElements = Array.from(table.querySelectorAll('tr'));
     if (trElements.length === 0) return null;
 
@@ -37,7 +28,6 @@ function parseHtmlTable(html: string): ParsedTable | null {
 
     if (thElements.length > 0) {
       headers = thElements.map(th => cleanTableCell(th.textContent || ''));
-      // Find where tbody or data starts
       const firstTr = trElements[0];
       if (firstTr.querySelectorAll('th').length > 0) {
         dataRowStartIndex = 1;
@@ -73,7 +63,7 @@ function parseHtmlTable(html: string): ParsedTable | null {
       rows
     };
   } catch (err) {
-    console.warn('Failed to parse clipboard HTML table:', err);
+    console.warn('Failed to parse table element:', err);
     return null;
   }
 }
@@ -82,7 +72,7 @@ function parseHtmlTable(html: string): ParsedTable | null {
  * Attempts to parse Tab-Separated Values (TSV) from plain text clipboard data.
  * Standard format generated when copying cells in Excel or Google Sheets.
  */
-function parseTsvTable(plainText: string): ParsedTable | null {
+export function parseTsvTable(plainText: string): ParsedTable | null {
   if (!plainText || !plainText.includes('\t')) {
     return null;
   }
@@ -121,37 +111,200 @@ function parseTsvTable(plainText: string): ParsedTable | null {
 }
 
 /**
- * Primary Smart Clipboard Parser:
- * Detects if clipboard contains tabular data from Excel, Google Sheets, or web tables,
- * and formats it into a clean, aligned GitHub-Flavored Markdown pipe table.
- * Returns null if the clipboard content is not recognized as tabular data.
+ * Helper to convert an HTML DOM node tree containing mixed text and tables to Markdown.
+ * Preserves all surrounding article/response text, headings, lists, code, and replaces
+ * every <table> with its formatted Markdown pipe table.
  */
-export function extractMarkdownTableFromClipboard(clipboardData: DataTransfer | null): string | null {
+function convertNodeToMarkdown(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent || '';
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return '';
+  }
+
+  const el = node as HTMLElement;
+  const tag = el.tagName.toLowerCase();
+
+  // 1. Tables: Parse and serialize to GitHub-Flavored Markdown pipe table
+  if (tag === 'table') {
+    const parsed = parseTableElement(el as HTMLTableElement);
+    if (parsed) {
+      return `\n\n${serializeMarkdownTable(parsed)}\n\n`;
+    }
+    // If not a structured table, fallback to text
+    return `\n\n${el.textContent || ''}\n\n`;
+  }
+
+  // 2. Headings
+  if (/^h[1-6]$/.test(tag)) {
+    const level = parseInt(tag[1], 10);
+    const hashes = '#'.repeat(level);
+    const inner = Array.from(el.childNodes).map(convertNodeToMarkdown).join('').trim();
+    return `\n\n${hashes} ${inner}\n\n`;
+  }
+
+  // 3. Paragraphs & Divisions
+  if (tag === 'p') {
+    const inner = Array.from(el.childNodes).map(convertNodeToMarkdown).join('').trim();
+    return inner ? `\n\n${inner}\n\n` : '';
+  }
+
+  if (tag === 'br') {
+    return '\n';
+  }
+
+  if (tag === 'hr') {
+    return '\n\n---\n\n';
+  }
+
+  // 4. Code Blocks and Inline Code
+  if (tag === 'pre') {
+    const codeEl = el.querySelector('code');
+    const lang = codeEl?.className.match(/language-(\w+)/)?.[1] || '';
+    const codeText = (codeEl || el).textContent || '';
+    return `\n\n\`\`\`${lang}\n${codeText.trim()}\n\`\`\`\n\n`;
+  }
+
+  if (tag === 'code') {
+    return `\`${el.textContent || ''}\``;
+  }
+
+  // 5. Blockquotes
+  if (tag === 'blockquote') {
+    const inner = Array.from(el.childNodes).map(convertNodeToMarkdown).join('').trim();
+    const quoted = inner.split('\n').map(line => `> ${line}`).join('\n');
+    return `\n\n${quoted}\n\n`;
+  }
+
+  // 6. Lists
+  if (tag === 'ul' || tag === 'ol') {
+    const items = Array.from(el.children).filter(child => child.tagName.toLowerCase() === 'li');
+    const isOrdered = tag === 'ol';
+    const listLines = items.map((li, idx) => {
+      const prefix = isOrdered ? `${idx + 1}. ` : '- ';
+      const itemText = Array.from(li.childNodes).map(convertNodeToMarkdown).join('').trim();
+      return `${prefix}${itemText}`;
+    });
+    return `\n\n${listLines.join('\n')}\n\n`;
+  }
+
+  if (tag === 'li') {
+    return Array.from(el.childNodes).map(convertNodeToMarkdown).join('');
+  }
+
+  // 7. Inlines: bold, italic, links, images
+  if (tag === 'strong' || tag === 'b') {
+    const inner = Array.from(el.childNodes).map(convertNodeToMarkdown).join('');
+    return inner.trim() ? `**${inner.trim()}**` : '';
+  }
+
+  if (tag === 'em' || tag === 'i') {
+    const inner = Array.from(el.childNodes).map(convertNodeToMarkdown).join('');
+    return inner.trim() ? `*${inner.trim()}*` : '';
+  }
+
+  if (tag === 'a') {
+    const href = el.getAttribute('href') || '#';
+    const text = Array.from(el.childNodes).map(convertNodeToMarkdown).join('').trim() || href;
+    return `[${text}](${href})`;
+  }
+
+  if (tag === 'img') {
+    const src = el.getAttribute('src') || '';
+    const alt = el.getAttribute('alt') || 'image';
+    return `![${alt}](${src})`;
+  }
+
+  // Default: process all children recursively
+  const childrenText = Array.from(el.childNodes).map(convertNodeToMarkdown).join('');
+  if (tag === 'div' || tag === 'section' || tag === 'article' || tag === 'main') {
+    return `\n${childrenText}\n`;
+  }
+
+  return childrenText;
+}
+
+/**
+ * Result of clipboard parsing
+ */
+export interface ClipboardParseResult {
+  type: 'table' | 'article';
+  markdown: string;
+}
+
+/**
+ * Primary Smart Clipboard Parser:
+ * Detects whether clipboard contains:
+ * 1. Isolated table (from Excel, Google Sheets, or table selection) -> returns single table snippet
+ * 2. Mixed content (blog, article, or AI response with surrounding text AND table/tables)
+ *    -> converts entire document preserving all text, headings, and all tables in place!
+ * Returns null if clipboard does not contain any tabular data to preserve default paste.
+ */
+export function extractClipboardMarkdown(clipboardData: DataTransfer | null): ClipboardParseResult | null {
   if (!clipboardData) return null;
 
-  // 1. Try HTML Table first (highest fidelity: captures formatting, headers, cells from Sheets/Excel/Web)
+  // 1. Check HTML first
   const html = clipboardData.getData('text/html');
-  if (html) {
-    const parsedHtmlTable = parseHtmlTable(html);
-    if (parsedHtmlTable && parsedHtmlTable.headers.length >= 2) {
-      const serialized = serializeMarkdownTable(parsedHtmlTable);
-      if (serialized.trim().length > 0) {
-        return serialized;
+  if (html && html.toLowerCase().includes('<table')) {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const tables = Array.from(doc.querySelectorAll('table'));
+
+      if (tables.length > 0) {
+        // Measure table content vs entire body content to determine if it is an isolated table
+        const totalBodyText = doc.body.textContent || '';
+        const allTablesText = tables.map(t => t.textContent || '').join('');
+        const nonTableTextLength = totalBodyText.length - allTablesText.length;
+
+        // If there is only 1 table and virtually no surrounding content (< 30 non-whitespace chars),
+        // treat as pure isolated table paste
+        if (tables.length === 1 && nonTableTextLength < 30) {
+          const parsed = parseTableElement(tables[0]);
+          if (parsed && parsed.headers.length >= 2) {
+            const tableMd = serializeMarkdownTable(parsed);
+            if (tableMd.trim().length > 0) {
+              return { type: 'table', markdown: tableMd };
+            }
+          }
+        }
+
+        // Otherwise: Mixed article, blog, or AI response with text + table(s)!
+        // Convert the full DOM tree so NO headings, text, or additional tables are discarded!
+        const converted = convertNodeToMarkdown(doc.body)
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+        if (converted.length > 0) {
+          return { type: 'article', markdown: converted };
+        }
       }
+    } catch (err) {
+      console.warn('Failed to parse clipboard HTML with tables:', err);
     }
   }
 
-  // 2. Fallback to Plain Text TSV (Tab-Separated Values)
+  // 2. Plain Text TSV (Tab-Separated Values from Excel / Sheets)
   const plainText = clipboardData.getData('text/plain');
-  if (plainText) {
-    const parsedTsvTable = parseTsvTable(plainText);
-    if (parsedTsvTable && parsedTsvTable.headers.length >= 2) {
-      const serialized = serializeMarkdownTable(parsedTsvTable);
+  if (plainText && plainText.includes('\t')) {
+    const parsedTsv = parseTsvTable(plainText);
+    if (parsedTsv && parsedTsv.headers.length >= 2) {
+      const serialized = serializeMarkdownTable(parsedTsv);
       if (serialized.trim().length > 0) {
-        return serialized;
+        return { type: 'table', markdown: serialized };
       }
     }
   }
 
   return null;
+}
+
+/**
+ * Backward compatibility alias for single-table consumers
+ */
+export function extractMarkdownTableFromClipboard(clipboardData: DataTransfer | null): string | null {
+  const result = extractClipboardMarkdown(clipboardData);
+  return result ? result.markdown : null;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MarkdownPreview } from '../../../components/editor/MarkdownPreview';
 import { FontFamily, MarginSize, PageSize, PdfPreset, PdfTheme, TocItem } from '../types';
 
@@ -51,103 +51,97 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
 
   const marginPaddingClass =
     margins === 'compact'
-      ? 'p-6 sm:p-8'
+      ? 'p-6 sm:p-10'
       : margins === 'wide'
-      ? 'p-10 sm:p-14'
+      ? 'p-10 sm:p-16'
       : 'p-8 sm:p-12';
 
   const maxSheetWidth = pageSize === 'letter' ? 'max-w-[816px]' : 'max-w-[794px]';
   const minSheetHeight = pageSize === 'letter' ? 'min-h-[1056px]' : 'min-h-[1123px]';
 
-  // Dynamic pagination state
-  const [paginatedPages, setPaginatedPages] = useState<string[][] | null>(null);
+  const [pagesHtml, setPagesHtml] = useState<string[]>([]);
   const measureRef = useRef<HTMLDivElement>(null);
 
-  // Measure rendered blocks and paginate content based on printable sheet height
+  // Paginate markdown DOM blocks into authentic A4/Letter sheets
   useEffect(() => {
-    const sandbox = measureRef.current;
-    if (!sandbox) return;
+    if (!measureRef.current) return;
+    const previewRoot = measureRef.current.querySelector('[data-markdown-preview="true"]');
+    if (!previewRoot) return;
 
-    const paginateContent = () => {
-      const previewRoot = sandbox.querySelector('[data-markdown-preview="true"]') || sandbox;
-      const childNodes = Array.from(previewRoot.children) as HTMLElement[];
+    const blocks = Array.from(previewRoot.children) as HTMLElement[];
+    if (blocks.length === 0) {
+      setPagesHtml(['<p class="opacity-40 italic">Empty document</p>']);
+      return;
+    }
 
-      if (childNodes.length === 0) {
-        setPaginatedPages(null);
-        return;
-      }
+    const paddingY = margins === 'compact' ? 24 : margins === 'wide' ? 48 : 32;
+    const headerFooterOverhead = includePageNumbers ? 116 : 0;
+    const targetSheetHeight = pageSize === 'letter' ? 1056 : 1123;
+    const maxPageHeight = targetSheetHeight - (paddingY * 2) - headerFooterOverhead - 24;
 
-      // Page dimensions in CSS pixels (at standard 96 DPI)
-      // A4: 794px x 1123px. US Letter: 816px x 1056px.
-      const totalSheetHeight = pageSize === 'letter' ? 1056 : 1123;
-      const paddingY = margins === 'compact' ? 56 : margins === 'wide' ? 100 : 76;
-      const headerFooterSpace = includePageNumbers ? 106 : 36;
-      const usableContentHeight = totalSheetHeight - paddingY - headerFooterSpace;
+    const pages: string[] = [];
+    let currentPageBlocks: string[] = [];
+    let currentPageHeight = 0;
 
-      const pages: string[][] = [];
-      let currentPageBlocks: string[] = [];
-      let currentHeight = 0;
+    for (let i = 0; i < blocks.length; i++) {
+      const el = blocks[i];
+      if (!el) continue;
 
-      for (let i = 0; i < childNodes.length; i++) {
-        const child = childNodes[i];
-        const computedStyle = window.getComputedStyle(child);
-        const marginTop = parseFloat(computedStyle.marginTop) || 0;
-        const marginBottom = parseFloat(computedStyle.marginBottom) || 0;
-        const blockHeight = child.offsetHeight + marginTop + marginBottom;
-        const isHeading = /^H[1-6]$/i.test(child.tagName);
-
-        // Avoid orphan heading near sheet bottom if remaining space is less than 65px
-        const orphanHeading = isHeading && (currentHeight + blockHeight + 65 > usableContentHeight);
-
-        if (currentPageBlocks.length > 0 && (currentHeight + blockHeight > usableContentHeight || orphanHeading)) {
-          pages.push(currentPageBlocks);
-          currentPageBlocks = [child.outerHTML];
-          currentHeight = blockHeight;
-        } else {
-          currentPageBlocks.push(child.outerHTML);
-          currentHeight += blockHeight;
+      // Handle explicit HR page break (---)
+      if (el.tagName.toLowerCase() === 'hr') {
+        if (currentPageBlocks.length > 0) {
+          pages.push(currentPageBlocks.join(''));
+          currentPageBlocks = [];
+          currentPageHeight = 0;
         }
+        continue;
       }
 
-      if (currentPageBlocks.length > 0) {
-        pages.push(currentPageBlocks);
+      const computed = window.getComputedStyle(el);
+      const marginTop = parseFloat(computed.marginTop) || 0;
+      const marginBottom = parseFloat(computed.marginBottom) || 0;
+      const height = el.getBoundingClientRect().height + marginTop + marginBottom;
+
+      const isHeading = /^H[1-6]$/i.test(el.tagName);
+      const nextEl = blocks[i + 1] as HTMLElement | undefined;
+      const nextHeight = nextEl ? nextEl.getBoundingClientRect().height : 0;
+
+      const wouldOverflow = currentPageHeight + height > maxPageHeight;
+      const isOrphanHeading = isHeading && (
+        (currentPageHeight + height + Math.min(nextHeight, 80) > maxPageHeight) ||
+        (maxPageHeight - currentPageHeight < 110)
+      );
+
+      if (currentPageBlocks.length > 0 && (wouldOverflow || isOrphanHeading)) {
+        pages.push(currentPageBlocks.join(''));
+        currentPageBlocks = [el.outerHTML];
+        currentPageHeight = height;
+      } else {
+        currentPageBlocks.push(el.outerHTML);
+        currentPageHeight += height;
       }
+    }
 
-      setPaginatedPages(pages.length > 0 ? pages : null);
-    };
+    if (currentPageBlocks.length > 0) {
+      pages.push(currentPageBlocks.join(''));
+    }
 
-    // Delay slightly to let KaTeX formulas, highlight.js, and typography compute layouts
-    const timer = setTimeout(paginateContent, 75);
-    return () => clearTimeout(timer);
-  }, [documentContent, pageSize, margins, fontFamily, preset, includePageNumbers, pdfTheme]);
+    setPagesHtml(pages);
+  }, [
+    documentContent,
+    pageSize,
+    margins,
+    fontFamily,
+    preset,
+    isDarkPdf,
+    includePageNumbers,
+  ]);
 
   return (
     <div 
-      className="flex-1 h-full min-h-0 w-full bg-neutral-100 dark:bg-neutral-950 overflow-y-auto overflow-x-auto p-2 sm:p-6 md:p-8 flex justify-center items-start pdf-studio-scroll-container"
+      className="flex-1 h-full min-h-0 w-full bg-neutral-100 dark:bg-[#0c0912] overflow-y-auto overflow-x-auto p-4 sm:p-8 md:p-10 flex justify-center items-start pdf-studio-scroll-container"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      {/* Hidden Measuring Sandbox (Runs offscreen with identical styling) */}
-      <div
-        ref={measureRef}
-        aria-hidden="true"
-        className={`fixed -left-[9999px] top-0 ${maxSheetWidth} ${marginPaddingClass} ${currentFontFamilyCss} opacity-0 pointer-events-none z-[-9999] ${
-          isDarkPdf ? 'pdf-theme-dark' : 'pdf-theme-light'
-        }`}
-        style={{ width: pageSize === 'letter' ? '816px' : '794px' }}
-      >
-        <div
-          className={`${
-            isDarkPdf ? 'prose prose-invert text-[#f3f4f6]' : 'prose prose-neutral text-[#111827]'
-          } max-w-none ${preset === 'technical' ? 'prose-headings:font-mono' : ''}`}
-        >
-          <MarkdownPreview 
-            content={documentContent} 
-            className={isDarkPdf ? 'text-[#f3f4f6] text-sm' : 'text-[#111827] text-sm'} 
-            forceTheme={isDarkPdf ? 'dark' : 'light'}
-          />
-        </div>
-      </div>
-
       {/* Main Studio Preview Canvas Container */}
       <div
         data-pdf-zoom-container="true"
@@ -156,14 +150,14 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
           transformOrigin: 'top center',
           transition: 'transform 0.15s ease-out',
         }}
-        className={`w-full ${maxSheetWidth} flex flex-col gap-6 sm:gap-10 shadow-2xl relative my-2 shrink-0`}
+        className={`w-full ${maxSheetWidth} flex flex-col gap-8 shadow-2xl relative my-2 shrink-0`}
       >
-        {/* SHEET: COVER PAGE (If Enabled) */}
+        {/* SHEET 1: COVER PAGE (If Enabled) */}
         {includeCoverPage && (
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="pdf-page-indicator w-full flex items-center justify-between px-2 text-xs font-mono text-neutral-400 select-none">
               <span>Cover Sheet</span>
-              <span className="uppercase text-[10px] tracking-wider text-neutral-400 font-semibold">
+              <span className="uppercase text-[10px] tracking-wider font-semibold text-brand-600 dark:text-brand-400">
                 {preset.toUpperCase()} SPECIFICATION
               </span>
             </div>
@@ -172,14 +166,14 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
               id="pdf-render-cover"
               data-pdf-sheet="true"
               className={`pdf-paper-sheet ${
-                isDarkPdf ? 'bg-[#121215] text-white border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
-              } rounded-sm shadow-xl p-10 sm:p-14 ${minSheetHeight} w-full flex flex-col justify-between relative overflow-hidden border ${currentFontFamilyCss}`}
-              style={{ borderTop: `12px solid ${accentColor}` }}
+                isDarkPdf ? 'bg-[#15111E] text-white border-[#2A2338] pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+              } rounded-md shadow-xl p-10 sm:p-16 ${minSheetHeight} w-full flex flex-col justify-between relative overflow-hidden border ${currentFontFamilyCss}`}
+              style={{ borderTop: `10px solid ${accentColor}` }}
             >
               {/* Watermark in Canvas */}
               {watermarkText && (
                 <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                  <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-40`}>
+                  <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-35`}>
                     {watermarkText}
                   </span>
                 </div>
@@ -198,7 +192,7 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
               {/* Center Hero Title */}
               <div className="my-auto space-y-4 max-w-xl">
                 <div
-                  className="inline-block px-3 py-1 rounded-md text-xs font-bold text-white uppercase tracking-wider mb-2"
+                  className="inline-block px-3 py-1 rounded-md text-xs font-bold text-white uppercase tracking-wider mb-2 shadow-xs"
                   style={{ backgroundColor: accentColor }}
                 >
                   {preset.toUpperCase()} SPECIFICATION
@@ -221,14 +215,14 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
                 </div>
                 <div className="text-right">
                   <div className={`text-[11px] uppercase tracking-wider font-bold ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-500'}`}>Engine</div>
-                  <div className={`text-xs font-mono ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-600'}`}>MD Writer Studio v2</div>
+                  <div className={`text-xs font-mono ${isDarkPdf ? 'text-neutral-400' : 'text-neutral-600'}`}>MD Writer Studio</div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* SHEET: TABLE OF CONTENTS (If Enabled) */}
+        {/* SHEET 2: TABLE OF CONTENTS (If Enabled) */}
         {includeToc && tableOfContents.length > 0 && (
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="pdf-page-indicator w-full flex items-center justify-between px-2 text-xs font-mono text-neutral-400 select-none">
@@ -242,8 +236,8 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
               id="pdf-render-toc"
               data-pdf-sheet="true"
               className={`pdf-paper-sheet ${
-                isDarkPdf ? 'bg-[#121215] text-neutral-100 border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
-              } rounded-sm shadow-xl p-12 ${minSheetHeight} w-full relative border ${currentFontFamilyCss}`}
+                isDarkPdf ? 'bg-[#15111E] text-neutral-100 border-[#2A2338] pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+              } rounded-md shadow-xl p-12 ${minSheetHeight} w-full relative border ${currentFontFamilyCss}`}
               style={{ borderLeft: `6px solid ${accentColor}` }}
             >
               <div className={`flex items-center justify-between border-b ${isDarkPdf ? 'border-neutral-800' : 'border-neutral-200'} pb-3 mb-8`}>
@@ -275,79 +269,14 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
           </div>
         )}
 
-        {/* SHEETS: PAGINATED BODY CONTENT */}
-        {paginatedPages && paginatedPages.length > 0 ? (
-          paginatedPages.map((pageBlocks, pageIdx) => {
-            const pageNum = pageIdx + 1;
-            const totalBodyPages = paginatedPages.length;
-
-            return (
-              <div key={pageIdx} className="flex flex-col items-center gap-2 w-full">
-                {/* Visual Sheet Bar Indicator */}
-                <div className="pdf-page-indicator w-full flex items-center justify-between px-2 text-xs font-mono text-neutral-400 select-none">
-                  <span>Page {pageNum} of {totalBodyPages}</span>
-                  <span className="uppercase text-[10px] tracking-wider text-neutral-400 font-semibold">
-                    {pageSize.toUpperCase()} &bull; {margins.toUpperCase()} MARGINS
-                  </span>
-                </div>
-
-                {/* Discrete Physical Sheet */}
-                <div
-                  id={`pdf-render-body-page-${pageIdx}`}
-                  data-pdf-sheet="true"
-                  className={`pdf-paper-sheet ${
-                    isDarkPdf ? 'bg-[#121215] text-neutral-100 border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
-                  } rounded-sm shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border ${currentFontFamilyCss}`}
-                >
-                  {/* Watermark in Canvas */}
-                  {watermarkText && (
-                    <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                      <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-30`}>
-                        {watermarkText}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Running Header */}
-                  {includePageNumbers && (
-                    <div className={`pdf-running-header flex items-center justify-between text-[11px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-b pb-3 mb-6 font-mono shrink-0`}>
-                      <span className="truncate max-w-[65%]">{documentTitle}</span>
-                      <span className="shrink-0">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                    </div>
-                  )}
-
-                  {/* Document Body for this page */}
-                  <div
-                    className={`${
-                      isDarkPdf ? 'prose prose-invert text-[#f3f4f6] prose-headings:text-white prose-p:text-[#f3f4f6] prose-li:text-[#f3f4f6] prose-strong:text-white' : 'prose prose-neutral text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712]'
-                    } max-w-none flex-1 prose-table:w-full prose-table:table-auto prose-td:break-words prose-th:break-words ${
-                      preset === 'technical' ? 'prose-headings:font-mono' : ''
-                    }`}
-                    style={{
-                      ['--tw-prose-links' as any]: accentColor,
-                      ['--tw-prose-headings' as any]: preset === 'corporate' ? accentColor : undefined,
-                    }}
-                    dangerouslySetInnerHTML={{ __html: pageBlocks.join('') }}
-                  />
-
-                  {/* Running Footer with accurate Page X of Y */}
-                  {includePageNumbers && (
-                    <div className={`pdf-running-footer flex items-center justify-between text-[10px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-t pt-3 mt-auto font-mono shrink-0`}>
-                      <span>Published with MD Writer</span>
-                      <span className={`font-semibold ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-700'}`}>Page {pageNum} of {totalBodyPages}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          /* Initial / Single Sheet Fallback */
+        {/* DOCUMENT BODY SHEETS (Authentic Multi-Page Sheets with Clean Breaks) */}
+        {pagesHtml.length === 0 ? (
+          /* Fallback before DOM measurement settles */
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="pdf-page-indicator w-full flex items-center justify-between px-2 text-xs font-mono text-neutral-400 select-none">
-              <span>Page 1 of 1</span>
+              <span>Document Content</span>
               <span className="uppercase text-[10px] tracking-wider text-neutral-400 font-semibold">
-                {pageSize.toUpperCase()} &bull; {margins.toUpperCase()} MARGINS
+                {pageSize.toUpperCase()} &bull; {margins.toUpperCase()} MARGINS &bull; {fontFamily.toUpperCase()}
               </span>
             </div>
 
@@ -355,12 +284,12 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
               id="pdf-render-body"
               data-pdf-sheet="true"
               className={`pdf-paper-sheet ${
-                isDarkPdf ? 'bg-[#121215] text-neutral-100 border-neutral-800 pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
-              } rounded-sm shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border ${currentFontFamilyCss}`}
+                isDarkPdf ? 'bg-[#15111E] text-neutral-100 border-[#2A2338] pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+              } rounded-md shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border ${currentFontFamilyCss}`}
             >
               {watermarkText && (
                 <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-                  <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-30`}>
+                  <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-25`}>
                     {watermarkText}
                   </span>
                 </div>
@@ -368,14 +297,14 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
 
               {includePageNumbers && (
                 <div className={`pdf-running-header flex items-center justify-between text-[11px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-b pb-3 mb-6 font-mono shrink-0`}>
-                  <span className="truncate max-w-[65%]">{documentTitle}</span>
+                  <span className="truncate max-w-[65%] font-medium">{documentTitle}</span>
                   <span className="shrink-0">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                 </div>
               )}
 
               <div
-                className={`${
-                  isDarkPdf ? 'prose prose-invert text-[#f3f4f6] prose-headings:text-white prose-p:text-[#f3f4f6] prose-li:text-[#f3f4f6] prose-strong:text-white' : 'prose prose-neutral text-[#111827] prose-headings:text-[#030712] prose-p:text-[#111827] prose-li:text-[#111827] prose-strong:text-[#030712]'
+                className={`pdf-prose-content ${
+                  isDarkPdf ? 'prose prose-invert text-[#EDEAF5] prose-headings:text-white prose-p:text-[#EDEAF5] prose-li:text-[#EDEAF5] prose-strong:text-white' : 'prose prose-neutral text-[#1B1626] prose-headings:text-[#1B1626] prose-p:text-[#1B1626] prose-li:text-[#1B1626] prose-strong:text-[#1B1626]'
                 } max-w-none flex-1 prose-table:w-full prose-table:table-auto prose-td:break-words prose-th:break-words ${
                   preset === 'technical' ? 'prose-headings:font-mono' : ''
                 }`}
@@ -386,20 +315,99 @@ export const PdfExportPreview: React.FC<PdfExportPreviewProps> = React.memo(({
               >
                 <MarkdownPreview 
                   content={documentContent} 
-                  className={isDarkPdf ? "text-[#f3f4f6] text-sm" : "text-[#111827] text-sm"} 
+                  className={isDarkPdf ? 'text-[#EDEAF5] text-sm' : 'text-[#1B1626] text-sm'} 
                   forceTheme={isDarkPdf ? 'dark' : 'light'}
                 />
               </div>
 
               {includePageNumbers && (
-                <div className={`pdf-running-footer flex items-center justify-between text-[10px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-t pt-3 mt-auto font-mono shrink-0`}>
+                <div className={`pdf-running-footer flex items-center justify-between text-[10px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-t pt-3 mt-8 font-mono shrink-0`}>
                   <span>Published with MD Writer</span>
-                  <span className={`font-semibold ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-700'}`}>Page 1 of 1</span>
+                  <span className={`font-semibold ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-700'}`}>Document Sheet</span>
                 </div>
               )}
             </div>
           </div>
+        ) : (
+          pagesHtml.map((pageHtml, pageIdx) => (
+            <div key={pageIdx} className="flex flex-col items-center gap-2 w-full">
+              <div className="pdf-page-indicator w-full flex items-center justify-between px-2 text-xs font-mono text-neutral-400 select-none">
+                <span>Document Content &bull; Page {pageIdx + 1} of {pagesHtml.length}</span>
+                <span className="uppercase text-[10px] tracking-wider text-neutral-400 font-semibold">
+                  {pageSize.toUpperCase()} &bull; {margins.toUpperCase()} MARGINS &bull; {fontFamily.toUpperCase()}
+                </span>
+              </div>
+
+              <div
+                id={`pdf-render-page-${pageIdx + 1}`}
+                data-pdf-sheet="true"
+                className={`pdf-paper-sheet ${
+                  isDarkPdf ? 'bg-[#15111E] text-neutral-100 border-[#2A2338] pdf-theme-dark' : 'bg-white text-neutral-900 border-neutral-200 pdf-theme-light'
+                } rounded-md shadow-xl ${marginPaddingClass} ${minSheetHeight} w-full flex flex-col justify-between relative border ${currentFontFamilyCss}`}
+              >
+                {watermarkText && (
+                  <div className="canvas-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
+                    <span className={`text-7xl font-black ${isDarkPdf ? 'text-neutral-800' : 'text-neutral-200'} tracking-widest uppercase rotate-[-35deg] opacity-25`}>
+                      {watermarkText}
+                    </span>
+                  </div>
+                )}
+
+                {/* Running Header */}
+                {includePageNumbers && (
+                  <div className={`pdf-running-header flex items-center justify-between text-[11px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-b pb-3 mb-6 font-mono shrink-0`}>
+                    <span className="truncate max-w-[65%] font-medium">{documentTitle}</span>
+                    <span className="shrink-0">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                  </div>
+                )}
+
+                {/* Live Markdown Rendering for this page */}
+                <div
+                  className={`pdf-prose-content ${
+                    isDarkPdf ? 'prose prose-invert text-[#EDEAF5] prose-headings:text-white prose-p:text-[#EDEAF5] prose-li:text-[#EDEAF5] prose-strong:text-white' : 'prose prose-neutral text-[#1B1626] prose-headings:text-[#1B1626] prose-p:text-[#1B1626] prose-li:text-[#1B1626] prose-strong:text-[#1B1626]'
+                  } max-w-none flex-1 prose-table:w-full prose-table:table-auto prose-td:break-words prose-th:break-words ${
+                    preset === 'technical' ? 'prose-headings:font-mono' : ''
+                  }`}
+                  style={{
+                    ['--tw-prose-links' as any]: accentColor,
+                    ['--tw-prose-headings' as any]: preset === 'corporate' ? accentColor : undefined,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: pageHtml }}
+                />
+
+                {/* Running Footer */}
+                {includePageNumbers && (
+                  <div className={`pdf-running-footer flex items-center justify-between text-[10px] ${isDarkPdf ? 'text-neutral-400 border-neutral-800' : 'text-neutral-500 border-neutral-200'} border-t pt-3 mt-8 font-mono shrink-0`}>
+                    <span>Published with MD Writer</span>
+                    <span className={`font-semibold ${isDarkPdf ? 'text-neutral-300' : 'text-neutral-700'}`}>
+                      Page {pageIdx + 1} of {pagesHtml.length}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
         )}
+      </div>
+
+      {/* Hidden Off-Screen Container for DOM Measurement & Pagination */}
+      <div
+        ref={measureRef}
+        aria-hidden="true"
+        className={`fixed -left-[9999px] top-0 pointer-events-none opacity-0 ${maxSheetWidth} ${marginPaddingClass} ${currentFontFamilyCss}`}
+        style={{ width: pageSize === 'letter' ? '816px' : '794px' }}
+      >
+        <div
+          className={`pdf-prose-content ${
+            isDarkPdf ? 'prose prose-invert text-[#EDEAF5]' : 'prose prose-neutral text-[#1B1626]'
+          } max-w-none`}
+        >
+          <MarkdownPreview 
+            content={documentContent} 
+            className={isDarkPdf ? 'text-[#EDEAF5] text-sm' : 'text-[#1B1626] text-sm'} 
+            forceTheme={isDarkPdf ? 'dark' : 'light'}
+          />
+        </div>
       </div>
     </div>
   );

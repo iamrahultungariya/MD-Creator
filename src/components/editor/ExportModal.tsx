@@ -198,7 +198,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
             className="w-full text-left p-3.5 rounded-2xl border border-neutral-200/70 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-all flex items-center justify-between group cursor-pointer hover:scale-[1.01]"
           >
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-sm shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -206,7 +206,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   <span className="font-bold text-xs sm:text-sm text-neutral-950 dark:text-white">
                     Word Document (.docx)
                   </span>
-                  <span className="text-[9px] bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-1.5 py-0.2 rounded font-mono font-bold">
+                  <span className="text-[9px] bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 px-1.5 py-0.2 rounded font-mono font-bold">
                     DOCX
                   </span>
                   {!isPro && (

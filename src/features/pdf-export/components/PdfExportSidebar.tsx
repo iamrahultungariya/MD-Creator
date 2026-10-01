@@ -136,7 +136,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
-            <Palette className="w-3.5 h-3.5 text-blue-500" />
+            <Palette className="w-3.5 h-3.5 text-brand-500" />
             <span>Design Presets</span>
           </label>
           <span className="text-[10px] text-neutral-400">Curated Styles</span>
@@ -192,7 +192,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
                 onClick={() => onChangeFontFamily(f.id as FontFamily)}
                 className={`py-1.5 px-2 rounded-lg border text-center font-medium transition-colors cursor-pointer ${
                   fontFamily === f.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 font-bold'
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 font-bold'
                     : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                 }`}
               >
@@ -293,7 +293,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
               type="checkbox"
               checked={includeCoverPage}
               onChange={(e) => onChangeIncludeCoverPage(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+              className="w-4 h-4 rounded text-brand-600 cursor-pointer"
             />
           </div>
           {includeCoverPage && (
@@ -339,7 +339,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
             type="checkbox"
             checked={includeToc}
             onChange={(e) => onChangeIncludeToc(e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+            className="w-4 h-4 rounded text-brand-600 cursor-pointer"
           />
         </div>
 
@@ -357,7 +357,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
             type="checkbox"
             checked={includePageNumbers}
             onChange={(e) => onChangeIncludePageNumbers(e.target.checked)}
-            className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+            className="w-4 h-4 rounded text-brand-600 cursor-pointer"
           />
         </div>
 

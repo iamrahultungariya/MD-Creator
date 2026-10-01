@@ -100,7 +100,7 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
         return {
           icon: HelpCircle,
           label: 'Question',
-          badge: 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+          badge: 'bg-brand-500/10 text-brand-400 border-brand-500/30'
         };
     }
   };
@@ -379,7 +379,7 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
                             {fb.system_info && (
                               <div className="space-y-1">
                                 <div className="font-semibold text-neutral-300 flex items-center gap-1.5 text-[11px]">
-                                  <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                                  <Monitor className="w-3.5 h-3.5 text-brand-400" />
                                   <span>Client Telemetry</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[10px] text-neutral-400 font-mono bg-neutral-900/60 p-2 rounded-xl">

@@ -48,10 +48,10 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = ({
         <div className="pt-6 flex justify-center">
           <button
             onClick={onExploreFeatures}
-            className="px-6 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 hover:border-blue-500 dark:hover:border-blue-500 text-neutral-900 dark:text-white font-bold text-xs sm:text-sm flex items-center gap-2.5 transition-all shadow-sm hover:shadow-md cursor-pointer group"
+            className="px-6 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 hover:border-brand-500 dark:hover:border-brand-500 text-neutral-900 dark:text-white font-bold text-xs sm:text-sm flex items-center gap-2.5 transition-all shadow-sm hover:shadow-md cursor-pointer group"
           >
             <span>Explore All 25+ Features &amp; Deep Dives</span>
-            <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="w-4 h-4 text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
 

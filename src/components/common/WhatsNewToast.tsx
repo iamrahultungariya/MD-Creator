@@ -51,7 +51,7 @@ export const WhatsNewToast: React.FC<WhatsNewToastProps> = ({ onOpenModal }) => 
           aria-label="Application update announcement"
           className="fixed bottom-5 left-5 z-50 max-w-sm w-[calc(100vw-2.5rem)] sm:w-auto bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-xl shadow-neutral-950/10 dark:shadow-black/40 p-3 sm:p-3.5 flex items-center gap-3 backdrop-blur-md"
         >
-          <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/50 dark:border-blue-900/50 flex items-center justify-center shrink-0 text-blue-600 dark:text-blue-400">
+          <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200/50 dark:border-brand-900/50 flex items-center justify-center shrink-0 text-brand-600 dark:text-brand-400">
             <Sparkles className="w-4 h-4" />
           </div>
 

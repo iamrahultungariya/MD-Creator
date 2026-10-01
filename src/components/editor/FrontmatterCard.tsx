@@ -47,7 +47,7 @@ export const FrontmatterCard: React.FC<FrontmatterCardProps> = ({ rawYaml }) => 
         className="px-4 py-2.5 flex items-center justify-between cursor-pointer bg-neutral-100/60 dark:bg-neutral-850 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
       >
         <div className="flex items-center gap-2 font-bold text-neutral-700 dark:text-neutral-200">
-          <Sliders className="w-3.5 h-3.5 text-blue-500" />
+          <Sliders className="w-3.5 h-3.5 text-brand-500" />
           <span>Metadata Front Matter</span>
           {data.title && (
             <span className="font-normal text-neutral-400 dark:text-neutral-500">• {data.title}</span>
@@ -110,7 +110,7 @@ export const FrontmatterCard: React.FC<FrontmatterCardProps> = ({ rawYaml }) => 
                       {data.tags.map((t: string, idx: number) => (
                         <span 
                           key={idx}
-                          className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40 text-[10.5px] font-medium font-mono"
+                          className="px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/60 dark:border-brand-900/40 text-[10.5px] font-medium font-mono"
                         >
                           #{t}
                         </span>

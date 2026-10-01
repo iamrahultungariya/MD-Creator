@@ -67,16 +67,16 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
           onClick={() => onNavigateTab('reviews')}
           className={`p-5 rounded-3xl border transition-all cursor-pointer group relative overflow-hidden ${
             stats.pendingReviews > 0
-              ? 'bg-gradient-to-br from-blue-500/10 via-neutral-900 to-neutral-900 border-blue-500/40 hover:border-blue-500/70 shadow-lg shadow-blue-500/5'
+              ? 'bg-gradient-to-br from-brand-500/10 via-neutral-900 to-neutral-900 border-brand-500/40 hover:border-brand-500/70 shadow-lg shadow-brand-500/5'
               : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30">
+            <div className="w-10 h-10 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
               <MessageSquare className="w-5 h-5" />
             </div>
             {stats.pendingReviews > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500 text-black">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500 text-white">
                 {stats.pendingReviews} New
               </span>
             ) : (
@@ -91,7 +91,7 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
           </div>
           <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
             <span>Awaiting homepage feature</span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-brand-400 group-hover:translate-x-1 transition-all" />
           </p>
         </div>
 

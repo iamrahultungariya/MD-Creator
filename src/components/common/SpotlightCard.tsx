@@ -49,15 +49,16 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
   const borderBackground = useMotionTemplate`
     radial-gradient(
       ${spotlightRadius}px circle at ${mouseX}px ${mouseY}px,
-      ${spotlightBorderColor || 'var(--spotlight-border, rgba(59, 130, 246, 0.45))'},
-      transparent 80%
+      ${spotlightBorderColor || 'var(--spotlight-border, rgba(130, 87, 245, 0.75))'} 0%,
+      ${spotlightBorderColor || 'var(--spotlight-border, rgba(130, 87, 245, 0.75))'} 30%,
+      transparent 75%
     )
   `;
 
   const surfaceBackground = useMotionTemplate`
     radial-gradient(
-      ${spotlightRadius * 1.25}px circle at ${mouseX}px ${mouseY}px,
-      ${spotlightSurfaceColor || 'var(--spotlight-surface, rgba(59, 130, 246, 0.05))'},
+      ${spotlightRadius * 1.1}px circle at ${mouseX}px ${mouseY}px,
+      ${spotlightSurfaceColor || 'var(--spotlight-surface, rgba(130, 87, 245, 0.08))'} 0%,
       transparent 70%
     )
   `;
@@ -71,17 +72,18 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       } ${className}`}
       {...props}
     >
-      {/* 1. Dynamic Mouse-following 1.25px Border Glow (Masked so only border illuminates!) */}
+      {/* 1. Dynamic Mouse-following 2px Border Glow with crisp illumination & halo */}
       {isActiveGlow && (
         <motion.div
-          className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+          className="pointer-events-none absolute -inset-0.5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
           style={{
             background: borderBackground,
             mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
             maskComposite: 'exclude',
             WebkitMaskComposite: 'xor',
-            padding: '1.25px',
+            padding: '2px',
+            filter: 'drop-shadow(0 0 6px rgba(130, 87, 245, 0.35))',
           }}
         />
       )}
@@ -89,7 +91,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       {/* 2. Dynamic Mouse-following Inner Surface Glow */}
       {isActiveGlow && (
         <motion.div
-          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10"
           style={{
             background: surfaceBackground,
           }}

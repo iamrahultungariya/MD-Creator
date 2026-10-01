@@ -58,7 +58,7 @@ const CATEGORIES: CategoryOption[] = [
     title: 'Question / Help',
     desc: 'Ask about shortcuts, KaTeX, or local sync',
     icon: HelpCircle,
-    badgeColor: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+    badgeColor: 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 border-brand-200 dark:border-brand-800'
   }
 ];
 
@@ -197,7 +197,7 @@ export const FeedbackPage: React.FC = () => {
 
         {/* Hero Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-semibold mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-semibold mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Direct Maintainer Channel</span>
           </div>
@@ -228,7 +228,7 @@ export const FeedbackPage: React.FC = () => {
                         onClick={() => setCategory(cat.id)}
                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3.5 ${
                           isSelected
-                            ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 shadow-xs'
+                            ? 'border-brand-600 bg-brand-50/50 dark:bg-brand-950/20 shadow-xs'
                             : 'border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900/60'
                         }`}
                       >
@@ -292,7 +292,7 @@ export const FeedbackPage: React.FC = () => {
                     placeholder="Subject / Summary (e.g., 'Add syntax highlighting for Rust' or 'Table formatting bug')"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-medium"
                   />
                 </div>
 
@@ -302,7 +302,7 @@ export const FeedbackPage: React.FC = () => {
                     placeholder="Tell us everything. What happened? What would you like to see? Markdown is welcome."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="w-full p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-y leading-relaxed"
+                    className="w-full p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-y leading-relaxed"
                   />
                 </div>
 
@@ -358,7 +358,7 @@ export const FeedbackPage: React.FC = () => {
                       type="checkbox"
                       checked={includeSystemInfo}
                       onChange={(e) => setIncludeSystemInfo(e.target.checked)}
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-0 cursor-pointer"
+                      className="w-4 h-4 rounded text-brand-600 focus:ring-0 cursor-pointer"
                     />
                     <div className="flex items-center gap-1.5">
                       <Monitor className="w-3.5 h-3.5 text-neutral-400" />
@@ -394,12 +394,12 @@ export const FeedbackPage: React.FC = () => {
                       onClick={() => setWillingnessToPay(willingnessToPay === opt.id ? '' : opt.id)}
                       className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                         willingnessToPay === opt.id
-                          ? 'border-blue-600 dark:border-blue-400 bg-blue-50/90 dark:bg-blue-950/70 text-blue-950 dark:text-blue-100 font-bold shadow-xs ring-2 ring-blue-500/20'
+                          ? 'border-brand-600 dark:border-brand-400 bg-brand-50/90 dark:bg-brand-950/70 text-brand-950 dark:text-brand-100 font-bold shadow-xs ring-2 ring-brand-500/20'
                           : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
                       }`}
                     >
                       <div className="font-bold text-xs">{opt.label}</div>
-                      <div className={`text-[10.5px] mt-0.5 ${willingnessToPay === opt.id ? 'text-blue-700 dark:text-blue-300' : 'text-neutral-500 dark:text-neutral-400'}`}>{opt.desc}</div>
+                      <div className={`text-[10.5px] mt-0.5 ${willingnessToPay === opt.id ? 'text-brand-700 dark:text-brand-300' : 'text-neutral-500 dark:text-neutral-400'}`}>{opt.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -410,7 +410,7 @@ export const FeedbackPage: React.FC = () => {
                     placeholder="Which specific feature would you pay for most? (e.g., Live Team Sync, PDF Custom Themes, Advanced Outlines)"
                     value={monetizationFeature}
                     onChange={(e) => setMonetizationFeature(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                   />
                 </div>
               </div>

@@ -51,15 +51,15 @@ export const ALERT_CONFIGS: Record<string, AlertCalloutConfig> = {
     type: 'note',
     title: 'Note',
     icon: Info,
-    borderColor: '#2563eb',
-    backgroundColor: 'rgba(37, 99, 235, 0.08)',
-    darkBackgroundColor: 'rgba(30, 58, 138, 0.25)',
-    badgeBg: 'rgba(37, 99, 235, 0.15)',
-    badgeColor: '#1d4ed8',
-    containerClass: 'bg-blue-50/80 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 border-l-4 border-l-blue-600 dark:border-l-blue-500',
-    badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 border border-blue-200 dark:border-blue-700/80',
-    titleClass: 'text-blue-800 dark:text-blue-300 font-bold',
-    iconClass: 'text-blue-600 dark:text-blue-400'
+    borderColor: '#8257F5',
+    backgroundColor: 'rgba(130, 87, 245, 0.08)',
+    darkBackgroundColor: 'rgba(47, 26, 99, 0.25)',
+    badgeBg: 'rgba(130, 87, 245, 0.15)',
+    badgeColor: '#6D3FE0',
+    containerClass: 'bg-brand-50/80 dark:bg-brand-950/40 text-brand-950 dark:text-brand-100 border-l-4 border-l-brand-600 dark:border-l-brand-500',
+    badgeClass: 'bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-300 border border-brand-200 dark:border-brand-700/80',
+    titleClass: 'text-brand-800 dark:text-brand-300 font-bold',
+    iconClass: 'text-brand-600 dark:text-brand-400'
   },
   tip: {
     type: 'tip',
@@ -230,9 +230,9 @@ export const getAlertThemeClasses = (config: AlertCalloutConfig, forceTheme?: 'l
     switch (config.type) {
       case 'note':
         return {
-          container: 'bg-blue-50/90 text-blue-950 border-l-4 border-l-blue-600 border-y border-r border-blue-200/50',
-          badge: 'bg-blue-100 text-blue-800 border border-blue-200',
-          icon: 'text-blue-600',
+          container: 'bg-brand-50/90 text-brand-950 border-l-4 border-l-brand-600 border-y border-r border-brand-200/50',
+          badge: 'bg-brand-100 text-brand-800 border border-brand-200',
+          icon: 'text-brand-600',
         };
       case 'tip':
         return {
@@ -263,9 +263,9 @@ export const getAlertThemeClasses = (config: AlertCalloutConfig, forceTheme?: 'l
     switch (config.type) {
       case 'note':
         return {
-          container: 'bg-blue-950/40 text-blue-100 border-l-4 border-l-blue-500 border-y border-r border-blue-800/50',
-          badge: 'bg-blue-900/60 text-blue-300 border border-blue-700/80',
-          icon: 'text-blue-400',
+          container: 'bg-brand-950/40 text-brand-100 border-l-4 border-l-brand-500 border-y border-r border-brand-800/50',
+          badge: 'bg-brand-900/60 text-brand-300 border border-brand-700/80',
+          icon: 'text-brand-400',
         };
       case 'tip':
         return {

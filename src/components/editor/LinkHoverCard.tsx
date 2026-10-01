@@ -48,7 +48,7 @@ export const PlatformBadgeIcon: React.FC<{ platform: RecognizedPlatform }> = ({ 
       );
     case 'generic':
     default:
-      return <Globe className="w-3.5 h-3.5 text-blue-500 shrink-0" />;
+      return <Globe className="w-3.5 h-3.5 text-brand-500 shrink-0" />;
   }
 };
 
@@ -149,7 +149,7 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
       {/* Main Body: Live Media Preview or Synthetic Platform Card */}
       {isLoading && !data ? (
         <div className="py-6 flex items-center justify-center gap-2 text-xs text-neutral-400 font-mono">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+          <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-500" />
           <span>Fetching preview...</span>
         </div>
       ) : (
@@ -172,7 +172,7 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
           {/* Title */}
           <h5 
             onClick={handleOpenLink}
-            className="text-xs font-bold leading-snug line-clamp-2 text-neutral-900 dark:text-neutral-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+            className="text-xs font-bold leading-snug line-clamp-2 text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
           >
             {data?.title || url}
           </h5>
@@ -191,7 +191,7 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
             </span>
             <button
               onClick={handleOpenLink}
-              className="text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-0.5 cursor-pointer shrink-0"
+              className="text-brand-600 dark:text-brand-400 font-semibold hover:underline flex items-center gap-0.5 cursor-pointer shrink-0"
             >
               <span>Visit</span>
               <ExternalLink className="w-2.5 h-2.5" />

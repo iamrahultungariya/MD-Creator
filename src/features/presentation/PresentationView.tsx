@@ -506,7 +506,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       {/* Bottom Progress Bar */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
         <div
-          className="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-300 ease-out"
+          className="h-full bg-brand-500 dark:bg-brand-400 transition-all duration-300 ease-out"
           style={{ width: `${progressPercent}%` }}
         />
       </div>

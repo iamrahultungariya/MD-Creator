@@ -19,8 +19,8 @@ export const BentoTemplatesCard: React.FC<BentoTemplatesCardProps> = ({ onOpenTe
     {
       name: 'Project Brief',
       icon: BookOpen,
-      iconColor: 'text-blue-500',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/50 border-blue-100 dark:border-blue-900/40',
+      iconColor: 'text-brand-500',
+      bgColor: 'bg-brand-50 dark:bg-brand-950/50 border-brand-100 dark:border-brand-900/40',
     },
     {
       name: 'Project README',

@@ -111,7 +111,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/40">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               <Table2 className="w-5 h-5" />
             </div>
             <div>
@@ -150,7 +150,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                 onClick={addColumn}
                 className="px-2.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Columns className="w-3.5 h-3.5 text-blue-500" />
+                <Columns className="w-3.5 h-3.5 text-brand-500" />
                 <span>Add Column</span>
               </button>
               <button
@@ -179,7 +179,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                             value={h}
                             onChange={(e) => updateHeader(colIdx, e.target.value)}
                             placeholder={`Header ${colIdx + 1}`}
-                            className="w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
                           />
                           {headers.length > 1 && (
                             <button
@@ -223,7 +223,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                           value={cell}
                           onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
                           placeholder="Empty cell..."
-                          className={`w-full px-2.5 py-1.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                          className={`w-full px-2.5 py-1.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
                             alignments[colIdx] === 'center' ? 'text-center' : alignments[colIdx] === 'right' ? 'text-right' : 'text-left'
                           }`}
                         />

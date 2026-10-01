@@ -20,7 +20,7 @@ import { closeBrackets } from '@codemirror/autocomplete';
 import { useThemeStore } from '../../../stores/useThemeStore';
 import { getThemeExtensions } from '../utils/codeMirrorThemes';
 import { createTableKeybindings } from '../../../utils/editorTableKeymap';
-import { extractMarkdownTableFromClipboard } from '../../../utils/clipboardTableParser';
+import { extractClipboardMarkdown } from '../../../utils/clipboardTableParser';
 
 // CodeMirror live highlight marker decorator for ==highlight== syntax
 const highlightDecorator = new MatchDecorator({
@@ -313,18 +313,23 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         }
 
         // 4. Smart Clipboard: Auto-convert Excel / Google Sheets / HTML tables to Markdown Pipe Table
-        const tableMarkdown = extractMarkdownTableFromClipboard(e.clipboardData);
-        if (tableMarkdown) {
+        // or convert rich AI responses/articles preserving all text and all tables
+        const clipResult = extractClipboardMarkdown(e.clipboardData);
+        if (clipResult) {
           e.preventDefault();
           const view = viewRef.current;
           if (view) {
             const main = view.state.selection.main;
-            const snippet = '\n\n' + tableMarkdown + '\n\n';
+            const snippet = '\n\n' + clipResult.markdown + '\n\n';
             view.dispatch({
               changes: { from: main.from, to: main.to, insert: snippet },
               selection: { anchor: main.from + snippet.length }
             });
-            onToastRef.current?.('📊 Converted table from clipboard (Press Ctrl+Z to undo)');
+            if (clipResult.type === 'table') {
+              onToastRef.current?.('📊 Converted table from clipboard (Press Ctrl+Z to undo)');
+            } else {
+              onToastRef.current?.('✨ Converted rich content & tables to Markdown (Press Ctrl+Z to undo)');
+            }
             return true;
           }
         }
