@@ -8,10 +8,10 @@ import {
   Image as ImageIcon,
   LayoutTemplate,
   History,
-  Timer,
   FileX,
   Trash2,
   Film,
+  Sparkles,
 } from 'lucide-react';
 
 interface EditorToolsMenuProps {
@@ -20,6 +20,7 @@ interface EditorToolsMenuProps {
   onBeforeOpen?: () => void;
   onOpenPdfStudio: () => void;
   onOpenClipStudio?: () => void;
+  onOpenSocialCard?: () => void;
   isAdmin?: boolean;
   onOpenOutline: () => void;
   onOpenTableBuilder: () => void;
@@ -37,13 +38,14 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
   onBeforeOpen,
   onOpenPdfStudio,
   onOpenClipStudio,
-  isAdmin,
+  onOpenSocialCard,
+  isAdmin: _isAdmin,
   onOpenOutline,
   onOpenTableBuilder,
   onOpenImageModal,
   onOpenTemplates,
   onOpenRevisions,
-  onOpenSprintPopover,
+  onOpenSprintPopover: _onOpenSprintPopover,
   onClearContent,
   onDeleteCurrentDoc,
 }) => {
@@ -97,7 +99,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
               </kbd>
             </button>
 
-            {isAdmin && onOpenClipStudio && (
+            {onOpenClipStudio && (
               <button
                 onClick={() => {
                   setIsOpen(false);
@@ -106,20 +108,44 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
-                  <Film className="w-4 h-4 text-sky-500" />
+                  <Film className="w-4 h-4 text-brand-500" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
                       <span>Social Clip Studio</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/30">
-                        Admin
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-brand-500/10 text-brand-400 border border-brand-500/30">
+                        Recordly
                       </span>
                     </div>
-                    <div className="text-[10px] text-neutral-500">Auto-zoom Reels, Threads &amp; X clips</div>
+                    <div className="text-[10px] text-neutral-500">Record in-app &amp; auto-zoom video clips</div>
                   </div>
                 </div>
                 <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">
                   Ctrl+Alt+R
                 </kbd>
+              </button>
+            )}
+
+            {onOpenSocialCard && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onOpenSocialCard();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-[#8257F5]" />
+                  <div>
+                    <div className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                      <span>Social Share Card</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-brand-500/10 text-brand-500 border border-brand-500/20">
+                        1200×630
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-neutral-500">Generate branded preview for X &amp; LinkedIn</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono text-neutral-400">Card</span>
               </button>
             )}
 
@@ -213,18 +239,21 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
             <button
               onClick={() => {
                 setIsOpen(false);
-                onOpenSprintPopover();
+                // Open Preferences modal
+                window.dispatchEvent(new CustomEvent('open-preferences-modal'));
               }}
               className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
             >
               <div className="flex items-center gap-2.5">
-                <Timer className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+                <Sliders className="w-4 h-4 text-brand-500" />
                 <div>
-                  <div className="font-semibold text-neutral-900 dark:text-white">Focus Sprint Timer</div>
-                  <div className="text-[10px] text-neutral-500">Pomodoro focus sprint mode</div>
+                  <div className="font-semibold text-neutral-900 dark:text-white">Preferences &amp; Settings</div>
+                  <div className="text-[10px] text-neutral-500">Typography, wrap &amp; backup</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">25m</span>
+              <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">
+                Ctrl+,
+              </kbd>
             </button>
 
             <div className="border-t border-neutral-100 dark:border-neutral-800 my-1" />

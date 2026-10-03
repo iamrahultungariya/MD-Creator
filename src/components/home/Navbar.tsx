@@ -6,7 +6,6 @@ import {
   FolderOpen, 
   ChevronDown, 
   Sparkles, 
-  CreditCard, 
   BookOpen, 
   MessageSquare, 
   Sliders, 
@@ -21,6 +20,8 @@ import { ProfileDropdown } from '../auth/ProfileDropdown';
 import { PwaInstallButton } from '../common/PwaInstallButton';
 import { isCurrentUserAdmin } from '../../utils/adminAuth';
 import { APP_VERSION_LABEL } from '../../config/version';
+
+import { usePreferencesStore } from '../../stores/usePreferencesStore';
 
 interface NavbarProps {
   onOpenTemplates?: () => void;
@@ -52,30 +53,25 @@ const RESOURCE_ITEMS: ResourceItem[] = [
     desc: 'Milestones & architectural evolution',
     badge: APP_VERSION_LABEL,
     icon: Sparkles,
-    iconColor: 'text-indigo-600 dark:text-indigo-400',
-    iconBg: 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200/40 dark:border-indigo-900/40',
+    iconColor: 'text-brand-600 dark:text-brand-400',
+    iconBg: 'bg-brand-50 dark:bg-brand-950/60 border-brand-200/40 dark:border-brand-900/40',
     path: '/updates',
     action: ({ navigate }) => navigate('/updates')
   },
   {
-    id: 'pricing',
-    title: 'Pricing',
-    desc: '100% Free & Open-source plans',
-    icon: CreditCard,
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-    iconBg: 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/40 dark:border-emerald-900/40',
-    path: '/pricing',
-    action: ({ navigate }) => navigate('/pricing')
-  },
-  {
-    id: 'blog',
-    title: 'Community Blog',
-    desc: 'You Write, We Publish.',
+    id: 'templates',
+    title: 'Starter Templates',
+    desc: 'Curated blueprints, notes & formats',
     icon: BookOpen,
     iconColor: 'text-amber-600 dark:text-amber-400',
     iconBg: 'bg-amber-50 dark:bg-amber-950/60 border-amber-200/40 dark:border-amber-900/40',
-    path: '/blog',
-    action: ({ navigate }) => navigate('/blog')
+    action: ({ onOpenTemplates, navigate }) => {
+      if (onOpenTemplates) {
+        onOpenTemplates();
+      } else {
+        navigate('/?templates=open');
+      }
+    }
   },
   {
     id: 'feedback',
@@ -88,14 +84,13 @@ const RESOURCE_ITEMS: ResourceItem[] = [
     action: ({ navigate }) => navigate('/feedback')
   },
   {
-    id: 'settings',
-    title: 'Settings & Toolbar',
-    desc: 'Customize floating markdown dock & tools',
+    id: 'preferences',
+    title: 'Preferences (Ctrl+,)',
+    desc: 'Editor font, tab size & full backup',
     icon: Sliders,
     iconColor: 'text-sky-600 dark:text-sky-400',
     iconBg: 'bg-sky-50 dark:bg-sky-950/60 border-sky-200/40 dark:border-sky-900/40',
-    path: '/settings',
-    action: ({ navigate }) => navigate('/settings')
+    action: () => usePreferencesStore.getState().openPreferences()
   }
 ];
 
@@ -194,32 +189,32 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white dark:bg-[#0e0e11] border-b border-neutral-200 dark:border-neutral-800 shadow-2xs dark:shadow-none transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-white/85 dark:bg-[#0c0d0e]/85 backdrop-blur-md border-b border-neutral-200/70 dark:border-neutral-800/70 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         
         {/* Brand Logo & Name */}
         <div 
           onClick={handleBrandClick} 
-          className="flex items-center gap-2.5 cursor-pointer group select-none shrink-0"
+          className="flex items-center gap-2 cursor-pointer group select-none shrink-0"
         >
           <img 
             src="/logo.webp" 
             alt="MD Writer Logo" 
-            className="w-8 h-8 rounded-xl object-contain shadow-xs group-hover:scale-105 transition-transform" 
+            className="w-7 h-7 rounded-lg object-contain shadow-xs group-hover:scale-105 transition-transform" 
           />
-          <span className="font-bold text-base sm:text-lg text-neutral-950 dark:text-white tracking-tight">
+          <span className="font-semibold text-sm sm:text-base text-neutral-950 dark:text-white tracking-tight">
             MD Writer
           </span>
         </div>
 
         {/* Center Desktop Navigation (Clean, spacious, decluttered) */}
-        <nav className="hidden md:flex items-center gap-2 text-sm font-medium text-neutral-600 dark:text-neutral-300">
+        <nav className="hidden md:flex items-center gap-1 text-[13px] font-medium text-neutral-600 dark:text-neutral-300">
           <button 
             onClick={handleBrandClick}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
               location.pathname === '/' 
-                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800' 
-                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800/80' 
+                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
             }`}
           >
             Home
@@ -227,36 +222,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
 
           <button 
             onClick={() => navigate('/documents')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
               location.pathname === '/documents' 
-                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800' 
-                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800/80' 
+                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
             }`}
           >
-            <FolderOpen className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
+            <FolderOpen className="w-3.5 h-3.5 text-neutral-400" />
             <span>Documents</span>
-          </button>
-
-          <button 
-            onClick={() => navigate('/features')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              location.pathname === '/features' 
-                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800' 
-                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
-            }`}
-          >
-            Features
-          </button>
-
-          <button 
-            onClick={() => navigate('/about')}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              location.pathname === '/about' 
-                ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800' 
-                : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
-            }`}
-          >
-            About
           </button>
 
           {/* Explore Dropdown */}
@@ -265,10 +238,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
               onClick={() => setIsResourcesOpen(!isResourcesOpen)}
               aria-expanded={isResourcesOpen}
               aria-haspopup="true"
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
                 isResourceActive || isResourcesOpen
-                  ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800'
-                  : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+                  ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800/80'
+                  : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
               }`}
             >
               <span>Explore</span>
@@ -346,23 +319,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             </button>
           )}
 
-          {/* Profile Dropdown OR Sign In / Get Started */}
+          {/* Profile Dropdown OR Sign In / Open Editor */}
           {user ? (
             <ProfileDropdown />
           ) : (
             <div className="hidden sm:flex items-center gap-2">
               <button
                 onClick={() => navigate('/auth')}
-                className="text-xs sm:text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white px-2 py-1.5 transition-colors cursor-pointer hidden lg:block"
+                className="text-[13px] font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white px-2.5 py-1 rounded-md transition-colors cursor-pointer hidden lg:block"
               >
                 Sign In
               </button>
 
               <button
-                onClick={() => navigate('/auth')}
-                className="bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold tracking-tight shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-1 hover:scale-[1.02] active:scale-[0.98]"
+                onClick={() => navigate('/editor')}
+                className="bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-1.5"
               >
-                <span>Get Started</span>
+                <span>Open Editor</span>
                 <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />
               </button>
             </div>
@@ -418,34 +391,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
               <span>Documents</span>
             </button>
           </div>
-
-          <button
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              navigate('/features');
-            }}
-            className={`w-full p-2.5 rounded-xl text-left font-semibold text-xs cursor-pointer ${
-              location.pathname === '/features'
-                ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white font-bold'
-                : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
-            }`}
-          >
-            Features
-          </button>
-
-          <button
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              navigate('/about');
-            }}
-            className={`w-full p-2.5 rounded-xl text-left font-semibold text-xs cursor-pointer ${
-              location.pathname === '/about'
-                ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-950 dark:text-white font-bold'
-                : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
-            }`}
-          >
-            About
-          </button>
 
           {/* Secondary Links Section */}
           <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-1">

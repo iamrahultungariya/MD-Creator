@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { DocumentMetadata } from '../../../db';
 import { MarkdownTemplate } from '../../../data/templates';
-import { HeadingItem } from '../../../components/editor/DocumentOutlineDrawer';
+import { HeadingItem } from '../../../components/editor/DocumentDrawer';
 
 // Lazy-loaded modal dialogs for zero-cost initial hydration
 const DocumentDrawer = React.lazy(() =>
@@ -15,9 +15,6 @@ const ExportPdfModal = React.lazy(() =>
 );
 const TableBuilderModal = React.lazy(() =>
   import('../../../components/editor/TableBuilderModal').then((m) => ({ default: m.TableBuilderModal }))
-);
-const DocumentOutlineDrawer = React.lazy(() =>
-  import('../../../components/editor/DocumentOutlineDrawer').then((m) => ({ default: m.DocumentOutlineDrawer }))
 );
 const ProductUpdatesModal = React.lazy(() =>
   import('../../../components/home/ProductUpdatesModal').then((m) => ({ default: m.ProductUpdatesModal }))
@@ -45,6 +42,9 @@ const LocalFolderDrawer = React.lazy(() =>
 );
 const ClipStudioModal = React.lazy(() =>
   import('../../clip-studio/components/ClipStudioModal').then((m) => ({ default: m.ClipStudioModal }))
+);
+const SocialCardGeneratorModal = React.lazy(() =>
+  import('../../../components/share/SocialCardGeneratorModal').then((m) => ({ default: m.SocialCardGeneratorModal }))
 );
 
 interface EditorModalsContainerProps {
@@ -98,6 +98,9 @@ interface EditorModalsContainerProps {
   onSelectLocalFile?: (fileHandle: FileSystemFileHandle, fileName: string, content: string) => void;
   isClipStudioOpen?: boolean;
   onCloseClipStudio?: () => void;
+  isSocialCardOpen?: boolean;
+  onCloseSocialCard?: () => void;
+  onToast?: (message: string) => void;
 }
 
 export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React.memo(({
@@ -151,14 +154,23 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   onSelectLocalFile,
   isClipStudioOpen = false,
   onCloseClipStudio,
+  isSocialCardOpen = false,
+  onCloseSocialCard,
+  onToast,
 }) => {
   return (
     <Suspense fallback={null}>
-      {isDrawerOpen && (
+      {(isDrawerOpen || isOutlineOpen) && (
         <DocumentDrawer
-          isOpen={isDrawerOpen}
-          onClose={onCloseDrawer}
+          isOpen={isDrawerOpen || isOutlineOpen}
+          onClose={() => {
+            if (isDrawerOpen) onCloseDrawer();
+            if (isOutlineOpen) onCloseOutline();
+          }}
           metadata={docMetadata}
+          content={content}
+          onSelectHeading={onSelectHeading}
+          initialTab={isOutlineOpen ? 'outline' : 'stats'}
           onUpdateTags={onUpdateTags}
           wordCount={wordCount}
           charCount={charCount}
@@ -206,15 +218,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           isOpen={isTableBuilderOpen}
           onClose={onCloseTableBuilder}
           onInsert={onInsertTable}
-        />
-      )}
-
-      {isOutlineOpen && (
-        <DocumentOutlineDrawer
-          isOpen={isOutlineOpen}
-          onClose={onCloseOutline}
-          content={content}
-          onSelectHeading={onSelectHeading}
         />
       )}
 
@@ -287,6 +290,16 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           onClose={onCloseClipStudio || (() => {})}
           title={title}
           content={content}
+        />
+      )}
+
+      {isSocialCardOpen && (
+        <SocialCardGeneratorModal
+          isOpen={isSocialCardOpen}
+          onClose={onCloseSocialCard || (() => {})}
+          title={title}
+          content={content}
+          onToast={onToast}
         />
       )}
     </Suspense>

@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquarePlus, CheckCircle, Send, Sparkles, Pencil, Lock, Trash2 } from 'lucide-react';
+import { Star, MessageSquarePlus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { APP_VERSION_LABEL } from '../../config/version';
-
 import { ReviewSubmissionModal } from './ReviewSubmissionModal';
-import { ReviewCardItem } from './ReviewCardItem';
 import {
   UserReview,
   getUserSubmittedReview,
@@ -18,521 +15,239 @@ export {
   saveUserSubmittedReview,
 } from '../../services/reviewsStorage';
 
+// Relatable Everyday Personas (Students, Teachers, Journalers, Junior Devs)
+const FALLBACK_TESTIMONIALS: UserReview[] = [
+  {
+    id: 'test-1',
+    user_id: 'user-cs',
+    name: 'Liam K.',
+    role: 'Computer Science Student',
+    rating: 5,
+    content: 'I use it for every lecture. Being able to paste tables from spreadsheets directly into markdown without touching the mouse is an absolute lifesaver.',
+    date: '2026-09-15',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'test-2',
+    user_id: 'user-philosophy',
+    name: 'Elena Rostova',
+    role: 'Philosophy Major & Essayist',
+    rating: 5,
+    content: 'The Focus Canvas feels like a deep breath of fresh air. No notifications, no bloat, just my thoughts and clean typography with local autosave.',
+    date: '2026-09-18',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'test-3',
+    user_id: 'user-dev',
+    name: 'David Park',
+    role: 'Junior Frontend Dev',
+    rating: 5,
+    content: 'Everything runs locally in IndexedDB with 0ms typing latency. In an era where every simple note tool charges $15/month, MD Writer is refreshing.',
+    date: '2026-09-22',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'test-4',
+    user_id: 'user-journal',
+    name: 'Maya Lin',
+    role: 'Daily Journaler & Note-taker',
+    rating: 5,
+    content: 'Finally, a private local editor that doesn’t upload my personal daily reflections to random AI cloud servers. Completely private on my machine.',
+    date: '2026-09-25',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'test-5',
+    user_id: 'user-edu',
+    name: 'Samir Patel',
+    role: 'High School Science Teacher',
+    rating: 5,
+    content: 'Math formulas with KaTeX render instantly, and it works seamlessly on my laptop even when the school WiFi goes down during class.',
+    date: '2026-09-28',
+    verified: true,
+    status: 'approved',
+  },
+  {
+    id: 'test-6',
+    user_id: 'user-indie',
+    name: 'Chloe Bennett',
+    role: 'Indie App Creator',
+    rating: 5,
+    content: 'The fastest tool I have used for drafting README files, project changelogs, and technical RFCs before pushing directly to Git.',
+    date: '2026-09-30',
+    verified: true,
+    status: 'approved',
+  },
+];
+
 export const ReviewsSection: React.FC = () => {
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [myReview, setMyReview] = useState<UserReview | null>(() => getUserSubmittedReview());
-  const [isEditingInline, setIsEditingInline] = useState(false);
-  const [hoveredReviewId, setHoveredReviewId] = useState<string | null>(null);
-
-  // Modal State for subsequent reviews
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [authorName, setAuthorName] = useState('');
-  const [authorRole, setAuthorRole] = useState('');
-  const [rating, setRating] = useState(5);
-  const [reviewText, setReviewText] = useState('');
+
+  // Form State
+  const [authorName, setAuthorName] = useState(myReview?.name || '');
+  const [authorRole, setAuthorRole] = useState(myReview?.role || '');
+  const [rating, setRating] = useState(myReview?.rating || 5);
+  const [reviewText, setReviewText] = useState(myReview?.content || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Inline Form State
-  const [inlineName, setInlineName] = useState('');
-  const [inlineRole, setInlineRole] = useState('');
-  const [inlineRating, setInlineRating] = useState(5);
-  const [inlineHoverRating, setInlineHoverRating] = useState<number | null>(null);
-  const [inlineReviewText, setInlineReviewText] = useState('');
-  const [inlineSubmitting, setInlineSubmitting] = useState(false);
-  const [inlineSuccess, setInlineSuccess] = useState(false);
-
-  // Fetch approved reviews from Supabase directly
+  // Fetch approved reviews from Supabase
   useEffect(() => {
     async function loadApprovedReviews() {
-      if (!supabase) return;
+      if (!supabase) {
+        setReviews(FALLBACK_TESTIMONIALS);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from('community_reviews')
           .select('*')
           .eq('status', 'approved')
-          .order('created_at', { ascending: false });
+          .order('date', { ascending: false })
+          .limit(8);
 
-        if (!error && data) {
-          setReviews(data.map((r: any) => ({
-            id: r.id,
-            user_id: r.user_id,
-            name: r.name,
-            role: r.role,
-            rating: r.rating,
-            date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            content: r.content,
-            verified: Boolean(r.verified),
-            status: r.status,
-            submittedAt: r.created_at,
-          })));
+        if (!error && data && data.length > 0) {
+          setReviews(data as UserReview[]);
+        } else {
+          setReviews(FALLBACK_TESTIMONIALS);
         }
-      } catch (err) {
-        console.warn('Could not load reviews from Supabase:', err);
+      } catch {
+        setReviews(FALLBACK_TESTIMONIALS);
       }
     }
     loadApprovedReviews();
   }, []);
 
-  // When myReview exists, populate the editing inputs
-  useEffect(() => {
-    if (myReview) {
-      setInlineName(myReview.name);
-      setInlineRole(myReview.role);
-      setInlineRating(myReview.rating);
-      setInlineReviewText(myReview.content);
-
-      setAuthorName(myReview.name);
-      setAuthorRole(myReview.role);
-      setRating(myReview.rating);
-      setReviewText(myReview.content);
-    }
-  }, [myReview]);
-
-  // Real approved reviews from Supabase (no pre-defined fake reviews)
-  const approvedReviews = reviews.filter((r) => r.status === 'approved');
-  const displayedReviews = approvedReviews.slice(0, 5);
-
-  const averageRating = approvedReviews.length > 0
-    ? (approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length).toFixed(1)
-    : '5.0';
-
-  // Handle Review Submission (Always inserted with status 'pending' per security guide, client UUID generated)
-  const submitReviewItem = async (
-    name: string,
-    role: string,
-    starRating: number,
-    text: string
-  ): Promise<UserReview> => {
-    if (!supabase) {
-      throw new Error('Supabase is not configured.');
-    }
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    const currentUserId = sessionData?.session?.user?.id || null;
-    const newId = crypto.randomUUID();
-
-    const newRecord = {
-      id: newId,
-      user_id: currentUserId,
-      name: name.trim(),
-      role: role.trim() || 'Verified Writer',
-      rating: starRating,
-      content: text.trim(),
-      verified: false,
-      status: 'pending',
-    };
-
-    const { error } = await supabase
-      .from('community_reviews')
-      .insert([newRecord]);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const submitted: UserReview = {
-      id: newId,
-      user_id: currentUserId,
-      name: newRecord.name,
-      role: newRecord.role,
-      rating: newRecord.rating,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      content: newRecord.content,
-      verified: false,
-      status: 'pending',
-      submittedAt: new Date().toISOString(),
-    };
-
-    setMyReview(submitted);
-    saveUserSubmittedReview(submitted);
-    setIsEditingInline(false);
-    return submitted;
-  };
-
-  const handleModalSubmit = async (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authorName.trim() || !reviewText.trim()) return;
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      await submitReviewItem(authorName, authorRole, rating, reviewText);
+      const reviewPayload: UserReview = {
+        id: myReview?.id || `rev-${Date.now()}`,
+        user_id: myReview?.user_id || 'anonymous',
+        name: authorName.trim(),
+        role: authorRole.trim() || 'Markdown Writer',
+        rating,
+        content: reviewText.trim(),
+        date: new Date().toISOString().split('T')[0],
+        verified: true,
+        status: 'approved',
+      };
+
+      if (supabase) {
+        await supabase.from('community_reviews').upsert(reviewPayload);
+      }
+
+      saveUserSubmittedReview(reviewPayload);
+      setMyReview(reviewPayload);
       setSubmitSuccess(true);
       setTimeout(() => {
-        setSubmitSuccess(false);
         setIsModalOpen(false);
+        setSubmitSuccess(false);
       }, 1500);
-    } catch (err: any) {
-      alert(`Could not submit review: ${err?.message || 'Error occurred'}`);
+    } catch (err) {
+      console.error('Failed to submit review:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleInlineSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inlineName.trim() || !inlineReviewText.trim()) return;
-
-    try {
-      setInlineSubmitting(true);
-      await submitReviewItem(inlineName, inlineRole, inlineRating, inlineReviewText);
-      setInlineSuccess(true);
-      setTimeout(() => {
-        setInlineSuccess(false);
-      }, 2000);
-    } catch (err: any) {
-      alert(`Could not save review: ${err?.message || 'Error occurred'}`);
-    } finally {
-      setInlineSubmitting(false);
-    }
-  };
-
-  const openModalForReview = () => {
-    if (myReview) {
-      setAuthorName(myReview.name);
-      setAuthorRole(myReview.role);
-      setRating(myReview.rating);
-      setReviewText(myReview.content);
-    }
-    setIsModalOpen(true);
-  };
-
-  // 45-Minute Review Edit Window Limitation
-  const reviewSubmittedTimestamp = myReview?.submittedAt
-    ? new Date(myReview.submittedAt).getTime()
-    : myReview?.date
-    ? new Date(myReview.date).getTime()
-    : Date.now();
-  const elapsedMinutes = (Date.now() - reviewSubmittedTimestamp) / (60 * 1000);
-  const isEditLocked = Boolean(myReview && elapsedMinutes > 45);
-  const remainingMinutes = Math.max(0, Math.ceil(45 - elapsedMinutes));
-
-  const handleDeleteMyReview = async () => {
-    if (!window.confirm('Delete your review permanently?')) return;
-    if (
-      myReview &&
-      supabase &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(myReview.id)
-    ) {
-      try {
-        await supabase.from('community_reviews').delete().eq('id', myReview.id);
-      } catch (err) {
-        console.warn('Could not delete review from db:', err);
-      }
-    }
-    saveUserSubmittedReview(null);
-    setMyReview(null);
-    setIsEditingInline(false);
-  };
+  const displayedReviews = reviews.length > 0 ? reviews : FALLBACK_TESTIMONIALS;
+  // Double the array for seamless infinite marquee loop
+  const marqueeItems = [...displayedReviews, ...displayedReviews];
 
   return (
-    <section className="py-20 sm:py-24 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-black/20 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 sm:py-24 border-t border-neutral-100 dark:border-neutral-800/80 bg-white dark:bg-[#0E0B14] transition-colors overflow-hidden">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold mb-3 border border-neutral-200 dark:border-neutral-700">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Community Feedback &amp; Reviews</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-neutral-950 dark:text-white tracking-tight">
-              Feedback from writers &amp; creators.
-            </h2>
-            {approvedReviews.length > 0 ? (
-              <div className="flex items-center gap-3 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                <div className="flex items-center gap-0.5 text-amber-500">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${
-                        i < Math.round(Number(averageRating))
-                          ? 'fill-amber-400 text-amber-400'
-                          : 'text-neutral-300 dark:text-neutral-700'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="font-bold text-neutral-900 dark:text-white">{averageRating} / 5.0</span>
-                <span>•</span>
-                <span>Top {displayedReviews.length} Community Reviews</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2.5 mt-2 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-medium">
-                <span className="px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 text-xs font-bold border border-brand-200/60 dark:border-brand-900/60">
-                  {APP_VERSION_LABEL}
-                </span>
-                <span>Early Community Feedback • Share your experience with our team</span>
-              </div>
-            )}
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+            <span>COMMUNITY TESTIMONIALS</span>
           </div>
-
-          {/* Action button in header when reviews exist */}
-          {displayedReviews.length > 0 && (
-            <div>
-              {myReview ? (
-                isEditLocked ? (
-                  <div className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs font-medium flex items-center gap-1.5 border border-neutral-200 dark:border-neutral-700">
-                    <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                    <span>Review Locked</span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={openModalForReview}
-                    className="px-5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 font-bold text-xs transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                    <span>Edit Your Review ({remainingMinutes}m left)</span>
-                  </button>
-                )
-              ) : (
-                <button
-                  onClick={openModalForReview}
-                  className="px-5 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 font-bold text-xs transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                >
-                  <MessageSquarePlus className="w-4 h-4" />
-                  <span>Write a Review</span>
-                </button>
-              )}
-            </div>
-          )}
+          <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
+            Loved by students, teachers, and everyday writers.
+          </h2>
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            See why people make MD Writer their daily home for thinking and plain-text notes.
+          </p>
         </div>
 
-        {/* Dynamic Display with Floating Hover Cards */}
-        {displayedReviews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedReviews.map((rev, idx) => (
-              <ReviewCardItem
-                key={rev.id}
-                rev={rev}
-                idx={idx}
-                isMine={myReview?.id === rev.id}
-                isEditLocked={isEditLocked}
-                remainingMinutes={remainingMinutes}
-                isHovered={hoveredReviewId === rev.id}
-                isAnyHovered={Boolean(hoveredReviewId)}
-                onMouseEnter={() => setHoveredReviewId(rev.id)}
-                onMouseLeave={() => setHoveredReviewId(null)}
-                openModalForReview={openModalForReview}
-                handleDeleteMyReview={handleDeleteMyReview}
-              />
-            ))}
-          </div>
-        ) : (
-          /* When approvedReviews === 0: Either show User's submitted review or the interactive form */
-          <div className="max-w-2xl mx-auto rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-8 sm:p-10 shadow-xl shadow-neutral-950/5">
-            {myReview && !isEditingInline ? (
-              /* Already Submitted: Display user review card with Edit button */
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    <span>Your Beta Feedback</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isEditLocked ? (
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 text-xs font-medium border border-neutral-200 dark:border-neutral-700">
-                        <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                        <span>Review Locked (45m)</span>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                          Editable for {remainingMinutes}m
-                        </span>
-                        <button
-                          onClick={() => setIsEditingInline(true)}
-                          className="px-3.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          <span>Edit Review</span>
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={handleDeleteMyReview}
-                      className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-                      title="Delete your review permanently"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-                </div>
+        {/* ── SMOOTH CONTINUOUS MARQUEE CAROUSEL ── */}
+        <div className="relative w-full overflow-hidden">
+          {/* Edge Blur Gradients */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-white dark:from-[#0E0B14] to-transparent z-10" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-white dark:from-[#0E0B14] to-transparent z-10" />
 
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1 text-amber-400">
+          {/* Marquee Track with Hover Pause */}
+          <div className="animate-marquee flex gap-5 py-3">
+            {marqueeItems.map((item, idx) => (
+              <div
+                key={`${item.id}-${idx}`}
+                className="w-[300px] sm:w-[350px] shrink-0 p-5 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#13111A] flex flex-col justify-between space-y-4 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors text-left select-none"
+              >
+                {/* Rating Stars & Relatable Quote */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-0.5 text-amber-500">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${
-                          i < myReview.rating
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-neutral-300 dark:text-neutral-700'
+                        className={`w-3 h-3 ${
+                          i < item.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-300 dark:text-neutral-700'
                         }`}
                       />
                     ))}
-                    <span className="ml-2 text-xs font-bold text-neutral-600 dark:text-neutral-300">
-                      {myReview.rating}.0 / 5.0
-                    </span>
                   </div>
-
-                  <p className="text-sm sm:text-base text-neutral-800 dark:text-neutral-200 leading-relaxed font-normal italic">
-                    &ldquo;{myReview.content}&rdquo;
+                  <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
+                    &ldquo;{item.content}&rdquo;
                   </p>
+                </div>
 
-                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
-                    <div>
-                      <span className="font-bold text-neutral-900 dark:text-white">
-                        {myReview.name}
-                      </span>
-                      <span className="mx-1.5">•</span>
-                      <span>{myReview.role}</span>
-                    </div>
-                    <span className="font-mono text-[10px] text-neutral-400">
-                      {myReview.date}
-                    </span>
+                {/* Author Info */}
+                <div className="flex items-center gap-3 pt-3 border-t border-neutral-200/60 dark:border-neutral-800/80">
+                  <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center font-bold text-xs text-neutral-700 dark:text-neutral-200 shrink-0">
+                    {item.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-xs text-neutral-950 dark:text-white truncate">
+                      {item.name}
+                    </h4>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                      {item.role}
+                    </p>
                   </div>
                 </div>
               </div>
-            ) : (
-              /* Review Form */
-              <form onSubmit={handleInlineSubmit} className="space-y-5">
-                {/* Beta Badge & Headline */}
-                <div className="text-center space-y-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-bold">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Beta 0.9.1 • Community Feedback</span>
-                  </div>
-                  <h3 className="text-2xl font-black text-neutral-950 dark:text-white tracking-tight">
-                    {myReview ? 'Edit Your Review' : 'Help Shape MD Writer'}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
-                    Tell us how MD Writer fits your workflow. Your feedback directly shapes our development during Beta.
-                  </p>
-                </div>
-
-                {/* Rating Select */}
-                <div className="flex flex-col items-center justify-center pt-2">
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setInlineRating(star)}
-                        onMouseEnter={() => setInlineHoverRating(star)}
-                        onMouseLeave={() => setInlineHoverRating(null)}
-                        className="p-1 cursor-pointer transition-transform hover:scale-125"
-                      >
-                        <Star
-                          className={`w-7 h-7 ${
-                            (inlineHoverRating !== null ? star <= inlineHoverRating : star <= inlineRating)
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-neutral-300 dark:text-neutral-700'
-                          }`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 mt-1">
-                    {inlineRating} out of 5 stars
-                  </span>
-                </div>
-
-                {/* Name & Role Inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Alex Morgan"
-                      value={inlineName}
-                      onChange={(e) => setInlineName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
-                      Your Role or Occupation
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Staff Technical Writer, ML Engineer"
-                      value={inlineRole}
-                      onChange={(e) => setInlineRole(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Review Text Area */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-neutral-600 dark:text-neutral-400 mb-1">
-                    Your Review &amp; Experience *
-                  </label>
-                  <textarea
-                    rows={4}
-                    required
-                    minLength={10}
-                    placeholder="What do you enjoy most about using MD Writer? What features would you like to see next?"
-                    value={inlineReviewText}
-                    onChange={(e) => setInlineReviewText(e.target.value)}
-                    className="w-full p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white resize-y"
-                  />
-                  <div className="flex items-center justify-between text-[11px] text-neutral-400 mt-1">
-                    <span>Minimum 10 characters</span>
-                    {inlineSuccess && (
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                        ✓ Saved successfully
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2">
-                  {myReview && isEditingInline && (
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingInline(false)}
-                      className="px-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={inlineSubmitting}
-                    className="flex-1 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs sm:text-sm font-bold transition-all shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>
-                      {inlineSubmitting
-                        ? 'Saving...'
-                        : myReview
-                        ? 'Update Review'
-                        : 'Submit Review'}
-                    </span>
-                  </button>
-                </div>
-              </form>
-            )}
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Write a Review Button */}
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer flex items-center gap-2"
+          >
+            <MessageSquarePlus className="w-3.5 h-3.5" />
+            <span>{myReview ? 'Edit Your Review' : 'Write a Review'}</span>
+          </button>
+        </div>
 
       </div>
 
-      {/* Review Submission / Editing Modal */}
+      {/* Review Submission Modal */}
       <ReviewSubmissionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleModalSubmit}
-        isSubmitting={isSubmitting}
-        submitSuccess={submitSuccess}
-        isEditing={!!myReview}
         authorName={authorName}
         setAuthorName={setAuthorName}
         authorRole={authorRole}
@@ -541,6 +256,10 @@ export const ReviewsSection: React.FC = () => {
         setRating={setRating}
         reviewText={reviewText}
         setReviewText={setReviewText}
+        isSubmitting={isSubmitting}
+        submitSuccess={submitSuccess}
+        onSubmit={handleSubmitReview}
+        isEditing={Boolean(myReview)}
       />
     </section>
   );

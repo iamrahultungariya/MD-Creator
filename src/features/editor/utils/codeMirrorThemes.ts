@@ -7,12 +7,8 @@ import { Extension } from '@codemirror/state';
 export const proseTheme = EditorView.theme({
   '&': {
     height: '100%',
-    fontSize: '15px',
-    fontFamily: 'var(--font-sans)',
   },
   '.cm-scroller': {
-    fontFamily: 'inherit',
-    lineHeight: '1.8',
     padding: '0',
   },
   '.cm-content': {

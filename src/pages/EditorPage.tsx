@@ -11,7 +11,7 @@ import { ReaderHeader } from '../features/editor/components/ReaderHeader';
 import { EditorWorkspace } from '../features/editor/components/EditorWorkspace';
 import { EditorStatusBar } from '../features/editor/components/EditorStatusBar';
 import { EditorModalsContainer } from '../features/editor/components/EditorModalsContainer';
-import { HeadingItem } from '../components/editor/DocumentOutlineDrawer';
+import { HeadingItem } from '../components/editor/DocumentDrawer';
 import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
 import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
 import { writeLocalFile } from '../services/localFolderService';
@@ -25,6 +25,7 @@ export const EditorPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [cursorPos, setCursorPos] = useState<CursorPosition>({ line: 1, col: 1 });
+  const [vimMode, setVimMode] = useState<'NORMAL' | 'INSERT' | 'VISUAL' | 'REPLACE'>('NORMAL');
   const [copyToast, setCopyToast] = useState<string | null>(null);
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [findMode, setFindMode] = useState<'find' | 'replace'>('find');
@@ -245,18 +246,10 @@ export const EditorPage: React.FC = () => {
           return 'split';
         });
       }
-      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'r') {
-        e.preventDefault();
-        if (isAdmin) {
-          modals.setIsClipStudioOpen(true);
-        } else {
-          showToast('Social Clip Studio is an admin-only feature');
-        }
-      }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [doc, slash.isSlashMenuOpen, modals, setViewMode, isAdmin, showToast]);
+  }, [doc, slash.isSlashMenuOpen, modals, setViewMode]);
 
   // Telemetry computations offloaded to background Web Worker (Bug 1: 5500 LOC crash fix)
   const workerStats = useMarkdownWorker(doc.content);
@@ -308,6 +301,7 @@ export const EditorPage: React.FC = () => {
           onOpenDrawer={() => modals.setIsDrawerOpen(true)}
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
           onOpenClipStudio={() => modals.setIsClipStudioOpen(true)}
+          onOpenSocialCard={() => modals.setIsSocialCardOpen(true)}
           isAdmin={isAdmin}
           onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
           onOpenImageModal={() => modals.setIsImageModalOpen(true)}
@@ -375,6 +369,7 @@ export const EditorPage: React.FC = () => {
         onOpenSprintPopover={() => modals.setIsSprintPopoverOpen((prev) => !prev)}
         editorRef={editorRef}
         onToast={showToast}
+        onVimModeChange={setVimMode}
       />
 
       {/* Telemetry Status Bar - Hidden in Read mode and on mobile (< md) to maximize reading area */}
@@ -383,6 +378,7 @@ export const EditorPage: React.FC = () => {
           <EditorStatusBar
             viewMode={viewMode}
             cursorPos={cursorPos}
+            vimMode={vimMode}
             lineCount={stats.lines}
             wordCount={stats.words}
             charCount={stats.chars}
@@ -463,6 +459,9 @@ export const EditorPage: React.FC = () => {
         onSelectLocalFile={handleSelectLocalFile}
         isClipStudioOpen={modals.isClipStudioOpen}
         onCloseClipStudio={() => modals.setIsClipStudioOpen(false)}
+        isSocialCardOpen={modals.isSocialCardOpen}
+        onCloseSocialCard={() => modals.setIsSocialCardOpen(false)}
+        onToast={showToast}
       />
     </div>
   );

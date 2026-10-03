@@ -135,6 +135,24 @@ export function useSlashCommands({
           return;
         }
 
+        if (snippet === '__ACTION_OPEN_TEMPLATES__') {
+          ed.setSelectionRange(from, cursor);
+          ed.replaceSelection('');
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
+          onOpenTemplates?.();
+          return;
+        }
+
+        if (snippet === '__ACTION_OPEN_PDF_STUDIO__') {
+          ed.setSelectionRange(from, cursor);
+          ed.replaceSelection('');
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
+          onOpenPdfStudio?.();
+          return;
+        }
+
         ed.setSelectionRange(from, cursor);
         ed.replaceSelection(snippet);
         const updated = ed.getValue();

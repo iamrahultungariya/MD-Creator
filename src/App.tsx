@@ -19,13 +19,8 @@ const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ defa
 const EditorPage = React.lazy(() => import('./pages/EditorPage').then((m) => ({ default: m.EditorPage })));
 const DocumentsPage = React.lazy(() => import('./pages/DocumentsPage').then((m) => ({ default: m.DocumentsPage })));
 const AuthPage = React.lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
-const PricingPage = React.lazy(() => import('./pages/PricingPage').then((m) => ({ default: m.PricingPage })));
-const BlogPage = React.lazy(() => import('./pages/BlogPage').then((m) => ({ default: m.BlogPage })));
 const UpdatesPage = React.lazy(() => import('./pages/UpdatesPage').then((m) => ({ default: m.UpdatesPage })));
 const FeedbackPage = React.lazy(() => import('./pages/FeedbackPage').then((m) => ({ default: m.FeedbackPage })));
-const FeaturesPage = React.lazy(() => import('./pages/FeaturesPage').then((m) => ({ default: m.FeaturesPage })));
-const AboutPage = React.lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
-const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const PublicDocumentPage = React.lazy(() => import('./pages/PublicDocumentPage').then((m) => ({ default: m.PublicDocumentPage })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 
@@ -39,6 +34,18 @@ const CommandPaletteModal = React.lazy(() =>
 const ToolbarSettingsModal = React.lazy(() =>
   import('./components/editor/ToolbarSettingsModal').then((m) => ({ default: m.ToolbarSettingsModal }))
 );
+const PreferencesModal = React.lazy(() =>
+  import('./components/common/PreferencesModal').then((m) => ({ default: m.PreferencesModal }))
+);
+const RecordingHud = React.lazy(() =>
+  import('./features/clip-studio/components/RecordingHud').then((m) => ({ default: m.RecordingHud }))
+);
+const ClipStudioModal = React.lazy(() =>
+  import('./features/clip-studio/components/ClipStudioModal').then((m) => ({ default: m.ClipStudioModal }))
+);
+import { useRecorderStore } from './features/clip-studio/stores/useRecorderStore';
+import { usePreferencesStore } from './stores/usePreferencesStore';
+
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -61,17 +68,18 @@ const AppRoutes: React.FC = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader />}><HomePage /></Suspense></PageTransition>} />
         <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense></PageTransition>} />
-        <Route path="/pricing" element={<PageTransition><Suspense fallback={<PageLoader />}><PricingPage /></Suspense></PageTransition>} />
-        <Route path="/blog" element={<PageTransition><Suspense fallback={<PageLoader />}><BlogPage /></Suspense></PageTransition>} />
         <Route path="/updates" element={<PageTransition><Suspense fallback={<PageLoader />}><UpdatesPage /></Suspense></PageTransition>} />
-        <Route path="/features" element={<PageTransition><Suspense fallback={<PageLoader />}><FeaturesPage /></Suspense></PageTransition>} />
-        <Route path="/about" element={<PageTransition><Suspense fallback={<PageLoader />}><AboutPage /></Suspense></PageTransition>} />
         <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense></PageTransition>} />
         <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></PageTransition>} />
-        <Route path="/settings" element={<PageTransition><Suspense fallback={<PageLoader />}><SettingsPage /></Suspense></PageTransition>} />
         <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></PageTransition>} />
         <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
         <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+        {/* Graceful redirects for pruned pages */}
+        <Route path="/about" element={<Navigate to="/" replace />} />
+        <Route path="/pricing" element={<Navigate to="/" replace />} />
+        <Route path="/blog" element={<Navigate to="/" replace />} />
+        <Route path="/features" element={<Navigate to="/" replace />} />
+        <Route path="/settings" element={<Navigate to="/editor" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
@@ -84,6 +92,45 @@ export const App: React.FC = () => {
   const { isOpen: isToolbarSettingsOpen } = useToolbarSettingsStore();
   const cmd = useCommandPalette();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const { isRecording, isStudioOpen, recordedClip, closeStudio } = useRecorderStore();
+  const { isOpen: isPreferencesOpen, openPreferences, togglePreferences } = usePreferencesStore();
+
+  // Global listeners for Preferences (Ctrl+, / Cmd+, and custom event)
+  useEffect(() => {
+    const handleOpenPref = () => openPreferences();
+    window.addEventListener('open-preferences-modal', handleOpenPref);
+
+    const handlePrefKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+        e.preventDefault();
+        togglePreferences();
+      }
+    };
+    window.addEventListener('keydown', handlePrefKeyDown);
+
+    return () => {
+      window.removeEventListener('open-preferences-modal', handleOpenPref);
+      window.removeEventListener('keydown', handlePrefKeyDown);
+    };
+  }, [openPreferences, togglePreferences]);
+
+  // Global Screen Recording shortcut (Ctrl+Alt+R / Cmd+Alt+R) - Works on ANY page without document requirement!
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        const state = useRecorderStore.getState();
+        if (state.isRecording) {
+          state.stopRecording();
+        } else {
+          state.startRecording();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Defer non-critical storage initialization and session checks until idle
   useEffect(() => {
@@ -133,6 +180,31 @@ export const App: React.FC = () => {
           <UpdateChangelogModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
         )}
       </Suspense>
+
+      {/* Floating Screen Recording HUD */}
+      {isRecording && (
+        <Suspense fallback={null}>
+          <RecordingHud />
+        </Suspense>
+      )}
+
+      {/* Social Clip Studio Review Modal */}
+      {isStudioOpen && (
+        <Suspense fallback={null}>
+          <ClipStudioModal
+            isOpen={isStudioOpen}
+            onClose={closeStudio}
+            recordedClip={recordedClip}
+          />
+        </Suspense>
+      )}
+
+      {/* Global Preferences Modal (Ctrl+,) */}
+      {isPreferencesOpen && (
+        <Suspense fallback={null}>
+          <PreferencesModal />
+        </Suspense>
+      )}
 
       <AppRoutes />
     </BrowserRouter>

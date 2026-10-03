@@ -18,6 +18,7 @@ export function useEditorModals() {
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
   const [isClipStudioOpen, setIsClipStudioOpen] = useState(false);
+  const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
 
   return {
     isDrawerOpen,
@@ -54,5 +55,7 @@ export function useEditorModals() {
     setIsLocalFolderOpen,
     isClipStudioOpen,
     setIsClipStudioOpen,
+    isSocialCardOpen,
+    setIsSocialCardOpen,
   };
 }

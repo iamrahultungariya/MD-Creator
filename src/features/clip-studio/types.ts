@@ -86,7 +86,24 @@ export type WatermarkPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bott
 export type SyntaxTheme = 'one-dark' | 'tokyo-night' | 'dracula' | 'github-dark' | 'github-light';
 export type ExportFormat = 'mp4' | 'gif';
 
+export interface InteractionEvent {
+  timestamp: number; // ms from recording start
+  x: number; // normalized 0 to 1
+  y: number; // normalized 0 to 1
+  type: 'move' | 'click' | 'key';
+}
+
+export interface RecordedClip {
+  blob: Blob;
+  url: string;
+  durationMs: number;
+  width: number;
+  height: number;
+  events: InteractionEvent[];
+}
+
 export interface ClipStudioConfig {
+  sourceType: 'screen-recording' | 'ghost-typer';
   preset: AspectRatioPreset;
   title: string;
   
@@ -95,18 +112,19 @@ export interface ClipStudioConfig {
   showDropShadow: boolean;
   shadowDepth: number; // 0 to 60
   cornerRadius: number; // 8 to 28
-  padding: number; // 24 to 80
+  padding: number; // 0 to 80
   tiltX: number; // -15 to 15 degrees
   tiltY: number; // -15 to 15 degrees
   background: BackgroundThemeId;
   theme: SyntaxTheme;
 
-  // Camera & Auto-Zoom
+  // Camera & Auto-Zoom (Recordly style)
   autoZoomEnabled: boolean;
   zoomScale: number; // 1.1 to 2.2
   cameraSmoothness: number; // 0.05 to 0.25
+  showClickRipples: boolean;
 
-  // Ghost Typer & Playback
+  // Ghost Typer & Playback (optional fallback mode)
   mode: 'ghost-typer' | 'cinematic-scroll';
   cadence: TypingCadence;
   showCaret: boolean;
@@ -139,3 +157,4 @@ export interface RenderProgress {
   outputFileName?: string;
   format?: ExportFormat;
 }
+

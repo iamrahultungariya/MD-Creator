@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Film, Shield, AlertTriangle } from 'lucide-react';
-import { ClipStudioConfig, RenderProgress } from '../types';
+import { X, Film, Video, Sparkles, Download } from 'lucide-react';
+import { ClipStudioConfig, RecordedClip, RenderProgress } from '../types';
 import { ClipStudioPreview } from './ClipStudioPreview';
 import { ClipStudioSidebar } from './ClipStudioSidebar';
 import { clipExportService } from '../services/clipExportService';
-import { isCurrentUserAdmin } from '../../../utils/adminAuth';
 
 interface ClipStudioModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
-  content: string;
+  title?: string;
+  content?: string;
+  recordedClip?: RecordedClip | null;
 }
 
 export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
@@ -18,8 +18,8 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
   onClose,
   title,
   content,
+  recordedClip,
 }) => {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isRendering, setIsRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState<RenderProgress>({
@@ -31,8 +31,9 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
 
   // Studio Configuration State
   const [config, setConfig] = useState<ClipStudioConfig>({
+    sourceType: recordedClip ? 'screen-recording' : 'ghost-typer',
     preset: 'reels-9-16',
-    title: title || 'untitled.md',
+    title: title || 'MD Writer',
     showMacButtons: true,
     showDropShadow: true,
     shadowDepth: 35,
@@ -43,8 +44,9 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
     background: 'raycast-purple',
     theme: 'one-dark',
     autoZoomEnabled: true,
-    zoomScale: 1.5,
+    zoomScale: 1.4,
     cameraSmoothness: 0.15,
+    showClickRipples: true,
     mode: 'ghost-typer',
     cadence: 'human',
     showCaret: true,
@@ -52,8 +54,8 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
     showKeystrokeRipples: true,
     highlightActiveLine: true,
     showWatermark: true,
-    handle: '@developer',
-    platformBadge: 'instagram',
+    handle: '@rahul_dev',
+    platformBadge: 'x',
     watermarkPosition: 'bottom-left',
     showProgressBar: true,
     showSafeZones: false,
@@ -62,21 +64,27 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
     bitrateMbps: 18,
   });
 
-  // Verify Admin Access
+  // Synchronize source type and title when props update
   useEffect(() => {
-    if (isOpen) {
-      isCurrentUserAdmin().then((admin) => {
-        setIsAdmin(admin);
-      });
-    }
-  }, [isOpen]);
-
-  // Synchronize document title
-  useEffect(() => {
-    if (title) {
+    if (recordedClip) {
+      setConfig((c) => ({
+        ...c,
+        sourceType: 'screen-recording',
+        title: title || 'MD Writer Recording',
+      }));
+    } else if (title) {
       setConfig((c) => ({ ...c, title }));
     }
-  }, [title]);
+  }, [recordedClip, title]);
+
+  // Handle Raw Video Instant Download
+  const handleDownloadRaw = useCallback(() => {
+    if (!recordedClip?.blob) return;
+    const isMp4 = recordedClip.blob.type.includes('mp4');
+    const ext = isMp4 ? 'mp4' : 'webm';
+    const fileName = `${(config.title || 'recording').replace(/[^a-zA-Z0-9_-]/g, '_')}_raw.${ext}`;
+    clipExportService.downloadBlob(recordedClip.blob, fileName);
+  }, [recordedClip, config.title]);
 
   // Handle Export Execution
   const handleStartExport = useCallback(async () => {
@@ -87,7 +95,7 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
     try {
       const result = await clipExportService.startRender(
         config,
-        content || '# Hello World\nWelcome to MD Creator.',
+        content || '# Hello World\nWelcome to MD Writer.',
         (progress) => {
           setRenderProgress(progress);
         }
@@ -107,7 +115,6 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is typing inside an input/textarea
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (tag === 'input' || tag === 'textarea') return;
 
@@ -136,25 +143,69 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
         {/* Header Bar */}
         <div className="h-14 border-b border-neutral-800 px-5 flex items-center justify-between bg-neutral-950 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20">
+            <div className="p-2 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/20">
               <Film className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm text-white">Social Clip Studio</span>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[10px] font-semibold flex items-center gap-1">
-                  <Shield className="w-3 h-3" />
-                  <span>Admin Access</span>
+                <span className="px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 font-mono text-[10px] font-semibold flex items-center gap-1">
+                  <span>Recordly Engine</span>
                 </span>
               </div>
               <p className="text-[11px] text-neutral-400">
-                Isolated 60 FPS recording for Instagram Reels, Threads, & X
+                Smooth auto-zoom, studio framing, and non-blocking 60 FPS export
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Mode Switcher Tabs (if both recorded video and text are present) */}
+          <div className="hidden sm:flex items-center p-1 rounded-xl bg-neutral-900 border border-neutral-800 text-xs">
             <button
+              type="button"
+              onClick={() => setConfig((c) => ({ ...c, sourceType: 'screen-recording' }))}
+              disabled={!recordedClip}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                config.sourceType === 'screen-recording'
+                  ? 'bg-brand-600 text-white shadow-xs'
+                  : recordedClip
+                  ? 'text-neutral-400 hover:text-white cursor-pointer'
+                  : 'text-neutral-600 cursor-not-allowed'
+              }`}
+            >
+              <Video className="w-3.5 h-3.5" />
+              <span>Screen Recording</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfig((c) => ({ ...c, sourceType: 'ghost-typer' }))}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                config.sourceType === 'ghost-typer'
+                  ? 'bg-brand-600 text-white shadow-xs'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Markdown Auto-Typer</span>
+            </button>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2">
+            {recordedClip && (
+              <button
+                type="button"
+                onClick={handleDownloadRaw}
+                className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-xl border border-neutral-700 hover:bg-neutral-800 text-neutral-200 text-xs font-medium transition-colors cursor-pointer"
+                title="Download raw capture without re-encoding"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Raw Download</span>
+              </button>
+            )}
+
+            <button
+              type="button"
               onClick={() => {
                 if (isRendering) {
                   clipExportService.cancelRender();
@@ -170,44 +221,24 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
         </div>
 
         {/* Content Body */}
-        {isAdmin === false ? (
-          // Unauthorized Screen
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-            <div className="p-4 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400">
-              <AlertTriangle className="w-8 h-8" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-bold text-lg text-white">Admin Privileges Required</h3>
-              <p className="text-xs text-neutral-400 max-w-sm">
-                Social Clip Studio is an administrative-only studio tool. Your current account does not have access.
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold cursor-pointer"
-            >
-              Return to Editor
-            </button>
-          </div>
-        ) : (
-          // Admin Authorized Studio
-          <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-            <ClipStudioPreview
-              config={config}
-              text={content || '# Hello World\nWelcome to MD Creator.'}
-              isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying}
-            />
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
+          <ClipStudioPreview
+            config={config}
+            text={content || '# Hello World\nWelcome to MD Writer.'}
+            recordedClip={recordedClip}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+          />
 
-            <ClipStudioSidebar
-              config={config}
-              setConfig={setConfig}
-              onStartExport={handleStartExport}
-              renderProgress={renderProgress}
-              isRendering={isRendering}
-            />
-          </div>
-        )}
+          <ClipStudioSidebar
+            config={config}
+            setConfig={setConfig}
+            onStartExport={handleStartExport}
+            onDownloadRaw={handleDownloadRaw}
+            renderProgress={renderProgress}
+            isRendering={isRendering}
+          />
+        </div>
       </div>
     </div>
   );

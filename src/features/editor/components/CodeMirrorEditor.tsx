@@ -4,80 +4,30 @@ import {
   lineNumbers, 
   highlightActiveLineGutter, 
   highlightActiveLine, 
-  keymap,
-  placeholder as cmPlaceholder,
-  drawSelection,
-  ViewUpdate,
-  MatchDecorator,
-  Decoration,
-  ViewPlugin
+  keymap, 
+  placeholder as cmPlaceholder, 
+  drawSelection, 
+  ViewUpdate 
 } from '@codemirror/view';
 import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
+import { vim, getCM } from '@replit/codemirror-vim';
 import { useThemeStore } from '../../../stores/useThemeStore';
+import { usePreferencesStore } from '../../../stores/usePreferencesStore';
 import { getThemeExtensions } from '../utils/codeMirrorThemes';
 import { createTableKeybindings } from '../../../utils/editorTableKeymap';
-import { extractClipboardMarkdown } from '../../../utils/clipboardTableParser';
+import { 
+  createFocusDimmingExtension, 
+  getEditorTypographyTheme, 
+  highlightViewPlugin 
+} from '../utils/editorExtensions';
+import { createEditorDomEventHandlers } from '../utils/editorDomHandlers';
+import { CodeMirrorEditorHandle, CodeMirrorEditorProps } from '../types/editorComponentTypes';
 
-// CodeMirror live highlight marker decorator for ==highlight== syntax
-const highlightDecorator = new MatchDecorator({
-  regexp: /(?<!=)==(?!=)([^=\r\n]+?)(?<!=)==(?!=)/g,
-  decoration: Decoration.mark({ class: 'cm-md-highlight' }),
-});
-
-const highlightViewPlugin = ViewPlugin.fromClass(
-  class {
-    decorations;
-    constructor(view: EditorView) {
-      this.decorations = highlightDecorator.createDeco(view);
-    }
-    update(update: ViewUpdate) {
-      this.decorations = highlightDecorator.updateDeco(update, this.decorations);
-    }
-  },
-  {
-    decorations: (v) => v.decorations,
-  }
-);
-
-export interface CodeMirrorEditorHandle {
-  focus: () => void;
-  getValue: () => string;
-  setValue: (val: string) => void;
-  getSelection: () => string;
-  replaceSelection: (text: string) => void;
-  setCursor: (offset: number) => void;
-  setSelectionRange: (from: number, to: number) => void;
-  scrollToLine: (lineIndex: number) => void;
-  getDOMNode: () => HTMLElement | null;
-  getSelectionStart: () => number;
-  getSelectionEnd: () => number;
-  getScrollDOM: () => HTMLElement | null;
-  scrollToRatio: (ratio: number) => void;
-  getScrollRatio: () => number;
-  getCaretCoords: () => { left: number; top: number; bottom: number } | null;
-  flush: () => void;
-}
-
-export interface CodeMirrorEditorProps {
-  value: string;
-  onChange: (value: string) => void;
-  onCursorChange?: (pos: { line: number; col: number; offset: number }) => void;
-  onSlashTrigger?: (query: string, pos: number) => void;
-  onScroll?: (event: Event, scrollDOM: HTMLElement) => void;
-  showLineNumbers?: boolean;
-  placeholder?: string;
-  className?: string;
-  autoFocus?: boolean;
-  onPasteImage?: (file: File) => void;
-  onDropImage?: (file: File) => void;
-  onKeyDown?: (e: KeyboardEvent) => boolean | void;
-  onToast?: (message: string) => void;
-  editorRef?: React.RefObject<CodeMirrorEditorHandle | null>;
-}
+export type { CodeMirrorEditorHandle, CodeMirrorEditorProps };
 
 export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   value,
@@ -93,15 +43,41 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
   onDropImage,
   onKeyDown,
   onToast,
+  onVimModeChange,
   editorRef,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const { isDark } = useThemeStore();
+  const {
+    fontFamily,
+    fontSize,
+    lineHeight,
+    wordWrap,
+    tabSize,
+    lineNumbers: prefLineNumbers,
+    autoCloseBrackets,
+    typewriterMode,
+    focusMode,
+    keymapMode,
+  } = usePreferencesStore();
+
+  const onVimModeChangeRef = useRef(onVimModeChange);
+  onVimModeChangeRef.current = onVimModeChange;
+  const typewriterModeRef = useRef(typewriterMode);
+  typewriterModeRef.current = typewriterMode;
+  const focusModeRef = useRef(focusMode);
+  focusModeRef.current = focusMode;
 
   // Compartments for dynamic reconfiguration without destroying state
   const lineNumbersCompartment = useRef(new Compartment());
   const themeCompartment = useRef(new Compartment());
+  const typographyCompartment = useRef(new Compartment());
+  const wrapCompartment = useRef(new Compartment());
+  const tabSizeCompartment = useRef(new Compartment());
+  const closeBracketsCompartment = useRef(new Compartment());
+  const vimCompartment = useRef(new Compartment());
+  const focusDimmingCompartment = useRef(new Compartment());
 
   // Avoid recreating editor or full doc re-parsing on typing
   const lastInternalDocRef = useRef<string>(value);
@@ -258,102 +234,13 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     if (!containerRef.current) return;
 
     // Event listener extension
-    const domEventHandlers = EditorView.domEventHandlers({
-      keydown: (e) => {
-        if (onKeyDownRef.current) {
-          const handled = onKeyDownRef.current(e);
-          if (handled) return true;
-        }
-        return false;
-      },
-      paste: (e) => {
-        // 1. Check clipboard files directly (e.g. copied from Windows Explorer or screenshot)
-        const files = e.clipboardData?.files;
-        if (files && files.length > 0) {
-          for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)$/i.test(file.name);
-            if (isImage) {
-              e.preventDefault();
-              onPasteImageRef.current?.(file);
-              return true;
-            }
-          }
-        }
-
-        // 2. Check clipboard items
-        const items = e.clipboardData?.items;
-        if (items) {
-          for (let i = 0; i < items.length; i++) {
-            if (items[i].type.startsWith('image/')) {
-              const file = items[i].getAsFile();
-              if (file) {
-                e.preventDefault();
-                onPasteImageRef.current?.(file);
-                return true;
-              }
-            }
-          }
-        }
-
-        // 3. Check if pasted text is an image path from disk (e.g. C:\Users\... or media_1790593155944.jpg)
-        const pastedText = e.clipboardData?.getData('text/plain')?.trim();
-        if (pastedText && (pastedText.includes('media_1790593155944') || pastedText.toLowerCase().includes('launch-image') || pastedText.toLowerCase().includes('launch image'))) {
-          e.preventDefault();
-          const view = viewRef.current;
-          if (view) {
-            const head = view.state.selection.main.head;
-            const snippet = '\n![launch image](/launch-image.jpg)\n';
-            view.dispatch({
-              changes: { from: head, to: head, insert: snippet },
-              selection: { anchor: head + snippet.length }
-            });
-            return true;
-          }
-        }
-
-        // 4. Smart Clipboard: Auto-convert Excel / Google Sheets / HTML tables to Markdown Pipe Table
-        // or convert rich AI responses/articles preserving all text and all tables
-        const clipResult = extractClipboardMarkdown(e.clipboardData);
-        if (clipResult) {
-          e.preventDefault();
-          const view = viewRef.current;
-          if (view) {
-            const main = view.state.selection.main;
-            const snippet = '\n\n' + clipResult.markdown + '\n\n';
-            view.dispatch({
-              changes: { from: main.from, to: main.to, insert: snippet },
-              selection: { anchor: main.from + snippet.length }
-            });
-            if (clipResult.type === 'table') {
-              onToastRef.current?.('📊 Converted table from clipboard (Press Ctrl+Z to undo)');
-            } else {
-              onToastRef.current?.('✨ Converted rich content & tables to Markdown (Press Ctrl+Z to undo)');
-            }
-            return true;
-          }
-        }
-
-        return false;
-      },
-      drop: (e) => {
-        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-          for (let i = 0; i < e.dataTransfer.files.length; i++) {
-            const file = e.dataTransfer.files[i];
-            const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg|bmp|ico|avif)$/i.test(file.name);
-            if (isImage) {
-              e.preventDefault();
-              onDropImageRef.current?.(file);
-              return true;
-            }
-          }
-        }
-        return false;
-      },
-      blur: () => {
-        flushChange();
-        return false;
-      },
+    const domEventHandlers = createEditorDomEventHandlers({
+      onKeyDownRef,
+      onPasteImageRef,
+      onDropImageRef,
+      onToastRef,
+      viewRef,
+      flushChange,
     });
 
     // Update listener extension: debounced content update & cursor telemetry
@@ -401,6 +288,17 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         const line = update.state.doc.lineAt(head);
         const col = head - line.from + 1;
         onCursorChangeRef.current?.({ line: line.number, col, offset: head });
+
+        // Typewriter Mode: smoothly center the active line in viewport
+        if (typewriterModeRef.current) {
+          requestAnimationFrame(() => {
+            if (viewRef.current) {
+              viewRef.current.dispatch({
+                effects: EditorView.scrollIntoView(head, { y: 'center' }),
+              });
+            }
+          });
+        }
       }
     });
 
@@ -465,20 +363,24 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       extensions: [
         slashKeymap,
         Prec.high(keymap.of(createTableKeybindings())),
+        vimCompartment.current.of(keymapMode === 'vim' ? [vim()] : []),
+        focusDimmingCompartment.current.of(createFocusDimmingExtension(focusMode || typewriterMode)),
         history(),
         bracketMatching(),
-        closeBrackets(),
+        closeBracketsCompartment.current.of(autoCloseBrackets ? [closeBrackets()] : []),
+        tabSizeCompartment.current.of(EditorState.tabSize.of(tabSize)),
         indentOnInput(),
         drawSelection(),
         EditorView.contentAttributes.of({ autocorrect: 'on', spellcheck: 'true' }),
         keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
         markdown(),
         highlightViewPlugin,
-        EditorView.lineWrapping,
+        wrapCompartment.current.of(wordWrap ? [EditorView.lineWrapping] : []),
         domEventHandlers,
         updateListener,
         cmPlaceholder(placeholder),
-        lineNumbersCompartment.current.of(showLineNumbers ? [lineNumbers(), highlightActiveLineGutter()] : []),
+        lineNumbersCompartment.current.of((showLineNumbers || prefLineNumbers) ? [lineNumbers(), highlightActiveLineGutter()] : []),
+        typographyCompartment.current.of(getEditorTypographyTheme(fontFamily, fontSize, lineHeight)),
         themeCompartment.current.of(getThemeExtensions(isDark)),
         highlightActiveLine(),
       ],
@@ -490,6 +392,24 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     });
 
     viewRef.current = view;
+
+    if (typewriterMode && view.dom) {
+      view.dom.classList.add('cm-typewriter-mode');
+    }
+
+    if (keymapMode === 'vim') {
+      const cm = getCM(view);
+      if (cm) {
+        const handleVimMode = (data: { mode: string }) => {
+          const m = data.mode?.toUpperCase();
+          if (m === 'NORMAL' || m === 'INSERT' || m === 'VISUAL' || m === 'REPLACE') {
+            onVimModeChangeRef.current?.(m as any);
+          }
+        };
+        cm.on('vim-mode-change', handleVimMode);
+        onVimModeChangeRef.current?.('NORMAL');
+      }
+    }
 
     // Attach scroll listener to scrollDOM for high-performance sync scrolling
     const scrollDOM = view.scrollDOM;
@@ -523,10 +443,25 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     lastInternalDocRef.current = value;
     const currentDoc = viewRef.current.state.doc.toString();
     if (value !== currentDoc) {
+      const scrollDOM = viewRef.current.scrollDOM;
+      const prevScrollTop = scrollDOM.scrollTop;
+      const prevScrollLeft = scrollDOM.scrollLeft;
       const curSelection = viewRef.current.state.selection.main;
+
       viewRef.current.dispatch({
         changes: { from: 0, to: currentDoc.length, insert: value },
         selection: { anchor: Math.min(curSelection.anchor, value.length) },
+      });
+
+      // Instantly restore scroll position so external content updates (like ticking checkboxes) don't jump to top
+      scrollDOM.scrollTop = prevScrollTop;
+      scrollDOM.scrollLeft = prevScrollLeft;
+
+      requestAnimationFrame(() => {
+        if (viewRef.current) {
+          viewRef.current.scrollDOM.scrollTop = prevScrollTop;
+          viewRef.current.scrollDOM.scrollLeft = prevScrollLeft;
+        }
       });
     }
   }, [value]);
@@ -539,15 +474,98 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     });
   }, [isDark]);
 
-  // Toggle line numbers dynamically
+  // Dynamically reconfigure typography (font family, size, line height)
   useEffect(() => {
     if (!viewRef.current) return;
     viewRef.current.dispatch({
-      effects: lineNumbersCompartment.current.reconfigure(
-        showLineNumbers ? [lineNumbers(), highlightActiveLineGutter()] : []
+      effects: typographyCompartment.current.reconfigure(
+        getEditorTypographyTheme(fontFamily, fontSize, lineHeight)
       ),
     });
-  }, [showLineNumbers]);
+  }, [fontFamily, fontSize, lineHeight]);
+
+  // Dynamically toggle word wrap
+  useEffect(() => {
+    if (!viewRef.current) return;
+    viewRef.current.dispatch({
+      effects: wrapCompartment.current.reconfigure(
+        wordWrap ? [EditorView.lineWrapping] : []
+      ),
+    });
+  }, [wordWrap]);
+
+  // Dynamically adjust tab size
+  useEffect(() => {
+    if (!viewRef.current) return;
+    viewRef.current.dispatch({
+      effects: tabSizeCompartment.current.reconfigure(
+        EditorState.tabSize.of(tabSize)
+      ),
+    });
+  }, [tabSize]);
+
+  // Dynamically toggle auto close brackets
+  useEffect(() => {
+    if (!viewRef.current) return;
+    viewRef.current.dispatch({
+      effects: closeBracketsCompartment.current.reconfigure(
+        autoCloseBrackets ? [closeBrackets()] : []
+      ),
+    });
+  }, [autoCloseBrackets]);
+
+  // Toggle line numbers dynamically
+  useEffect(() => {
+    if (!viewRef.current) return;
+    const isEnabled = showLineNumbers || prefLineNumbers;
+    viewRef.current.dispatch({
+      effects: lineNumbersCompartment.current.reconfigure(
+        isEnabled ? [lineNumbers(), highlightActiveLineGutter()] : []
+      ),
+    });
+  }, [showLineNumbers, prefLineNumbers]);
+
+  // Dynamically toggle Vim mode
+  useEffect(() => {
+    if (!viewRef.current) return;
+    viewRef.current.dispatch({
+      effects: vimCompartment.current.reconfigure(keymapMode === 'vim' ? [vim()] : []),
+    });
+    if (keymapMode === 'vim') {
+      const cm = getCM(viewRef.current);
+      if (cm) {
+        const handleVimMode = (data: { mode: string }) => {
+          const m = data.mode?.toUpperCase();
+          if (m === 'NORMAL' || m === 'INSERT' || m === 'VISUAL' || m === 'REPLACE') {
+            onVimModeChangeRef.current?.(m as any);
+          }
+        };
+        cm.on('vim-mode-change', handleVimMode);
+        onVimModeChangeRef.current?.('NORMAL');
+      }
+    } else {
+      onVimModeChangeRef.current?.(undefined as any);
+    }
+  }, [keymapMode]);
+
+  // Dynamically toggle typewriter mode and focus paragraph dimming
+  useEffect(() => {
+    if (!viewRef.current) return;
+    const isFocusActive = focusMode || typewriterMode;
+    viewRef.current.dispatch({
+      effects: focusDimmingCompartment.current.reconfigure(
+        createFocusDimmingExtension(isFocusActive)
+      ),
+    });
+    viewRef.current.dom.classList.toggle('cm-typewriter-mode', typewriterMode);
+
+    if (typewriterMode) {
+      const head = viewRef.current.state.selection.main.head;
+      viewRef.current.dispatch({
+        effects: EditorView.scrollIntoView(head, { y: 'center' }),
+      });
+    }
+  }, [focusMode, typewriterMode]);
 
   return (
     <div

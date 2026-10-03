@@ -370,7 +370,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
   }, [updateDockPosition]);
 
   return (
-    <div className="relative flex-1 flex flex-col h-full bg-[#fdfdfd] dark:bg-[#111114] text-neutral-800 dark:text-neutral-100 transition-colors overflow-hidden select-text">
+    <div className="relative flex-1 min-h-0 flex flex-col h-full bg-[#fdfdfd] dark:bg-[#111114] text-neutral-800 dark:text-neutral-100 transition-colors overflow-hidden select-text">
       {/* Floating Minimal Formatting Dock Anchored at Cursor Coordinates */}
       <FloatingFormattingDock 
         onFormat={handleFormat} 
@@ -405,7 +405,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
       {/* CodeMirror 6 Virtualized Document Writing Area */}
       <div 
         onPointerDown={notifyUserActivity}
-        className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative transition-all duration-200"
+        className="flex-1 min-h-0 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative transition-all duration-200"
       >
         <CodeMirrorEditor
           value={content}

@@ -206,31 +206,36 @@ export const DocumentsPage: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
-        {/* Workspace Header */}
+        {/* Workspace Header with Clean Telemetry */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-neutral-950 dark:text-white tracking-tight">
-              Documents Library
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
+                Documents Vault
+              </h1>
+              <span className="text-xs text-neutral-400 dark:text-neutral-500 font-mono">
+                · {documents.length} notes
+              </span>
+            </div>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              Browse, manage, and write your markdown notes and technical documents
+              IndexedDB local storage · 0ms typing latency · 100% private
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             <button
               onClick={() => setIsTemplatesOpen(true)}
-              className="justify-center px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="justify-center px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
-              <LayoutTemplate className="w-4 h-4 text-emerald-500" />
-              <span>Templates</span>
+              <LayoutTemplate className="w-3.5 h-3.5 text-neutral-400" />
+              <span>Blueprints</span>
             </button>
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="justify-center px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="justify-center px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
-              <Upload className="w-4 h-4" />
+              <Upload className="w-3.5 h-3.5 text-neutral-400" />
               <span>Import .md</span>
             </button>
             <input
@@ -243,64 +248,62 @@ export const DocumentsPage: React.FC = () => {
 
             <button
               onClick={() => setIsLocalFolderOpen(true)}
-              className="justify-center px-3.5 sm:px-4 py-2.5 sm:py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="justify-center px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
               title="Open local folder as note vault"
             >
-              <FolderTree className="w-4 h-4 text-brand-500" />
-              <span>Open Vault</span>
+              <FolderTree className="w-3.5 h-3.5 text-neutral-400" />
+              <span>Local Folder</span>
             </button>
 
             <button
               onClick={handleCreateNew}
               disabled={isCreatingNew}
-              className="justify-center px-4 py-2.5 sm:py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+              className="justify-center px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
             >
               {isCreatingNew ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>Creating...</span>
                 </>
               ) : (
                 <>
-                  <Plus className="w-4 h-4" />
-                  <span>New Document</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New Note</span>
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Workspace Tab Switcher (Active Docs vs Recycle Bin) */}
-        <div className="flex items-center gap-6 mb-6 border-b border-neutral-200 dark:border-neutral-800">
+        {/* Minimal Segmented Tab Controller (All Documents vs Recycle Bin) */}
+        <div className="flex items-center gap-1 mb-6 p-1 bg-neutral-100/70 dark:bg-neutral-900/80 rounded-xl w-fit border border-neutral-200/60 dark:border-neutral-800/80 text-xs font-medium">
           <button
             onClick={() => { setCurrentTab('active'); setActiveTag('All'); }}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
               currentTab === 'active'
-                ? 'border-neutral-900 text-neutral-950 dark:border-white dark:text-white'
-                : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
+                ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
+                : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-3.5 h-3.5" />
             <span>All Documents</span>
-            {currentTab === 'active' && (
-              <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-mono">
-                {documents.length}
-              </span>
-            )}
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-mono">
+              {documents.length}
+            </span>
           </button>
 
           <button
             onClick={() => { setCurrentTab('trash'); setActiveTag('All'); }}
-            className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
               currentTab === 'trash'
-                ? 'border-red-500 text-red-600 dark:border-red-400 dark:text-red-400'
-                : 'border-transparent text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
+                ? 'bg-white dark:bg-neutral-800 text-red-600 dark:text-red-400 shadow-2xs font-semibold'
+                : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
             }`}
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
             <span>Recycle Bin</span>
             {trashCount > 0 && (
-              <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 font-mono font-bold">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 font-mono font-bold">
                 {trashCount}
               </span>
             )}

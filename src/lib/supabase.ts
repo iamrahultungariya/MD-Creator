@@ -1,6 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { db, DocumentMetadata } from '../db';
-import { isHolidayFreeProActive } from '../stores/useAuthStore';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -30,26 +29,14 @@ export async function checkEmailExists(_email: string): Promise<boolean> {
 }
 
 /**
- * Returns true if the authenticated user has Pro cloud-sync privileges.
- * Privilege order: promo window → lifetime list → DB profile tier.
+ * Returns true if the user is authenticated and can sync to cloud.
+ * In MD Writer's 100% free model, all authenticated users have full cloud sync.
  */
 export async function isUserProForSync(): Promise<boolean> {
   if (!supabase) return false;
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return false;
-
-    // 1. Free promo window — all authenticated users get Pro
-    if (isHolidayFreeProActive()) return true;
-
-    // 2. Database subscription tier
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('subscription_tier')
-      .eq('id', session.user.id)
-      .maybeSingle();
-
-    return prof?.subscription_tier === 'pro' || prof?.subscription_tier === 'team';
+    return Boolean(session?.user);
   } catch {
     return false;
   }

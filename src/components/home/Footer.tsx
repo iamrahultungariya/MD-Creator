@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { APP_VERSION_LABEL } from '../../config/version';
 import { LegalModal } from '../common/LegalModal';
+import { usePreferencesStore } from '../../stores/usePreferencesStore';
 
 interface FooterProps {
   onOpenUpdates?: () => void;
@@ -11,7 +12,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
   const [isLegalOpen, setIsLegalOpen] = useState(false);
 
   return (
-    <footer className="py-12 bg-white dark:bg-neutral-950 border-t border-neutral-100 dark:border-neutral-800/80 transition-colors">
+    <footer className="py-10 bg-white dark:bg-[#0c0d0e] border-t border-neutral-200/70 dark:border-neutral-800/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -24,11 +25,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
               className="w-7 h-7 rounded-lg object-contain shadow-xs" 
             />
             <div>
-              <span className="font-bold text-sm text-neutral-900 dark:text-white">
-                MD Writer
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm text-neutral-900 dark:text-white tracking-tight">
+                  MD Writer
+                </span>
+                <span className="text-[11px] text-neutral-400 dark:text-neutral-500">·</span>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Local-first Markdown Studio
+                </span>
+              </div>
               <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                Write better. Think clearer.
+                Zero paywalls · Free forever · Fully offline capable
               </p>
             </div>
           </div>
@@ -38,12 +45,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
             
             {/* Nav Links */}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-5 gap-y-2.5 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-              <Link to="/pricing" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
-                Pricing
+              <Link to="/documents" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
+                Documents
               </Link>
-              <Link to="/blog" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
-                Blog
-              </Link>
+              <button 
+                type="button" 
+                onClick={() => usePreferencesStore.getState().openPreferences()} 
+                className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Preferences
+              </button>
               <Link to="/feedback" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 Feedback
               </Link>
@@ -65,9 +76,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
                   <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">{APP_VERSION_LABEL}</span>
                 </Link>
               )}
-              <Link to="/about" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
-                About
-              </Link>
               <button 
                 type="button" 
                 onClick={() => setIsLegalOpen(true)} 

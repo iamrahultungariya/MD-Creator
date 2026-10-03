@@ -108,3 +108,51 @@ export function calculateCameraTarget(params: {
     scale: targetScale,
   };
 }
+
+/**
+ * Calculates camera target for real recorded screen video using normalized cursor coordinates (0 to 1).
+ */
+export function calculateScreenRecordCameraTarget(params: {
+  autoZoomEnabled: boolean;
+  zoomScale: number;
+  normX: number; // 0 to 1
+  normY: number; // 0 to 1
+  isRecentActivity: boolean;
+  cardWidth: number;
+  cardHeight: number;
+}): CameraTarget {
+  const {
+    autoZoomEnabled,
+    zoomScale,
+    normX,
+    normY,
+    isRecentActivity,
+    cardWidth,
+    cardHeight,
+  } = params;
+
+  if (!autoZoomEnabled || !isRecentActivity) {
+    return { x: 0, y: 0, scale: 1.0 };
+  }
+
+  const targetScale = zoomScale;
+  const panMultiplier = (targetScale - 1.0);
+
+  // Offset from center (0.5)
+  const rawOffsetX = (0.5 - normX) * cardWidth * panMultiplier;
+  const rawOffsetY = (0.5 - normY) * cardHeight * panMultiplier;
+
+  // Maximum allowed pan to ensure framing remains aesthetic
+  const maxPanX = (cardWidth * 0.45) * panMultiplier;
+  const maxPanY = (cardHeight * 0.45) * panMultiplier;
+
+  const clampedX = Math.max(-maxPanX, Math.min(maxPanX, rawOffsetX));
+  const clampedY = Math.max(-maxPanY, Math.min(maxPanY, rawOffsetY));
+
+  return {
+    x: clampedX,
+    y: clampedY,
+    scale: targetScale,
+  };
+}
+

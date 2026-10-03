@@ -1,8 +1,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
-import { FeatureStrip } from '../components/home/FeatureStrip';
 import { BentoFeatures } from '../components/home/BentoFeatures';
 import { ReviewsSection } from '../components/home/ReviewsSection';
 import { Footer } from '../components/home/Footer';
@@ -35,7 +35,7 @@ export const HomePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0E0B14] text-neutral-900 dark:text-neutral-100 transition-colors">
       {/* Top Sticky Navigation */}
       <Navbar 
         onOpenTemplates={() => setIsTemplatesOpen(true)}
@@ -48,21 +48,52 @@ export const HomePage: React.FC = () => {
 
       {/* Main Content Sections */}
       <main className="flex-1">
-        {/* Hero Section with Laptop Mockup */}
+        {/* Notion-Style Centered Hero with Interactive Studio Showcase */}
         <Hero onOpenTemplates={() => setIsTemplatesOpen(true)} />
 
-        {/* 5-Item Highlights Strip */}
-        <FeatureStrip />
-
-        {/* Bento Grid Features */}
+        {/* 3-Block Notion-Style Features Story */}
         <BentoFeatures 
-          onExploreFeatures={() => navigate('/features')} 
+          onExploreFeatures={() => navigate('/editor')} 
           onOpenUpdates={() => navigate('/updates')}
           onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
 
-        {/* Top 5 Verified Community Reviews + Review Submission */}
+        {/* 3-Column Minimal Verified Community Reviews */}
         <ReviewsSection />
+
+        {/* Notion-Style Bottom Call-to-Action */}
+        <section className="py-20 sm:py-24 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-black/20 text-center">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
+              Ready to write clearer documents?
+            </h2>
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto leading-relaxed">
+              No credit cards, no monthly subscriptions, and no lock-in. Just your thoughts and clean, beautifully rendered markdown.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+              <button
+                onClick={() => navigate('/editor')}
+                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 font-semibold text-sm shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01]"
+              >
+                <span>Open Markdown Studio</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              <button
+                onClick={() => setIsTemplatesOpen(true)}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+              >
+                <BookOpen className="w-4 h-4 text-neutral-400" />
+                <span>Browse Blueprints</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-neutral-400 font-mono pt-4">
+              Free forever • 100% Offline • Works in any browser
+            </p>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}

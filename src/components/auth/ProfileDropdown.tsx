@@ -14,11 +14,14 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import { createNewDocument } from '../../db';
 import { useConfirm } from '../../stores/useConfirmStore';
 import { isCurrentUserAdmin } from '../../utils/adminAuth';
+import { AvatarPickerModal } from './AvatarPickerModal';
+import { usePreferencesStore } from '../../stores/usePreferencesStore';
 
 export const ProfileDropdown: React.FC = () => {
   const { user, signOut } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -93,14 +96,38 @@ export const ProfileDropdown: React.FC = () => {
           {/* User Info Header */}
           <div className="p-3 bg-neutral-50/80 dark:bg-neutral-950/50 rounded-xl mb-1.5 border border-neutral-100 dark:border-neutral-800/80">
             <div className="flex items-center gap-3 mb-2">
-              <img
-                src={user.avatarUrl}
-                alt={user.displayName}
-                className="w-10 h-10 rounded-full object-cover ring-1 ring-neutral-300 dark:ring-neutral-700"
-              />
-              <div className="overflow-hidden">
-                <div className="font-bold text-sm text-neutral-900 dark:text-white truncate">
-                  {user.displayName}
+              <div 
+                className="relative group cursor-pointer shrink-0" 
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsAvatarModalOpen(true);
+                }}
+                title="Change Character Avatar"
+              >
+                <img
+                  src={user.avatarUrl}
+                  alt={user.displayName}
+                  className="w-10 h-10 rounded-full object-cover ring-1 ring-neutral-300 dark:ring-neutral-700 group-hover:opacity-75 transition-opacity"
+                />
+                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-[9px] font-bold">
+                  Edit
+                </div>
+              </div>
+
+              <div className="overflow-hidden flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-neutral-950 dark:text-white truncate">
+                    {user.displayName}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      setIsAvatarModalOpen(true);
+                    }}
+                    className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                  >
+                    Change Face
+                  </button>
                 </div>
                 <div className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
                   {user.email}
@@ -154,12 +181,12 @@ export const ProfileDropdown: React.FC = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                navigate('/settings');
+                usePreferencesStore.getState().openPreferences();
               }}
               className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
               <SlidersHorizontal className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
-              <span>Settings &amp; Toolbar</span>
+              <span>Preferences (Ctrl+,)</span>
             </button>
 
             {isAdmin && (
@@ -214,6 +241,12 @@ export const ProfileDropdown: React.FC = () => {
 
         </div>
       )}
+
+      {/* Bespoke Character Avatar Selection Modal */}
+      <AvatarPickerModal 
+        isOpen={isAvatarModalOpen} 
+        onClose={() => setIsAvatarModalOpen(false)} 
+      />
     </div>
   );
 };

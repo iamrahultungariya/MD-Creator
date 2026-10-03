@@ -36,6 +36,7 @@ interface EditorHeaderProps {
   onOpenDrawer: () => void;
   onOpenPdfStudio: () => void;
   onOpenClipStudio?: () => void;
+  onOpenSocialCard?: () => void;
   isAdmin?: boolean;
   onOpenTableBuilder: () => void;
   onOpenImageModal?: () => void;
@@ -88,6 +89,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   onOpenDrawer,
   onOpenPdfStudio,
   onOpenClipStudio,
+  onOpenSocialCard,
   isAdmin,
   onOpenTableBuilder,
   onOpenImageModal,
@@ -198,7 +200,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => executeSave(content, title)}
-              className="bg-transparent font-bold text-xs sm:text-sm text-neutral-950 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-600 rounded-lg px-2 py-1 max-w-[140px] sm:max-w-xs md:max-w-sm truncate transition-colors font-sans"
+              placeholder="Untitled Document"
+              className="bg-transparent font-bold text-xs sm:text-sm text-neutral-950 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/40 dark:focus:ring-brand-400/40 rounded-md px-2 py-1 w-auto min-w-[120px] max-w-[180px] md:max-w-[260px] lg:max-w-[340px] truncate transition-colors font-sans hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40"
               title="Click to rename document"
             />
             <div className="flex items-center gap-1.5 text-xs font-mono shrink-0 pl-1">
@@ -399,6 +402,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               }}
               onOpenPdfStudio={onOpenPdfStudio}
               onOpenClipStudio={onOpenClipStudio}
+              onOpenSocialCard={onOpenSocialCard}
               isAdmin={isAdmin}
               onOpenOutline={onOpenOutline}
               onOpenTableBuilder={onOpenTableBuilder}

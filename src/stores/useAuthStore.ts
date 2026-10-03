@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured, syncAllDocuments } from '../lib/supabase';
+import { getDefaultAvatar } from '../components/auth/avatarPresets';
 
 export interface UserProfile {
   id: string;
@@ -38,9 +39,16 @@ export const isUserPro = (user?: UserProfile | null): boolean => {
 };
 
 // ─── Avatar helper ────────────────────────────────────────────────────────────
-// Generates a deterministic initials avatar keyed by email.
-const getAvatarUrl = (email: string): string =>
-  `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(email)}&backgroundColor=0a0a0a&textColor=ffffff`;
+// Defaults to locally saved character avatar, or bespoke default avatar
+const getAvatarUrl = (_email: string): string => {
+  try {
+    const custom = localStorage.getItem('md_writer_custom_avatar');
+    if (custom) return custom;
+  } catch {
+    // Ignore localStorage error
+  }
+  return getDefaultAvatar();
+};
 
 // ─── Store types ──────────────────────────────────────────────────────────────
 interface AuthState {
@@ -118,6 +126,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               u.email?.split('@')[0] ||
               'Writer',
             avatarUrl:
+              localStorage.getItem('md_writer_custom_avatar') ||
               prof?.avatar_url ||
               u.user_metadata?.avatar_url ||
               getAvatarUrl(u.email || 'writer'),
@@ -181,6 +190,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             data.user.user_metadata?.full_name ||
             cleanEmail.split('@')[0],
           avatarUrl:
+            localStorage.getItem('md_writer_custom_avatar') ||
             prof?.avatar_url ||
             data.user.user_metadata?.avatar_url ||
             getAvatarUrl(cleanEmail),

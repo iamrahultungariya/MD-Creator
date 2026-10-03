@@ -8,8 +8,8 @@ import {
   VolumeX 
 } from 'lucide-react';
 import { CursorPosition, ViewMode } from '../types';
-import { useAuthStore, isUserPro } from '../../../stores/useAuthStore';
-import { ProUpgradeModal } from '../../../components/common/ProUpgradeModal';
+import { useAuthStore } from '../../../stores/useAuthStore';
+import { usePreferencesStore } from '../../../stores/usePreferencesStore';
 
 interface EditorStatusBarProps {
   viewMode: ViewMode;
@@ -37,6 +37,7 @@ interface EditorStatusBarProps {
   onResetSprint: () => void;
   onOpenUpdates?: () => void;
   onOpenSwitcher?: () => void;
+  vimMode?: 'NORMAL' | 'INSERT' | 'VISUAL' | 'REPLACE';
 }
 
 export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
@@ -63,10 +64,17 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
   onStartSprint,
   onPauseSprint,
   onResetSprint,
+  vimMode = 'NORMAL',
 }) => {
   const { user } = useAuthStore();
-  const isPro = isUserPro(user);
-  const [isProModalOpen, setIsProModalOpen] = React.useState(false);
+  const {
+    typewriterMode,
+    setTypewriterMode,
+    focusMode,
+    setFocusMode,
+    keymapMode,
+  } = usePreferencesStore();
+
   const [selectedSprintMode, setSelectedSprintMode] = React.useState<'time' | 'words'>(sprintMode);
   const [selectedMins, setSelectedMins] = React.useState<number>(sprintDuration || 25);
   const [selectedGoal, setSelectedGoal] = React.useState<number>(targetWords || 250);
@@ -75,8 +83,24 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
     <footer
       className="editor-status-bar h-8 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/90 px-4 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 select-none z-30 transition-all duration-200 no-print"
     >
-      {/* Left Stats: Cursor & Document Telemetry */}
+      {/* Left Stats: Cursor, Document Telemetry & Vim Mode */}
       <div className="flex items-center gap-3">
+        {keymapMode === 'vim' && (
+          <div
+            className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider border transition-colors ${
+              vimMode === 'INSERT'
+                ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/30'
+                : vimMode === 'VISUAL'
+                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                : vimMode === 'REPLACE'
+                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+            }`}
+          >
+            {vimMode}
+          </div>
+        )}
+
         <span className="font-mono">
           Ln {cursorPos.line}, Col {cursorPos.col}
         </span>
@@ -88,8 +112,33 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
         <span className="hidden md:inline">~{readingTime} min read</span>
       </div>
 
-      {/* Center Actions: Focus Sprint Companion */}
+      {/* Center Actions: Typewriter, Focus & Sprint Companion */}
       <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setTypewriterMode(!typewriterMode)}
+          className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all cursor-pointer border ${
+            typewriterMode
+              ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/30 font-bold'
+              : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white border-transparent hover:border-neutral-200 dark:hover:border-neutral-800'
+          }`}
+          title="Typewriter Mode: Vertically centers cursor and isolates active paragraph"
+        >
+          Typewriter
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setFocusMode(!focusMode)}
+          className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-all cursor-pointer border ${
+            focusMode
+              ? 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border-brand-500/30 font-bold'
+              : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white border-transparent hover:border-neutral-200 dark:hover:border-neutral-800'
+          }`}
+          title="Focus Mode: Keeps active writing paragraph in crisp focus while dimming surrounding content"
+        >
+          Focus
+        </button>
 
         {/* Upgraded Focus Sprint Timer Button */}
         <div className="relative">
@@ -279,59 +328,24 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
         </div>
       </div>
 
-      {/* Right Status: Clean Local & Cloud Storage Telemetry with Pro Tiering */}
-      <div className="flex items-center gap-2">
-        {isPro ? (
-          <div className="flex items-center gap-1.5" title="Real-time multi-device cloud sync active">
+      {/* Right Status: Clean Local & Cloud Storage Telemetry */}
+      <div className="flex items-center gap-2.5">
+        {user ? (
+          <div className="flex items-center gap-1.5" title="IndexedDB offline cache with cloud sync">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-              ⚡ Dexie + ☁️ Cloud Sync (Pro)
+            <span className="font-medium text-neutral-700 dark:text-neutral-300">
+              ⚡ Dexie + ☁️ Synced
             </span>
           </div>
-        ) : user ? (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5" title="Offline-first browser storage (IndexedDB)">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                ⚡ Dexie Local
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsProModalOpen(true)}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-700 text-[10px] font-medium hover:bg-neutral-300/70 dark:hover:bg-neutral-700 transition-all cursor-pointer"
-              title="Enable multi-device cloud sync with Pro"
-            >
-              <span>Cloud Sync (Pro)</span>
-            </button>
-          </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5" title="Guest mode: documents stored in local browser cache">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                ⚡ Dexie Local (Guest)
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsProModalOpen(true)}
-              className="inline-flex items-center gap-1 text-[10px] text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
-              title="Explore Pro features"
-            >
-              <span>Pro</span>
-            </button>
+          <div className="flex items-center gap-1.5" title="Guest mode: documents stored privately in local browser cache (IndexedDB)">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="font-medium text-neutral-700 dark:text-neutral-300">
+              ⚡ Dexie Local (Private)
+            </span>
           </div>
         )}
       </div>
-
-      {/* Pro Upgrade Modal for Status Bar */}
-      <ProUpgradeModal
-        isOpen={isProModalOpen}
-        onClose={() => setIsProModalOpen(false)}
-        featureTitle="Multi-Device Cloud Sync"
-        featureDescription="Real-time multi-device cloud synchronization automatically syncs and backs up your documents to Supabase PostgreSQL. Available in MD Writer Pro."
-      />
     </footer>
   );
 });

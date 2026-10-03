@@ -117,6 +117,16 @@ async function renderClip(config: ClipStudioConfig, text: string) {
         timeMs,
       });
 
+      // Backpressure management: wait if hardware encoder queue is saturated
+      while (videoEncoder.encodeQueueSize > 4) {
+        await new Promise((r) => setTimeout(r, 10));
+      }
+
+      // Cooperative yield every 3 frames to avoid starving worker event loop
+      if (frameIdx % 3 === 0) {
+        await new Promise((r) => setTimeout(r, 0));
+      }
+
       // Submit frame to WebCodecs
       const timestampMicros = (frameIdx * 1_000_000) / fps;
       const videoFrame = new VideoFrame(canvas, {
@@ -161,8 +171,14 @@ async function renderClip(config: ClipStudioConfig, text: string) {
 
     const gif = GIFEncoder();
     const frameDelayMs = 1000 / fps;
+    let cachedPalette: number[][] | null = null;
 
     for (let frameIdx = 0; frameIdx < totalFrames; frameIdx++) {
+      // Yield every 2 frames to avoid starving the event loop
+      if (frameIdx % 2 === 0) {
+        await new Promise((r) => setTimeout(r, 0));
+      }
+
       const timeMs = (frameIdx / fps) * 1000;
       const typerState = getTyperStateAt(simulation, timeMs);
       const isInitialRest = timeMs < 500;
@@ -207,11 +223,14 @@ async function renderClip(config: ClipStudioConfig, text: string) {
 
       const imageData = gifCtx.getImageData(0, 0, gifWidth, gifHeight);
       const { data } = imageData;
-      const palette = quantize(data, 128);
-      const index = applyPalette(data, palette);
+      // Quantize palette only on key intervals to prevent CPU locking
+      if (!cachedPalette || frameIdx % 8 === 0) {
+        cachedPalette = quantize(data, 128);
+      }
+      const index = applyPalette(data, cachedPalette);
 
       gif.writeFrame(index, gifWidth, gifHeight, {
-        palette,
+        palette: cachedPalette,
         delay: frameDelayMs,
       });
 

@@ -11,7 +11,7 @@ import {
   Image as ImageIcon,
   LayoutTemplate,
   History,
-  Timer,
+  Sliders,
   FileX,
   Trash2,
 } from 'lucide-react';
@@ -49,7 +49,7 @@ export const EditorMobileOverflowMenu: React.FC<EditorMobileOverflowMenuProps> =
   onOpenImageModal,
   onOpenTemplates,
   onOpenRevisions,
-  onOpenSprintPopover,
+  onOpenSprintPopover: _onOpenSprintPopover,
   onClearContent,
   onDeleteCurrentDoc,
 }) => {
@@ -213,12 +213,12 @@ export const EditorMobileOverflowMenu: React.FC<EditorMobileOverflowMenuProps> =
             <button
               onClick={() => {
                 setIsOpen(false);
-                onOpenSprintPopover();
+                window.dispatchEvent(new CustomEvent('open-preferences-modal'));
               }}
               className="w-full text-left px-2.5 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2.5 text-neutral-700 dark:text-neutral-300 cursor-pointer"
             >
-              <Timer className="w-4 h-4 text-neutral-500" />
-              <span className="font-semibold text-neutral-900 dark:text-white">Focus Sprint Timer</span>
+              <Sliders className="w-4 h-4 text-brand-500" />
+              <span className="font-semibold text-neutral-900 dark:text-white">Preferences</span>
             </button>
 
             <div className="border-t border-neutral-100 dark:border-neutral-800 my-1.5" />

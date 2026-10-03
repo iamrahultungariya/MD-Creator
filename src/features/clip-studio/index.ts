@@ -2,4 +2,8 @@ export * from './types';
 export * from './components/ClipStudioModal';
 export * from './components/ClipStudioPreview';
 export * from './components/ClipStudioSidebar';
+export * from './components/RecordingHud';
+export * from './stores/useRecorderStore';
+export * from './services/screenCaptureService';
+export * from './services/actionTracker';
 export * from './services/clipExportService';

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getPublicDocumentBySlug, PublicDocumentView } from '../services/publishService';
 import { MarkdownPreview } from '../components/editor/MarkdownPreview';
+import { SocialCardGeneratorModal } from '../components/share/SocialCardGeneratorModal';
 
 export const PublicDocumentPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
@@ -25,6 +26,8 @@ export const PublicDocumentPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [theme, setTheme] = useState<'default' | 'paper' | 'sepia' | 'nordic' | 'dark'>('default');
   const [isCopied, setIsCopied] = useState(false);
+  const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
+  const [readingProgress, setReadingProgress] = useState(0);
 
   useEffect(() => {
     if (!slug) {
@@ -44,6 +47,53 @@ export const PublicDocumentPage: React.FC = () => {
         setStatus('not_found');
       });
   }, [slug]);
+
+  // Dynamic Open Graph and Twitter card meta tags
+  useEffect(() => {
+    if (!doc) return;
+    const originalTitle = document.title;
+    const pageTitle = `${doc.title || 'Published Document'} • MD Writer`;
+    document.title = pageTitle;
+
+    const setMeta = (name: string, content: string, isProp = false) => {
+      const attr = isProp ? 'property' : 'name';
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    const plainExcerpt = doc.content.replace(/[#*`_~[\]()-]/g, '').trim().slice(0, 160) || 'An expressive, distraction-free document published with MD Writer.';
+    setMeta('og:title', pageTitle, true);
+    setMeta('og:description', plainExcerpt, true);
+    setMeta('og:type', 'article', true);
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:title', pageTitle);
+    setMeta('twitter:description', plainExcerpt);
+
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [doc]);
+
+  // Window scroll reading progress indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const total = document.documentElement.scrollHeight - window.innerHeight;
+      if (total <= 0) {
+        setReadingProgress(100);
+        return;
+      }
+      const current = window.scrollY;
+      setReadingProgress(Math.min(100, Math.max(0, (current / total) * 100)));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,6 +264,12 @@ export const PublicDocumentPage: React.FC = () => {
   // 4. Clean Read-Only Reader Canvas
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${currentTheme.bg} ${currentTheme.text}`}>
+      {/* Top Reading Progress Bar */}
+      <div 
+        className="fixed top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#8257F5] to-indigo-500 z-50 transition-all duration-75 pointer-events-none"
+        style={{ width: `${readingProgress}%` }}
+      />
+
       {/* Sticky Reader Header */}
       <header
         className={`sticky top-0 z-30 h-14 border-b backdrop-blur-md px-4 sm:px-8 flex items-center justify-between select-none transition-colors ${currentTheme.headerBg} ${currentTheme.border}`}
@@ -232,7 +288,7 @@ export const PublicDocumentPage: React.FC = () => {
         </Link>
 
         {/* Reader Theme Controls & Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {/* Theme Palette Dots */}
           <div className="hidden xs:flex items-center gap-1 px-2 py-1 rounded-full border border-current/15">
             {(['default', 'paper', 'sepia', 'nordic', 'dark'] as const).map((t) => (
@@ -251,10 +307,20 @@ export const PublicDocumentPage: React.FC = () => {
             ))}
           </div>
 
+          {/* Branded Social Card Button */}
+          <button
+            onClick={() => setIsSocialCardOpen(true)}
+            className="px-2.5 py-1.5 rounded-lg border border-brand-500/30 bg-brand-500/10 text-brand-600 dark:text-brand-400 hover:bg-brand-500/20 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+            title="Generate & download 1200x630 branded social card"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+            <span className="hidden sm:inline">Share Card</span>
+          </button>
+
           {/* Copy Markdown Button */}
           <button
             onClick={handleCopyMarkdown}
-            className="px-2.5 py-1.5 rounded-xl border border-current/15 hover:bg-current/5 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+            className="px-2.5 py-1.5 rounded-lg border border-current/15 hover:bg-current/5 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
             title="Copy Raw Markdown"
           >
             {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 opacity-70" />}
@@ -264,7 +330,7 @@ export const PublicDocumentPage: React.FC = () => {
           {/* Download Button */}
           <button
             onClick={handleDownload}
-            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-current/15 hover:bg-current/5 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+            className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-current/15 hover:bg-current/5 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
             title="Download .md file"
           >
             <Download className="w-3.5 h-3.5 opacity-70" />
@@ -274,9 +340,9 @@ export const PublicDocumentPage: React.FC = () => {
           {/* Create Own */}
           <Link
             to="/editor"
-            className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+            className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <PenTool className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Write in MD</span>
           </Link>
         </div>
@@ -325,6 +391,16 @@ export const PublicDocumentPage: React.FC = () => {
       <footer className={`py-8 text-center text-xs opacity-60 border-t ${currentTheme.border} font-mono select-none`}>
         <p>Published with MD Writer • Fast, offline-first Markdown workstation</p>
       </footer>
+
+      {/* Branded Social Card Generator Modal */}
+      <SocialCardGeneratorModal
+        isOpen={isSocialCardOpen}
+        onClose={() => setIsSocialCardOpen(false)}
+        title={doc.title}
+        content={doc.content}
+        slug={slug}
+        authorName="MD Writer Author"
+      />
     </div>
   );
 };
