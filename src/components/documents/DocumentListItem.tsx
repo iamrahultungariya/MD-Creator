@@ -78,9 +78,9 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
         }}
       />
 
-      <div className="relative z-10 flex items-center gap-3.5 min-w-0 pr-4 flex-1">
+      <div className="relative z-10 flex items-center gap-3.5 min-w-0 pr-4 flex-1 font-sans">
         <div
-          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
+          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
             isHovered ? 'scale-105' : ''
           } ${
             currentTab === 'trash'
@@ -98,7 +98,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
               {doc.title}
             </span>
             {doc.isPinned && currentTab === 'active' && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0 font-sans">
                 <Pin className="w-2.5 h-2.5 fill-current" />
                 <span>Pinned</span>
               </span>
@@ -110,8 +110,8 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
         </div>
       </div>
 
-      <div className="relative z-10 flex items-center gap-4 shrink-0 text-xs text-neutral-400">
-        <span className="hidden sm:inline font-mono">{doc.wordCount} words</span>
+      <div className="relative z-10 flex items-center gap-4 shrink-0 text-xs text-neutral-400 font-sans">
+        <span className="hidden sm:inline font-sans font-medium">{doc.wordCount} words</span>
         <span className="hidden md:flex items-center gap-1 text-neutral-500 dark:text-neutral-400">
           <Clock className="w-3 h-3" />
           <span>{formatRelativeTime(doc.updatedAt)}</span>

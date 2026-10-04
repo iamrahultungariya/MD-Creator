@@ -79,7 +79,7 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
           zIndex: isHovered ? 30 : 1,
           transformOrigin: 'center center',
         }}
-        className={`relative h-full p-6 sm:p-8 rounded-2xl bg-white/95 dark:bg-[#121217]/95 backdrop-blur-xl border flex flex-col justify-between break-words transition-all duration-200 overflow-hidden active:scale-[0.99] ${
+        className={`relative h-full p-6 sm:p-8 rounded-xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl border flex flex-col justify-between break-words transition-all duration-200 overflow-hidden active:scale-[0.99] font-sans ${
           isDimmed ? 'opacity-65' : 'opacity-100'
         } ${
           isHovered
@@ -93,7 +93,7 @@ export const ReviewCardItem: React.FC<ReviewCardItemProps> = ({
       >
         {/* Dynamic Mouse-Following 1.25px Border Glow */}
         <motion.div
-          className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+          className="pointer-events-none absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
           style={{
             background: borderBackground,
             mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',

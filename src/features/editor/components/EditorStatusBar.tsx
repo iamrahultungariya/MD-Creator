@@ -35,7 +35,6 @@ interface EditorStatusBarProps {
   onStartSprint: (minutes?: number, mode?: 'time' | 'words', wordGoal?: number) => void;
   onPauseSprint: () => void;
   onResetSprint: () => void;
-  onOpenUpdates?: () => void;
   onOpenSwitcher?: () => void;
   vimMode?: 'NORMAL' | 'INSERT' | 'VISUAL' | 'REPLACE';
 }
@@ -172,16 +171,16 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
 
           {/* Upgraded Sprint Flow Popover */}
           {isSprintPopoverOpen && (
-            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-64 bg-white dark:bg-[#141415] border border-neutral-200/90 dark:border-neutral-800/90 rounded-2xl shadow-2xl p-3.5 z-50 text-xs space-y-3 animate-in fade-in zoom-in-95 duration-100 select-none">
+            <div className="absolute bottom-9 left-1/2 -translate-x-1/2 w-64 bg-white dark:bg-[#141415] border border-neutral-200/90 dark:border-neutral-800/90 rounded-xl shadow-2xl p-3.5 z-50 text-xs space-y-3 font-sans animate-in fade-in zoom-in-95 duration-100 select-none">
               {/* Popover Header */}
               <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-2">
-                <span className="font-bold text-neutral-900 dark:text-white flex items-center gap-1.5 text-xs">
+                <span className="font-bold text-neutral-900 dark:text-white flex items-center gap-1.5 text-xs font-sans">
                   <Timer className="w-3.5 h-3.5 text-amber-500" />
                   <span>Writing Sprint & Flow</span>
                 </span>
                 <button
                   onClick={() => setIsSprintPopoverOpen(false)}
-                  className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer p-0.5"
+                  className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 cursor-pointer p-0.5 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 >
                   ✕
                 </button>
@@ -189,19 +188,19 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
 
               {/* Live Sprint Stats if Active */}
               {isSprintActive && (
-                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
-                  <div className="flex items-center justify-between text-[11px]">
+                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-sans">
                     <span className="font-semibold text-amber-700 dark:text-amber-400">
                       ⚡ Velocity: {wpm} WPM
                     </span>
-                    <span className="font-mono text-neutral-600 dark:text-neutral-300">
+                    <span className="font-sans font-medium text-neutral-600 dark:text-neutral-300">
                       {wordsWritten} words written
                     </span>
                   </div>
                   {/* Progress Bar */}
-                  <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-md overflow-hidden">
                     <div 
-                      className="bg-amber-500 h-full transition-all duration-300 rounded-full" 
+                      className="bg-amber-500 h-full transition-all duration-300 rounded-sm" 
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
@@ -211,11 +210,11 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
               {/* Mode Selection Segmented Control */}
               {!isSprintActive && (
                 <div className="space-y-2">
-                  <div className="flex rounded-lg bg-neutral-100 dark:bg-neutral-800 p-0.5 text-[10px] font-semibold">
+                  <div className="flex rounded-md bg-neutral-100 dark:bg-neutral-800 p-0.5 text-[10px] font-semibold font-sans">
                     <button
                       type="button"
                       onClick={() => setSelectedSprintMode('time')}
-                      className={`flex-1 py-1 rounded-md transition-all cursor-pointer ${
+                      className={`flex-1 py-1 rounded-sm transition-all cursor-pointer ${
                         selectedSprintMode === 'time'
                           ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
                           : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -226,7 +225,7 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
                     <button
                       type="button"
                       onClick={() => setSelectedSprintMode('words')}
-                      className={`flex-1 py-1 rounded-md transition-all cursor-pointer ${
+                      className={`flex-1 py-1 rounded-sm transition-all cursor-pointer ${
                         selectedSprintMode === 'words'
                           ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
                           : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -238,13 +237,13 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
 
                   {/* Preset Options based on active mode */}
                   {selectedSprintMode === 'time' ? (
-                    <div className="flex items-center gap-1.5 text-[10px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-sans">
                       {[15, 25, 45].map((mins) => (
                         <button
                           key={mins}
                           type="button"
                           onClick={() => setSelectedMins(mins)}
-                          className={`flex-1 py-1.5 rounded-lg border text-center font-medium transition-all cursor-pointer ${
+                          className={`flex-1 py-1.5 rounded-md border text-center font-medium transition-all cursor-pointer ${
                             selectedMins === mins
                               ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold'
                               : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
@@ -255,13 +254,13 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
                       ))}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1.5 text-[10px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-sans">
                       {[250, 500, 1000].map((goal) => (
                         <button
                           key={goal}
                           type="button"
                           onClick={() => setSelectedGoal(goal)}
-                          className={`flex-1 py-1.5 rounded-lg border text-center font-medium transition-all cursor-pointer ${
+                          className={`flex-1 py-1.5 rounded-md border text-center font-medium transition-all cursor-pointer ${
                             selectedGoal === goal
                               ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold'
                               : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
@@ -276,14 +275,14 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
               )}
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-2 pt-1 font-sans">
                 {!isSprintActive ? (
                   <button
                     type="button"
                     onClick={() => {
                       onStartSprint(selectedMins, selectedSprintMode, selectedGoal);
                     }}
-                    className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold flex items-center justify-center gap-1.5 cursor-pointer text-xs shadow-sm transition-all"
+                    className="flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold flex items-center justify-center gap-1.5 cursor-pointer text-xs shadow-sm transition-all"
                   >
                     <Play className="w-3 h-3 fill-white" />
                     <span>Start {selectedSprintMode === 'time' ? `${selectedMins}m Sprint` : `${selectedGoal}w Goal`}</span>
@@ -292,7 +291,7 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
                   <button
                     type="button"
                     onClick={onPauseSprint}
-                    className="flex-1 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 active:scale-95 text-white font-bold flex items-center justify-center gap-1.5 cursor-pointer text-xs shadow-sm transition-all"
+                    className="flex-1 py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 active:scale-95 text-white font-bold flex items-center justify-center gap-1.5 cursor-pointer text-xs shadow-sm transition-all"
                   >
                     <Pause className="w-3 h-3 fill-current" />
                     <span>Pause</span>
@@ -302,7 +301,7 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
                 <button
                   type="button"
                   onClick={onResetSprint}
-                  className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors"
+                  className="p-2 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors"
                   title="Reset Sprint"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
@@ -312,7 +311,7 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
                   <button
                     type="button"
                     onClick={onToggleSound}
-                    className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                    className={`p-2 rounded-lg border transition-colors cursor-pointer ${
                       soundEnabled
                         ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
                         : 'border-neutral-200 dark:border-neutral-800 text-neutral-400'

@@ -183,7 +183,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => navigate('/documents')}
-            className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer shrink-0 shadow-2xs font-sans"
+            className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 p-2 sm:px-2.5 sm:py-1.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer shrink-0 shadow-2xs font-sans"
             title="Back to Documents Library"
             aria-label="Back to Documents Library"
           >
@@ -204,7 +204,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               className="bg-transparent font-bold text-xs sm:text-sm text-neutral-950 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/40 dark:focus:ring-brand-400/40 rounded-md px-2 py-1 w-auto min-w-[120px] max-w-[180px] md:max-w-[260px] lg:max-w-[340px] truncate transition-colors font-sans hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40"
               title="Click to rename document"
             />
-            <div className="flex items-center gap-1.5 text-xs font-mono shrink-0 pl-1">
+            <div className="flex items-center gap-1.5 text-xs font-sans shrink-0 pl-1 font-medium">
               {renderSaveIndicator(true)}
             </div>
           </div>
@@ -219,7 +219,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               setIsToolsMenuOpen(false);
               setIsOverflowMenuOpen(false);
             }}
-            className="min-h-[44px] px-3 sm:px-3.5 py-1.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-900 dark:text-neutral-100 shadow-2xs transition-all cursor-pointer flex items-center gap-2 font-sans select-none active:scale-98"
+            className="min-h-[44px] px-3 sm:px-3.5 py-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-900 dark:text-neutral-100 shadow-2xs transition-all cursor-pointer flex items-center gap-2 font-sans select-none active:scale-98"
             title="Switch Active Mode (Ctrl+M or Alt+M)"
             aria-label="Switch Active Workspace Mode"
           >
@@ -237,10 +237,10 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
           {isModeMenuOpen && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsModeMenuOpen(false)} />
-              <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-mono flex items-center justify-between">
+              <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-72 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-1 font-sans">
+                <div className="px-3 py-1.5 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 font-sans flex items-center justify-between">
                   <span>Workspace Modes</span>
-                  <kbd className="text-[9px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs font-mono">
+                  <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">
                     Alt+M
                   </kbd>
                 </div>
@@ -253,20 +253,32 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                     <button
                       key={opt.id}
                       onClick={() => handleSelectMode(opt)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between transition-colors cursor-pointer font-sans ${
+                      className={`w-full text-left p-2 rounded-lg flex items-center justify-between transition-all cursor-pointer font-sans ${
                         isSelected
-                          ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white font-semibold'
-                          : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/60 text-neutral-700 dark:text-neutral-300'
+                          ? 'bg-brand-50/80 dark:bg-brand-950/40 text-neutral-950 dark:text-white font-semibold border border-brand-200/70 dark:border-brand-800/60 shadow-2xs'
+                          : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/60 text-neutral-700 dark:text-neutral-300 border border-transparent'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-500 dark:text-neutral-400'}`} />
-                        <div>
-                          <div className="font-semibold">{opt.label}</div>
-                          <div className="text-[10px] text-neutral-500 dark:text-neutral-400 font-normal">{opt.desc}</div>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                            isSelected
+                              ? 'bg-brand-500 text-white shadow-2xs'
+                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 shrink-0" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className={`font-semibold text-xs truncate ${isSelected ? 'text-brand-900 dark:text-brand-100' : ''}`}>
+                            {opt.label}
+                          </div>
+                          <div className="text-[11px] text-neutral-500 dark:text-neutral-400 font-normal truncate">
+                            {opt.desc}
+                          </div>
                         </div>
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />}
+                      {isSelected && <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 ml-1.5" />}
                     </button>
                   );
                 })}
@@ -307,7 +319,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             {onOpenPublish && (
               <button
                 onClick={onOpenPublish}
-                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95 shrink-0"
+                className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all active:scale-95 shrink-0 font-sans"
                 title="Publish document to a shareable web link"
               >
                 <Globe className="w-3.5 h-3.5" />
@@ -323,7 +335,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                   setIsModeMenuOpen(false);
                   setIsToolsMenuOpen(false);
                 }}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs font-sans ${
                   isFilesMenuOpen
                     ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-transparent shadow-xs'
                     : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'
@@ -338,8 +350,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               {isFilesMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilesMenuOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-0.5">
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-mono">
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-0.5 font-sans">
+                    <div className="px-3 py-1.5 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 font-sans">
                       File Operations
                     </div>
 
@@ -348,7 +360,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                         setIsFilesMenuOpen(false);
                         onOpenSwitcher();
                       }}
-                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
                     >
                       <div className="flex items-center gap-2.5">
                         <FolderOpen className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -357,7 +369,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                           <div className="text-[10px] text-neutral-500">Search and open any document</div>
                         </div>
                       </div>
-                      <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">Ctrl+O</kbd>
+                      <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">Ctrl+O</kbd>
                     </button>
 
                     {onOpenLocalFolder && (
@@ -366,7 +378,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                           setIsFilesMenuOpen(false);
                           onOpenLocalFolder();
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
                       >
                         <div className="flex items-center gap-2.5">
                           <FolderTree className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -386,7 +398,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             {/* Quick Document Print & PDF Studio Trigger */}
             <button
               onClick={onOpenPdfStudio}
-              className="hidden lg:flex p-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-semibold cursor-pointer items-center justify-center shadow-2xs"
+              className="hidden lg:flex p-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-semibold cursor-pointer items-center justify-center shadow-2xs"
               title="Document Print & PDF Studio (Ctrl+P)"
             >
               <Printer className="w-3.5 h-3.5" />
@@ -417,7 +429,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             {/* Document Insights / Drawer Trigger */}
             <button
               onClick={onOpenDrawer}
-              className="p-2 rounded-xl text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer relative"
+              className="p-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer relative shadow-2xs"
               title="Document details & tags"
             >
               <Info className="w-4 h-4" />
@@ -448,7 +460,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
         </div>
 
         {/* Real-time Save status badge on mobile */}
-        <div className="shrink-0 flex items-center gap-1 font-mono text-[11px]">
+        <div className="shrink-0 flex items-center gap-1 font-sans font-medium text-[11px]">
           {renderSaveIndicator(true)}
         </div>
       </div>

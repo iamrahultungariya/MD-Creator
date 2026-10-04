@@ -8,7 +8,6 @@ export function useEditorModals() {
   const [isPdfStudioOpen, setIsPdfStudioOpen] = useState(false);
   const [isTableBuilderOpen, setIsTableBuilderOpen] = useState(false);
   const [isOutlineOpen, setIsOutlineOpen] = useState(false);
-  const [isUpdatesOpen, setIsUpdatesOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isRevisionsOpen, setIsRevisionsOpen] = useState(false);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
@@ -35,8 +34,6 @@ export function useEditorModals() {
     setIsTableBuilderOpen,
     isOutlineOpen,
     setIsOutlineOpen,
-    isUpdatesOpen,
-    setIsUpdatesOpen,
     isTemplatesOpen,
     setIsTemplatesOpen,
     isRevisionsOpen,

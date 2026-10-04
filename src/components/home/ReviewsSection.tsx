@@ -166,7 +166,7 @@ export const ReviewsSection: React.FC = () => {
   const marqueeItems = [...displayedReviews, ...displayedReviews];
 
   return (
-    <section className="py-20 sm:py-24 border-t border-neutral-100 dark:border-neutral-800/80 bg-white dark:bg-[#0E0B14] transition-colors overflow-hidden">
+    <section className="py-20 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-950 transition-colors overflow-hidden font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Header */}
@@ -185,15 +185,15 @@ export const ReviewsSection: React.FC = () => {
         {/* ── SMOOTH CONTINUOUS MARQUEE CAROUSEL ── */}
         <div className="relative w-full overflow-hidden">
           {/* Edge Blur Gradients */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-white dark:from-[#0E0B14] to-transparent z-10" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-white dark:from-[#0E0B14] to-transparent z-10" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-white dark:from-neutral-950 to-transparent z-10" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-white dark:from-neutral-950 to-transparent z-10" />
 
           {/* Marquee Track with Hover Pause */}
           <div className="animate-marquee flex gap-5 py-3">
             {marqueeItems.map((item, idx) => (
               <div
                 key={`${item.id}-${idx}`}
-                className="w-[300px] sm:w-[350px] shrink-0 p-5 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-[#13111A] flex flex-col justify-between space-y-4 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors text-left select-none"
+                className="w-[300px] sm:w-[350px] shrink-0 p-5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 flex flex-col justify-between space-y-4 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors text-left select-none font-sans"
               >
                 {/* Rating Stars & Relatable Quote */}
                 <div className="space-y-2.5">
@@ -235,7 +235,7 @@ export const ReviewsSection: React.FC = () => {
         <div className="flex justify-center pt-2">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer flex items-center gap-2"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 transition-colors cursor-pointer flex items-center gap-2 font-sans shadow-2xs"
           >
             <MessageSquarePlus className="w-3.5 h-3.5" />
             <span>{myReview ? 'Edit Your Review' : 'Write a Review'}</span>

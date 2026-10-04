@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './stores/useAuthStore';
@@ -9,17 +9,10 @@ import { useCommandPalette } from './hooks/useCommandPalette';
 import { PageTransition } from './components/common/PageTransition';
 
 // Lazy-loaded route chunks
-const WhatsNewToast = React.lazy(() =>
-  import('./components/common/WhatsNewToast').then((m) => ({ default: m.WhatsNewToast }))
-);
-const UpdateChangelogModal = React.lazy(() =>
-  import('./components/common/UpdateChangelogModal').then((m) => ({ default: m.UpdateChangelogModal }))
-);
 const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
 const EditorPage = React.lazy(() => import('./pages/EditorPage').then((m) => ({ default: m.EditorPage })));
 const DocumentsPage = React.lazy(() => import('./pages/DocumentsPage').then((m) => ({ default: m.DocumentsPage })));
 const AuthPage = React.lazy(() => import('./pages/AuthPage').then((m) => ({ default: m.AuthPage })));
-const UpdatesPage = React.lazy(() => import('./pages/UpdatesPage').then((m) => ({ default: m.UpdatesPage })));
 const FeedbackPage = React.lazy(() => import('./pages/FeedbackPage').then((m) => ({ default: m.FeedbackPage })));
 const PublicDocumentPage = React.lazy(() => import('./pages/PublicDocumentPage').then((m) => ({ default: m.PublicDocumentPage })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
@@ -68,13 +61,14 @@ const AppRoutes: React.FC = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader />}><HomePage /></Suspense></PageTransition>} />
         <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense></PageTransition>} />
-        <Route path="/updates" element={<PageTransition><Suspense fallback={<PageLoader />}><UpdatesPage /></Suspense></PageTransition>} />
         <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense></PageTransition>} />
         <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></PageTransition>} />
         <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></PageTransition>} />
         <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
         <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
         {/* Graceful redirects for pruned pages */}
+        <Route path="/updates" element={<Navigate to="/" replace />} />
+        <Route path="/changelog" element={<Navigate to="/" replace />} />
         <Route path="/about" element={<Navigate to="/" replace />} />
         <Route path="/pricing" element={<Navigate to="/" replace />} />
         <Route path="/blog" element={<Navigate to="/" replace />} />
@@ -91,7 +85,6 @@ export const App: React.FC = () => {
   const { isOpen: isConfirmOpen } = useConfirmStore();
   const { isOpen: isToolbarSettingsOpen } = useToolbarSettingsStore();
   const cmd = useCommandPalette();
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const { isRecording, isStudioOpen, recordedClip, closeStudio } = useRecorderStore();
   const { isOpen: isPreferencesOpen, openPreferences, togglePreferences } = usePreferencesStore();
 
@@ -173,13 +166,6 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      {/* 0.9.2 Beta What's New Toast & Modal */}
-      <Suspense fallback={null}>
-        <WhatsNewToast onOpenModal={() => setIsUpdateModalOpen(true)} />
-        {isUpdateModalOpen && (
-          <UpdateChangelogModal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} />
-        )}
-      </Suspense>
 
       {/* Floating Screen Recording HUD */}
       {isRecording && (

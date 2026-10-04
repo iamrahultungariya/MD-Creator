@@ -52,33 +52,33 @@ export const GlobalConfirmDialog: React.FC = () => {
     switch (icon) {
       case 'trash':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 border border-red-200 dark:border-red-900/50 shadow-inner">
+          <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 border border-red-200 dark:border-red-900/50 shadow-2xs">
             <Trash2 className="w-5 h-5" />
           </div>
         );
       case 'logout':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-200 dark:border-orange-900/50 shadow-inner">
+          <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0 border border-orange-200 dark:border-orange-900/50 shadow-2xs">
             <LogOut className="w-5 h-5" />
           </div>
         );
       case 'clear':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-900/50 shadow-inner">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-900/50 shadow-2xs">
             <FileX className="w-5 h-5" />
           </div>
         );
       case 'warning':
       case 'alert':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-900/50 shadow-inner">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-900/50 shadow-2xs">
             <AlertTriangle className="w-5 h-5" />
           </div>
         );
       case 'info':
       default:
         return (
-          <div className="w-11 h-11 rounded-2xl bg-brand-100 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-900/50 shadow-inner">
+          <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-200 dark:border-brand-900/50 shadow-2xs">
             <Info className="w-5 h-5" />
           </div>
         );
@@ -89,13 +89,13 @@ export const GlobalConfirmDialog: React.FC = () => {
     if (options.confirmButtonClass) return options.confirmButtonClass;
     switch (variant) {
       case 'danger':
-        return 'bg-red-600 hover:bg-red-700 text-white shadow-sm shadow-red-600/20 active:scale-98';
+        return 'bg-red-600 hover:bg-red-700 text-white shadow-2xs active:scale-98';
       case 'warning':
-        return 'bg-amber-600 hover:bg-amber-700 text-white shadow-sm shadow-amber-600/20 active:scale-98';
+        return 'bg-amber-600 hover:bg-amber-700 text-white shadow-2xs active:scale-98';
       case 'info':
       case 'primary':
       default:
-        return 'bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 active:scale-98';
+        return 'bg-brand-600 hover:bg-brand-700 text-white shadow-2xs active:scale-98';
     }
   };
 
@@ -103,7 +103,7 @@ export const GlobalConfirmDialog: React.FC = () => {
     <AnimatePresence>
       {isOpen && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto font-sans"
           role="dialog"
           aria-modal="true"
         >
@@ -119,23 +119,23 @@ export const GlobalConfirmDialog: React.FC = () => {
 
           {/* Dialog Container */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 10 }}
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 6 }}
+            exit={{ opacity: 0, scale: 0.96, y: 4 }}
             transition={{ type: 'spring', damping: 26, stiffness: 380 }}
-            className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden p-6 z-10"
+            className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden p-6 z-10 font-sans"
           >
             {/* Close button in top right */}
             <button
               onClick={handleCancel}
-              className="absolute top-5 right-5 p-1.5 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Content Area */}
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3.5">
               {renderIcon(options.variant, options.icon)}
 
               <div className="flex-1 min-w-0 pr-4">
@@ -147,7 +147,7 @@ export const GlobalConfirmDialog: React.FC = () => {
                 </div>
 
                 {options.description && (
-                  <div className="mt-2.5 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-start gap-1.5">
+                  <div className="mt-2.5 p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-start gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-neutral-400" />
                     <span>{options.description}</span>
                   </div>
@@ -161,7 +161,7 @@ export const GlobalConfirmDialog: React.FC = () => {
                 ref={cancelBtnRef}
                 type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all cursor-pointer border border-neutral-200 dark:border-neutral-700"
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all cursor-pointer border border-neutral-200 dark:border-neutral-700 shadow-2xs"
               >
                 {options.cancelText || 'Cancel'}
               </button>
@@ -170,7 +170,7 @@ export const GlobalConfirmDialog: React.FC = () => {
                 ref={confirmBtnRef}
                 type="button"
                 onClick={handleConfirm}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${getConfirmButtonClasses(options.variant)}`}
+                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${getConfirmButtonClasses(options.variant)}`}
               >
                 {options.confirmText || 'Confirm'}
               </button>

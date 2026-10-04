@@ -18,6 +18,7 @@ import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
 import { renderWithRichIcons } from '../utils/richIcons';
 import { supabase } from '../lib/supabase';
+import { APP_VERSION_LABEL } from '../config/version';
 
 type FeedbackCategory = 'bug' | 'feature' | 'praise' | 'question';
 type Sentiment = 'terrible' | 'bad' | 'okay' | 'good' | 'amazing';
@@ -109,7 +110,7 @@ export const FeedbackPage: React.FC = () => {
     return {
       userAgent: navigator.userAgent,
       screenResolution: `${window.innerWidth}x${window.innerHeight}`,
-      appVersion: 'v0.9.1 Beta',
+      appVersion: APP_VERSION_LABEL,
       language: navigator.language,
       platform: navigator.platform
     };
@@ -197,8 +198,8 @@ export const FeedbackPage: React.FC = () => {
 
         {/* Hero Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] border border-[#8257F5]/20 text-xs font-semibold mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-[#8257F5]" />
             <span>Direct Maintainer Channel</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
@@ -210,15 +211,15 @@ export const FeedbackPage: React.FC = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl p-6 sm:p-10 shadow-xs">
+        <div className="bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl p-5 sm:p-8 shadow-xs">
           {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-7">
               {/* Category Selection */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                   1. What would you like to share?
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {CATEGORIES.map((cat) => {
                     const Icon = cat.icon;
                     const isSelected = category === cat.id;
@@ -226,13 +227,13 @@ export const FeedbackPage: React.FC = () => {
                       <div
                         key={cat.id}
                         onClick={() => setCategory(cat.id)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3.5 ${
+                        className={`p-3.5 rounded-lg border cursor-pointer transition-all flex items-start gap-3 ${
                           isSelected
-                            ? 'border-brand-600 bg-brand-50/50 dark:bg-brand-950/20 shadow-xs'
+                            ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 shadow-xs ring-1 ring-[#8257F5]'
                             : 'border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900/60'
                         }`}
                       >
-                        <div className={`p-2 rounded-xl border shrink-0 ${cat.badgeColor}`}>
+                        <div className={`p-2 rounded-md border shrink-0 ${cat.badgeColor}`}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
@@ -254,7 +255,7 @@ export const FeedbackPage: React.FC = () => {
                 <label className="block text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">
                   2. How are you feeling about MD Writer right now?
                 </label>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   {SENTIMENTS.map((s) => {
                     const isSelected = sentiment === s.id;
                     return (
@@ -262,9 +263,9 @@ export const FeedbackPage: React.FC = () => {
                         key={s.id}
                         type="button"
                         onClick={() => setSentiment(s.id)}
-                        className={`flex-1 min-w-[80px] py-2.5 px-3 rounded-2xl border transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                        className={`flex-1 min-w-[76px] py-2 px-2.5 rounded-lg border transition-all flex flex-col items-center gap-1 cursor-pointer ${
                           isSelected
-                            ? 'border-neutral-950 dark:border-white bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 shadow-md scale-105'
+                            ? 'border-[#8257F5] bg-[#8257F5] text-white shadow-xs'
                             : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
                         }`}
                       >
@@ -292,7 +293,7 @@ export const FeedbackPage: React.FC = () => {
                     placeholder="Subject / Summary (e.g., 'Add syntax highlighting for Rust' or 'Table formatting bug')"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 font-medium"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#8257F5]/20 focus:border-[#8257F5] font-medium"
                   />
                 </div>
 
@@ -302,7 +303,7 @@ export const FeedbackPage: React.FC = () => {
                     placeholder="Tell us everything. What happened? What would you like to see? Markdown is welcome."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="w-full p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-y leading-relaxed"
+                    className="w-full p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#8257F5]/20 focus:border-[#8257F5] resize-y leading-relaxed"
                   />
                 </div>
 
@@ -317,7 +318,7 @@ export const FeedbackPage: React.FC = () => {
                       placeholder="Alex"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8257F5]/20 focus:border-[#8257F5]"
                     />
                   </div>
 
@@ -330,7 +331,7 @@ export const FeedbackPage: React.FC = () => {
                       placeholder="alex@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8257F5]/20 focus:border-[#8257F5]"
                     />
                   </div>
 
@@ -341,7 +342,7 @@ export const FeedbackPage: React.FC = () => {
                     <select
                       value={priority}
                       onChange={(e) => setPriority(e.target.value as Priority)}
-                      className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                      className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8257F5]/20 focus:border-[#8257F5]"
                     >
                       <option value="low">Low (Nice to have)</option>
                       <option value="normal">Normal (Standard)</option>
@@ -358,14 +359,14 @@ export const FeedbackPage: React.FC = () => {
                       type="checkbox"
                       checked={includeSystemInfo}
                       onChange={(e) => setIncludeSystemInfo(e.target.checked)}
-                      className="w-4 h-4 rounded text-brand-600 focus:ring-0 cursor-pointer"
+                      className="w-4 h-4 rounded text-[#8257F5] focus:ring-0 cursor-pointer"
                     />
                     <div className="flex items-center gap-1.5">
                       <Monitor className="w-3.5 h-3.5 text-neutral-400" />
                       <span>Include browser & platform specs for debugging</span>
                     </div>
                   </label>
-                  <span className="text-[10px] text-neutral-400">MD Writer v0.9.1 Beta</span>
+                  <span className="text-[10px] text-neutral-400">MD Writer {APP_VERSION_LABEL}</span>
                 </div>
               </div>
 
@@ -375,7 +376,7 @@ export const FeedbackPage: React.FC = () => {
                   <label className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                     4. Product Demand & Pricing (Optional)
                   </label>
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono font-semibold">Roadmap Input</span>
+                  <span className="text-[10px] text-[#8257F5] dark:text-[#a07cf8] font-mono font-semibold">Roadmap Input</span>
                 </div>
 
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-normal">
@@ -392,14 +393,14 @@ export const FeedbackPage: React.FC = () => {
                       key={opt.id}
                       type="button"
                       onClick={() => setWillingnessToPay(willingnessToPay === opt.id ? '' : opt.id)}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
                         willingnessToPay === opt.id
-                          ? 'border-brand-600 dark:border-brand-400 bg-brand-50/90 dark:bg-brand-950/70 text-brand-950 dark:text-brand-100 font-bold shadow-xs ring-2 ring-brand-500/20'
+                          ? 'border-[#8257F5] bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] font-bold shadow-xs ring-1 ring-[#8257F5]'
                           : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
                       }`}
                     >
                       <div className="font-bold text-xs">{opt.label}</div>
-                      <div className={`text-[10.5px] mt-0.5 ${willingnessToPay === opt.id ? 'text-brand-700 dark:text-brand-300' : 'text-neutral-500 dark:text-neutral-400'}`}>{opt.desc}</div>
+                      <div className={`text-[10.5px] mt-0.5 ${willingnessToPay === opt.id ? 'text-[#8257F5] dark:text-[#a07cf8]' : 'text-neutral-500 dark:text-neutral-400'}`}>{opt.desc}</div>
                     </button>
                   ))}
                 </div>
@@ -410,13 +411,13 @@ export const FeedbackPage: React.FC = () => {
                     placeholder="Which specific feature would you pay for most? (e.g., Live Team Sync, PDF Custom Themes, Advanced Outlines)"
                     value={monetizationFeature}
                     onChange={(e) => setMonetizationFeature(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#8257F5]/20 focus:border-[#8257F5]"
                   />
                 </div>
               </div>
 
               {errorMessage && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs border border-rose-200 dark:border-rose-900">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs border border-rose-200 dark:border-rose-900">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
@@ -427,7 +428,7 @@ export const FeedbackPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/editor')}
-                  className="px-5 py-2.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -435,7 +436,7 @@ export const FeedbackPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white text-xs font-bold shadow-xs hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -456,14 +457,14 @@ export const FeedbackPage: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-12 space-y-4"
+              className="text-center py-10 space-y-4"
             >
-              <div className="w-16 h-16 rounded-3xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-md">
-                <CheckCircle2 className="w-8 h-8" />
+              <div className="w-14 h-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-xs">
+                <CheckCircle2 className="w-7 h-7" />
               </div>
 
               <div>
-                <h2 className="text-2xl font-black text-neutral-900 dark:text-white">
+                <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white">
                   Thank You for Your Feedback! {renderWithRichIcons('🙌✨')}
                 </h2>
                 <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
@@ -471,11 +472,11 @@ export const FeedbackPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="pt-6 flex flex-wrap items-center justify-center gap-3">
+              <div className="pt-5 flex flex-wrap items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="px-5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-semibold cursor-pointer transition-colors"
+                  className="px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-semibold cursor-pointer transition-colors"
                 >
                   Submit Another Note
                 </button>
@@ -483,7 +484,7 @@ export const FeedbackPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/editor')}
-                  className="px-6 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold shadow-md transition-all cursor-pointer"
+                  className="px-5 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
                 >
                   Open Editor
                 </button>

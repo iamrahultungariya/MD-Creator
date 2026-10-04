@@ -138,18 +138,18 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 md:p-6 animate-in fade-in duration-200">
-      <div className="w-full h-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-neutral-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-2 md:p-6 animate-in fade-in duration-200 font-sans">
+      <div className="w-full h-full max-w-7xl bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl flex flex-col overflow-hidden text-neutral-100 font-sans">
         {/* Header Bar */}
         <div className="h-14 border-b border-neutral-800 px-5 flex items-center justify-between bg-neutral-950 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/20">
+            <div className="p-2 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-2xs shadow-brand-500/20">
               <Film className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm text-white">Social Clip Studio</span>
-                <span className="px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 font-mono text-[10px] font-semibold flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-md bg-brand-500/10 border border-brand-500/30 text-brand-300 font-mono text-[10px] font-semibold flex items-center gap-1">
                   <span>Recordly Engine</span>
                 </span>
               </div>
@@ -160,14 +160,14 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
           </div>
 
           {/* Mode Switcher Tabs (if both recorded video and text are present) */}
-          <div className="hidden sm:flex items-center p-1 rounded-xl bg-neutral-900 border border-neutral-800 text-xs">
+          <div className="hidden sm:flex items-center p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-xs">
             <button
               type="button"
               onClick={() => setConfig((c) => ({ ...c, sourceType: 'screen-recording' }))}
               disabled={!recordedClip}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all ${
                 config.sourceType === 'screen-recording'
-                  ? 'bg-brand-600 text-white shadow-xs'
+                  ? 'bg-brand-600 text-white shadow-2xs'
                   : recordedClip
                   ? 'text-neutral-400 hover:text-white cursor-pointer'
                   : 'text-neutral-600 cursor-not-allowed'
@@ -179,9 +179,9 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
             <button
               type="button"
               onClick={() => setConfig((c) => ({ ...c, sourceType: 'ghost-typer' }))}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
                 config.sourceType === 'ghost-typer'
-                  ? 'bg-brand-600 text-white shadow-xs'
+                  ? 'bg-brand-600 text-white shadow-2xs'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -196,7 +196,7 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadRaw}
-                className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-xl border border-neutral-700 hover:bg-neutral-800 text-neutral-200 text-xs font-medium transition-colors cursor-pointer"
+                className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-200 text-xs font-medium transition-colors cursor-pointer"
                 title="Download raw capture without re-encoding"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -212,7 +212,7 @@ export const ClipStudioModal: React.FC<ClipStudioModalProps> = ({
                 }
                 onClose();
               }}
-              className="p-2 rounded-xl hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
               title="Close (Esc)"
             >
               <X className="w-5 h-5" />

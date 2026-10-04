@@ -40,27 +40,27 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="relative w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-2xl text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl p-6 shadow-2xl text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
+          className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {submitSuccess ? (
-          <div className="py-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+          <div className="py-8 text-center space-y-3 font-sans">
+            <div className="w-11 h-11 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-2xs">
               <CheckCircle className="w-6 h-6" />
             </div>
             <h3 className="text-lg font-bold text-neutral-950 dark:text-white">
@@ -71,9 +71,9 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
             </p>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4 font-sans">
             <div>
-              <h3 className="text-lg font-black text-neutral-950 dark:text-white tracking-tight">
+              <h3 className="text-base font-bold text-neutral-950 dark:text-white tracking-tight">
                 {isEditing ? 'Edit Your Review' : 'Write a Review'}
               </h3>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
@@ -120,7 +120,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                   placeholder="e.g. Alex Morgan"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                 />
               </div>
               <div>
@@ -132,7 +132,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                   placeholder="e.g. Technical Writer"
                   value={authorRole}
                   onChange={(e) => setAuthorRole(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                 />
               </div>
             </div>
@@ -149,7 +149,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
                 placeholder="Tell us what you love about MD Writer..."
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
-                className="w-full p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white resize-y"
+                className="w-full p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 resize-y"
               />
               <span className="text-[10px] text-neutral-400 block mt-1">Minimum 10 characters</span>
             </div>
@@ -158,7 +158,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold transition-all shadow cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
             >
               {isSubmitting
                 ? 'Saving...'

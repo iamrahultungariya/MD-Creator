@@ -116,7 +116,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="fixed inset-0 z-50 overflow-hidden font-sans">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -133,10 +133,10 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="absolute inset-y-0 right-0 max-w-sm w-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col z-10 select-none"
+            className="absolute inset-y-0 right-0 max-w-sm w-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col z-10 select-none font-sans"
           >
             {/* Drawer Header */}
-            <div className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
+            <div className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-50/50 dark:bg-neutral-950/40">
               <div>
                 <h3 className="font-bold text-sm text-neutral-900 dark:text-white">
                   Document Sidebar
@@ -168,7 +168,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                 <ListTree className="w-3.5 h-3.5" />
                 <span>Outline</span>
                 {headings.length > 0 && (
-                  <span className={`text-[10px] font-mono px-1 rounded ${
+                  <span className={`text-[10px] font-mono px-1 rounded-md ${
                     activeTab === 'outline' ? 'bg-brand-700 text-brand-100' : 'bg-neutral-200 dark:bg-neutral-800'
                   }`}>
                     {headings.length}
@@ -210,7 +210,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                 <div className="space-y-2">
                   {headings.length === 0 ? (
                     <div className="py-16 flex flex-col items-center justify-center text-center p-6 text-neutral-400">
-                      <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-3">
+                      <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-3">
                         <BookOpen className="w-5 h-5 text-neutral-400" />
                       </div>
                       <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-300 mb-1">
@@ -232,7 +232,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                               onSelectHeading?.(h);
                               onClose();
                             }}
-                            className="w-full text-left p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 flex items-center justify-between group transition-colors cursor-pointer"
+                            className="w-full text-left p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/80 flex items-center justify-between group transition-colors cursor-pointer"
                             style={{ paddingLeft: `${Math.max(8, 8 + indentPx)}px` }}
                           >
                             <div className="flex items-center gap-2 min-w-0 pr-2">
@@ -259,15 +259,15 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                 <div className="space-y-6">
                   {/* Grid of Telemetry */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
+                    <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
                       <span className="text-lg font-black text-neutral-900 dark:text-white block">{wordCount}</span>
                       <span className="text-[10px] text-neutral-500 uppercase font-semibold">Words</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
+                    <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
                       <span className="text-lg font-black text-neutral-900 dark:text-white block">{charCount}</span>
                       <span className="text-[10px] text-neutral-500 uppercase font-semibold">Chars</span>
                     </div>
-                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
+                    <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
                       <span className="text-lg font-black text-neutral-900 dark:text-white block">{lineCount}</span>
                       <span className="text-[10px] text-neutral-500 uppercase font-semibold">Lines</span>
                     </div>
@@ -275,7 +275,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
 
                   {/* Reading / Speaking Time & Readability */}
                   <div className="space-y-2.5">
-                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-brand-500" />
                         <span className="text-neutral-600 dark:text-neutral-300 font-medium">Silent Reading Time</span>
@@ -283,7 +283,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                       <span className="font-bold text-neutral-900 dark:text-white">~{readingTimeMinutes} min</span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-indigo-500" />
                         <span className="text-neutral-600 dark:text-neutral-300 font-medium">Speaking / Speech Time</span>
@@ -291,7 +291,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                       <span className="font-bold text-neutral-900 dark:text-white">~{speakingTimeMinutes} min</span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <BarChart2 className="w-4 h-4 text-emerald-500" />
                         <span className="text-neutral-600 dark:text-neutral-300 font-medium">Readability Grade</span>
@@ -320,7 +320,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                       {tags.map((t) => (
                         <span
                           key={t}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700"
                         >
                           <span>#{t}</span>
                           <button
@@ -340,12 +340,12 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
                         placeholder="Add tag (e.g. notes, blog)..."
-                        className="flex-1 px-3 py-1.5 text-xs bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-hidden focus:border-brand-500 text-neutral-900 dark:text-neutral-100"
+                        className="flex-1 px-3 py-1.5 text-xs bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg focus:outline-hidden focus:border-brand-500 text-neutral-900 dark:text-neutral-100"
                       />
                       <button
                         type="submit"
                         disabled={!newTag.trim()}
-                        className="px-3 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-bold disabled:opacity-40 cursor-pointer"
+                        className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold disabled:opacity-40 cursor-pointer transition-colors shadow-2xs"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -394,7 +394,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                           onClearContent();
                           onClose();
                         }}
-                        className="w-full py-2 px-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-2 px-3 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <FileX className="w-3.5 h-3.5" />
                         <span>Clear Editor Content</span>
@@ -408,7 +408,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                           onDeleteDocument();
                           onClose();
                         }}
-                        className="w-full py-2 px-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-2 px-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-400 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Delete Document</span>

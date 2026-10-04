@@ -54,7 +54,7 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
   }, [isMoreTagsOpen]);
 
   return (
-    <div className="p-2.5 sm:p-3 rounded-2xl bg-neutral-50/70 dark:bg-[#121217] border border-neutral-200/80 dark:border-neutral-800 mb-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+    <div className="p-2.5 sm:p-3 rounded-xl bg-neutral-50/70 dark:bg-[#121217] border border-neutral-200/80 dark:border-neutral-800 mb-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between font-sans">
       {/* Search Bar with '/' Shortcut Hint */}
       <div className="relative w-full sm:w-80">
         <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -64,10 +64,10 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Filter notes by title or content..."
-          className="w-full pl-9 pr-8 py-1.5 rounded-xl border border-neutral-200/80 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-900 dark:focus:ring-white transition-all"
+          className="w-full pl-9 pr-8 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-sans text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
         />
         {!search && (
-          <kbd className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-neutral-400 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+          <kbd className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-sans font-semibold text-neutral-400 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
             /
           </kbd>
         )}
@@ -84,9 +84,9 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
                 setActiveTag(tag);
                 setIsMoreTagsOpen(false);
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer font-sans ${
                 activeTag === tag
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs font-bold'
+                  ? 'bg-brand-600 text-white shadow-2xs font-bold border border-brand-600'
                   : 'bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
               }`}
             >
@@ -99,9 +99,9 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsMoreTagsOpen((prev) => !prev)}
-                className={`px-2 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1 font-sans ${
                   allTags.slice(5).includes(activeTag)
-                    ? 'bg-brand-600 text-white shadow-2xs'
+                    ? 'bg-brand-600 text-white shadow-2xs border border-brand-600'
                     : isMoreTagsOpen
                     ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white'
                     : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-800'
@@ -118,8 +118,8 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
 
               {/* Overflow Tags Dropdown */}
               {isMoreTagsOpen && (
-                <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-1.5 z-40 w-52 max-h-60 overflow-y-auto p-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-2 py-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider border-b border-neutral-100 dark:border-neutral-800 mb-1">
+                <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-1.5 z-40 w-52 max-h-60 overflow-y-auto p-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl animate-in fade-in zoom-in-95 duration-150 font-sans">
+                  <div className="px-2 py-1 text-[11px] font-semibold text-neutral-400 font-sans border-b border-neutral-100 dark:border-neutral-800 mb-1">
                     More Tags ({allTags.length - 5})
                   </div>
                   <div className="flex flex-col gap-0.5">
@@ -131,7 +131,7 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
                           setActiveTag(tag);
                           setIsMoreTagsOpen(false);
                         }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors cursor-pointer ${
+                        className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center justify-between transition-colors cursor-pointer font-sans ${
                           activeTag === tag
                             ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold'
                             : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'

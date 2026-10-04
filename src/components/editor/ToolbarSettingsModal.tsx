@@ -60,28 +60,28 @@ export const ToolbarSettingsModal: React.FC = () => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
       <div 
-        className="w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
       >
         {/* Header */}
-        <div className="px-5 sm:px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
+        <div className="px-5 sm:px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-50/50 dark:bg-neutral-950/40">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200">
+            <div className="w-9 h-9 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-2xs">
               <SlidersHorizontal className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white font-sans">
+              <h2 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white">
                 Floating Toolbar Settings
               </h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 Drag to reorder and choose tools in your cursor dock
               </p>
             </div>
           </div>
           <button
             onClick={closeSettings}
-            className="p-2 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />
@@ -89,12 +89,12 @@ export const ToolbarSettingsModal: React.FC = () => {
         </div>
 
         {/* Live Preview Dock Pill with Drag-and-Drop */}
-        <div className="p-3.5 sm:p-4 bg-neutral-50 dark:bg-neutral-950/50 border-b border-neutral-100 dark:border-neutral-800 flex flex-col items-center justify-center gap-2 shrink-0">
-          <div className="flex items-center justify-between w-full px-2 text-[10px] font-sans font-bold uppercase tracking-wider text-neutral-400">
+        <div className="p-3.5 sm:p-4 bg-neutral-50/60 dark:bg-neutral-950/50 border-b border-neutral-100 dark:border-neutral-800 flex flex-col items-center justify-center gap-2 shrink-0">
+          <div className="flex items-center justify-between w-full px-2 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
             <span>Dock Preview</span>
             <span className="text-[10px] lowercase font-normal text-neutral-400 italic">drag icons to reorder</span>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-white/95 dark:bg-[#18181c]/95 text-neutral-700 dark:text-neutral-200 border border-neutral-200/90 dark:border-neutral-800/90 shadow-md max-w-full overflow-x-auto select-none">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 dark:bg-[#18181c]/95 text-neutral-700 dark:text-neutral-200 border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xs max-w-full overflow-x-auto select-none">
             {enabledActions.map((actionId, idx) => (
               <div 
                 key={actionId}
@@ -103,7 +103,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
-                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing transition-all ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing transition-all ${
                   draggedIndex === idx 
                     ? 'opacity-40 scale-90 ring-2 ring-brand-500' 
                     : dragOverIndex === idx 
@@ -132,7 +132,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                 onDragOver={(e) => isEnabled && handleDragOver(e, activeIndex)}
                 onDrop={(e) => isEnabled && handleDrop(e, activeIndex)}
                 onDragEnd={handleDragEnd}
-                className={`p-2.5 sm:p-3 rounded-2xl border transition-all flex items-center justify-between gap-2.5 ${
+                className={`p-2.5 sm:p-3 rounded-lg border transition-all flex items-center justify-between gap-2.5 ${
                   isEnabled
                     ? draggedIndex === activeIndex
                       ? 'border-brand-400 bg-brand-50/40 dark:bg-brand-950/20 opacity-60 scale-98'
@@ -156,7 +156,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                   )}
 
                   <div 
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 border ${
                       isEnabled
                         ? 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white'
                         : 'border-neutral-200/50 dark:border-neutral-800 text-neutral-400'
@@ -171,7 +171,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                         {action.label}
                       </span>
                       {action.shortcut && (
-                        <span className="text-[10px] font-sans px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-medium">
+                        <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 font-medium">
                           {action.shortcut}
                         </span>
                       )}
@@ -193,7 +193,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                           }
                         }}
                         disabled={activeIndex === 0}
-                        className="p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                        className="p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
                         title="Move Left"
                       >
                         <ArrowUp className="w-3.5 h-3.5 -rotate-90" />
@@ -205,7 +205,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                           }
                         }}
                         disabled={activeIndex === enabledActions.length - 1}
-                        className="p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
+                        className="p-1 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
                         title="Move Right"
                       >
                         <ArrowDown className="w-3.5 h-3.5 -rotate-90" />
@@ -216,10 +216,10 @@ export const ToolbarSettingsModal: React.FC = () => {
                   {/* Toggle Button */}
                   <button
                     onClick={() => toggleAction(action.id)}
-                    className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer font-sans ${
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer font-sans ${
                       isEnabled
-                        ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
-                        : 'border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                        ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-2xs'
+                        : 'border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                     }`}
                   >
                     {isEnabled ? (
@@ -238,7 +238,7 @@ export const ToolbarSettingsModal: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 flex items-center justify-between shrink-0">
+        <div className="px-6 py-3.5 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 flex items-center justify-between shrink-0 font-sans">
           <div className="flex items-center gap-3">
             <button
               onClick={resetDefaults}
@@ -261,7 +261,7 @@ export const ToolbarSettingsModal: React.FC = () => {
 
           <button
             onClick={closeSettings}
-            className="px-4 py-2 rounded-xl bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+            className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
           >
             Save &amp; Close
           </button>

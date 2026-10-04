@@ -91,13 +91,13 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs select-none font-sans">
       <div 
         className="fixed inset-0" 
         onClick={onClose} 
       />
 
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#121216] rounded-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden z-10 flex flex-col max-h-[85vh]">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden z-10 flex flex-col max-h-[85vh] font-sans">
         {/* Header */}
         <div className="px-6 py-4 border-b border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/40">
           <div>
@@ -111,7 +111,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer flex items-center justify-center"
           >
             <X className="w-4 h-4" />
           </button>
@@ -126,7 +126,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
               placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8.5 pr-3 py-1.5 text-xs rounded-xl bg-neutral-100/80 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="w-full pl-8.5 pr-3 py-1.5 text-xs rounded-lg bg-neutral-100/80 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
             />
           </div>
 
@@ -137,7 +137,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer shrink-0 ${
                   selectedCategory === cat
-                    ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-semibold'
+                    ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-semibold shadow-2xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                 }`}
               >
@@ -159,15 +159,15 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <div
                   key={template.id}
                   onClick={() => setSelectedTemplateId(template.id)}
-                  className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
+                  className={`p-3 rounded-lg border text-left cursor-pointer transition-all ${
                     isSelected
-                      ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/20 shadow-xs'
+                      ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/20 shadow-2xs'
                       : 'border-neutral-200/80 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-900/60'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                      <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
                         isEngineering 
                           ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400' 
                           : 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400'
@@ -178,7 +178,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                         {template.title.replace(/\.md$/i, '')}
                       </span>
                     </div>
-                    <span className="px-1.5 py-0.5 rounded text-[9.5px] font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-md text-[9.5px] font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 shrink-0">
                       {template.category}
                     </span>
                   </div>
@@ -197,7 +197,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
           </div>
 
           {/* Right Column: Template Preview & Action */}
-          <div className="md:col-span-7 flex flex-col p-5 overflow-hidden bg-neutral-50/40 dark:bg-[#0c0c0f]">
+          <div className="md:col-span-7 flex flex-col p-5 overflow-hidden bg-neutral-50/40 dark:bg-neutral-950">
             {activeTemplate ? (
               <>
                 <div className="flex items-center justify-between pb-3 border-b border-neutral-200/60 dark:border-neutral-800/80">
@@ -212,7 +212,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   <button
                     onClick={() => handleApplyTemplate(activeTemplate)}
                     disabled={isCreating}
-                    className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 font-semibold text-xs transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {isCreating ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -225,7 +225,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto mt-3 p-3.5 rounded-xl border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 font-mono text-[11px] text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap select-text">
+                <div className="flex-1 overflow-y-auto mt-3 p-3.5 rounded-lg border border-neutral-200/70 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 font-mono text-[11px] text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap select-text">
                   {activeTemplate.content.slice(0, 1800)}
                   {activeTemplate.content.length > 1800 && '\n\n... [Full blueprint includes complete structure & diagrams]'}
                 </div>
@@ -241,11 +241,11 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+              className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans"
             >
-              <div className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 space-y-4 text-left">
+              <div className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl p-6 space-y-4 text-left font-sans">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20">
                     <Zap className="w-4 h-4" />
                   </div>
                   <div>
@@ -263,21 +263,21 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <div className="space-y-2 pt-2">
                   <button
                     onClick={() => handleConfirmAction('insert')}
-                    className="w-full py-2.5 px-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer flex items-center justify-between"
+                    className="w-full py-2 px-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer flex items-center justify-between"
                   >
                     <span>Append at Cursor Position</span>
                     <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
                   </button>
                   <button
                     onClick={() => handleConfirmAction('replace')}
-                    className="w-full py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs flex items-center justify-between"
+                    className="w-full py-2 px-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition-colors cursor-pointer shadow-2xs flex items-center justify-between"
                   >
                     <span>Replace All Content</span>
                     <Check className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setActiveTemplateForAction(null)}
-                    className="w-full py-2 text-xs font-medium text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer"
+                    className="w-full py-1.5 text-xs font-medium text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>

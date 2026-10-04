@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Database, Download, CheckCircle2 } from 'lucide-react';
 import { usePreferencesStore } from '../../../stores/usePreferencesStore';
 import { db } from '../../../db';
+import { StorageLimitRing } from '../StorageLimitRing';
+import { APP_VERSION } from '../../../config/version';
 
 interface PreferencesStorageTabProps {
   docCount: number;
@@ -20,7 +22,7 @@ export const PreferencesStorageTab: React.FC<PreferencesStorageTabProps> = ({ do
       const allDocs = await db.documents.toArray();
       const exportData = {
         app: 'MD Writer',
-        version: '0.9.3.0',
+        version: APP_VERSION,
         exportedAt: new Date().toISOString(),
         documentsCount: allDocs.length,
         documents: allDocs,
@@ -49,6 +51,9 @@ export const PreferencesStorageTab: React.FC<PreferencesStorageTabProps> = ({ do
 
   return (
     <div className="space-y-3.5">
+      {/* 300 MB Workspace Storage Limit Ring Card */}
+      <StorageLimitRing variant="card" />
+
       {/* Local Storage Card */}
       <div className="p-4 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2.5 text-xs">
         <div className="flex items-center justify-between">

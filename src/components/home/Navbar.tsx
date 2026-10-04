@@ -5,7 +5,6 @@ import {
   Moon, 
   FolderOpen, 
   ChevronDown, 
-  Sparkles, 
   BookOpen, 
   MessageSquare, 
   Sliders, 
@@ -26,7 +25,6 @@ import { usePreferencesStore } from '../../stores/usePreferencesStore';
 interface NavbarProps {
   onOpenTemplates?: () => void;
   onOpenFeatures?: () => void;
-  onOpenUpdates?: () => void;
 }
 
 interface ResourceItem {
@@ -40,24 +38,12 @@ interface ResourceItem {
   action: (handlers: {
     navigate: (path: string) => void;
     onOpenTemplates?: () => void;
-    onOpenUpdates?: () => void;
     handleNavClick: (id: string) => void;
   }) => void;
   path?: string;
 }
 
 const RESOURCE_ITEMS: ResourceItem[] = [
-  {
-    id: 'updates',
-    title: 'Changelog & Updates',
-    desc: 'Milestones & architectural evolution',
-    badge: APP_VERSION_LABEL,
-    icon: Sparkles,
-    iconColor: 'text-brand-600 dark:text-brand-400',
-    iconBg: 'bg-brand-50 dark:bg-brand-950/60 border-brand-200/40 dark:border-brand-900/40',
-    path: '/updates',
-    action: ({ navigate }) => navigate('/updates')
-  },
   {
     id: 'templates',
     title: 'Starter Templates',
@@ -94,7 +80,7 @@ const RESOURCE_ITEMS: ResourceItem[] = [
   }
 ];
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures: _onOpenFeatures, onOpenUpdates }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures: _onOpenFeatures }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useThemeStore();
@@ -183,13 +169,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
     item.action({
       navigate,
       onOpenTemplates,
-      onOpenUpdates,
       handleNavClick
     });
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/85 dark:bg-[#0c0d0e]/85 backdrop-blur-md border-b border-neutral-200/70 dark:border-neutral-800/70 transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-white/85 dark:bg-neutral-950/85 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800 transition-colors font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         
         {/* Brand Logo & Name */}
@@ -198,12 +183,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           className="flex items-center gap-2 cursor-pointer group select-none shrink-0"
         >
           <img 
-            src="/logo.webp" 
+            src="/logo.png" 
             alt="MD Writer Logo" 
             className="w-7 h-7 rounded-lg object-contain shadow-xs group-hover:scale-105 transition-transform" 
           />
           <span className="font-semibold text-sm sm:text-base text-neutral-950 dark:text-white tracking-tight">
             MD Writer
+          </span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+            {APP_VERSION_LABEL}
           </span>
         </div>
 
@@ -249,7 +237,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             </button>
 
             {isResourcesOpen && (
-              <div className="absolute left-0 mt-2 w-72 p-2 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/40 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute left-0 mt-2 w-72 p-1.5 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/40 z-50 animate-in fade-in zoom-in-95 duration-150 font-sans">
                 <div className="space-y-0.5">
                   {RESOURCE_ITEMS.map((item) => {
                     const Icon = item.icon;
@@ -258,7 +246,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                       <button
                         key={item.id}
                         onClick={() => triggerResource(item)}
-                        className={`w-full text-left p-2.5 rounded-xl hover:bg-neutral-100/80 dark:hover:bg-neutral-800/70 transition-colors cursor-pointer flex items-center gap-3 group ${
+                        className={`w-full text-left p-2.5 rounded-lg hover:bg-neutral-100/80 dark:hover:bg-neutral-800/70 transition-colors cursor-pointer flex items-center gap-3 group font-sans ${
                           isActive ? 'bg-neutral-100/80 dark:bg-neutral-800/70' : ''
                         }`}
                       >
@@ -269,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                           <div className="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
                             <span>{item.title}</span>
                             {item.badge && (
-                              <span className="px-1.5 py-0.5 rounded font-mono text-[9px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                              <span className="px-1.5 py-0.5 rounded font-sans text-[9px] font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/60">
                                 {item.badge}
                               </span>
                             )}
@@ -298,7 +286,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           <button
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/80 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shadow-2xs font-sans"
           >
             {isDark ? (
               <Sun className="w-4 h-4 text-amber-400 transition-transform rotate-0 hover:rotate-45" />
@@ -311,7 +299,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           {isAdmin && (
             <button
               onClick={() => navigate('/admin')}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-xs"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-all cursor-pointer shadow-2xs font-sans"
               title="Open Admin Moderation Panel"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
@@ -326,14 +314,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             <div className="hidden sm:flex items-center gap-2">
               <button
                 onClick={() => navigate('/auth')}
-                className="text-[13px] font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white px-2.5 py-1 rounded-md transition-colors cursor-pointer hidden lg:block"
+                className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white px-3 py-1.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer hidden lg:block font-sans shadow-2xs"
               >
                 Sign In
               </button>
 
               <button
                 onClick={() => navigate('/editor')}
-                className="bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-1.5"
+                className="bg-brand-600 hover:bg-brand-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-tight shadow-xs hover:shadow transition-all cursor-pointer flex items-center gap-1.5 font-sans"
               >
                 <span>Open Editor</span>
                 <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />
@@ -346,9 +334,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             id="navbar-mobile-toggle"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation menu"
-            className="md:hidden w-9 h-9 rounded-xl flex items-center justify-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="md:hidden w-8 h-8 rounded-lg border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shadow-2xs"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
         </div>
 
@@ -361,15 +349,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           className="md:hidden border-t border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-150 shadow-lg"
         >
           {/* Core Links */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 font-sans">
             <button
               onClick={() => {
                 setIsMobileMenuOpen(false);
                 handleBrandClick();
               }}
-              className={`p-2.5 rounded-xl text-left font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`p-2.5 rounded-lg text-left font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer font-sans ${
                 location.pathname === '/' 
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950' 
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs' 
                   : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
               }`}
             >
@@ -381,9 +369,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                 setIsMobileMenuOpen(false);
                 navigate('/documents');
               }}
-              className={`p-2.5 rounded-xl text-left font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer ${
+              className={`p-2.5 rounded-lg text-left font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer font-sans ${
                 location.pathname === '/documents' 
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950' 
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs' 
                   : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
               }`}
             >
@@ -393,9 +381,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           </div>
 
           {/* Secondary Links Section */}
-          <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-1">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 px-1 py-1">
-              Explore & Updates
+          <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-1 font-sans">
+            <div className="text-[11px] font-semibold text-neutral-400 px-1 py-1 font-sans">
+              Explore & Resources
             </div>
 
             {RESOURCE_ITEMS.map((item) => {
@@ -404,14 +392,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                 <button
                   key={`mobile-${item.id}`}
                   onClick={() => triggerResource(item)}
-                  className="w-full text-left p-2 rounded-lg text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between cursor-pointer"
+                  className="w-full text-left p-2 rounded-lg text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between cursor-pointer font-sans"
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon className={`w-4 h-4 ${item.iconColor}`} />
                     <span>{item.title}</span>
                   </div>
                   {item.badge && (
-                    <span className="px-1.5 py-0.5 rounded font-mono text-[9px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/80 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                    <span className="px-1.5 py-0.5 rounded font-sans text-[9px] font-bold bg-brand-50 text-brand-700 dark:bg-brand-950/80 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/60">
                       {item.badge}
                     </span>
                   )}
@@ -425,7 +413,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                   setIsMobileMenuOpen(false);
                   navigate('/admin');
                 }}
-                className="w-full text-left p-2.5 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-2.5 cursor-pointer mt-1"
+                className="w-full text-left p-2.5 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center gap-2.5 cursor-pointer mt-1 font-sans shadow-2xs"
               >
                 <ShieldCheck className="w-4 h-4 text-amber-500" />
                 <span>Admin Moderation Panel</span>
@@ -440,13 +428,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
 
           {/* Bottom Actions */}
           {!user && (
-            <div className="pt-1 flex items-center gap-2">
+            <div className="pt-1 flex items-center gap-2 font-sans">
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   navigate('/auth');
                 }}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center gap-1 cursor-pointer"
+                className="w-full py-2.5 rounded-lg text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center gap-1 cursor-pointer transition-all shadow-xs"
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-3.5 h-3.5" />

@@ -12,7 +12,6 @@ import {
 
 interface BentoFeaturesProps {
   onExploreFeatures?: () => void;
-  onOpenUpdates?: () => void;
   onOpenTemplates?: () => void;
   onExportClick?: () => void;
 }
@@ -21,7 +20,7 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="features" className="py-20 sm:py-28 relative overflow-hidden bg-neutral-50/50 dark:bg-black/20 border-t border-neutral-100 dark:border-neutral-800/80 transition-colors">
+    <section id="features" className="py-20 sm:py-28 relative overflow-hidden bg-neutral-50/50 dark:bg-neutral-900/20 border-t border-neutral-200/80 dark:border-neutral-800 transition-colors font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24 sm:space-y-32">
 
         {/* ── SECTION HEADER ── */}
@@ -76,21 +75,28 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
 
           {/* Visual Showcase Column (Right 7 cols) - Clean, no floating action bar */}
           <div className="lg:col-span-7">
-            <div className="rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-[#121216] p-6 shadow-xl shadow-neutral-900/5 dark:shadow-black/40 space-y-4 text-left">
+            <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-xl dark:shadow-black/40 space-y-4 text-left font-sans">
               <div className="flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800 pb-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs" />
+                {/* macOS Traffic Lights with Hover Symbols */}
+                <div className="flex items-center gap-1.5 group/traffic cursor-pointer">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 flex items-center justify-center text-[7px] font-bold text-[#4c0000] shadow-xs">
+                    <span className="opacity-0 group-hover/traffic:opacity-100 transition-opacity leading-none">✕</span>
+                  </span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 flex items-center justify-center text-[7px] font-bold text-[#5c3c00] shadow-xs">
+                    <span className="opacity-0 group-hover/traffic:opacity-100 transition-opacity leading-none">−</span>
+                  </span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/50 flex items-center justify-center text-[7px] font-bold text-[#004d11] shadow-xs">
+                    <span className="opacity-0 group-hover/traffic:opacity-100 transition-opacity leading-none">+</span>
+                  </span>
                   <span className="font-mono text-xs text-neutral-400 ml-2">RFC-042-distributed-cache.md</span>
                 </div>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-200/50">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-200/50 dark:border-emerald-800/60">
                   0ms Latency
                 </span>
               </div>
 
               {/* Clean Code Snippet */}
-              <div className="p-4 rounded-xl bg-neutral-50/80 dark:bg-[#0c0c0f] font-mono text-xs text-neutral-800 dark:text-neutral-200 leading-relaxed border border-neutral-200/60 dark:border-neutral-800/80 space-y-2">
+              <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-950 font-mono text-xs text-neutral-800 dark:text-neutral-200 leading-relaxed border border-neutral-200/80 dark:border-neutral-800 space-y-2">
                 <p className="text-brand-600 dark:text-brand-400 font-bold"># Distributed Consensus Specification</p>
                 <p className="text-neutral-500 italic">&gt; Standard RFC contract for high-throughput edge nodes.</p>
                 
@@ -100,7 +106,7 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
                   - [ ] Optional multi-device synchronization
                 </p>
 
-                <div className="p-2.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-600 dark:text-neutral-400 mt-2">
+                <div className="p-2.5 rounded-md bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-[11px] text-neutral-600 dark:text-neutral-400 mt-2">
                   | Component | Protocol | SLA Guarantee |<br />
                   | :--- | :--- | :--- |<br />
                   | In-Memory Cache | gRPC Stream | 99.999% uptime |<br />
@@ -128,8 +134,8 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
             {/* Card A: 100% Offline IndexedDB */}
-            <div className="p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-[#121216] shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/40">
+            <div className="p-6 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm space-y-3 font-sans">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/40 dark:border-emerald-800/40">
                 <HardDrive className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-base text-neutral-950 dark:text-white tracking-tight">
@@ -141,8 +147,8 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
             </div>
 
             {/* Card B: File System Access API */}
-            <div className="p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-[#121216] shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/40">
+            <div className="p-6 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm space-y-3 font-sans">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/40 dark:border-blue-800/40">
                 <FolderOpen className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-base text-neutral-950 dark:text-white tracking-tight">
@@ -154,8 +160,8 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
             </div>
 
             {/* Card C: Optional Free Cloud Sync */}
-            <div className="p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-[#121216] shadow-sm space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/40">
+            <div className="p-6 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm space-y-3 font-sans">
+              <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/40 dark:border-purple-800/40">
                 <Cloud className="w-5 h-5" />
               </div>
               <h4 className="font-bold text-base text-neutral-950 dark:text-white tracking-tight">
@@ -168,14 +174,14 @@ export const BentoFeatures: React.FC<BentoFeaturesProps> = () => {
           </div>
         </div>
 
-        {/* ── BOTTOM CTA BANNER ── */}
-        <div className="pt-6 flex justify-center">
+        {/* ── BOTTOM EXPLORATION LINK ── */}
+        <div className="pt-4 flex justify-center">
           <button
             onClick={() => navigate('/editor')}
-            className="px-7 py-3.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 font-semibold text-sm flex items-center gap-2.5 transition-all shadow-sm hover:shadow cursor-pointer group hover:scale-[1.01]"
+            className="px-6 py-2.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer group font-sans border border-neutral-200/80 dark:border-neutral-700 shadow-2xs"
           >
-            <span>Open Studio &amp; Start Writing Free</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            <span>Open Markdown Studio &amp; Start Writing Free</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 

@@ -4,15 +4,13 @@ import { APP_VERSION_LABEL } from '../../config/version';
 import { LegalModal } from '../common/LegalModal';
 import { usePreferencesStore } from '../../stores/usePreferencesStore';
 
-interface FooterProps {
-  onOpenUpdates?: () => void;
-}
+interface FooterProps {}
 
-export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
+export const Footer: React.FC<FooterProps> = () => {
   const [isLegalOpen, setIsLegalOpen] = useState(false);
 
   return (
-    <footer className="py-10 bg-white dark:bg-[#0c0d0e] border-t border-neutral-200/70 dark:border-neutral-800/80 transition-colors">
+    <footer className="py-10 bg-white dark:bg-neutral-950 border-t border-neutral-200/80 dark:border-neutral-800 transition-colors font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -20,7 +18,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
           {/* Brand Info */}
           <div className="flex items-center gap-3">
             <img 
-              src="/logo.webp" 
+              src="/logo.png" 
               alt="MD Writer Logo" 
               className="w-7 h-7 rounded-lg object-contain shadow-xs" 
             />
@@ -58,24 +56,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenUpdates }) => {
               <Link to="/feedback" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 Feedback
               </Link>
-              {onOpenUpdates ? (
-                <button 
-                  type="button" 
-                  onClick={onOpenUpdates} 
-                  className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">{APP_VERSION_LABEL}</span>
-                </button>
-              ) : (
-                <Link 
-                  to="/updates" 
-                  className="hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>Changelog</span>
-                  <span className="px-1.5 py-0.5 rounded font-mono text-[9px] bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-brand-800">{APP_VERSION_LABEL}</span>
-                </Link>
-              )}
+              <span className="px-2 py-0.5 rounded-full font-mono text-[10px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20">
+                {APP_VERSION_LABEL}
+              </span>
               <button 
                 type="button" 
                 onClick={() => setIsLegalOpen(true)} 

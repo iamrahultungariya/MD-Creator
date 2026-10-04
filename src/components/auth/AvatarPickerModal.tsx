@@ -55,22 +55,25 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm select-none animate-in fade-in duration-150">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-16 sm:pt-20 bg-black/50 backdrop-blur-xs select-none animate-in fade-in duration-150 overflow-y-auto"
+      onClick={onClose}
+    >
       <div 
-        className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#121217] border border-neutral-200/90 dark:border-neutral-800 shadow-2xl shadow-neutral-950/20 dark:shadow-black/70 overflow-hidden"
+        className="w-full max-w-lg my-auto rounded-xl bg-white border border-neutral-200/90 shadow-2xl shadow-neutral-900/15 overflow-hidden flex flex-col text-neutral-900 font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
+        <div className="px-5 py-3.5 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/60 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#8257F5]/10 text-[#8257F5] flex items-center justify-center border border-[#8257F5]/20">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-neutral-950 dark:text-white">
+              <h3 className="text-sm font-bold text-neutral-950">
                 Choose Character Avatar
               </h3>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+              <p className="text-[11px] text-neutral-500">
                 Distinctive MD Writer personas for your workspace profile
               </p>
             </div>
@@ -78,14 +81,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-800 hover:bg-neutral-100 transition-colors cursor-pointer"
+            title="Close (Esc)"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* 8-Avatar Grid */}
-        <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[380px] overflow-y-auto">
+        <div className="p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[min(50vh,380px)] overflow-y-auto">
           {AVATAR_PRESETS.map((preset) => {
             const isSelected = selectedId === preset.id;
             const avatarUrl = getPresetAvatarUrl(preset.id);
@@ -94,15 +98,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
               <button
                 key={preset.id}
                 onClick={() => setSelectedId(preset.id)}
-                className={`group p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-2 relative ${
+                className={`group p-3 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-2 relative ${
                   isSelected
-                    ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 shadow-xs ring-1 ring-brand-500'
-                    : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/60'
+                    ? 'border-[#8257F5] bg-[#8257F5]/5 shadow-xs ring-1 ring-[#8257F5]'
+                    : 'border-neutral-200/80 bg-neutral-50/60 hover:border-neutral-300 hover:bg-neutral-100/70 text-neutral-900'
                 }`}
               >
                 {/* Active check pill */}
                 {isSelected && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-brand-600 text-white flex items-center justify-center text-[10px]">
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#8257F5] text-white flex items-center justify-center text-[10px]">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
                   </span>
                 )}
@@ -110,16 +114,16 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
                 <img
                   src={avatarUrl}
                   alt={preset.name}
-                  className={`w-14 h-14 rounded-full object-cover transition-transform group-hover:scale-105 ${
-                    isSelected ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-neutral-900' : ''
+                  className={`w-13 h-13 rounded-full object-cover transition-transform group-hover:scale-105 ${
+                    isSelected ? 'ring-2 ring-[#8257F5] ring-offset-2 ring-offset-white' : ''
                   }`}
                 />
 
                 <div className="min-w-0">
-                  <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                  <div className="text-xs font-bold text-neutral-900 truncate">
                     {preset.name}
                   </div>
-                  <div className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate">
+                  <div className="text-[10px] text-neutral-500 truncate">
                     {preset.tagline}
                   </div>
                 </div>
@@ -129,7 +133,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
         </div>
 
         {/* Footer Actions */}
-        <div className="px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/30">
+        <div className="px-5 py-3 border-t border-neutral-100 flex items-center justify-between bg-neutral-50/60 shrink-0">
           <span className="text-[11px] text-neutral-400 font-mono">
             100% Vector • Offline Stored
           </span>
@@ -137,13 +141,13 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
-              className="px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+              className="px-4 py-1.5 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white font-semibold text-xs transition-colors shadow-xs cursor-pointer"
             >
               Apply Character
             </button>

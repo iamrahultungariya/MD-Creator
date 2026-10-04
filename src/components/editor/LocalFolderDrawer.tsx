@@ -220,12 +220,12 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/50 backdrop-blur-xs select-none">
-      <div className="w-full max-w-sm sm:max-w-md bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200 text-neutral-800 dark:text-neutral-200">
+    <div className="fixed inset-0 z-50 overflow-hidden flex justify-end bg-black/50 backdrop-blur-xs select-none font-sans">
+      <div className="w-full max-w-sm sm:max-w-md bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200 text-neutral-800 dark:text-neutral-200 font-sans">
         {/* Drawer Header */}
-        <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+        <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/40">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-2xs">
               <HardDrive className="w-4 h-4" />
             </div>
             <div>
@@ -239,7 +239,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -264,7 +264,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
         ) : !dirHandle ? (
           /* Empty State: Prompt to connect folder */
           <div className="p-6 text-center space-y-4 my-auto">
-            <div className="w-14 h-14 rounded-3xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 mx-auto flex items-center justify-center">
+            <div className="w-14 h-14 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 mx-auto flex items-center justify-center border border-neutral-200/60 dark:border-neutral-700/60">
               <FolderOpen className="w-7 h-7" />
             </div>
             <div className="space-y-1">
@@ -277,7 +277,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
             </div>
             <button
               onClick={handlePickFolder}
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-2xs cursor-pointer transition-all active:scale-95"
             >
               <FolderOpen className="w-4 h-4" />
               <span>Choose Local Folder</span>
@@ -296,20 +296,20 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search folder notes..."
-                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-none border border-transparent focus:border-neutral-300 dark:focus:border-neutral-700"
+                    className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden border border-neutral-200/60 dark:border-neutral-700/60 focus:border-brand-500"
                   />
                 </div>
                 <button
                   onClick={() => refreshFolder(dirHandle)}
                   disabled={isLoading}
-                  className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 cursor-pointer"
+                  className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 cursor-pointer transition-colors"
                   title="Rescan folder"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 </button>
                 <button
                   onClick={() => setIsCreatingFile((prev) => !prev)}
-                  className="p-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white cursor-pointer shadow-xs"
+                  className="p-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white cursor-pointer shadow-2xs transition-colors"
                   title="New Note in Folder"
                 >
                   <Plus className="w-3.5 h-3.5" />
@@ -325,18 +325,18 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
                     value={newFileName}
                     onChange={(e) => setNewFileName(e.target.value)}
                     placeholder="Note-name.md"
-                    className="flex-1 px-3 py-1.5 rounded-xl border border-brand-500 bg-neutral-50 dark:bg-neutral-800 text-xs font-mono focus:outline-none"
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-brand-500 bg-neutral-50 dark:bg-neutral-800 text-xs font-mono focus:outline-hidden"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold cursor-pointer shadow-2xs"
                   >
                     Create
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsCreatingFile(false)}
-                    className="p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer"
+                    className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-white cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -346,7 +346,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
 
             {/* Error Message */}
             {errorMsg && (
-              <div className="p-3 mx-3 my-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
+              <div className="p-3 mx-3 my-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2 border border-rose-200 dark:border-rose-900/60">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>

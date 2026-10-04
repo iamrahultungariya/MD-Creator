@@ -37,7 +37,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
         <div className="flex flex-wrap items-center justify-center gap-3.5 mb-10">
           <button
             onClick={() => navigate('/editor')}
-            className="w-full sm:w-auto bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 px-7 py-3 rounded-xl font-semibold text-sm shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 group hover:scale-[1.01]"
+            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-7 py-3 rounded-lg font-semibold text-sm shadow-xs hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2 group hover:scale-[1.01] font-sans"
           >
             <span>Start Writing — It&apos;s Free</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -46,7 +46,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
           {onOpenTemplates && (
             <button
               onClick={onOpenTemplates}
-              className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 px-5 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs"
+              className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200/80 dark:border-neutral-800 px-5 py-3 rounded-lg font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs font-sans"
             >
               <BookOpen className="w-4 h-4 text-neutral-400" />
               <span>Browse Blueprints</span>

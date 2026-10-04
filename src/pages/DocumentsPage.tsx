@@ -10,8 +10,7 @@ import {
   Trash,
   FolderTree,
   Copy,
-  X,
-  Loader2
+  X
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Footer } from '../components/home/Footer';
@@ -20,7 +19,6 @@ import { DocumentListItem } from '../components/documents/DocumentListItem';
 import { DocumentsFilterToolbar } from '../components/documents/DocumentsFilterToolbar';
 import { 
   useDocuments, 
-  useCreateDocument, 
   useDeleteDocument, 
   useTogglePin,
   useTrashCount,
@@ -31,6 +29,8 @@ import {
 } from '../hooks/useDocuments';
 import { saveDocument } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
+import { CreateDocumentModal } from '../components/document/CreateDocumentModal';
+import { StorageLimitRing } from '../components/common/StorageLimitRing';
 
 const TemplatesModal = React.lazy(() =>
   import('../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
@@ -48,7 +48,7 @@ export const DocumentsPage: React.FC = () => {
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
   const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
   const [cloneToast, setCloneToast] = useState<{ title: string; id: string } | null>(null);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -56,7 +56,6 @@ export const DocumentsPage: React.FC = () => {
 
   const { data: documents = [], isLoading } = useDocuments(search, activeTag, currentTab === 'trash');
   const { data: trashCount = 0 } = useTrashCount();
-  const createDocMutation = useCreateDocument();
   const deleteDocMutation = useDeleteDocument();
   const restoreDocMutation = useRestoreDocument();
   const emptyTrashMutation = useEmptyTrash();
@@ -72,20 +71,8 @@ export const DocumentsPage: React.FC = () => {
     }
   }, [cloneToast]);
 
-  const handleCreateNew = async () => {
-    if (isCreatingNew) return;
-    setIsCreatingNew(true);
-    try {
-      const id = await createDocMutation.mutateAsync({
-        title: 'Untitled Document.md',
-        content: '# Untitled Document\n\nStart writing with Markdown...'
-      });
-      navigate(`/editor/${id}`);
-    } catch (err) {
-      console.error('Failed to create new document', err);
-    } finally {
-      setIsCreatingNew(false);
-    }
+  const handleCreateNew = () => {
+    setIsCreateModalOpen(true);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,7 +187,6 @@ export const DocumentsPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
       <Navbar 
-        onOpenUpdates={() => navigate('/updates')} 
         onOpenTemplates={() => setIsTemplatesOpen(true)} 
       />
 
@@ -209,23 +195,24 @@ export const DocumentsPage: React.FC = () => {
         {/* Workspace Header with Clean Telemetry */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
                 Documents Vault
               </h1>
-              <span className="text-xs text-neutral-400 dark:text-neutral-500 font-mono">
+              <span className="text-xs text-neutral-400 dark:text-neutral-500 font-sans font-medium">
                 · {documents.length} notes
               </span>
+              <StorageLimitRing variant="badge" />
             </div>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               IndexedDB local storage · 0ms typing latency · 100% private
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto font-sans">
             <button
               onClick={() => setIsTemplatesOpen(true)}
-              className="justify-center px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <LayoutTemplate className="w-3.5 h-3.5 text-neutral-400" />
               <span>Blueprints</span>
@@ -233,7 +220,7 @@ export const DocumentsPage: React.FC = () => {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="justify-center px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
               <Upload className="w-3.5 h-3.5 text-neutral-400" />
               <span>Import .md</span>
@@ -248,7 +235,7 @@ export const DocumentsPage: React.FC = () => {
 
             <button
               onClick={() => setIsLocalFolderOpen(true)}
-              className="justify-center px-3.5 py-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
               title="Open local folder as note vault"
             >
               <FolderTree className="w-3.5 h-3.5 text-neutral-400" />
@@ -257,26 +244,16 @@ export const DocumentsPage: React.FC = () => {
 
             <button
               onClick={handleCreateNew}
-              disabled={isCreatingNew}
-              className="justify-center px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+              className="justify-center px-4 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              {isCreatingNew ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Creating...</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>New Note</span>
-                </>
-              )}
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Note</span>
             </button>
           </div>
         </div>
 
         {/* Minimal Segmented Tab Controller (All Documents vs Recycle Bin) */}
-        <div className="flex items-center gap-1 mb-6 p-1 bg-neutral-100/70 dark:bg-neutral-900/80 rounded-xl w-fit border border-neutral-200/60 dark:border-neutral-800/80 text-xs font-medium">
+        <div className="flex items-center gap-1 mb-6 p-1 bg-neutral-100/70 dark:bg-neutral-900/80 rounded-xl w-fit border border-neutral-200/60 dark:border-neutral-800/80 text-xs font-medium font-sans">
           <button
             onClick={() => { setCurrentTab('active'); setActiveTag('All'); }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
@@ -287,7 +264,7 @@ export const DocumentsPage: React.FC = () => {
           >
             <FileText className="w-3.5 h-3.5" />
             <span>All Documents</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-mono">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-sans font-semibold">
               {documents.length}
             </span>
           </button>
@@ -303,7 +280,7 @@ export const DocumentsPage: React.FC = () => {
             <Trash2 className="w-3.5 h-3.5" />
             <span>Recycle Bin</span>
             {trashCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 font-mono font-bold">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 font-sans font-bold">
                 {trashCount}
               </span>
             )}
@@ -312,9 +289,9 @@ export const DocumentsPage: React.FC = () => {
 
         {/* Trash Banner when viewing Recycle Bin */}
         {currentTab === 'trash' && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border border-red-200/80 dark:border-red-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="mb-6 p-4 rounded-xl bg-red-50/60 dark:bg-red-950/20 border border-red-200/80 dark:border-red-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-sans">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
                 <Trash2 className="w-4 h-4" />
               </div>
               <div>
@@ -327,7 +304,7 @@ export const DocumentsPage: React.FC = () => {
             {trashCount > 0 && (
               <button
                 onClick={handleEmptyTrash}
-                className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1.5 self-start sm:self-auto"
+                className="px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1.5 self-start sm:self-auto font-sans"
               >
                 <Trash className="w-3.5 h-3.5" />
                 <span>Empty Trash ({trashCount})</span>
@@ -352,8 +329,8 @@ export const DocumentsPage: React.FC = () => {
           {isLoading && !documents.length ? (
             <div className="py-20 text-center text-xs text-neutral-400">Loading documents...</div>
           ) : documents.length === 0 ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-3xl p-8">
-            <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 mb-4">
+          <div className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl p-8">
+            <div className="w-12 h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 mb-4">
               {currentTab === 'trash' ? <Trash2 className="w-6 h-6 text-neutral-400" /> : <FileText className="w-6 h-6" />}
             </div>
             <h3 className="font-bold text-base text-neutral-900 dark:text-white mb-1">
@@ -367,20 +344,10 @@ export const DocumentsPage: React.FC = () => {
             {currentTab === 'active' && (
               <button
                 onClick={handleCreateNew}
-                disabled={isCreatingNew}
-                className="px-5 py-2.5 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold text-xs flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-75"
+                className="px-5 py-2.5 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
               >
-                {isCreatingNew ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    <span>Create Document</span>
-                  </>
-                )}
+                <Plus className="w-4 h-4" />
+                <span>Create Document</span>
               </button>
             )}
           </div>
@@ -418,7 +385,7 @@ export const DocumentsPage: React.FC = () => {
           </div>
         ) : (
           /* List View with Scoped Layout IDs and Vertical Spring Motion */
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800 font-sans">
             {documents.map((doc) => (
               <motion.div
                 key={doc.id}
@@ -452,7 +419,7 @@ export const DocumentsPage: React.FC = () => {
 
       </main>
 
-      <Footer onOpenUpdates={() => navigate('/updates')} />
+      <Footer />
 
       {/* Duplicate In-Place Notification Toast */}
       <AnimatePresence>
@@ -462,7 +429,7 @@ export const DocumentsPage: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="fixed bottom-6 right-6 z-50 bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-neutral-800 dark:border-neutral-200 text-xs"
+            className="fixed bottom-6 right-6 z-50 bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-neutral-800 dark:border-neutral-200 text-xs font-sans"
           >
             <Copy className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
             <span className="truncate max-w-xs">
@@ -504,6 +471,13 @@ export const DocumentsPage: React.FC = () => {
           />
         </React.Suspense>
       )}
+
+      {/* Create New Document / Note Modal */}
+      <CreateDocumentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        defaultFolderTag={activeTag !== 'All' ? activeTag : undefined}
+      />
     </div>
   );
 };

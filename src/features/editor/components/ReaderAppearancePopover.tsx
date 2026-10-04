@@ -117,16 +117,16 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
   return (
     <div
       ref={popoverRef}
-      className="absolute top-14 right-2 sm:right-6 w-80 max-w-[calc(100vw-1rem)] rounded-2xl bg-white dark:bg-[#1a1b20] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-3.5 sm:p-4.5 z-50 text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in duration-100 will-change-transform"
+      className="absolute top-14 right-2 sm:right-6 w-80 max-w-[calc(100vw-1rem)] rounded-xl bg-white dark:bg-[#1a1b20] border border-neutral-200 dark:border-neutral-800 shadow-2xl p-4 z-50 text-neutral-900 dark:text-neutral-100 font-sans select-none animate-in fade-in duration-100 will-change-transform"
     >
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-100 dark:border-neutral-800/80">
         <div className="flex items-center gap-2">
-          <Type className="w-4 h-4 text-neutral-500" />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          <Type className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+          <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 font-sans">
             Reading Appearance
           </h4>
         </div>
-        <span className="text-[10px] font-mono text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
+        <span className="text-[10px] font-sans font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-md border border-neutral-200/70 dark:border-neutral-700/70">
           Eye Comfort
         </span>
       </div>
@@ -134,7 +134,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
       <div className="space-y-4">
         {/* 1. Paper / Eye-Comfort Themes */}
         <div>
-          <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-2">
+          <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-2 font-sans">
             Environment & Paper Tone
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -145,15 +145,15 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${t.bg} ${t.border} ${t.text} ${
-                    isSelected ? 'ring-2 ring-neutral-900 dark:ring-white shadow-sm font-bold' : 'opacity-85 hover:opacity-100 hover:scale-[1.02]'
+                  className={`p-2.5 rounded-lg border flex items-center justify-between transition-all cursor-pointer font-sans ${t.bg} ${t.border} ${t.text} ${
+                    isSelected ? 'ring-2 ring-brand-500 dark:ring-brand-400 shadow-xs font-bold' : 'opacity-85 hover:opacity-100 hover:scale-[1.02]'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <Icon className="w-3.5 h-3.5 shrink-0" />
                     <span className="text-xs truncate">{t.label}</span>
                   </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-brand-600 dark:text-brand-400" />}
                 </button>
               );
             })}
@@ -162,19 +162,19 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
 
         {/* 2. Typography Font Family */}
         <div>
-          <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-2">
+          <label className="block text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 mb-2 font-sans">
             Typography Style
           </label>
-          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60">
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60 font-sans">
             {FONT_FAMILIES.map((f) => {
               const isSelected = fontFamily === f.id;
               return (
                 <button
                   key={f.id}
                   onClick={() => setFontFamily(f.id)}
-                  className={`py-1.5 px-2 rounded-lg text-xs transition-all cursor-pointer text-center ${f.fontClass} ${
+                  className={`py-1.5 px-2 rounded-md text-xs transition-all cursor-pointer text-center ${f.fontClass} ${
                     isSelected
-                      ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white font-bold shadow-xs'
+                      ? 'bg-white dark:bg-neutral-900 text-brand-600 dark:text-brand-400 font-bold shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                   }`}
                   title={f.example}
@@ -189,19 +189,19 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
         {/* 3. Font Size Stepper */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">
+            <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
               Text Scale
             </label>
-            <span className="text-[11px] font-mono text-neutral-400 font-medium">
+            <span className="text-[11px] font-sans font-medium text-neutral-400">
               {FONT_SIZES.find((s) => s.id === fontSize)?.px}
             </span>
           </div>
 
-          <div className="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60">
+          <div className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60">
             <button
               onClick={() => handleStepFontSize(-1)}
               disabled={fontSize === 'sm'}
-              className="p-1.5 rounded-lg bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
+              className="p-1.5 rounded-md bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
               title="Decrease Font Size"
             >
               <Minus className="w-3.5 h-3.5" />
@@ -212,9 +212,9 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={s.id}
                   onClick={() => setFontSize(s.id)}
-                  className={`w-7 h-7 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center justify-center ${
+                  className={`w-7 h-7 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center justify-center ${
                     fontSize === s.id
-                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
+                      ? 'bg-brand-500 text-white font-bold shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700'
                   }`}
                 >
@@ -226,7 +226,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
             <button
               onClick={() => handleStepFontSize(1)}
               disabled={fontSize === 'xl'}
-              className="p-1.5 rounded-lg bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
+              className="p-1.5 rounded-md bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-2xs cursor-pointer flex items-center justify-center shrink-0"
               title="Increase Font Size"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -237,21 +237,21 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
         {/* 4. Persona Column Width */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">
+            <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
               Reading Persona & Canvas
             </label>
-            <span className="text-[10px] font-mono text-neutral-400">
+            <span className="text-[10px] font-sans text-neutral-400 font-medium">
               {COLUMN_WIDTHS.find((w) => w.id === columnWidth)?.desc}
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60 text-xs">
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60 text-xs font-sans">
             {COLUMN_WIDTHS.map((w) => {
               const isSelected = columnWidth === w.id;
               return (
                 <button
                   key={w.id}
                   onClick={() => setColumnWidth(w.id)}
-                  className={`py-2 px-1.5 rounded-lg transition-all cursor-pointer text-center flex flex-col items-center justify-center ${
+                  className={`py-2 px-1.5 rounded-md transition-all cursor-pointer text-center flex flex-col items-center justify-center ${
                     isSelected
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white font-medium'

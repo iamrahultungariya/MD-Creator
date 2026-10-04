@@ -53,13 +53,13 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
   return (
     <>
       {/* Sticky Bottom Accessory Bar — Docked above mobile viewport / virtual keyboard */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200/80 dark:border-neutral-800 px-3 py-2 flex items-center justify-around shadow-lg safe-bottom">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200/80 dark:border-neutral-800 px-3 py-2 flex items-center justify-around shadow-lg safe-bottom font-sans">
         {/* 1. Bold */}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onInsertBold}
-          className="p-2.5 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer"
+          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
           title="Bold (**text**)"
         >
           <Bold className="w-4 h-4" />
@@ -72,7 +72,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={onInsertHighlight}
-            className="p-2.5 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer"
+            className="p-2.5 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
             title="Highlight (==text==)"
           >
             <Highlighter className="w-4 h-4" />
@@ -85,7 +85,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onInsertLink}
-          className="p-2.5 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer"
+          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
           title="Insert Link"
         >
           <Link2 className="w-4 h-4" />
@@ -97,7 +97,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onOpenImageModal}
-          className="p-2.5 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer"
+          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
           title="Embed Image"
         >
           <ImageIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
@@ -109,7 +109,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onTriggerSlash}
-          className="w-9 h-9 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-mono font-bold active:scale-95 transition-all flex items-center justify-center shadow-sm cursor-pointer"
+          className="w-8 h-8 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-sans font-bold active:scale-95 transition-all flex items-center justify-center shadow-xs cursor-pointer"
           title="Slash Commands (/)"
         >
           <span className="text-sm font-bold">/</span>
@@ -120,7 +120,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setIsOverflowOpen(true)}
-          className="p-2.5 rounded-xl text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer"
+          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
           title="More Tools"
         >
           <MoreHorizontal className="w-4 h-4" />
@@ -131,7 +131,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
       {/* Overflow Bottom Sheet Drawer */}
       <AnimatePresence>
         {isOverflowOpen && (
-          <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end font-sans">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -145,13 +145,13 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative z-10 w-full bg-white dark:bg-neutral-900 rounded-t-3xl border-t border-neutral-200 dark:border-neutral-800 p-5 shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto"
+              className="relative z-10 w-full bg-white dark:bg-neutral-900 rounded-t-xl border-t border-neutral-200 dark:border-neutral-800 p-5 shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto font-sans"
             >
               {/* Grab handle */}
-              <div className="w-12 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-700 rounded-full mx-auto" />
 
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-neutral-950 dark:text-white">
+              <div className="flex items-center justify-between font-sans">
+                <span className="font-bold text-sm text-neutral-950 dark:text-white font-sans">
                   Writing Studio &amp; Export
                 </span>
                 <button
@@ -162,13 +162,13 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 font-sans">
                 <button
                   onClick={() => {
                     setIsOverflowOpen(false);
                     onOpenPdfStudio();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <Printer className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">PDF Studio</span>
@@ -180,7 +180,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onExportMd();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <Download className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">Export .md</span>
@@ -192,7 +192,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onCopyMarkdown();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <Copy className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">Copy Markdown</span>
@@ -204,7 +204,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onOpenOutline();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <ListTree className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">Outline (TOC)</span>
@@ -216,7 +216,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onOpenTableBuilder();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <Table2 className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">Table Builder</span>
@@ -228,7 +228,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onOpenTemplates();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <LayoutTemplate className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">Templates</span>
@@ -240,7 +240,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onOpenRevisions();
                   }}
-                  className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200"
+                  className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 text-left flex flex-col gap-1 text-neutral-800 dark:text-neutral-200 font-sans cursor-pointer"
                 >
                   <History className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                   <span className="font-bold text-xs">Revisions</span>
@@ -252,7 +252,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
                     setIsOverflowOpen(false);
                     onClearContent();
                   }}
-                  className="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-left flex flex-col gap-1 text-amber-700 dark:text-amber-400"
+                  className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 text-left flex flex-col gap-1 text-amber-700 dark:text-amber-400 font-sans cursor-pointer"
                 >
                   <FileX className="w-5 h-5" />
                   <span className="font-bold text-xs">Clear Canvas</span>

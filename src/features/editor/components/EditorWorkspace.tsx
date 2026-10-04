@@ -319,27 +319,27 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
       {/* Mobile-Only Edit / Preview Segmented Tab Bar (< 768px) */}
       {viewMode === 'split' && (
         <div className="md:hidden flex items-center justify-center py-2 px-4 bg-neutral-100/90 dark:bg-neutral-900/90 border-b border-neutral-200 dark:border-neutral-800 select-none z-20">
-          <div className="inline-flex rounded-xl bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-semibold">
+          <div className="inline-flex rounded-lg bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-sans font-medium">
             <button
               onClick={() => setMobileTab('edit')}
-              className={`px-4 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
                 mobileTab === 'edit'
-                  ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-bold'
+                  ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-semibold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              <PenTool className="w-3.5 h-3.5" />
+              <PenTool className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               <span>Edit Markdown</span>
             </button>
             <button
               onClick={() => setMobileTab('preview')}
-              className={`px-4 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
                 mobileTab === 'preview'
-                  ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-bold'
+                  ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-semibold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              <Eye className="w-3.5 h-3.5" />
+              <Eye className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               <span>Preview</span>
             </button>
           </div>
@@ -359,9 +359,9 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           }`}
         >
           {/* Editor Sub-header Bar - Hidden on mobile (< md) to maximize writing area */}
-          <div className="hidden md:flex px-4 py-2 bg-neutral-100/80 dark:bg-[#1e1e24] border-b border-neutral-200 dark:border-neutral-800 items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 select-none no-print transition-colors">
-            <span className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+          <div className="hidden md:flex px-4 py-2 bg-neutral-100/80 dark:bg-[#1e1e24] border-b border-neutral-200 dark:border-neutral-800 items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 select-none no-print transition-colors font-sans">
+            <span className="flex items-center gap-2 font-medium text-neutral-700 dark:text-neutral-300">
+              <span className="w-2 h-2 rounded-xs bg-emerald-500 dark:bg-emerald-400" />
               <span>Raw Markdown</span>
             </span>
 
@@ -382,10 +382,10 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                       return next;
                     });
                   }}
-                  className={`px-2 py-0.5 rounded border text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-colors shadow-2xs ${
+                  className={`px-2.5 py-1 rounded-md border text-xs font-sans font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs ${
                     isSyncScrollEnabled
-                      ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                      : 'bg-neutral-50 dark:bg-neutral-800 text-neutral-400 border-neutral-200 dark:border-neutral-700 opacity-60'
+                      ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border-brand-200 dark:border-brand-800/80 font-semibold'
+                      : 'bg-white dark:bg-neutral-800/80 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:text-neutral-900 dark:hover:text-white'
                   }`}
                   title={isSyncScrollEnabled ? 'Synchronized Scrolling: ON' : 'Synchronized Scrolling: OFF'}
                 >

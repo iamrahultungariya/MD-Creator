@@ -137,7 +137,7 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
       } ${className}`}
     >
       {/* Light & Dark Theme Followed Pristinely */}
-      <div className="flex items-center gap-0.5 sm:gap-1 px-2 py-1 rounded-2xl bg-white/95 dark:bg-[#18181c]/95 text-neutral-700 dark:text-neutral-200 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-xl dark:shadow-2xl dark:shadow-black/50">
+      <div className="flex items-center gap-0.5 sm:gap-1 px-1.5 py-1 rounded-xl bg-white/95 dark:bg-[#18181c]/95 text-neutral-700 dark:text-neutral-200 backdrop-blur-md border border-neutral-200/90 dark:border-neutral-800/90 shadow-xl dark:shadow-2xl font-sans">
         {enabledActions.map((actionId) => {
           const act = ACTION_ICON_MAP[actionId];
           if (!act) return null;
@@ -153,7 +153,7 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
               }}
               title={act.tooltip}
               aria-label={act.tooltip}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/80 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-brand-950/40 active:scale-95 transition-all cursor-pointer shrink-0 font-sans"
             >
               {act.icon}
             </button>

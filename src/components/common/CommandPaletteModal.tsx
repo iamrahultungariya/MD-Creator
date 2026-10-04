@@ -8,28 +8,32 @@ import {
   Moon,
   Printer,
   FileCode,
-  Sigma,
   FolderOpen,
-  ArrowRight,
-  ExternalLink,
-  Download,
-  MessageSquare,
+  Settings,
+  Database,
+  Eye,
+  Type,
+  CornerDownLeft,
+  X,
+  Command,
 } from 'lucide-react';
 import { db, DocumentMetadata, createNewDocument } from '../../db';
 import { useThemeStore } from '../../stores/useThemeStore';
-import { usePwaInstall } from '../../hooks/usePwaInstall';
+import { usePreferencesStore } from '../../stores/usePreferencesStore';
+import { StorageDetailsModal } from './StorageDetailsModal';
 
 interface CommandPaletteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenMathStudio?: () => void;
   onOpenPdfStudio?: () => void;
 }
+
+export type ActionCategory = 'Documents' | 'Actions & Navigation';
 
 interface PaletteAction {
   id: string;
   title: string;
-  category: 'Documents' | 'Quick Actions' | 'Formulas & Math' | 'Navigation' | 'Community & Support';
+  category: ActionCategory;
   description?: string;
   icon: React.ElementType;
   iconColor: string;
@@ -40,61 +44,75 @@ interface PaletteAction {
 export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   isOpen,
   onClose,
-  onOpenMathStudio,
   onOpenPdfStudio,
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useThemeStore();
-  const { isInstalled, installApp } = usePwaInstall();
+
+  const {
+    typewriterMode,
+    setTypewriterMode,
+    focusMode,
+    setFocusMode,
+    openPreferences,
+  } = usePreferencesStore();
 
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [documents, setDocuments] = useState<DocumentMetadata[]>([]);
+  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Load documents from IndexedDB
-  useEffect(() => {
-    if (!isOpen) return;
-    let isMounted = true;
+  // Load recent documents from IndexedDB
+  const loadDocuments = useCallback(() => {
     db.documents
       .orderBy('updatedAt')
       .reverse()
       .limit(10)
       .toArray()
       .then((docs) => {
-        if (isMounted) setDocuments(docs);
+        setDocuments(docs);
       })
       .catch(console.error);
+  }, []);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen]);
+  useEffect(() => {
+    if (isOpen) {
+      loadDocuments();
+    }
+  }, [isOpen, loadDocuments]);
 
-  // Focus input on open
+  // Focus input and reset state on open
   useEffect(() => {
     if (isOpen) {
       setSearch('');
       setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Build static & dynamic action items
-  const actions = useMemo<PaletteAction[]>(() => {
+  // Build curated actions catalogue: only documents, high-frequency actions & core navigation
+  const allActions = useMemo<PaletteAction[]>(() => {
     const list: PaletteAction[] = [];
 
-    // 1. Documents from IndexedDB
+    // 1. Recent Documents from IndexedDB
     documents.forEach((doc) => {
+      const formattedDate = new Date(doc.updatedAt).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+      });
+
       list.push({
         id: `doc-${doc.id}`,
-        title: doc.title,
+        title: doc.title || 'Untitled Document.md',
         category: 'Documents',
-        description: `Last edited ${new Date(doc.updatedAt).toLocaleDateString()}`,
+        description: `Last edited ${formattedDate}`,
         icon: FileText,
-        iconColor: 'text-sky-500 bg-sky-50 dark:bg-sky-950/50',
+        iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
         shortcut: 'Open',
         perform: () => {
           navigate(`/editor/${doc.id}`);
@@ -103,109 +121,30 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       });
     });
 
-    // 2. Quick Actions
+    // 2. High-Frequency Actions & Core Navigation
     list.push({
       id: 'action-new-doc',
       title: 'Create New Document',
-      category: 'Quick Actions',
-      description: 'Start a blank Markdown document in IndexedDB',
+      category: 'Actions & Navigation',
+      description: 'Start a blank Markdown document in your offline vault',
       icon: Plus,
-      iconColor: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/50',
+      iconColor: 'text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/20 border-emerald-500/20',
       shortcut: 'New',
       perform: async () => {
-        const newId = await createNewDocument('Untitled Document.md');
+        const title = search.trim() ? (search.endsWith('.md') ? search : `${search}.md`) : 'Untitled Document.md';
+        const newId = await createNewDocument(title);
         navigate(`/editor/${newId}`);
         onClose();
       },
     });
 
     list.push({
-      id: 'action-toggle-theme',
-      title: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-      category: 'Quick Actions',
-      description: 'Toggle application visual theme',
-      icon: isDark ? Sun : Moon,
-      iconColor: 'text-amber-500 bg-amber-50 dark:bg-amber-950/50',
-      shortcut: 'Theme',
-      perform: () => {
-        toggleTheme();
-        onClose();
-      },
-    });
-
-    if (!isInstalled) {
-      list.push({
-        id: 'action-install-app',
-        title: 'Install MD Writer App',
-        category: 'Quick Actions',
-        description: 'Install as desktop/offline standalone Progressive Web App',
-        icon: Download,
-        iconColor: 'text-sky-500 bg-sky-50 dark:bg-sky-950/50',
-        shortcut: 'PWA',
-        perform: async () => {
-          onClose();
-          await installApp();
-        },
-      });
-    }
-
-    if (location.pathname.startsWith('/editor') && onOpenPdfStudio) {
-      list.push({
-        id: 'action-pdf-export',
-        title: 'Open PDF Export Studio',
-        category: 'Quick Actions',
-        description: 'Format, theme & print publication-grade vector PDF',
-        icon: Printer,
-        iconColor: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/50',
-        shortcut: 'Ctrl+P',
-        perform: () => {
-          onOpenPdfStudio();
-          onClose();
-        },
-      });
-    }
-
-    list.push({
-      id: 'action-feedback',
-      title: 'Submit Feedback & Ideas',
-      category: 'Community & Support',
-      description: 'Report bugs, suggest features, or share thoughts',
-      icon: MessageSquare,
-      iconColor: 'text-brand-500 bg-brand-50 dark:bg-brand-950/50',
-      shortcut: '/feedback',
-      perform: () => {
-        onClose();
-        navigate('/feedback');
-      },
-    });
-
-    // 3. Formulas & Math
-    list.push({
-      id: 'action-math-studio',
-      title: 'Open KaTeX Formula Studio',
-      category: 'Formulas & Math',
-      description: 'Predefined Calculus, Algebra, Physics & Statistics equations',
-      icon: Sigma,
-      iconColor: 'text-purple-500 bg-purple-50 dark:bg-purple-950/50',
-      shortcut: '/math',
-      perform: () => {
-        if (onOpenMathStudio) {
-          onOpenMathStudio();
-        } else if (!location.pathname.startsWith('/editor')) {
-          navigate('/editor');
-        }
-        onClose();
-      },
-    });
-
-    // 4. Navigation
-    list.push({
       id: 'nav-documents',
       title: 'Go to Documents Vault',
-      category: 'Navigation',
-      description: 'Browse all offline documents, tags, and stats',
+      category: 'Actions & Navigation',
+      description: 'Browse, manage, and filter all offline notes',
       icon: FolderOpen,
-      iconColor: 'text-brand-500 bg-brand-50 dark:bg-brand-950/50',
+      iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
       shortcut: 'Vault',
       perform: () => {
         navigate('/documents');
@@ -214,35 +153,141 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     });
 
     list.push({
-      id: 'nav-home',
-      title: 'Go to Home Landing Page',
-      category: 'Navigation',
-      description: 'Return to MD Writer feature showcase',
-      icon: ExternalLink,
-      iconColor: 'text-neutral-500 bg-neutral-100 dark:bg-neutral-800',
-      shortcut: 'Home',
+      id: 'nav-editor',
+      title: 'Open Markdown Editor',
+      category: 'Actions & Navigation',
+      description: 'Return to active writing editor screen',
+      icon: FileCode,
+      iconColor: 'text-sky-600 bg-sky-500/10 dark:text-sky-400 dark:bg-sky-500/20 border-sky-500/20',
+      shortcut: 'Editor',
       perform: () => {
-        navigate('/');
+        navigate('/editor');
         onClose();
       },
     });
 
+    list.push({
+      id: 'action-toggle-theme',
+      title: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+      category: 'Actions & Navigation',
+      description: `Toggle visual theme (${isDark ? 'Dark' : 'Light'} active)`,
+      icon: isDark ? Sun : Moon,
+      iconColor: 'text-amber-600 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-500/20 border-amber-500/20',
+      shortcut: 'Theme',
+      perform: () => {
+        toggleTheme();
+        onClose();
+      },
+    });
+
+    list.push({
+      id: 'mode-typewriter',
+      title: typewriterMode ? 'Disable Typewriter Mode' : 'Enable Typewriter Mode',
+      category: 'Actions & Navigation',
+      description: 'Keep the current active writing line vertically centered',
+      icon: Type,
+      iconColor: typewriterMode
+        ? 'text-brand-600 bg-brand-500/20 border-brand-500/30'
+        : 'text-neutral-600 bg-neutral-500/10 dark:text-neutral-400 dark:bg-neutral-800 border-neutral-500/20',
+      shortcut: typewriterMode ? 'ON' : 'OFF',
+      perform: () => {
+        setTypewriterMode(!typewriterMode);
+        onClose();
+      },
+    });
+
+    list.push({
+      id: 'mode-focus',
+      title: focusMode ? 'Disable Focus Mode' : 'Enable Focus Mode',
+      category: 'Actions & Navigation',
+      description: 'Dim surrounding paragraphs to highlight the current line',
+      icon: Eye,
+      iconColor: focusMode
+        ? 'text-emerald-600 bg-emerald-500/20 border-emerald-500/30'
+        : 'text-neutral-600 bg-neutral-500/10 dark:text-neutral-400 dark:bg-neutral-800 border-neutral-500/20',
+      shortcut: focusMode ? 'ON' : 'OFF',
+      perform: () => {
+        setFocusMode(!focusMode);
+        onClose();
+      },
+    });
+
+    list.push({
+      id: 'action-pdf-export',
+      title: 'Export / Print PDF Studio',
+      category: 'Actions & Navigation',
+      description: 'Vector PDF generation with themes and cover layout',
+      icon: Printer,
+      iconColor: 'text-indigo-600 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-500/20 border-indigo-500/20',
+      shortcut: 'Ctrl+P',
+      perform: () => {
+        if (onOpenPdfStudio) {
+          onOpenPdfStudio();
+        } else if (!location.pathname.startsWith('/editor')) {
+          navigate('/editor');
+        }
+        onClose();
+      },
+    });
+
+    list.push({
+      id: 'action-preferences',
+      title: 'Editor Preferences',
+      category: 'Actions & Navigation',
+      description: 'Font choices, line height, tab sizes & editor behaviors',
+      icon: Settings,
+      iconColor: 'text-neutral-600 bg-neutral-500/10 dark:text-neutral-300 dark:bg-neutral-800 border-neutral-500/20',
+      shortcut: 'Prefs',
+      perform: () => {
+        openPreferences();
+        onClose();
+      },
+    });
+
+    list.push({
+      id: 'action-storage-details',
+      title: 'Storage & 300 MB Limit Telemetry',
+      category: 'Actions & Navigation',
+      description: 'View IndexedDB usage, local-first safety & purge trash',
+      icon: Database,
+      iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
+      shortcut: '300 MB',
+      perform: () => {
+        setIsStorageModalOpen(true);
+      },
+    });
+
     return list;
-  }, [documents, isDark, toggleTheme, navigate, onClose, onOpenMathStudio, onOpenPdfStudio, location.pathname]);
+  }, [
+    documents,
+    search,
+    isDark,
+    toggleTheme,
+    typewriterMode,
+    setTypewriterMode,
+    focusMode,
+    setFocusMode,
+    openPreferences,
+    onOpenPdfStudio,
+    location.pathname,
+    navigate,
+    onClose,
+  ]);
 
   // Filter actions based on query
   const filteredActions = useMemo(() => {
-    if (!search.trim()) return actions;
+    if (!search.trim()) return allActions;
     const q = search.toLowerCase();
-    return actions.filter(
-      (a) =>
-        a.title.toLowerCase().includes(q) ||
-        a.category.toLowerCase().includes(q) ||
-        a.description?.toLowerCase().includes(q)
-    );
-  }, [actions, search]);
+    return allActions.filter((a) => {
+      const matchTitle = a.title.toLowerCase().includes(q);
+      const matchCategory = a.category.toLowerCase().includes(q);
+      const matchDesc = a.description?.toLowerCase().includes(q) || false;
+      const matchShortcut = a.shortcut?.toLowerCase().includes(q) || false;
+      return matchTitle || matchCategory || matchDesc || matchShortcut;
+    });
+  }, [allActions, search]);
 
-  // Reset selected index when query changes
+  // Reset selection index when query changes
   useEffect(() => {
     setSelectedIndex(0);
   }, [search]);
@@ -272,109 +317,254 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         e.preventDefault();
         if (filteredActions[selectedIndex]) {
           filteredActions[selectedIndex].perform();
+        } else if (search.trim()) {
+          const title = search.endsWith('.md') ? search : `${search}.md`;
+          createNewDocument(title).then((newId) => {
+            navigate(`/editor/${newId}`);
+            onClose();
+          });
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
       }
     },
-    [filteredActions, selectedIndex, onClose]
+    [filteredActions, selectedIndex, search, navigate, onClose]
   );
 
   if (!isOpen) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-3 sm:px-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-150 select-none"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150 text-neutral-900 dark:text-neutral-100">
-        {/* Search Bar Input */}
-        <div className="px-4 py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-3 bg-white dark:bg-neutral-900 shrink-0">
-          <Search className="w-5 h-5 text-neutral-400 shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a command, search documents, or insert formulas..."
-            className="flex-1 bg-transparent text-sm sm:text-base font-medium text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none"
-          />
-          <kbd className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 px-2 py-0.5 rounded-md border border-neutral-200/70 dark:border-neutral-700/70 shadow-2xs">
-            ESC
-          </kbd>
-        </div>
+  const selectedAction = filteredActions[selectedIndex];
 
-        {/* Results List */}
-        <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2 space-y-1">
-          {filteredActions.map((action, idx) => {
-            const isSelected = selectedIndex === idx;
-            const Icon = action.icon;
-            return (
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-150 select-none font-sans"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div 
+          className="w-full max-w-xl bg-white/95 dark:bg-[#121118]/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150 text-neutral-900 dark:text-neutral-100 font-sans"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Command Palette"
+        >
+          {/* Subtle Electric Violet Top Sheen */}
+          <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-500/80 to-transparent shrink-0" />
+
+          {/* Top Window Header: macOS Traffic Lights & Title */}
+          <div className="px-4 py-2.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-950/40 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 mr-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] inline-block shadow-2xs" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] inline-block shadow-2xs" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] inline-block shadow-2xs" />
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                <Command className="w-3.5 h-3.5 text-brand-500" />
+                <span>Quick Commands &amp; Navigation</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono text-neutral-500 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60">
+                ⌘K / Ctrl+K
+              </span>
               <button
-                key={action.id}
-                data-index={idx}
                 type="button"
-                onClick={() => action.perform()}
-                onMouseEnter={() => setSelectedIndex(idx)}
-                className={`w-full text-left px-3 py-2.5 rounded-2xl flex items-center justify-between transition-colors cursor-pointer ${
-                  isSelected
-                    ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white'
-                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
-                }`}
+                onClick={onClose}
+                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                aria-label="Close Command Palette"
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${action.iconColor}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <div className="truncate">
-                    <div className="text-xs font-bold text-neutral-950 dark:text-white truncate">
-                      {action.title}
-                    </div>
-                    {action.description && (
-                      <div className="text-[11px] text-neutral-400 dark:text-neutral-500 truncate">
-                        {action.description}
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Search Bar Input */}
+          <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center gap-3 bg-white dark:bg-neutral-900/60 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20 shadow-2xs">
+              <Search className="w-4 h-4" />
+            </div>
+
+            <input
+              ref={inputRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search documents or jump to actions..."
+              className="flex-1 bg-transparent text-sm sm:text-base font-medium text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-hidden"
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="p-1 rounded-md text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 border border-neutral-200/60 dark:border-neutral-700/60">
+              ESC
+            </kbd>
+          </div>
+
+          {/* Results Action List */}
+          <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-1">
+            {filteredActions.length > 0 ? (
+              filteredActions.map((action, idx) => {
+                const isSelected = selectedIndex === idx;
+                const Icon = action.icon;
+
+                // Category header logic
+                const isFirstOfCategory =
+                  idx === 0 || filteredActions[idx - 1].category !== action.category;
+
+                return (
+                  <React.Fragment key={action.id}>
+                    {isFirstOfCategory && (
+                      <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                        {action.category}
                       </div>
                     )}
-                  </div>
+
+                    <button
+                      data-index={idx}
+                      type="button"
+                      onClick={() => action.perform()}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-all cursor-pointer border ${
+                        isSelected
+                          ? 'bg-brand-50/80 dark:bg-brand-950/40 border-brand-500/40 text-neutral-950 dark:text-white shadow-2xs'
+                          : 'border-transparent text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 pr-2">
+                        <div
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs transition-colors ${action.iconColor}`}
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+
+                        <div className="truncate">
+                          <div className="text-xs font-bold text-neutral-950 dark:text-white truncate">
+                            {action.title}
+                          </div>
+
+                          {action.description && (
+                            <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                              {action.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right shortcut & enter cue */}
+                      <div className="flex items-center gap-2 shrink-0 pl-2">
+                        {action.shortcut && (
+                          <kbd
+                            className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md border shadow-2xs transition-colors ${
+                              isSelected
+                                ? 'bg-brand-500/10 text-brand-600 dark:text-brand-300 border-brand-500/30'
+                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200/60 dark:border-neutral-700/60'
+                            }`}
+                          >
+                            {action.shortcut}
+                          </kbd>
+                        )}
+
+                        {isSelected && (
+                          <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 flex items-center">
+                            <CornerDownLeft className="w-3.5 h-3.5" />
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  </React.Fragment>
+                );
+              })
+            ) : (
+              /* Quick-Create Note state when no matches */
+              <div className="py-10 px-4 flex flex-col items-center justify-center text-center">
+                <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-2.5 text-neutral-400">
+                  <FileCode className="w-5 h-5" />
                 </div>
-
-                <div className="flex items-center gap-2 shrink-0 pl-3">
-                  <kbd className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60 shadow-2xs">
-                    {action.shortcut}
-                  </kbd>
-                  {isSelected && <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />}
-                </div>
-              </button>
-            );
-          })}
-
-          {filteredActions.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center text-neutral-400">
-              <FileCode className="w-8 h-8 mb-2 opacity-50" />
-              <p className="text-xs font-medium">No commands found for "{search}"</p>
-            </div>
-          )}
-        </div>
-
-        {/* Palette Footer Tip */}
-        <div className="px-4 py-2.5 border-t border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/50 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 shrink-0">
-          <div className="flex items-center gap-2">
-            <span>
-              Use <kbd className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md text-[10px] font-medium shadow-2xs">↑</kbd>{' '}
-              <kbd className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md text-[10px] font-medium shadow-2xs">↓</kbd> to navigate
-            </span>
-            <span>•</span>
-            <span>
-              <kbd className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md text-[10px] font-medium shadow-2xs">↵</kbd> to select
-            </span>
+                <h3 className="text-xs font-bold text-neutral-900 dark:text-white mb-1">
+                  No matches for "{search}"
+                </h3>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 max-w-xs mb-3">
+                  Create a new document with this title and jump directly into writing.
+                </p>
+                {search.trim() && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const title = search.endsWith('.md') ? search : `${search}.md`;
+                      const newId = await createNewDocument(title);
+                      navigate(`/editor/${newId}`);
+                      onClose();
+                    }}
+                    className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Create "{search.endsWith('.md') ? search : `${search}.md`}"</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <span className="text-[11px] font-medium">{filteredActions.length} actions</span>
+
+          {/* Palette Footer Status Bar */}
+          <div className="px-4 py-2 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-950/50 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300/60 dark:border-neutral-700 font-mono text-[10px]">
+                  ↑↓
+                </kbd>
+                <span>Navigate</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300/60 dark:border-neutral-700 font-mono text-[10px]">
+                  ↵
+                </kbd>
+                <span>Select</span>
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300/60 dark:border-neutral-700 font-mono text-[10px]">
+                  Esc
+                </kbd>
+                <span>Close</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedAction && (
+                <div className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-500/20">
+                  <span>↵ {selectedAction.shortcut || 'Select'}</span>
+                </div>
+              )}
+              <span className="text-[11px] font-mono">
+                {filteredActions.length} item{filteredActions.length === 1 ? '' : 's'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Storage Breakdown Sub-modal if triggered */}
+      {isStorageModalOpen && (
+        <StorageDetailsModal
+          isOpen={isStorageModalOpen}
+          onClose={() => setIsStorageModalOpen(false)}
+        />
+      )}
+    </>
   );
 };

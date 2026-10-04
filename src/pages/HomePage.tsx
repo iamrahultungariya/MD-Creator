@@ -35,7 +35,7 @@ export const HomePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0E0B14] text-neutral-900 dark:text-neutral-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 font-sans text-neutral-900 dark:text-neutral-100 transition-colors">
       {/* Top Sticky Navigation */}
       <Navbar 
         onOpenTemplates={() => setIsTemplatesOpen(true)}
@@ -43,7 +43,6 @@ export const HomePage: React.FC = () => {
           const el = document.getElementById('features');
           el?.scrollIntoView({ behavior: 'smooth' });
         }}
-        onOpenUpdates={() => navigate('/updates')}
       />
 
       {/* Main Content Sections */}
@@ -54,7 +53,6 @@ export const HomePage: React.FC = () => {
         {/* 3-Block Notion-Style Features Story */}
         <BentoFeatures 
           onExploreFeatures={() => navigate('/editor')} 
-          onOpenUpdates={() => navigate('/updates')}
           onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
 
@@ -62,7 +60,7 @@ export const HomePage: React.FC = () => {
         <ReviewsSection />
 
         {/* Notion-Style Bottom Call-to-Action */}
-        <section className="py-20 sm:py-24 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-black/20 text-center">
+        <section className="py-20 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/30 text-center font-sans">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
               Ready to write clearer documents?
@@ -74,7 +72,7 @@ export const HomePage: React.FC = () => {
             <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
               <button
                 onClick={() => navigate('/editor')}
-                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 font-semibold text-sm shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01]"
+                className="w-full sm:w-auto px-7 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01] font-sans"
               >
                 <span>Open Markdown Studio</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -82,7 +80,7 @@ export const HomePage: React.FC = () => {
 
               <button
                 onClick={() => setIsTemplatesOpen(true)}
-                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                className="w-full sm:w-auto px-5 py-3 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs font-sans"
               >
                 <BookOpen className="w-4 h-4 text-neutral-400" />
                 <span>Browse Blueprints</span>
@@ -97,7 +95,7 @@ export const HomePage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer onOpenUpdates={() => navigate('/updates')} />
+      <Footer />
 
       {/* Interactive Templates Modal — Lazy Loaded On-Demand */}
       {isTemplatesOpen && (

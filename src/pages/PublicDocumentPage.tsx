@@ -181,10 +181,10 @@ export const PublicDocumentPage: React.FC = () => {
   // 2. Password Prompt
   if (status === 'password_required' || status === 'invalid_password' || status === 'rate_limited') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200">
-        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-6">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200 font-sans">
+        <div className="max-w-md w-full p-8 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl space-y-6 font-sans">
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
+            <div className="w-12 h-12 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-2xs">
               <Lock className="w-6 h-6" />
             </div>
             <h1 className="text-lg font-bold text-neutral-900 dark:text-white">
@@ -203,7 +203,7 @@ export const PublicDocumentPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter passphrase..."
-                className="w-full px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
+                className="w-full px-4 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-sm focus:outline-hidden focus:border-brand-500 font-mono"
               />
             </div>
 
@@ -223,7 +223,7 @@ export const PublicDocumentPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-md"
+              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-2xs"
             >
               Unlock Page
             </button>
@@ -236,9 +236,9 @@ export const PublicDocumentPage: React.FC = () => {
   // 3. 404 / Private Notice
   if (status === 'not_found' || !doc) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200">
-        <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl text-center space-y-5">
-          <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 mx-auto flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200 font-sans">
+        <div className="max-w-md w-full p-8 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl text-center space-y-5 font-sans">
+          <div className="w-12 h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-500 mx-auto flex items-center justify-center border border-neutral-200/60 dark:border-neutral-700/60">
             <FileText className="w-6 h-6" />
           </div>
           <div className="space-y-1">
@@ -251,7 +251,7 @@ export const PublicDocumentPage: React.FC = () => {
           </div>
           <Link
             to="/editor"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-md transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-2xs transition-colors"
           >
             <PenTool className="w-4 h-4" />
             <span>Open MD Writer</span>
@@ -280,7 +280,7 @@ export const PublicDocumentPage: React.FC = () => {
           className="flex items-center gap-2 text-xs font-semibold text-neutral-900 dark:text-white hover:opacity-80 transition-opacity"
         >
           <img 
-            src="/logo.webp" 
+            src="/logo.png" 
             alt="MD Writer Logo" 
             className="w-6 h-6 rounded-lg object-contain shadow-xs" 
           />

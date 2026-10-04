@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FileText, 
   Plus, 
   LogOut, 
   ChevronDown, 
@@ -11,17 +10,19 @@ import {
 } from 'lucide-react';
 import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { createNewDocument } from '../../db';
 import { useConfirm } from '../../stores/useConfirmStore';
 import { isCurrentUserAdmin } from '../../utils/adminAuth';
 import { AvatarPickerModal } from './AvatarPickerModal';
 import { usePreferencesStore } from '../../stores/usePreferencesStore';
+import { CreateDocumentModal } from '../document/CreateDocumentModal';
+import { StorageLimitRing } from '../common/StorageLimitRing';
 
 export const ProfileDropdown: React.FC = () => {
   const { user, signOut } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -48,10 +49,9 @@ export const ProfileDropdown: React.FC = () => {
 
   if (!user) return null;
 
-  const handleCreateNew = async () => {
+  const handleCreateNew = () => {
     setIsOpen(false);
-    const id = await createNewDocument('Untitled Document.md');
-    navigate(`/editor/${id}`);
+    setIsCreateModalOpen(true);
   };
 
   const handleSignOut = async () => {
@@ -91,10 +91,10 @@ export const ProfileDropdown: React.FC = () => {
 
       {/* Floating Profile Popup Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/50 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/50 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
           
           {/* User Info Header */}
-          <div className="p-3 bg-neutral-50/80 dark:bg-neutral-950/50 rounded-xl mb-1.5 border border-neutral-100 dark:border-neutral-800/80">
+          <div className="p-3 bg-neutral-50/80 dark:bg-neutral-950/50 rounded-lg mb-1.5 border border-neutral-100 dark:border-neutral-800/80">
             <div className="flex items-center gap-3 mb-2">
               <div 
                 className="relative group cursor-pointer shrink-0" 
@@ -124,7 +124,7 @@ export const ProfileDropdown: React.FC = () => {
                       setIsOpen(false);
                       setIsAvatarModalOpen(true);
                     }}
-                    className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                    className="text-[10px] font-semibold text-[#8257F5] dark:text-[#a07cf8] hover:underline cursor-pointer"
                   >
                     Change Face
                   </button>
@@ -153,7 +153,7 @@ export const ProfileDropdown: React.FC = () => {
                 setIsOpen(false);
                 navigate('/documents');
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
               <FolderOpen className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>My Documents</span>
@@ -161,7 +161,7 @@ export const ProfileDropdown: React.FC = () => {
 
             <button
               onClick={handleCreateNew}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
               <Plus className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>New Document</span>
@@ -170,20 +170,9 @@ export const ProfileDropdown: React.FC = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                navigate('/editor');
-              }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
-            >
-              <FileText className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
-              <span>Open Editor</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setIsOpen(false);
                 usePreferencesStore.getState().openPreferences();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center gap-2.5 transition-colors cursor-pointer group"
             >
               <SlidersHorizontal className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
               <span>Preferences (Ctrl+,)</span>
@@ -195,7 +184,7 @@ export const ProfileDropdown: React.FC = () => {
                   setIsOpen(false);
                   navigate('/admin');
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center justify-between transition-colors cursor-pointer group"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800/70 flex items-center justify-between transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-4 h-4 text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
@@ -208,31 +197,16 @@ export const ProfileDropdown: React.FC = () => {
             )}
           </div>
 
-          {/* Storage Telemetry Summary - Clean Micro Status */}
-          <div className="my-1.5 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-950/40 text-[11px] text-neutral-500 dark:text-neutral-400 space-y-1.5 border border-neutral-100 dark:border-neutral-800/60">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500" />
-                <span>IndexedDB Vault</span>
-              </span>
-              <span className="font-mono text-neutral-600 dark:text-neutral-300">Instant</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className={`w-1.5 h-1.5 rounded-full ${hasSupabase ? 'bg-neutral-700 dark:bg-neutral-300' : 'bg-neutral-300 dark:bg-neutral-700'}`} />
-                <span>Cloud Sync</span>
-              </span>
-              <span className="font-mono text-neutral-600 dark:text-neutral-300">
-                {hasSupabase ? 'Active' : 'Offline'}
-              </span>
-            </div>
+          {/* Storage Telemetry Summary - 300 MB Soft Quota Ring */}
+          <div className="my-1.5">
+            <StorageLimitRing variant="card" />
           </div>
 
           {/* Sign Out Button */}
           <div className="pt-1 border-t border-neutral-100 dark:border-neutral-800">
             <button
               onClick={handleSignOut}
-              className="w-full text-left px-3 py-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/70 dark:hover:bg-rose-950/30 flex items-center gap-2.5 transition-colors cursor-pointer text-xs font-semibold group"
+              className="w-full text-left px-3 py-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/70 dark:hover:bg-rose-950/30 flex items-center gap-2.5 transition-colors cursor-pointer text-xs font-semibold group"
             >
               <LogOut className="w-4 h-4 text-neutral-400 group-hover:text-rose-500 transition-colors" />
               <span>Sign Out</span>
@@ -246,6 +220,12 @@ export const ProfileDropdown: React.FC = () => {
       <AvatarPickerModal 
         isOpen={isAvatarModalOpen} 
         onClose={() => setIsAvatarModalOpen(false)} 
+      />
+
+      {/* New Document & Note Creation Flow Modal */}
+      <CreateDocumentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
   );

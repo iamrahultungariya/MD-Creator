@@ -16,9 +16,6 @@ const ExportPdfModal = React.lazy(() =>
 const TableBuilderModal = React.lazy(() =>
   import('../../../components/editor/TableBuilderModal').then((m) => ({ default: m.TableBuilderModal }))
 );
-const ProductUpdatesModal = React.lazy(() =>
-  import('../../../components/home/ProductUpdatesModal').then((m) => ({ default: m.ProductUpdatesModal }))
-);
 const TemplatesModal = React.lazy(() =>
   import('../../../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
 );
@@ -70,8 +67,6 @@ interface EditorModalsContainerProps {
   isOutlineOpen: boolean;
   onCloseOutline: () => void;
   onSelectHeading: (heading: HeadingItem) => void;
-  isUpdatesOpen: boolean;
-  onCloseUpdates: () => void;
   isTemplatesOpen: boolean;
   onCloseTemplates: () => void;
   onSelectTemplate: (template: MarkdownTemplate, action: 'insert' | 'replace') => void;
@@ -126,8 +121,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   isOutlineOpen,
   onCloseOutline,
   onSelectHeading,
-  isUpdatesOpen,
-  onCloseUpdates,
   isTemplatesOpen,
   onCloseTemplates,
   onSelectTemplate,
@@ -221,12 +214,7 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
         />
       )}
 
-      {isUpdatesOpen && (
-        <ProductUpdatesModal
-          isOpen={isUpdatesOpen}
-          onClose={onCloseUpdates}
-        />
-      )}
+
 
       {isTemplatesOpen && (
         <TemplatesModal

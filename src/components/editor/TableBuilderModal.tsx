@@ -103,15 +103,15 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
       <div 
         data-table-builder="true"
-        className="w-full max-w-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
       >
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/40">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-2xs">
               <Table2 className="w-5 h-5" />
             </div>
             <div>
@@ -125,21 +125,21 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Body: Controls & Grid */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1">
+        <div className="p-6 overflow-y-auto space-y-5 flex-1 font-sans">
           {/* Quick Actions Row */}
           <div className="flex items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-neutral-700 dark:text-neutral-300">
                 Dimensions:
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-mono text-[11px]">
+              <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-mono text-[11px] border border-neutral-200/60 dark:border-neutral-700/60">
                 {rows.length} rows × {headers.length} cols
               </span>
             </div>
@@ -148,15 +148,15 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
               <button
                 type="button"
                 onClick={addColumn}
-                className="px-2.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
               >
-                <Columns className="w-3.5 h-3.5 text-brand-500" />
+                <Columns className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                 <span>Add Column</span>
               </button>
               <button
                 type="button"
                 onClick={addRow}
-                className="px-2.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
               >
                 <Rows className="w-3.5 h-3.5 text-emerald-500" />
                 <span>Add Row</span>
@@ -165,7 +165,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
           </div>
 
           {/* Interactive Grid Container */}
-          <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-xl bg-white dark:bg-neutral-900 shadow-2xs">
+          <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-lg bg-white dark:bg-neutral-900 shadow-2xs">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-neutral-100/70 dark:bg-neutral-800/60 border-b border-neutral-200 dark:border-neutral-800">
@@ -179,7 +179,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                             value={h}
                             onChange={(e) => updateHeader(colIdx, e.target.value)}
                             placeholder={`Header ${colIdx + 1}`}
-                            className="w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                            className="w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                           />
                           {headers.length > 1 && (
                             <button
@@ -196,7 +196,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                         <button
                           type="button"
                           onClick={() => toggleAlignment(colIdx)}
-                          className="px-2 py-0.5 rounded text-[10px] font-semibold bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center gap-1 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                          className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center gap-1 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
                           title="Cycle alignment (left / center / right)"
                         >
                           {alignments[colIdx] === 'left' && <AlignLeft className="w-3 h-3" />}
@@ -223,7 +223,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
                           value={cell}
                           onChange={(e) => updateCell(rowIdx, colIdx, e.target.value)}
                           placeholder="Empty cell..."
-                          className={`w-full px-2.5 py-1.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
+                          className={`w-full px-2.5 py-1.5 text-xs rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 ${
                             alignments[colIdx] === 'center' ? 'text-center' : alignments[colIdx] === 'right' ? 'text-right' : 'text-left'
                           }`}
                         />
@@ -252,25 +252,25 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
             <label className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
               Generated Markdown Output Preview
             </label>
-            <pre className="p-3 bg-neutral-900 text-neutral-200 dark:bg-neutral-950 rounded-xl font-mono text-[11px] overflow-x-auto border border-neutral-800">
+            <pre className="p-3 bg-neutral-900 text-neutral-200 dark:bg-neutral-950 rounded-lg font-mono text-[11px] overflow-x-auto border border-neutral-800">
               {generateMarkdown()}
             </pre>
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/40">
+        <div className="px-6 py-3.5 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/40 font-sans">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleInsert}
-            className="px-5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Check className="w-4 h-4" />
             <span>Insert Table into Document</span>

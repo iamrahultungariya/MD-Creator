@@ -86,15 +86,15 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-neutral-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-neutral-950/60 backdrop-blur-xs animate-in fade-in duration-200 font-sans">
       <div 
-        className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] font-sans"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/50 dark:border-amber-900/40">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/50 dark:border-amber-900/40 shadow-2xs">
               <History className="w-4 h-4" />
             </div>
             <div>
@@ -102,7 +102,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
                 <h3 className="font-bold text-sm sm:text-base text-neutral-950 dark:text-white">
                   Local Revision History
                 </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-semibold">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-semibold border border-neutral-200/60 dark:border-neutral-700/60">
                   IndexedDB Offline Engine
                 </span>
               </div>
@@ -116,7 +116,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
             <button
               onClick={handleTakeSnapshot}
               disabled={isCreating}
-              className="px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
               title="Save an instant snapshot checkpoint"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -124,15 +124,15 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
             </button>
             <button 
               onClick={onClose}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Content Body: Two-Pane Split */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden font-sans">
           
           {/* Left: Revisions Timeline List */}
           <div className="w-full md:w-80 border-r border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 overflow-y-auto p-3 space-y-2">
@@ -155,9 +155,9 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
                   <button
                     key={rev.id}
                     onClick={() => setSelectedRevision(rev)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1 ${
+                    className={`w-full text-left p-3 rounded-lg border transition-all cursor-pointer flex flex-col gap-1 ${
                       isSelected
-                        ? 'bg-white dark:bg-neutral-800 border-neutral-900/80 dark:border-white/30 shadow-xs'
+                        ? 'bg-white dark:bg-neutral-800 border-brand-500 shadow-2xs'
                         : 'bg-white/60 dark:bg-neutral-900/60 border-neutral-200/60 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
                     }`}
                   >
@@ -172,7 +172,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
 
                     <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400">
                       <span>{dateObj.toLocaleDateString()}</span>
-                      <span className="px-1.5 py-0.2 rounded text-[9px] bg-neutral-100 dark:bg-neutral-800 font-mono">
+                      <span className="px-1.5 py-0.2 rounded-md text-[9px] bg-neutral-100 dark:bg-neutral-800 font-mono">
                         {rev.reason || 'Auto'}
                       </span>
                     </div>
@@ -183,7 +183,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
           </div>
 
           {/* Right: Snapshot Preview & Rollback Action */}
-          <div className="flex-1 flex flex-col bg-white dark:bg-neutral-900 overflow-hidden">
+          <div className="flex-1 flex flex-col bg-white dark:bg-neutral-900 overflow-hidden font-sans">
             {selectedRevision ? (
               <>
                 <div className="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/40 dark:bg-neutral-900/40 text-xs">
@@ -200,14 +200,14 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
 
                   <button
                     onClick={() => handleRestore(selectedRevision)}
-                    className="px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Rollback to this Version</span>
                   </button>
                 </div>
 
-                <div className="flex-1 p-5 overflow-y-auto font-mono-code text-xs text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap leading-relaxed select-text bg-neutral-50/20 dark:bg-neutral-950/20">
+                <div className="flex-1 p-5 overflow-y-auto font-mono text-xs text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap leading-relaxed select-text bg-neutral-50/20 dark:bg-neutral-950/20">
                   {selectedRevision.content}
                 </div>
               </>
@@ -221,11 +221,11 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/60 flex items-center justify-between text-xs text-neutral-500">
+        <div className="px-6 py-3 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/60 flex items-center justify-between text-xs text-neutral-500 font-sans">
           <span>Zero cloud egress • Stored 100% locally in your browser's Dexie IndexedDB.</span>
           <button
             onClick={onClose}
-            className="hover:text-neutral-900 dark:hover:text-white cursor-pointer"
+            className="px-3 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>

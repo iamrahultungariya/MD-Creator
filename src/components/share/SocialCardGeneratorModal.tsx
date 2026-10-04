@@ -126,16 +126,16 @@ export const SocialCardGeneratorModal: React.FC<SocialCardGeneratorModalProps> =
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200 select-none font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="w-full max-w-2xl bg-white dark:bg-[#14121c] border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 font-sans"
       >
         {/* Header Bar */}
-        <div className="px-5 py-3.5 border-b border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-[#181620] shrink-0">
+        <div className="px-5 py-3.5 border-b border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
           <div className="flex items-center gap-2">
             {/* Mac Traffic Lights */}
             <div className="flex items-center gap-1.5 mr-2">
@@ -192,9 +192,11 @@ export const SocialCardGeneratorModal: React.FC<SocialCardGeneratorModalProps> =
               {/* Card Header: Brand Logo & Traffic Lights */}
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#8257F5] flex items-center justify-center shadow-lg shadow-[#8257F5]/30">
-                    <span className="font-bold text-white text-sm tracking-tighter">MD</span>
-                  </div>
+                  <img 
+                    src="/logo.png" 
+                    alt="MD Writer Logo" 
+                    className="w-8 h-8 rounded-lg object-contain shadow-md shadow-brand-500/20" 
+                  />
                   <div>
                     <span className="font-bold text-xs tracking-tight text-white/95">
                       MD Writer Studio
@@ -248,7 +250,7 @@ export const SocialCardGeneratorModal: React.FC<SocialCardGeneratorModalProps> =
               type="button"
               disabled={isDownloading}
               onClick={handleDownloadImage}
-              className="py-2.5 px-3 rounded-lg bg-[#8257F5] hover:bg-[#7245E5] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
+              className="py-2.5 px-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
             >
               {isDownloading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

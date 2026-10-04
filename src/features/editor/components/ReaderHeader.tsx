@@ -142,18 +142,18 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
           onClick={() => setViewMode('split')}
-          className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-2xs border ${themeStyles.btnDefault}`}
+          className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-sans font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-2xs border ${themeStyles.btnDefault}`}
           title="Exit to Editor Workspace (Esc)"
         >
           <PenTool className="w-3.5 h-3.5" />
           <span>Editor</span>
-          <span className={`hidden md:inline text-[10px] font-mono opacity-70`}>Esc</span>
+          <span className={`hidden md:inline text-[10px] font-sans font-medium opacity-70`}>Esc</span>
         </button>
 
         <div className={`hidden sm:block h-4 w-px shrink-0 ${themeStyles.divider}`} />
 
         {/* Title */}
-        <div className="min-w-0 flex items-center gap-2">
+        <div className="min-w-0 flex items-center gap-2 font-sans">
           <BookOpen className={`w-4 h-4 shrink-0 hidden xs:block ${themeStyles.muted}`} />
           <h1 className={`font-bold text-xs sm:text-sm truncate max-w-[130px] xs:max-w-[200px] sm:max-w-xs md:max-w-md ${themeStyles.title}`}>
             {title || 'Untitled Document'}
@@ -162,7 +162,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       </div>
 
       {/* Center: Reading Telemetry & Percentage */}
-      <div className={`hidden md:flex items-center gap-3 text-xs ${themeStyles.muted}`}>
+      <div className={`hidden md:flex items-center gap-3 text-xs font-sans ${themeStyles.muted}`}>
         <div className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 opacity-80" />
           <span className="font-medium">
@@ -170,26 +170,26 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
           </span>
         </div>
         <span className="opacity-40">•</span>
-        <span className="font-mono text-[11px]">{wordCount.toLocaleString()} words</span>
+        <span className="font-sans text-[11px] font-medium">{wordCount.toLocaleString()} words</span>
         <span className="opacity-40">•</span>
-        <div className={`flex items-center gap-1 font-mono text-[11px] font-semibold px-2 py-0.5 rounded-full ${themeStyles.badge}`}>
+        <div className={`flex items-center gap-1 font-sans text-[11px] font-semibold px-2 py-0.5 rounded-md ${themeStyles.badge}`}>
           <span>{readingProgress}%</span>
           <span className="text-[10px] opacity-70 font-normal">read</span>
         </div>
       </div>
 
       {/* Right: Reading Controls */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 relative font-sans">
         {/* Table of Contents / Outline */}
         <button
           onClick={onOpenOutline}
-          className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${themeStyles.btnAction}`}
+          className={`px-2.5 py-1.5 rounded-lg border text-xs font-sans font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${themeStyles.btnAction}`}
           title="Document Outline & Table of Contents"
         >
           <ListTree className="w-3.5 h-3.5 opacity-80" />
           <span className="hidden sm:inline">Outline</span>
           {headingsCount > 0 && (
-            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${themeStyles.badge}`}>
+            <span className={`text-[10px] font-sans font-semibold px-1.5 py-0.2 rounded-md ${themeStyles.badge}`}>
               {headingsCount}
             </span>
           )}
@@ -198,7 +198,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         {/* Reading Appearance Settings (Aa) */}
         <button
           onClick={() => setIsAppearanceOpen((prev) => !prev)}
-          className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+          className={`px-2.5 py-1.5 rounded-lg border text-xs font-sans font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
             isAppearanceOpen
               ? 'bg-brand-500 text-white border-brand-500 shadow-xs'
               : themeStyles.btnAction
@@ -212,7 +212,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         {/* Fullscreen Toggle */}
         <button
           onClick={toggleFullscreen}
-          className={`p-2 rounded-xl transition-colors cursor-pointer hidden xs:flex items-center justify-center ${themeStyles.btnAction}`}
+          className={`p-2 rounded-lg transition-colors cursor-pointer hidden xs:flex items-center justify-center ${themeStyles.btnAction}`}
           title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Reader'}
         >
           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -222,7 +222,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         {onOpenPdfStudio && (
           <button
             onClick={onOpenPdfStudio}
-            className={`p-2 rounded-xl transition-colors cursor-pointer hidden sm:flex items-center justify-center ${themeStyles.btnAction}`}
+            className={`p-2 rounded-lg transition-colors cursor-pointer hidden sm:flex items-center justify-center ${themeStyles.btnAction}`}
             title="Export / Print Clean Document"
           >
             <Printer className="w-4 h-4" />
@@ -232,7 +232,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
         {/* Split View Quick Switch */}
         <button
           onClick={() => setViewMode('split')}
-          className={`p-2 rounded-xl transition-colors cursor-pointer flex items-center justify-center ${themeStyles.btnAction}`}
+          className={`p-2 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${themeStyles.btnAction}`}
           title="Switch to Split View"
         >
           <Columns className="w-4 h-4" />

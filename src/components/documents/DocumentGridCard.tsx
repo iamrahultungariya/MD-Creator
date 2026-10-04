@@ -62,9 +62,9 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
       <div>
         {/* Card Header: Icon, Title & Reveal-on-Hover Action Dock */}
         <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1 font-sans">
             <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
                 isHovered ? 'scale-105' : ''
               } ${
                 currentTab === 'trash'
@@ -87,7 +87,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Glowing Amber Pin Badge when pinned and not hovered */}
             {doc.isPinned && currentTab === 'active' && !isHovered && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs font-sans">
                 <Pin className="w-2.5 h-2.5 fill-current" />
                 <span>Pinned</span>
               </span>
@@ -187,7 +187,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
             <Clock className="w-3 h-3 text-neutral-400" />
             <span>{formatRelativeTime(doc.updatedAt)}</span>
           </span>
-          <span className="font-mono">{doc.wordCount} words</span>
+          <span className="font-sans font-medium">{doc.wordCount} words</span>
         </div>
       </div>
     </SpotlightCard>

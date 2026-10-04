@@ -67,7 +67,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
     <div
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`group relative overflow-hidden rounded-2xl transition-all duration-200 ${
+      className={`group relative overflow-hidden rounded-xl transition-all duration-200 ${
         isDimmed ? 'opacity-55' : 'opacity-100'
       } ${className}`}
       {...props}
@@ -75,7 +75,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       {/* 1. Dynamic Mouse-following 2px Border Glow with crisp illumination & halo */}
       {isActiveGlow && (
         <motion.div
-          className="pointer-events-none absolute -inset-0.5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
+          className="pointer-events-none absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20"
           style={{
             background: borderBackground,
             mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
@@ -91,7 +91,7 @@ export const SpotlightCard: React.FC<SpotlightCardProps> = ({
       {/* 2. Dynamic Mouse-following Inner Surface Glow */}
       {isActiveGlow && (
         <motion.div
-          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10"
+          className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-10"
           style={{
             background: surfaceBackground,
           }}

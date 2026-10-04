@@ -55,13 +55,13 @@ export const EditorPreviewPane: React.FC<EditorPreviewPaneProps> = ({
     >
       {/* Preview Sub-header - Only displayed in Split mode (hidden in Read mode) */}
       {viewMode === 'split' && (
-        <div className="hidden md:flex px-5 py-2 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 items-center justify-between text-xs text-neutral-500 select-none no-print">
-          <span className="flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
-            <Columns className="w-3.5 h-3.5" />
+        <div className="hidden md:flex px-5 py-2 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 items-center justify-between text-xs text-neutral-500 select-none no-print font-sans">
+          <span className="flex items-center gap-2 font-semibold text-neutral-700 dark:text-neutral-300">
+            <Columns className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
             <span>Live Rendered Preview</span>
           </span>
-          <span className="text-[11px] text-neutral-400 font-mono">
-            GFM + KaTeX Math + Highlights
+          <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans font-medium">
+            GFM • KaTeX Math • Highlights
           </span>
         </div>
       )}

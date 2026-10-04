@@ -86,13 +86,13 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
       <div 
-        className="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+        className="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh] font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="p-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-2.5 bg-neutral-50/50 dark:bg-neutral-950/40">
+        <div className="p-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-2.5 bg-neutral-50/50 dark:bg-neutral-950/40 font-sans">
           <Search className="w-4 h-4 text-neutral-400 ml-1" />
           <input
             ref={inputRef}
@@ -104,21 +104,21 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Search saved documents..."
-            className="flex-1 bg-transparent text-sm text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
+            className="flex-1 bg-transparent text-sm font-sans text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
           />
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Action Shortcuts Bar */}
-        <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+        <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-xs font-sans">
           <button
             onClick={handleCreateNew}
-            className="text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white font-semibold flex items-center gap-1.5 cursor-pointer"
+            className="text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white font-semibold flex items-center gap-1.5 cursor-pointer font-sans"
           >
             <Plus className="w-3.5 h-3.5 text-brand-500" />
             <span>New Document</span>
@@ -126,7 +126,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 flex items-center gap-1.5 cursor-pointer"
+            className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 flex items-center gap-1.5 cursor-pointer font-sans font-medium"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Import .md</span>
@@ -138,7 +138,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
                 onClose();
                 onOpenLocalFolder();
               }}
-              className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 flex items-center gap-1.5 cursor-pointer"
+              className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 flex items-center gap-1.5 cursor-pointer font-sans font-medium"
             >
               <FolderTree className="w-3.5 h-3.5" />
               <span>Local Vault</span>
@@ -154,9 +154,9 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
         </div>
 
         {/* Documents List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1 font-sans">
           {documents.length === 0 ? (
-            <div className="p-8 text-center text-xs text-neutral-400">
+            <div className="p-8 text-center text-xs text-neutral-400 font-sans">
               No documents found matching "{search}"
             </div>
           ) : (
@@ -168,7 +168,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
                   key={doc.id}
                   onClick={() => handleSelectDoc(doc.id)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full text-left p-3 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                  className={`w-full text-left p-2.5 rounded-lg flex items-center justify-between transition-all cursor-pointer font-sans ${
                     isSelected
                       ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white'
                       : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50 text-neutral-700 dark:text-neutral-300'
@@ -190,18 +190,18 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
                           <Pin className="w-3 h-3 text-amber-500 fill-current shrink-0" />
                         )}
                         {isCurrent && (
-                          <span className="text-[10px] bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 px-1.5 py-0.2 rounded font-medium">
+                          <span className="text-[10px] bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 px-1.5 py-0.2 rounded-md font-semibold font-sans">
                             Active
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-neutral-400 truncate mt-0.5">
+                      <p className="text-[11px] text-neutral-400 truncate mt-0.5 font-sans">
                         {doc.snippet || 'Empty document'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="text-[10px] text-neutral-400 shrink-0 flex items-center gap-2">
+                  <div className="text-[10px] text-neutral-400 shrink-0 flex items-center gap-2 font-sans font-medium">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {new Date(doc.updatedAt).toLocaleDateString()}
@@ -215,7 +215,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-950/60 border-t border-neutral-100 dark:border-neutral-800 text-[10px] text-neutral-400 flex items-center justify-between">
+        <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-950/60 border-t border-neutral-100 dark:border-neutral-800 text-[10px] text-neutral-400 flex items-center justify-between font-sans">
           <span>Navigate with <strong>↑ ↓</strong> &bull; <strong>Enter</strong> to open</span>
           <span><strong>Esc</strong> to close</span>
         </div>

@@ -180,14 +180,14 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   return (
     <div
       data-pdf-studio-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md overflow-hidden animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs overflow-hidden animate-in fade-in duration-200 font-sans"
     >
-      <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-[#15111E] border-0 sm:border border-neutral-200 dark:border-[#2A2338] rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden min-h-0">
+      <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-[#15111E] border-0 sm:border border-neutral-200 dark:border-[#2A2338] rounded-none sm:rounded-xl shadow-2xl flex flex-col overflow-hidden min-h-0 font-sans">
         {/* Studio Top Navigation Bar */}
         <div data-pdf-studio-navbar="true" className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-200 dark:border-[#2A2338] flex items-center justify-between bg-neutral-50/80 dark:bg-[#100D18]/90 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center shadow-xs shrink-0">
-              <Printer className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-2xs shrink-0">
+              <Printer className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 dark:text-brand-400" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
@@ -195,7 +195,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
                   <span className="sm:hidden">PDF Studio</span>
                   <span className="hidden sm:inline">Document Print &amp; PDF Studio</span>
                 </h1>
-                <span className="hidden xs:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shrink-0">
+                <span className="hidden xs:inline-block px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-400 border border-brand-200 dark:border-brand-800 shrink-0">
                   Vector Sharp
                 </span>
               </div>
@@ -207,11 +207,11 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
 
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Desktop Zoom Controls */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-[#1D1829] border border-neutral-200 dark:border-[#2A2338] rounded-xl shadow-2xs">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-[#1D1829] border border-neutral-200 dark:border-[#2A2338] rounded-lg shadow-2xs">
               <button
                 type="button"
                 onClick={() => setZoomLevel((prev) => Math.max(30, prev - 10))}
-                className="p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white rounded transition-colors cursor-pointer"
+                className="p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white rounded-md transition-colors cursor-pointer"
                 title="Zoom Out"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
@@ -227,7 +227,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               <button
                 type="button"
                 onClick={() => setZoomLevel((prev) => Math.min(125, prev + 10))}
-                className="p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white rounded transition-colors cursor-pointer"
+                className="p-1 text-neutral-500 hover:text-neutral-900 dark:hover:text-white rounded-md transition-colors cursor-pointer"
                 title="Zoom In"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -239,7 +239,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               type="button"
               onClick={handlePrintPdf}
               disabled={isDownloading}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold shadow-2xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
               title="Print Document or Save as Vector PDF (Ctrl+P / Cmd+P)"
             >
               <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
@@ -252,7 +252,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               type="button"
               onClick={handleDirectDownload}
               disabled={isDownloading}
-              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1D1829] dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-[#2A2338] transition-all hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1D1829] dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-[#2A2338] transition-all hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               title="Direct File Download (Ctrl+S / Cmd+S)"
             >
               {isDownloading ? (
@@ -272,7 +272,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               title="Close Studio"
             >
               <X className="w-5 h-5" />
@@ -282,7 +282,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
 
         {/* Mobile Tab Switcher (< lg) */}
         <div className="lg:hidden flex items-center justify-between px-3 py-1.5 bg-neutral-100/90 dark:bg-neutral-950/80 border-b border-neutral-200 dark:border-neutral-800 shrink-0 select-none">
-          <div className="inline-flex rounded-xl bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-semibold">
+          <div className="inline-flex rounded-lg bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setMobileTab('preview')}

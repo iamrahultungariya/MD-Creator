@@ -56,7 +56,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
           onBeforeOpen?.();
           setIsOpen((prev) => !prev);
         }}
-        className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs font-sans ${
           isOpen
             ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-transparent shadow-xs'
             : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'
@@ -75,8 +75,8 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-0.5">
-            <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400 font-mono">
+          <div className="absolute right-0 mt-2 w-68 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-0.5 font-sans">
+            <div className="px-3 py-1.5 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 font-sans">
               Writing Studio Tools
             </div>
 
@@ -85,7 +85,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onOpenPdfStudio();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <Printer className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -94,7 +94,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">Publication PDF &amp; print formatting</div>
                 </div>
               </div>
-              <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">
+              <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">
                 Ctrl+P
               </kbd>
             </button>
@@ -105,21 +105,21 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   setIsOpen(false);
                   onOpenClipStudio();
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
               >
                 <div className="flex items-center gap-2.5">
                   <Film className="w-4 h-4 text-brand-500" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
                       <span>Social Clip Studio</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-brand-500/10 text-brand-400 border border-brand-500/30">
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/30">
                         Recordly
                       </span>
                     </div>
                     <div className="text-[10px] text-neutral-500">Record in-app &amp; auto-zoom video clips</div>
                   </div>
                 </div>
-                <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">
+                <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">
                   Ctrl+Alt+R
                 </kbd>
               </button>
@@ -131,21 +131,21 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   setIsOpen(false);
                   onOpenSocialCard();
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
               >
                 <div className="flex items-center gap-2.5">
                   <Sparkles className="w-4 h-4 text-[#8257F5]" />
                   <div>
                     <div className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
                       <span>Social Share Card</span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-brand-500/10 text-brand-500 border border-brand-500/20">
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
                         1200×630
                       </span>
                     </div>
                     <div className="text-[10px] text-neutral-500">Generate branded preview for X &amp; LinkedIn</div>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-neutral-400">Card</span>
+                <span className="text-[10px] font-medium text-neutral-400 font-sans">Card</span>
               </button>
             )}
 
@@ -154,7 +154,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onOpenOutline();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <ListTree className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -163,7 +163,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">Live H1–H6 table of contents</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">TOC</span>
+              <span className="text-[10px] font-medium text-neutral-400 font-sans">TOC</span>
             </button>
 
             <button
@@ -171,7 +171,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onOpenTableBuilder();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <Table2 className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -180,7 +180,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">Visual rows & columns designer</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">/table</span>
+              <span className="text-[10px] font-medium text-neutral-400 font-sans">/table</span>
             </button>
 
             {onOpenImageModal && (
@@ -189,7 +189,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   setIsOpen(false);
                   onOpenImageModal();
                 }}
-                className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
               >
                 <div className="flex items-center gap-2.5">
                   <ImageIcon className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -198,7 +198,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                     <div className="text-[10px] text-neutral-500">Offline upload or web link</div>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-neutral-400">/image</span>
+                <span className="text-[10px] font-medium text-neutral-400 font-sans">/image</span>
               </button>
             )}
 
@@ -207,7 +207,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onOpenTemplates();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <LayoutTemplate className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -216,7 +216,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">8 curated specs, PRDs & notes</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">8 Presets</span>
+              <span className="text-[10px] font-medium text-neutral-400 font-sans">8 Presets</span>
             </button>
 
             <button
@@ -224,7 +224,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onOpenRevisions();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <History className="w-4 h-4 text-neutral-500 dark:text-neutral-400" />
@@ -233,7 +233,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">IndexedDB checkpoints & rollback</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">History</span>
+              <span className="text-[10px] font-medium text-neutral-400 font-sans">History</span>
             </button>
 
             <button
@@ -242,7 +242,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 // Open Preferences modal
                 window.dispatchEvent(new CustomEvent('open-preferences-modal'));
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <Sliders className="w-4 h-4 text-brand-500" />
@@ -251,7 +251,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">Typography, wrap &amp; backup</div>
                 </div>
               </div>
-              <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs">
+              <kbd className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-700/70 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">
                 Ctrl+,
               </kbd>
             </button>
@@ -263,7 +263,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onClearContent();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center justify-between text-amber-600 dark:text-amber-400 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center justify-between text-amber-600 dark:text-amber-400 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <FileX className="w-4 h-4 text-amber-500" />
@@ -272,7 +272,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">Wipe current markdown text</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">Clear</span>
+              <span className="text-[10px] font-medium text-neutral-400 font-sans">Clear</span>
             </button>
 
             <button
@@ -280,7 +280,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 setIsOpen(false);
                 onDeleteCurrentDoc();
               }}
-              className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-between text-red-600 dark:text-red-400 cursor-pointer group"
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-between text-red-600 dark:text-red-400 cursor-pointer group transition-colors font-sans"
             >
               <div className="flex items-center gap-2.5">
                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -289,7 +289,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                   <div className="text-[10px] text-neutral-500">Move to Recycle Bin</div>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">Del</span>
+              <span className="text-[10px] font-medium text-neutral-400 font-sans">Del</span>
             </button>
           </div>
         </>

@@ -68,13 +68,13 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
 
   const modalContent = (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="relative w-full max-w-md rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl p-6 sm:p-7 text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-md rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl p-6 text-neutral-900 dark:text-neutral-100 animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
@@ -83,7 +83,7 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
         <button
           onClick={onClose}
           aria-label="Close modal"
-          className="absolute top-5 right-5 p-2 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -91,16 +91,16 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
         {/* Header with App Logo */}
         <div className="flex items-center gap-3.5 mb-5">
           <img 
-            src="/logo.webp" 
+            src="/logo.png" 
             alt="MD Writer Logo" 
-            className="w-12 h-12 rounded-2xl object-contain shadow-md shrink-0" 
+            className="w-11 h-11 rounded-lg object-contain shadow-2xs shrink-0 border border-neutral-200/80 dark:border-neutral-800" 
           />
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-black tracking-tight text-neutral-950 dark:text-white">
+              <h3 className="text-base font-bold tracking-tight text-neutral-950 dark:text-white">
                 Install MD Writer
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold font-mono">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
                 PWA
               </span>
             </div>
@@ -111,19 +111,19 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
             <WifiOff className="w-4 h-4 text-sky-500 mx-auto mb-1.5" />
             <div className="text-[11px] font-bold">100% Offline</div>
             <div className="text-[9.5px] text-neutral-400">IndexedDB sync</div>
           </div>
-          <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
+          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
             <Zap className="w-4 h-4 text-amber-500 mx-auto mb-1.5" />
             <div className="text-[11px] font-bold">Instant Launch</div>
             <div className="text-[9.5px] text-neutral-400">Zero startup lag</div>
           </div>
-          <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
-            <ShieldCheck className="w-4 h-4 text-emerald-500 mx-auto mb-1.5" />
+          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-center">
+            <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400 mx-auto mb-1.5" />
             <div className="text-[11px] font-bold">Local First</div>
             <div className="text-[9.5px] text-neutral-400">100% private</div>
           </div>
@@ -131,7 +131,7 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
 
         {/* Primary Action Button */}
         {installSuccess || isInstalled ? (
-          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 flex items-center justify-center gap-2 text-xs font-bold mb-4">
+          <div className="p-3.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 flex items-center justify-center gap-2 text-xs font-bold mb-4 shadow-2xs">
             <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>MD Writer is installed as an application</span>
           </div>
@@ -140,9 +140,9 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
             <button
               onClick={handleInstallClick}
               disabled={isInstalling}
-              className="w-full py-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer disabled:opacity-50"
             >
-              <Download className="w-4 h-4 text-sky-400 dark:text-sky-600" />
+              <Download className="w-4 h-4" />
               <span>
                 {isInstalling
                   ? 'Installing...'
@@ -153,7 +153,7 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
             </button>
 
             {installFeedback && (
-              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs leading-relaxed text-center">
+              <div className="p-2.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs leading-relaxed text-center">
                 {installFeedback}
               </div>
             )}
@@ -164,7 +164,7 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
         <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="px-4 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-semibold transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>

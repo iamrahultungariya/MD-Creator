@@ -49,21 +49,21 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 pt-16 sm:pt-20 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="relative w-full max-w-3xl max-h-[90vh] bg-white dark:bg-[#121316] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col text-neutral-900 dark:text-neutral-100 overflow-hidden animate-in zoom-in-95 duration-150 font-sans"
+        className="relative w-full max-w-3xl max-h-[85vh] my-auto bg-white dark:bg-[#121316] rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col text-neutral-900 dark:text-neutral-100 overflow-hidden animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with Document Metadata */}
-        <div className="p-5 sm:px-8 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-50/70 dark:bg-neutral-900/40">
+        <div className="p-4 sm:px-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-50/70 dark:bg-neutral-900/40">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-lg bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] flex items-center justify-center border border-[#8257F5]/20 shrink-0">
               {activeTab === 'privacy' ? (
                 <ShieldCheck className="w-5 h-5" />
               ) : (
@@ -75,8 +75,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 <h2 className="text-base sm:text-lg font-bold text-neutral-950 dark:text-white tracking-tight">
                   {activeTab === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
                 </h2>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-semibold hidden sm:inline">
-                  v0.9.1 Beta
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-semibold hidden sm:inline">
+                  v1.0.0
                 </span>
               </div>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -90,14 +90,14 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={handlePrint}
-              className="p-2 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer hidden sm:flex items-center"
+              className="p-2 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer hidden sm:flex items-center"
               title="Print Document"
             >
               <Printer className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="p-2 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
               title="Close (Esc)"
             >
               <X className="w-4 h-4" />
@@ -106,11 +106,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-5 sm:px-8 py-2.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-white dark:bg-[#121316]">
-          <div className="flex gap-1.5 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-xl">
+        <div className="px-4 sm:px-6 py-2.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-white dark:bg-[#121316]">
+          <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('privacy')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'privacy'
                   ? 'bg-white text-neutral-950 dark:bg-neutral-900 dark:text-white shadow-2xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -120,7 +120,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('terms')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'terms'
                   ? 'bg-white text-neutral-950 dark:bg-neutral-900 dark:text-white shadow-2xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -275,7 +275,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex items-center gap-2 text-neutral-400 text-[11px]">
             <span>Effective: October 2026</span>
             <span>•</span>
-            <span>Audit Ref: v0.9.1-BETA</span>
+            <span>Audit Ref: v1.0.0-RELEASE</span>
             <span>•</span>
             <span className="hidden sm:inline">Certified Local-First Standard</span>
           </div>
@@ -283,7 +283,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none px-5 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+              className="flex-1 sm:flex-none px-5 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95"
             >
               I Understand &amp; Agree
             </button>

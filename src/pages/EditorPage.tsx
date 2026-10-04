@@ -437,8 +437,6 @@ export const EditorPage: React.FC = () => {
         isOutlineOpen={modals.isOutlineOpen}
         onCloseOutline={() => modals.setIsOutlineOpen(false)}
         onSelectHeading={handleSelectHeading}
-        isUpdatesOpen={modals.isUpdatesOpen}
-        onCloseUpdates={() => modals.setIsUpdatesOpen(false)}
         isTemplatesOpen={modals.isTemplatesOpen}
         onCloseTemplates={() => modals.setIsTemplatesOpen(false)}
         onSelectTemplate={doc.handleSelectTemplate}
