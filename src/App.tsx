@@ -84,12 +84,17 @@ const AppRoutes: React.FC = () => {
 };
 
 export const App: React.FC = () => {
-  const { checkAuth } = useAuthStore();
-  const { isOpen: isConfirmOpen } = useConfirmStore();
-  const { isOpen: isToolbarSettingsOpen } = useToolbarSettingsStore();
+  const checkAuth = useAuthStore((s) => s.checkAuth);
+  const isConfirmOpen = useConfirmStore((s) => s.isOpen);
+  const isToolbarSettingsOpen = useToolbarSettingsStore((s) => s.isOpen);
   const cmd = useCommandPalette();
-  const { isRecording, isStudioOpen, recordedClip, closeStudio } = useRecorderStore();
-  const { isOpen: isPreferencesOpen, openPreferences, togglePreferences } = usePreferencesStore();
+  const isRecording = useRecorderStore((s) => s.isRecording);
+  const isStudioOpen = useRecorderStore((s) => s.isStudioOpen);
+  const recordedClip = useRecorderStore((s) => s.recordedClip);
+  const closeStudio = useRecorderStore((s) => s.closeStudio);
+  const isPreferencesOpen = usePreferencesStore((s) => s.isOpen);
+  const openPreferences = usePreferencesStore((s) => s.openPreferences);
+  const togglePreferences = usePreferencesStore((s) => s.togglePreferences);
 
   // Global listeners for Preferences (Ctrl+, / Cmd+, and custom event)
   useEffect(() => {

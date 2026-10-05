@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Star, MessageSquarePlus } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { ReviewSubmissionModal } from './ReviewSubmissionModal';
+const ReviewSubmissionModal = React.lazy(() =>
+  import('./ReviewSubmissionModal').then((m) => ({ default: m.ReviewSubmissionModal }))
+);
 import {
   UserReview,
   getUserSubmittedReview,
@@ -245,22 +247,26 @@ export const ReviewsSection: React.FC = () => {
       </div>
 
       {/* Review Submission Modal */}
-      <ReviewSubmissionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        authorName={authorName}
-        setAuthorName={setAuthorName}
-        authorRole={authorRole}
-        setAuthorRole={setAuthorRole}
-        rating={rating}
-        setRating={setRating}
-        reviewText={reviewText}
-        setReviewText={setReviewText}
-        isSubmitting={isSubmitting}
-        submitSuccess={submitSuccess}
-        onSubmit={handleSubmitReview}
-        isEditing={Boolean(myReview)}
-      />
+      {isModalOpen && (
+        <Suspense fallback={null}>
+          <ReviewSubmissionModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            authorName={authorName}
+            setAuthorName={setAuthorName}
+            authorRole={authorRole}
+            setAuthorRole={setAuthorRole}
+            rating={rating}
+            setRating={setRating}
+            reviewText={reviewText}
+            setReviewText={setReviewText}
+            isSubmitting={isSubmitting}
+            submitSuccess={submitSuccess}
+            onSubmit={handleSubmitReview}
+            isEditing={Boolean(myReview)}
+          />
+        </Suspense>
+      )}
     </section>
   );
 };

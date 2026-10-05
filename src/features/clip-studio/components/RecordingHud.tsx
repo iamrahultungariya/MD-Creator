@@ -4,17 +4,15 @@ import { Pause, Play, X, Mic, MicOff, Check } from 'lucide-react';
 import { useRecorderStore } from '../stores/useRecorderStore';
 
 export const RecordingHud: React.FC = () => {
-  const {
-    isRecording,
-    isPaused,
-    recordingDurationSeconds,
-    includeMic,
-    pauseRecording,
-    resumeRecording,
-    stopRecording,
-    cancelRecording,
-    toggleMic,
-  } = useRecorderStore();
+  const isRecording = useRecorderStore((s) => s.isRecording);
+  const isPaused = useRecorderStore((s) => s.isPaused);
+  const recordingDurationSeconds = useRecorderStore((s) => s.recordingDurationSeconds);
+  const includeMic = useRecorderStore((s) => s.includeMic);
+  const pauseRecording = useRecorderStore((s) => s.pauseRecording);
+  const resumeRecording = useRecorderStore((s) => s.resumeRecording);
+  const stopRecording = useRecorderStore((s) => s.stopRecording);
+  const cancelRecording = useRecorderStore((s) => s.cancelRecording);
+  const toggleMic = useRecorderStore((s) => s.toggleMic);
 
   if (!isRecording) return null;
 

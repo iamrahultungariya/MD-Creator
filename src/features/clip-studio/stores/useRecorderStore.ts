@@ -60,6 +60,10 @@ export const useRecorderStore = create<RecorderState>((set, get) => {
         await screenCaptureService.startCapture(includeMic, (clip) => {
           // Triggered if stopped via browser UI (e.g. Chrome's "Stop sharing" button)
           stopTimer();
+          const prev = get().recordedClip;
+          if (prev?.url && prev.url !== clip.url) {
+            try { URL.revokeObjectURL(prev.url); } catch { /* ignore */ }
+          }
           set({
             isRecording: false,
             isPaused: false,
@@ -93,6 +97,10 @@ export const useRecorderStore = create<RecorderState>((set, get) => {
       stopTimer();
       try {
         const clip = await screenCaptureService.stop();
+        const prev = get().recordedClip;
+        if (prev?.url && prev.url !== clip.url) {
+          try { URL.revokeObjectURL(prev.url); } catch { /* ignore */ }
+        }
         set({
           isRecording: false,
           isPaused: false,
@@ -108,10 +116,15 @@ export const useRecorderStore = create<RecorderState>((set, get) => {
     cancelRecording: () => {
       stopTimer();
       screenCaptureService.cancel();
+      const prev = get().recordedClip;
+      if (prev?.url) {
+        try { URL.revokeObjectURL(prev.url); } catch { /* ignore */ }
+      }
       set({
         isRecording: false,
         isPaused: false,
         recordingDurationSeconds: 0,
+        recordedClip: null,
       });
     },
 

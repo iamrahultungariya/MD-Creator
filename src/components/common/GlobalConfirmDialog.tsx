@@ -12,7 +12,10 @@ import {
 import { useConfirmStore, ConfirmVariant, ConfirmIcon } from '../../stores/useConfirmStore';
 
 export const GlobalConfirmDialog: React.FC = () => {
-  const { isOpen, options, handleConfirm, handleCancel } = useConfirmStore();
+  const isOpen = useConfirmStore((s) => s.isOpen);
+  const options = useConfirmStore((s) => s.options);
+  const handleConfirm = useConfirmStore((s) => s.handleConfirm);
+  const handleCancel = useConfirmStore((s) => s.handleCancel);
   const cancelBtnRef = useRef<HTMLButtonElement>(null);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
 

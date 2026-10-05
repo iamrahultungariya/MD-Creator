@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useDeferredValue, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -42,6 +42,13 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
 
   const linkHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const linkCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (linkHoverTimeoutRef.current) clearTimeout(linkHoverTimeoutRef.current);
+      if (linkCloseTimeoutRef.current) clearTimeout(linkCloseTimeoutRef.current);
+    };
+  }, []);
 
   const handleLinkMouseEnter = (href: string, e: React.MouseEvent<HTMLAnchorElement>) => {
     if (linkCloseTimeoutRef.current) clearTimeout(linkCloseTimeoutRef.current);

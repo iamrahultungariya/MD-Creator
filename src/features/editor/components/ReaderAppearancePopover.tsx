@@ -28,16 +28,14 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
   onClose,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
-  const {
-    theme,
-    fontFamily,
-    fontSize,
-    columnWidth,
-    setTheme,
-    setFontFamily,
-    setFontSize,
-    setColumnWidth,
-  } = useReaderSettingsStore();
+  const theme = useReaderSettingsStore((s) => s.theme);
+  const fontFamily = useReaderSettingsStore((s) => s.fontFamily);
+  const fontSize = useReaderSettingsStore((s) => s.fontSize);
+  const columnWidth = useReaderSettingsStore((s) => s.columnWidth);
+  const setTheme = useReaderSettingsStore((s) => s.setTheme);
+  const setFontFamily = useReaderSettingsStore((s) => s.setFontFamily);
+  const setFontSize = useReaderSettingsStore((s) => s.setFontSize);
+  const setColumnWidth = useReaderSettingsStore((s) => s.setColumnWidth);
 
   // Close on outside click
   useEffect(() => {

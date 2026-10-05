@@ -35,8 +35,11 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   setViewMode,
 }) => {
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
-  const { theme: readerTheme, readingProgress, isFullscreen, toggleFullscreen } = useReaderSettingsStore();
-  const { isDark } = useThemeStore();
+  const readerTheme = useReaderSettingsStore((s) => s.theme);
+  const readingProgress = useReaderSettingsStore((s) => s.readingProgress);
+  const isFullscreen = useReaderSettingsStore((s) => s.isFullscreen);
+  const toggleFullscreen = useReaderSettingsStore((s) => s.toggleFullscreen);
+  const isDark = useThemeStore((s) => s.isDark);
 
   const themeStyles = useMemo(() => {
     switch (readerTheme) {

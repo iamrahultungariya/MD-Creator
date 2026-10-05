@@ -33,7 +33,7 @@ const cleanupMermaidArtifacts = () => {
 };
 
 const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart, forceTheme }) => {
-  const { isDark } = useThemeStore();
+  const isDark = useThemeStore((s) => s.isDark);
   const effectiveIsDark = forceTheme ? forceTheme === 'dark' : isDark;
   const trimmedChart = chart.trim();
   const cacheKey = `${effectiveIsDark ? 'dark' : 'light'}::${trimmedChart}`;
@@ -130,6 +130,10 @@ const MermaidBlockComponent: React.FC<MermaidBlockProps> = ({ chart, forceTheme 
         const { svg } = await mermaid.render(renderId, trimmedChart);
 
         if (!isCancelled) {
+          if (mermaidSvgCache.size >= 50) {
+            const firstKey = mermaidSvgCache.keys().next().value;
+            if (firstKey) mermaidSvgCache.delete(firstKey);
+          }
           mermaidSvgCache.set(cacheKey, svg);
           setSvgContent(svg);
           setError(null);

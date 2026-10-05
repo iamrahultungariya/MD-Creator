@@ -8,9 +8,12 @@ import { FindReplaceBar } from './FindReplaceBar';
 import { useReaderAppearance } from '../hooks/useReaderAppearance';
 import { WritingModeCanvas } from './WritingModeCanvas';
 import { CodeMirrorEditor, CodeMirrorEditorHandle } from './CodeMirrorEditor';
-import { PresentationView } from '../../presentation/PresentationView';
 import { EditorPreviewPane } from './EditorPreviewPane';
 import { useEditorWorkspaceSyncScroll } from '../hooks/useEditorWorkspaceSyncScroll';
+
+const PresentationView = React.lazy(() =>
+  import('../../presentation/PresentationView').then((m) => ({ default: m.PresentationView }))
+);
 
 interface EditorWorkspaceProps {
   viewMode: ViewMode;
@@ -306,11 +309,13 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
 
   if (viewMode === 'present') {
     return (
-      <PresentationView
-        content={content}
-        title={title}
-        onExit={() => setViewMode('split')}
-      />
+      <React.Suspense fallback={<div className="fixed inset-0 bg-neutral-950 flex items-center justify-center text-neutral-400 font-mono text-xs">Loading presentation slides...</div>}>
+        <PresentationView
+          content={content}
+          title={title}
+          onExit={() => setViewMode('split')}
+        />
+      </React.Suspense>
     );
   }
 

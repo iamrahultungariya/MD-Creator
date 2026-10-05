@@ -15,14 +15,12 @@ import { ACTION_ICON_MAP } from '../../features/editor/components/FloatingFormat
 
 export const ToolbarSettingsModal: React.FC = () => {
   const navigate = useNavigate();
-  const { 
-    enabledActions, 
-    isOpen, 
-    closeSettings, 
-    toggleAction, 
-    moveAction, 
-    resetDefaults 
-  } = useToolbarSettingsStore();
+  const isOpen = useToolbarSettingsStore((s) => s.isOpen);
+  const enabledActions = useToolbarSettingsStore((s) => s.enabledActions);
+  const closeSettings = useToolbarSettingsStore((s) => s.closeSettings);
+  const toggleAction = useToolbarSettingsStore((s) => s.toggleAction);
+  const moveAction = useToolbarSettingsStore((s) => s.moveAction);
+  const resetDefaults = useToolbarSettingsStore((s) => s.resetDefaults);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);

@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { ViewMode } from '../types';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
 
@@ -32,6 +32,16 @@ export function useEditorWorkspaceSyncScroll({
   const scrollPreviewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRafRef = useRef<number | null>(null);
   const previewRafRef = useRef<number | null>(null);
+
+  // Clean up any pending rAF frames and debounce timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollEditorTimeoutRef.current) clearTimeout(scrollEditorTimeoutRef.current);
+      if (scrollPreviewTimeoutRef.current) clearTimeout(scrollPreviewTimeoutRef.current);
+      if (editorRafRef.current) cancelAnimationFrame(editorRafRef.current);
+      if (previewRafRef.current) cancelAnimationFrame(previewRafRef.current);
+    };
+  }, []);
 
   // Synchronized Split-Pane Proportional Scrolling (Editor -> Preview) with 60/120fps rAF
   const handleEditorScroll = useCallback((_e: Event, scrollDOM: HTMLElement) => {

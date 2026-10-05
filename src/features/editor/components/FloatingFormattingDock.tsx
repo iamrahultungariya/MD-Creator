@@ -110,7 +110,7 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
   const shouldShow = Boolean(coords && (isVisible || isHovered));
-  const { enabledActions } = useToolbarSettingsStore();
+  const enabledActions = useToolbarSettingsStore((s) => s.enabledActions);
 
   if (!coords) return null;
 

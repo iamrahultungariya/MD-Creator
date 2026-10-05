@@ -4,10 +4,14 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
 import { BentoFeatures } from '../components/home/BentoFeatures';
-import { ReviewsSection } from '../components/home/ReviewsSection';
-import { Footer } from '../components/home/Footer';
 
-// Code-split heavy interactive modals on-demand
+// Code-split heavy below-the-fold sections and interactive modals on-demand
+const ReviewsSection = React.lazy(() =>
+  import('../components/home/ReviewsSection').then((m) => ({ default: m.ReviewsSection }))
+);
+const Footer = React.lazy(() =>
+  import('../components/home/Footer').then((m) => ({ default: m.Footer }))
+);
 const TemplatesModal = React.lazy(() =>
   import('../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
 );
@@ -57,7 +61,9 @@ export const HomePage: React.FC = () => {
         />
 
         {/* 3-Column Minimal Verified Community Reviews */}
-        <ReviewsSection />
+        <Suspense fallback={<div className="h-32" />}>
+          <ReviewsSection />
+        </Suspense>
 
         {/* Notion-Style Bottom Call-to-Action */}
         <section className="py-20 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/30 text-center font-sans">
@@ -95,7 +101,9 @@ export const HomePage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Suspense fallback={<div className="h-16" />}>
+        <Footer />
+      </Suspense>
 
       {/* Interactive Templates Modal — Lazy Loaded On-Demand */}
       {isTemplatesOpen && (

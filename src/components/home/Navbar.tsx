@@ -83,8 +83,9 @@ const RESOURCE_ITEMS: ResourceItem[] = [
 export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures: _onOpenFeatures }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDark, toggleTheme } = useThemeStore();
-  const { user } = useAuthStore();
+  const isDark = useThemeStore((s) => s.isDark);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
+  const user = useAuthStore((s) => s.user);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);

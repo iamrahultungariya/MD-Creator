@@ -1,14 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { X, Type, Sliders, HardDrive } from 'lucide-react';
+import { X, Type, Sliders, HardDrive, Loader2 } from 'lucide-react';
 import { usePreferencesStore } from '../../stores/usePreferencesStore';
 import { db } from '../../db';
-import { PreferencesEditorTab } from './preferences/PreferencesEditorTab';
-import { PreferencesToolbarTab } from './preferences/PreferencesToolbarTab';
-import { PreferencesStorageTab } from './preferences/PreferencesStorageTab';
+
+const PreferencesEditorTab = React.lazy(() =>
+  import('./preferences/PreferencesEditorTab').then((m) => ({ default: m.PreferencesEditorTab }))
+);
+const PreferencesToolbarTab = React.lazy(() =>
+  import('./preferences/PreferencesToolbarTab').then((m) => ({ default: m.PreferencesToolbarTab }))
+);
+const PreferencesStorageTab = React.lazy(() =>
+  import('./preferences/PreferencesStorageTab').then((m) => ({ default: m.PreferencesStorageTab }))
+);
 
 export const PreferencesModal: React.FC = () => {
-  const { isOpen, closePreferences } = usePreferencesStore();
+  const isOpen = usePreferencesStore((s) => s.isOpen);
+  const closePreferences = usePreferencesStore((s) => s.closePreferences);
   const [activeTab, setActiveTab] = useState<'editor' | 'toolbar' | 'storage'>('editor');
   const [docCount, setDocCount] = useState<number>(0);
 
@@ -116,9 +124,16 @@ export const PreferencesModal: React.FC = () => {
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {activeTab === 'editor' && <PreferencesEditorTab />}
-          {activeTab === 'toolbar' && <PreferencesToolbarTab />}
-          {activeTab === 'storage' && <PreferencesStorageTab docCount={docCount} />}
+          <Suspense fallback={
+            <div className="py-12 flex items-center justify-center text-xs text-neutral-400 gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#8257F5]" />
+              <span>Loading preferences...</span>
+            </div>
+          }>
+            {activeTab === 'editor' && <PreferencesEditorTab />}
+            {activeTab === 'toolbar' && <PreferencesToolbarTab />}
+            {activeTab === 'storage' && <PreferencesStorageTab docCount={docCount} />}
+          </Suspense>
         </div>
 
         {/* Clean Footer Bar */}

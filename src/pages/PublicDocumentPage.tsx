@@ -16,7 +16,10 @@ import {
 } from 'lucide-react';
 import { getPublicDocumentBySlug, PublicDocumentView } from '../services/publishService';
 import { MarkdownPreview } from '../components/editor/MarkdownPreview';
-import { SocialCardGeneratorModal } from '../components/share/SocialCardGeneratorModal';
+
+const SocialCardGeneratorModal = React.lazy(() =>
+  import('../components/share/SocialCardGeneratorModal').then((m) => ({ default: m.SocialCardGeneratorModal }))
+);
 
 export const PublicDocumentPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
@@ -393,14 +396,18 @@ export const PublicDocumentPage: React.FC = () => {
       </footer>
 
       {/* Branded Social Card Generator Modal */}
-      <SocialCardGeneratorModal
-        isOpen={isSocialCardOpen}
-        onClose={() => setIsSocialCardOpen(false)}
-        title={doc.title}
-        content={doc.content}
-        slug={slug}
-        authorName="MD Writer Author"
-      />
+      {isSocialCardOpen && (
+        <React.Suspense fallback={null}>
+          <SocialCardGeneratorModal
+            isOpen={isSocialCardOpen}
+            onClose={() => setIsSocialCardOpen(false)}
+            title={doc.title}
+            content={doc.content}
+            slug={slug}
+            authorName="MD Writer Author"
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };

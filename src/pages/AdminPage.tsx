@@ -5,14 +5,29 @@ import { isCurrentUserAdmin } from '../utils/adminAuth';
 import { AdminTab, Article } from '../types/admin';
 import { BlogCategory } from '../data/blogArticles';
 import { AdminHeader } from '../components/admin/AdminHeader';
-import { AdminOverviewTab } from '../components/admin/AdminOverviewTab';
-import { AdminBlogsTab } from '../components/admin/AdminBlogsTab';
-import { AdminReviewsTab } from '../components/admin/AdminReviewsTab';
-import { AdminFeedbackTab } from '../components/admin/AdminFeedbackTab';
-import { AdminAccessDenied } from '../components/admin/AdminAccessDenied';
-import { BlogReaderModal } from '../components/blog/BlogReaderModal';
-import { BlogCreateModal } from '../components/blog/BlogCreateModal';
 import { useAdminData } from '../hooks/useAdminData';
+
+const AdminOverviewTab = React.lazy(() =>
+  import('../components/admin/AdminOverviewTab').then((m) => ({ default: m.AdminOverviewTab }))
+);
+const AdminBlogsTab = React.lazy(() =>
+  import('../components/admin/AdminBlogsTab').then((m) => ({ default: m.AdminBlogsTab }))
+);
+const AdminReviewsTab = React.lazy(() =>
+  import('../components/admin/AdminReviewsTab').then((m) => ({ default: m.AdminReviewsTab }))
+);
+const AdminFeedbackTab = React.lazy(() =>
+  import('../components/admin/AdminFeedbackTab').then((m) => ({ default: m.AdminFeedbackTab }))
+);
+const BlogReaderModal = React.lazy(() =>
+  import('../components/blog/BlogReaderModal').then((m) => ({ default: m.BlogReaderModal }))
+);
+const BlogCreateModal = React.lazy(() =>
+  import('../components/blog/BlogCreateModal').then((m) => ({ default: m.BlogCreateModal }))
+);
+const AdminAccessDenied = React.lazy(() =>
+  import('../components/admin/AdminAccessDenied').then((m) => ({ default: m.AdminAccessDenied }))
+);
 
 const MarkdownPreview = React.lazy(() =>
   import('../components/editor/MarkdownPreview').then((m) => ({ default: m.MarkdownPreview }))
@@ -163,10 +178,12 @@ export const AdminPage: React.FC = () => {
   // If unauthorized, show Access Denied
   if (!isAdmin) {
     return (
-      <AdminAccessDenied
-        isChecking={isCheckingAuth}
-        onEnableDevBypass={handleEnableDevBypass}
-      />
+      <React.Suspense fallback={<div className="min-h-screen bg-neutral-950 flex items-center justify-center text-neutral-400">Verifying permissions...</div>}>
+        <AdminAccessDenied
+          isChecking={isCheckingAuth}
+          onEnableDevBypass={handleEnableDevBypass}
+        />
+      </React.Suspense>
     );
   }
 
@@ -192,120 +209,122 @@ export const AdminPage: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Tab 1: Overview */}
-        {activeTab === 'overview' && (
-          <AdminOverviewTab
-            stats={stats}
-            articles={articles}
-            reviews={reviews}
-            onNavigateTab={setActiveTab}
-            onOpenCreateBlog={() => setIsCreateModalOpen(true)}
-            onApproveBlog={handleApproveBlog}
-            onApproveReview={handleApproveReview}
+      <React.Suspense fallback={<div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center text-neutral-500 font-mono text-xs">Loading studio dashboard...</div>}>
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          {/* Tab 1: Overview */}
+          {activeTab === 'overview' && (
+            <AdminOverviewTab
+              stats={stats}
+              articles={articles}
+              reviews={reviews}
+              onNavigateTab={setActiveTab}
+              onOpenCreateBlog={() => setIsCreateModalOpen(true)}
+              onApproveBlog={handleApproveBlog}
+              onApproveReview={handleApproveReview}
+            />
+          )}
+
+          {/* Tab 2: Blogs Management */}
+          {activeTab === 'blogs' && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight mb-1">
+                  Blog Articles Moderation
+                </h2>
+                <p className="text-xs text-neutral-400">
+                  Review community submissions and approve them to make them live on the public website.
+                </p>
+              </div>
+
+              <AdminBlogsTab
+                articles={articles}
+                onApprove={handleApproveBlog}
+                onReject={handleRejectBlog}
+                onDelete={async (id) => {
+                  await handleDeleteBlog(id);
+                  if (previewArticle?.id === id) setPreviewArticle(null);
+                }}
+                onToggleFeatured={handleToggleFeaturedBlog}
+                onPreview={(art) => setPreviewArticle(art)}
+                onOpenCreate={() => setIsCreateModalOpen(true)}
+              />
+            </div>
+          )}
+
+          {/* Tab 3: Reviews Management */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight mb-1">
+                  Community Reviews Moderation
+                </h2>
+                <p className="text-xs text-neutral-400">
+                  Approve verified writer reviews to surface them in the homepage testimonials carousel.
+                </p>
+              </div>
+
+              <AdminReviewsTab
+                reviews={reviews}
+                onApprove={handleApproveReview}
+                onReject={handleRejectReview}
+                onDelete={handleDeleteReview}
+                onToggleVerified={handleToggleVerifiedReview}
+              />
+            </div>
+          )}
+
+          {/* Tab 4: Feedback & Bug Tracker */}
+          {activeTab === 'feedback' && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight mb-1">
+                  User Feedback &amp; Bug Tracker
+                </h2>
+                <p className="text-xs text-neutral-400">
+                  Inspect bug reports, feature suggestions, willingness to pay, and device telemetry.
+                </p>
+              </div>
+
+              <AdminFeedbackTab
+                feedbacks={feedbacks}
+                onUpdateStatus={handleUpdateFeedbackStatus}
+                onDelete={handleDeleteFeedback}
+              />
+            </div>
+          )}
+        </main>
+
+        {/* Reader Preview Modal */}
+        {previewArticle && (
+          <BlogReaderModal
+            article={previewArticle}
+            onClose={() => setPreviewArticle(null)}
+            MarkdownPreview={MarkdownPreview}
           />
         )}
 
-        {/* Tab 2: Blogs Management */}
-        {activeTab === 'blogs' && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-black text-white tracking-tight mb-1">
-                Blog Articles Moderation
-              </h2>
-              <p className="text-xs text-neutral-400">
-                Review community submissions and approve them to make them live on the public website.
-              </p>
-            </div>
-
-            <AdminBlogsTab
-              articles={articles}
-              onApprove={handleApproveBlog}
-              onReject={handleRejectBlog}
-              onDelete={async (id) => {
-                await handleDeleteBlog(id);
-                if (previewArticle?.id === id) setPreviewArticle(null);
-              }}
-              onToggleFeatured={handleToggleFeaturedBlog}
-              onPreview={(art) => setPreviewArticle(art)}
-              onOpenCreate={() => setIsCreateModalOpen(true)}
-            />
-          </div>
+        {/* Blog Creation Modal */}
+        {isCreateModalOpen && (
+          <BlogCreateModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            onSubmit={onSubmitCreateBlog}
+            formError={formError}
+            newTitle={newTitle}
+            setNewTitle={setNewTitle}
+            newAuthorName={newAuthorName}
+            setNewAuthorName={setNewAuthorName}
+            newAuthorRole={newAuthorRole}
+            setNewAuthorRole={setNewAuthorRole}
+            newCategory={newCategory}
+            setNewCategory={setNewCategory}
+            newExcerpt={newExcerpt}
+            setNewExcerpt={setNewExcerpt}
+            newContent={newContent}
+            setNewContent={setNewContent}
+          />
         )}
-
-        {/* Tab 3: Reviews Management */}
-        {activeTab === 'reviews' && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-black text-white tracking-tight mb-1">
-                Community Reviews Moderation
-              </h2>
-              <p className="text-xs text-neutral-400">
-                Approve verified writer reviews to surface them in the homepage testimonials carousel.
-              </p>
-            </div>
-
-            <AdminReviewsTab
-              reviews={reviews}
-              onApprove={handleApproveReview}
-              onReject={handleRejectReview}
-              onDelete={handleDeleteReview}
-              onToggleVerified={handleToggleVerifiedReview}
-            />
-          </div>
-        )}
-
-        {/* Tab 4: Feedback & Bug Tracker */}
-        {activeTab === 'feedback' && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl font-black text-white tracking-tight mb-1">
-                User Feedback &amp; Bug Tracker
-              </h2>
-              <p className="text-xs text-neutral-400">
-                Inspect bug reports, feature suggestions, willingness to pay, and device telemetry.
-              </p>
-            </div>
-
-            <AdminFeedbackTab
-              feedbacks={feedbacks}
-              onUpdateStatus={handleUpdateFeedbackStatus}
-              onDelete={handleDeleteFeedback}
-            />
-          </div>
-        )}
-      </main>
-
-      {/* Reader Preview Modal */}
-      {previewArticle && (
-        <BlogReaderModal
-          article={previewArticle}
-          onClose={() => setPreviewArticle(null)}
-          MarkdownPreview={MarkdownPreview}
-        />
-      )}
-
-      {/* Blog Creation Modal */}
-      {isCreateModalOpen && (
-        <BlogCreateModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSubmit={onSubmitCreateBlog}
-          formError={formError}
-          newTitle={newTitle}
-          setNewTitle={setNewTitle}
-          newAuthorName={newAuthorName}
-          setNewAuthorName={setNewAuthorName}
-          newAuthorRole={newAuthorRole}
-          setNewAuthorRole={setNewAuthorRole}
-          newCategory={newCategory}
-          setNewCategory={setNewCategory}
-          newExcerpt={newExcerpt}
-          setNewExcerpt={setNewExcerpt}
-          newContent={newContent}
-          setNewContent={setNewContent}
-        />
-      )}
+      </React.Suspense>
     </div>
   );
 };

@@ -65,14 +65,12 @@ export const EditorStatusBar: React.FC<EditorStatusBarProps> = React.memo(({
   onResetSprint,
   vimMode = 'NORMAL',
 }) => {
-  const { user } = useAuthStore();
-  const {
-    typewriterMode,
-    setTypewriterMode,
-    focusMode,
-    setFocusMode,
-    keymapMode,
-  } = usePreferencesStore();
+  const user = useAuthStore((s) => s.user);
+  const typewriterMode = usePreferencesStore((s) => s.typewriterMode);
+  const setTypewriterMode = usePreferencesStore((s) => s.setTypewriterMode);
+  const focusMode = usePreferencesStore((s) => s.focusMode);
+  const setFocusMode = usePreferencesStore((s) => s.setFocusMode);
+  const keymapMode = usePreferencesStore((s) => s.keymapMode);
 
   const [selectedSprintMode, setSelectedSprintMode] = React.useState<'time' | 'words'>(sprintMode);
   const [selectedMins, setSelectedMins] = React.useState<number>(sprintDuration || 25);

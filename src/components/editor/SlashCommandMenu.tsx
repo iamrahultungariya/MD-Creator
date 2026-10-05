@@ -1,35 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import { 
-  Heading1, 
-  Heading2, 
-  Heading3, 
-  List, 
-  ListOrdered, 
-  CheckSquare, 
-  Code2, 
-  Quote, 
-  Table2, 
-  Sigma, 
-  Minus,
-  AlertCircle,
-  Lightbulb,
-  AlertTriangle,
-  GitBranch,
-  Image as ImageIcon,
-  Highlighter,
-  Command,
-  X,
-  Sparkles,
-  FileDown,
-  ShieldAlert,
-  Info
-} from 'lucide-react';
+import { Command, X } from 'lucide-react';
+import { DynamicIcon, type IconName } from '../common/DynamicIcon';
 
 export interface CommandItem {
   id: string;
   title: string;
   description: string;
-  icon: React.ElementType;
+  icon?: React.ElementType;
+  iconName: IconName | string;
   shortcut: string;
   insertSnippet: string;
   category: 'Structure' | 'Rich Blocks' | 'Callouts' | 'Media & Tools';
@@ -41,7 +19,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'h1',
     title: 'Heading 1',
     description: 'Top-level document heading',
-    icon: Heading1,
+    iconName: 'heading-1',
     shortcut: '#',
     insertSnippet: '# Heading 1\n',
     category: 'Structure',
@@ -50,7 +28,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'h2',
     title: 'Heading 2',
     description: 'Sub-section heading',
-    icon: Heading2,
+    iconName: 'heading-2',
     shortcut: '##',
     insertSnippet: '## Heading 2\n',
     category: 'Structure',
@@ -59,7 +37,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'h3',
     title: 'Heading 3',
     description: 'Small sub-heading',
-    icon: Heading3,
+    iconName: 'heading-3',
     shortcut: '###',
     insertSnippet: '### Heading 3\n',
     category: 'Structure',
@@ -68,7 +46,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'checklist',
     title: 'Task Checklist',
     description: 'Interactive todo checkboxes',
-    icon: CheckSquare,
+    iconName: 'check-square',
     shortcut: '- [ ]',
     insertSnippet: '- [ ] Action item 1\n- [ ] Action item 2\n',
     category: 'Structure',
@@ -77,7 +55,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'bullet-list',
     title: 'Bullet List',
     description: 'Standard unordered bullet points',
-    icon: List,
+    iconName: 'list',
     shortcut: '-',
     insertSnippet: '- Bullet point 1\n- Bullet point 2\n- Bullet point 3\n',
     category: 'Structure',
@@ -86,7 +64,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'numbered-list',
     title: 'Numbered List',
     description: 'Sequential ordered steps',
-    icon: ListOrdered,
+    iconName: 'list-ordered',
     shortcut: '1.',
     insertSnippet: '1. Step one\n2. Step two\n3. Step three\n',
     category: 'Structure',
@@ -95,7 +73,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'quote',
     title: 'Blockquote',
     description: 'Indented quotation block',
-    icon: Quote,
+    iconName: 'quote',
     shortcut: '>',
     insertSnippet: '> Write your quotation or insight here.\n',
     category: 'Structure',
@@ -104,7 +82,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'divider',
     title: 'Divider',
     description: 'Horizontal rule line',
-    icon: Minus,
+    iconName: 'minus',
     shortcut: '---',
     insertSnippet: '\n---\n\n',
     category: 'Structure',
@@ -115,7 +93,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'code-block',
     title: 'Code Block',
     description: 'Fenced code with syntax highlight',
-    icon: Code2,
+    iconName: 'code-2',
     shortcut: '```',
     insertSnippet: '```typescript\n// Write your code here\nconst greeting = "Hello, MD Writer!";\nconsole.log(greeting);\n```\n',
     category: 'Rich Blocks',
@@ -124,7 +102,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'table-builder',
     title: 'Visual Table Builder',
     description: 'Interactive modal table designer',
-    icon: Table2,
+    iconName: 'table-2',
     shortcut: '/table',
     insertSnippet: '__ACTION_OPEN_TABLE_BUILDER__',
     category: 'Rich Blocks',
@@ -133,7 +111,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'table',
     title: '3x3 Quick Table',
     description: 'Standard markdown pipe table',
-    icon: Table2,
+    iconName: 'table-2',
     shortcut: 'table',
     insertSnippet: '\n| Column 1 | Column 2 | Column 3 |\n| :--- | :--- | :--- |\n| Alpha | Feature A | Active |\n| Beta | Feature B | Ready |\n| Gamma | Feature C | Done |\n\n',
     category: 'Rich Blocks',
@@ -142,7 +120,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'math-studio',
     title: 'Formula Studio',
     description: 'Interactive KaTeX equation builder',
-    icon: Sigma,
+    iconName: 'sigma',
     shortcut: '/math',
     insertSnippet: '__ACTION_OPEN_MATH_STUDIO__',
     category: 'Rich Blocks',
@@ -151,7 +129,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'math',
     title: 'LaTeX Formula',
     description: 'Raw KaTeX math block',
-    icon: Sigma,
+    iconName: 'sigma',
     shortcut: '$$',
     insertSnippet: '$$\nE = mc^2\n$$\n',
     category: 'Rich Blocks',
@@ -160,7 +138,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'mermaid',
     title: 'Mermaid Diagram',
     description: 'Architecture flowchart & sequence graph',
-    icon: GitBranch,
+    iconName: 'git-branch',
     shortcut: '/mermaid',
     insertSnippet: '```mermaid\ngraph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Result 1]\n    B -->|No| D[Result 2]\n```\n',
     category: 'Rich Blocks',
@@ -169,7 +147,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'highlight',
     title: 'Text Highlight',
     description: 'Mark passage (==text==)',
-    icon: Highlighter,
+    iconName: 'highlighter',
     shortcut: '/hl',
     insertSnippet: '==highlighted text==',
     category: 'Rich Blocks',
@@ -180,7 +158,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'callout-note',
     title: 'Note Callout',
     description: 'GitHub-style blue note box',
-    icon: Info,
+    iconName: 'info',
     shortcut: '/note',
     insertSnippet: '> [!NOTE]\n> Key context or background information.\n',
     category: 'Callouts',
@@ -189,7 +167,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'callout-tip',
     title: 'Tip Callout',
     description: 'Helpful advice or optimization tip',
-    icon: Lightbulb,
+    iconName: 'lightbulb',
     shortcut: '/tip',
     insertSnippet: '> [!TIP]\n> Pro-tip or best practice recommendation.\n',
     category: 'Callouts',
@@ -198,7 +176,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'callout-important',
     title: 'Important Callout',
     description: 'Essential requirement or must-read notice',
-    icon: AlertCircle,
+    iconName: 'alert-circle',
     shortcut: '/important',
     insertSnippet: '> [!IMPORTANT]\n> Crucial information to remember.\n',
     category: 'Callouts',
@@ -207,7 +185,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'callout-warning',
     title: 'Warning Callout',
     description: 'Cautionary advisory or breaking change',
-    icon: AlertTriangle,
+    iconName: 'alert-triangle',
     shortcut: '/warning',
     insertSnippet: '> [!WARNING]\n> Breaking changes or potential hazards.\n',
     category: 'Callouts',
@@ -216,7 +194,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'callout-caution',
     title: 'Caution Callout',
     description: 'High-risk action warning',
-    icon: ShieldAlert,
+    iconName: 'shield-alert',
     shortcut: '/caution',
     insertSnippet: '> [!CAUTION]\n> Danger of data loss or security risk.\n',
     category: 'Callouts',
@@ -227,7 +205,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'image',
     title: 'Embed Image',
     description: 'Upload local image or embed URL',
-    icon: ImageIcon,
+    iconName: 'image',
     shortcut: '/image',
     insertSnippet: '__ACTION_OPEN_IMAGE_MODAL__',
     category: 'Media & Tools',
@@ -236,7 +214,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'templates',
     title: 'Template Library',
     description: 'Choose ready-made markdown templates',
-    icon: Sparkles,
+    iconName: 'sparkles',
     shortcut: '/template',
     insertSnippet: '__ACTION_OPEN_TEMPLATES__',
     category: 'Media & Tools',
@@ -245,7 +223,7 @@ export const COMMANDS: CommandItem[] = [
     id: 'pdf-studio',
     title: 'Export PDF Studio',
     description: 'Print preview & PDF pagination studio',
-    icon: FileDown,
+    iconName: 'file-down',
     shortcut: '/pdf',
     insertSnippet: '__ACTION_OPEN_PDF_STUDIO__',
     category: 'Media & Tools',
@@ -375,7 +353,6 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
           </div>
         ) : (
           filteredCommands.map((cmd, idx) => {
-            const Icon = cmd.icon;
             const isSelected = idx === (selectedIndex % filteredCommands.length);
             const showCategoryHeader = !searchQuery && cmd.category !== lastCategory;
             if (showCategoryHeader) {
@@ -406,7 +383,7 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
                         ? 'bg-brand-500 text-white shadow-xs' 
                         : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                     }`}>
-                      <Icon className="w-3 h-3" />
+                      <DynamicIcon name={cmd.iconName} className="w-3 h-3" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs truncate leading-tight font-medium">{cmd.title}</p>

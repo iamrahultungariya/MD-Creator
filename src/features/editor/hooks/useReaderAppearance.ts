@@ -3,14 +3,12 @@ import { useReaderSettingsStore } from '../../../stores/useReaderSettingsStore';
 import { useThemeStore } from '../../../stores/useThemeStore';
 
 export function useReaderAppearance() {
-  const {
-    theme: readerTheme,
-    fontFamily: readerFontFamily,
-    fontSize: readerFontSize,
-    columnWidth: readerColumnWidth,
-    setReadingProgress,
-  } = useReaderSettingsStore();
-  const { isDark } = useThemeStore();
+  const readerTheme = useReaderSettingsStore((s) => s.theme);
+  const readerFontFamily = useReaderSettingsStore((s) => s.fontFamily);
+  const readerFontSize = useReaderSettingsStore((s) => s.fontSize);
+  const readerColumnWidth = useReaderSettingsStore((s) => s.columnWidth);
+  const setReadingProgress = useReaderSettingsStore((s) => s.setReadingProgress);
+  const isDark = useThemeStore((s) => s.isDark);
 
   const readerThemeClasses = useMemo(() => {
     switch (readerTheme) {

@@ -48,19 +48,17 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const { isDark } = useThemeStore();
-  const {
-    fontFamily,
-    fontSize,
-    lineHeight,
-    wordWrap,
-    tabSize,
-    lineNumbers: prefLineNumbers,
-    autoCloseBrackets,
-    typewriterMode,
-    focusMode,
-    keymapMode,
-  } = usePreferencesStore();
+  const isDark = useThemeStore((s) => s.isDark);
+  const fontFamily = usePreferencesStore((s) => s.fontFamily);
+  const fontSize = usePreferencesStore((s) => s.fontSize);
+  const lineHeight = usePreferencesStore((s) => s.lineHeight);
+  const wordWrap = usePreferencesStore((s) => s.wordWrap);
+  const tabSize = usePreferencesStore((s) => s.tabSize);
+  const prefLineNumbers = usePreferencesStore((s) => s.lineNumbers);
+  const autoCloseBrackets = usePreferencesStore((s) => s.autoCloseBrackets);
+  const typewriterMode = usePreferencesStore((s) => s.typewriterMode);
+  const focusMode = usePreferencesStore((s) => s.focusMode);
+  const keymapMode = usePreferencesStore((s) => s.keymapMode);
 
   const onVimModeChangeRef = useRef(onVimModeChange);
   onVimModeChangeRef.current = onVimModeChange;

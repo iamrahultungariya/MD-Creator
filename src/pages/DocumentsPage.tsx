@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -13,7 +13,6 @@ import {
   X
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
-import { Footer } from '../components/home/Footer';
 import { DocumentGridCard } from '../components/documents/DocumentGridCard';
 import { DocumentListItem } from '../components/documents/DocumentListItem';
 import { DocumentsFilterToolbar } from '../components/documents/DocumentsFilterToolbar';
@@ -29,14 +28,19 @@ import {
 } from '../hooks/useDocuments';
 import { saveDocument } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
-import { CreateDocumentModal } from '../components/document/CreateDocumentModal';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
 
+const CreateDocumentModal = React.lazy(() =>
+  import('../components/document/CreateDocumentModal').then((m) => ({ default: m.CreateDocumentModal }))
+);
 const TemplatesModal = React.lazy(() =>
   import('../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
 );
 const LocalFolderDrawer = React.lazy(() =>
   import('../components/editor/LocalFolderDrawer').then((m) => ({ default: m.LocalFolderDrawer }))
+);
+const Footer = React.lazy(() =>
+  import('../components/home/Footer').then((m) => ({ default: m.Footer }))
 );
 
 export const DocumentsPage: React.FC = () => {
@@ -419,7 +423,9 @@ export const DocumentsPage: React.FC = () => {
 
       </main>
 
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
 
       {/* Duplicate In-Place Notification Toast */}
       <AnimatePresence>
@@ -473,11 +479,15 @@ export const DocumentsPage: React.FC = () => {
       )}
 
       {/* Create New Document / Note Modal */}
-      <CreateDocumentModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        defaultFolderTag={activeTag !== 'All' ? activeTag : undefined}
-      />
+      {isCreateModalOpen && (
+        <React.Suspense fallback={null}>
+          <CreateDocumentModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            defaultFolderTag={activeTag !== 'All' ? activeTag : undefined}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };

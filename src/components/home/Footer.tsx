@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { APP_VERSION_LABEL } from '../../config/version';
-import { LegalModal } from '../common/LegalModal';
 import { usePreferencesStore } from '../../stores/usePreferencesStore';
+
+const LegalModal = React.lazy(() =>
+  import('../common/LegalModal').then((m) => ({ default: m.LegalModal }))
+);
 
 interface FooterProps {}
 
@@ -102,7 +105,11 @@ export const Footer: React.FC<FooterProps> = () => {
 
       </div>
 
-      <LegalModal isOpen={isLegalOpen} onClose={() => setIsLegalOpen(false)} />
+      {isLegalOpen && (
+        <Suspense fallback={null}>
+          <LegalModal isOpen={isLegalOpen} onClose={() => setIsLegalOpen(false)} />
+        </Suspense>
+      )}
     </footer>
   );
 };

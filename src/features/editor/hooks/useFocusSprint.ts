@@ -49,6 +49,8 @@ export function useFocusSprint({ content, onSprintComplete }: UseFocusSprintOpti
     return isSprintActive ? fastCountWords(content) : 0;
   }, [isSprintActive, content]);
   const wordsWritten = isSprintActive ? Math.max(0, currentWords - sprintStartWordCount) : 0;
+  const wordsWrittenRef = useRef(wordsWritten);
+  wordsWrittenRef.current = wordsWritten;
 
   // Calculate live WPM
   const calculateWpm = useCallback(() => {
@@ -58,19 +60,20 @@ export function useFocusSprint({ content, onSprintComplete }: UseFocusSprintOpti
     return Math.round(wordsWritten / elapsedMin);
   }, [isSprintActive, wordsWritten]);
 
-  // Main countdown / sprint tracking loop
+  // Main countdown / sprint tracking loop (runs strictly on a 1-second cadence without tearing down on each typed letter)
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isSprintActive) {
       interval = setInterval(() => {
+        const currentWordsWritten = wordsWrittenRef.current;
         // Check if word target is achieved in 'words' mode
-        if (sprintMode === 'words' && wordsWritten >= targetWords) {
+        if (sprintMode === 'words' && currentWordsWritten >= targetWords) {
           setIsSprintActive(false);
           const elapsedSec = (Date.now() - startTimeRef.current) / 1000 + pausedElapsedRef.current;
           const elapsedMin = Math.max(0.1, elapsedSec / 60);
-          const wpm = Math.round(wordsWritten / elapsedMin);
+          const wpm = Math.round(currentWordsWritten / elapsedMin);
           if (soundEnabled) playTone([523.25, 659.25, 783.99, 1046.50], 450); // Victory fanfare
-          onSprintComplete?.(wordsWritten, Math.round(elapsedMin), wpm);
+          onSprintComplete?.(currentWordsWritten, Math.round(elapsedMin), wpm);
           return;
         }
 
@@ -80,9 +83,9 @@ export function useFocusSprint({ content, onSprintComplete }: UseFocusSprintOpti
             if (prev <= 1) {
               setIsSprintActive(false);
               const elapsedMin = sprintDuration;
-              const wpm = Math.round(wordsWritten / Math.max(1, elapsedMin));
+              const wpm = Math.round(currentWordsWritten / Math.max(1, elapsedMin));
               if (soundEnabled) playTone([523.25, 659.25, 783.99, 1046.50], 450); // Victory fanfare
-              onSprintComplete?.(wordsWritten, elapsedMin, wpm);
+              onSprintComplete?.(currentWordsWritten, elapsedMin, wpm);
               return 0;
             }
             return prev - 1;
@@ -93,7 +96,7 @@ export function useFocusSprint({ content, onSprintComplete }: UseFocusSprintOpti
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isSprintActive, sprintMode, wordsWritten, targetWords, sprintDuration, soundEnabled, onSprintComplete]);
+  }, [isSprintActive, sprintMode, targetWords, sprintDuration, soundEnabled, onSprintComplete]);
 
   const handleStartSprint = useCallback(
     (minutes?: number, mode: SprintMode = 'time', wordGoal = 250) => {

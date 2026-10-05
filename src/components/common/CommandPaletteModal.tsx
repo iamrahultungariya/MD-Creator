@@ -48,15 +48,14 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDark, toggleTheme } = useThemeStore();
+  const isDark = useThemeStore((s) => s.isDark);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
-  const {
-    typewriterMode,
-    setTypewriterMode,
-    focusMode,
-    setFocusMode,
-    openPreferences,
-  } = usePreferencesStore();
+  const typewriterMode = usePreferencesStore((s) => s.typewriterMode);
+  const setTypewriterMode = usePreferencesStore((s) => s.setTypewriterMode);
+  const focusMode = usePreferencesStore((s) => s.focusMode);
+  const setFocusMode = usePreferencesStore((s) => s.setFocusMode);
+  const openPreferences = usePreferencesStore((s) => s.openPreferences);
 
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
