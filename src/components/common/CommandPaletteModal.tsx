@@ -246,12 +246,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     list.push({
       id: 'action-storage-details',
-      title: 'Storage & 300 MB Limit Telemetry',
+      title: 'Local Storage Details',
       category: 'Actions & Navigation',
-      description: 'View IndexedDB usage, local-first safety & purge trash',
+      description: 'View IndexedDB usage, backup data & empty trash',
       icon: Database,
       iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
-      shortcut: '300 MB',
+      shortcut: 'Storage',
       perform: () => {
         setIsStorageModalOpen(true);
       },

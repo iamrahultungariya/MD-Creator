@@ -149,7 +149,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/60 hover:border-brand-500/50 hover:bg-neutral-100/90 dark:hover:bg-neutral-800/80 font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 shadow-2xs select-none cursor-pointer transition-all ${className}`}
-          title={`Click to view detailed storage telemetry (${usedMb} MB used of ${SOFT_LIMIT_MB} MB)`}
+          title={`Storage usage: ${usedMb} MB of ${SOFT_LIMIT_MB} MB`}
         >
           <svg className="w-4 h-4 -rotate-90 shrink-0" viewBox="0 0 24 24">
             <circle
@@ -187,7 +187,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           className={`flex items-center gap-3 font-sans text-xs select-none cursor-pointer hover:opacity-80 transition-opacity ${className}`}
-          title={`Click to view storage details (${usedMb} MB used out of ${SOFT_LIMIT_MB} MB)`}
+          title={`Storage usage: ${usedMb} MB of ${SOFT_LIMIT_MB} MB`}
         >
           <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
             <svg className="w-7 h-7 -rotate-90" viewBox="0 0 24 24">
@@ -219,7 +219,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
               <span>{usedMb} MB</span>
               <span className="text-neutral-400 font-normal text-[11px]">/ {SOFT_LIMIT_MB} MB</span>
             </div>
-            <div className="text-[10px] text-neutral-400 font-medium">Workspace Soft Limit</div>
+            <div className="text-[10px] text-neutral-400 font-medium">Local Storage</div>
           </div>
         </div>
       )}
@@ -231,7 +231,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           className={`p-3.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/40 hover:border-brand-500/50 hover:bg-neutral-100/70 dark:hover:bg-neutral-850/60 font-sans text-xs space-y-3 select-none cursor-pointer transition-all group ${className}`}
-          title={`Click to view storage breakdown & telemetry (${usedMb} MB used of ${SOFT_LIMIT_MB} MB)`}
+          title={`Storage usage: ${usedMb} MB of ${SOFT_LIMIT_MB} MB`}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
@@ -266,10 +266,10 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
 
               <div className="min-w-0">
                 <div className="font-bold text-neutral-900 dark:text-white text-xs group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-                  Workspace Storage
+                  Local Storage
                 </div>
                 <div className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                  In-App Soft Limit ({SOFT_LIMIT_MB} MB quota)
+                  {SOFT_LIMIT_MB} MB recommended limit
                 </div>
               </div>
             </div>

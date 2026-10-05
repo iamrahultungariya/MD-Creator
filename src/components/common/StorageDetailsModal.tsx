@@ -8,8 +8,7 @@ import {
   Trash2, 
   Download, 
   CheckCircle2, 
-  Zap, 
-  ShieldCheck
+  HardDrive
 } from 'lucide-react';
 import { db, emptyTrash } from '../../db';
 import { SOFT_LIMIT_MB, SOFT_LIMIT_BYTES } from './StorageLimitRing';
@@ -210,10 +209,10 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
             </div>
             <div>
               <h2 id="storage-modal-title" className="text-base font-bold text-neutral-900 dark:text-white leading-tight">
-                Workspace Storage & Limit
+                Local Storage
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                In-app IndexedDB safeguards & live telemetry
+                IndexedDB data usage and document breakdown
               </p>
             </div>
           </div>
@@ -282,10 +281,9 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
               </div>
 
               <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400">
-                <span>Safe capacity: 300 MB</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                  <Zap className="w-3 h-3" />
-                  0ms Typist Latency
+                <span>Recommended limit: {SOFT_LIMIT_MB} MB</span>
+                <span className="font-medium text-neutral-600 dark:text-neutral-300">
+                  {Math.max(0, SOFT_LIMIT_MB - Number(usedMb)).toFixed(1)} MB available
                 </span>
               </div>
             </div>
@@ -330,7 +328,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
               <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400">
                 <div className="flex items-center gap-1.5 text-xs font-medium">
                   <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Media Blobs</span>
+                  <span>Images & Media</span>
                 </div>
                 <span className="text-[11px] font-semibold text-neutral-900 dark:text-white">
                   {breakdown.imageCount}
@@ -358,24 +356,12 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
             </div>
           </div>
 
-          {/* Educational Explainers */}
-          <div className="p-3.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 space-y-2.5 text-xs">
-            <div className="flex items-center gap-2 font-bold text-neutral-900 dark:text-white">
-              <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              <span>Why is there a 300 MB soft limit?</span>
-            </div>
-
-            <ul className="space-y-1.5 text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed list-disc list-inside">
-              <li>
-                <strong className="text-neutral-800 dark:text-neutral-200">100% Local & Private:</strong> All documents, images, and history snapshots are stored directly in your browser's IndexedDB. Nothing leaves your machine unless you publish.
-              </li>
-              <li>
-                <strong className="text-neutral-800 dark:text-neutral-200">Zero Typing Lag (0ms):</strong> Keeping active working memory under 300 MB avoids browser garbage collection spikes, ensuring instantaneous search and keystroke autosaves.
-              </li>
-              <li>
-                <strong className="text-neutral-800 dark:text-neutral-200">Soft Advisory Benchmark:</strong> Your hard drive has plenty of space; 300 MB is our recommended threshold for an ultra-snappy web app experience.
-              </li>
-            </ul>
+          {/* Storage Information Note */}
+          <div className="p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 flex items-start gap-2.5 text-neutral-600 dark:text-neutral-400">
+            <HardDrive className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+            <p className="leading-relaxed text-[11px]">
+              Workspace data is stored locally in your browser's IndexedDB. The {SOFT_LIMIT_MB} MB guideline helps maintain responsive indexing, search, and document autosaves.
+            </p>
           </div>
 
           {/* Action Row */}
@@ -388,7 +374,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{isExporting ? 'Exporting...' : 'Export Vault (.json)'}</span>
+                <span>{isExporting ? 'Exporting...' : 'Export Backup (.json)'}</span>
               </button>
 
               {breakdown.trashedCount > 0 && (
@@ -407,7 +393,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
             {exportSuccess && (
               <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Vault backup downloaded!</span>
+                <span>Backup downloaded!</span>
               </span>
             )}
 
