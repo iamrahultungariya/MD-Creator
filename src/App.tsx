@@ -67,6 +67,9 @@ const AppRoutes: React.FC = () => {
         <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
         <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
         {/* Graceful redirects for pruned pages */}
+        <Route path="/showcase" element={<Navigate to="/" replace />} />
+        <Route path="/record" element={<Navigate to="/" replace />} />
+        <Route path="/studio" element={<Navigate to="/" replace />} />
         <Route path="/updates" element={<Navigate to="/" replace />} />
         <Route path="/changelog" element={<Navigate to="/" replace />} />
         <Route path="/about" element={<Navigate to="/" replace />} />

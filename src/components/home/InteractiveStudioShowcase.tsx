@@ -13,6 +13,11 @@ export type ShowcaseTab = 'editor' | 'focus';
 export const InteractiveStudioShowcase: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ShowcaseTab>('editor');
+  const [tasks, setTasks] = useState([
+    { id: 't1', label: 'Sub-10ms local persistence', checked: true },
+    { id: 't2', label: 'Auto-table conversion from spreadsheets', checked: true },
+    { id: 't3', label: 'Edge synchronization channel', checked: false }
+  ]);
 
   return (
     <div className="w-full max-w-5xl mx-auto text-left select-none">
@@ -107,10 +112,12 @@ export const InteractiveStudioShowcase: React.FC = () => {
                       <span className="text-neutral-400 mr-1">&gt;</span>
                       High-reliability local-first notes specification.
                     </p>
-                    <p className="text-neutral-700 dark:text-neutral-300">
-                      - [x] Sub-10ms local persistence<br />
-                      - [x] Auto-table conversion from spreadsheets<br />
-                      - [ ] Edge synchronization channel
+                    <p className="text-neutral-700 dark:text-neutral-300 font-mono">
+                      {tasks.map((t) => (
+                        <span key={t.id} className="block">
+                          - [{t.checked ? 'x' : ' '}] {t.label}
+                        </span>
+                      ))}
                     </p>
                     <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/80 dark:border-neutral-800 text-[11px] text-neutral-600 dark:text-neutral-400">
                       <span className="text-neutral-400">| Module | Latency | Redundancy |</span><br />
@@ -125,7 +132,7 @@ export const InteractiveStudioShowcase: React.FC = () => {
                 </div>
 
                 {/* Rendered Output Preview Pane (Right - Authentic High-Contrast Monochrome) */}
-                <div className="w-full md:w-1/2 p-6 overflow-hidden bg-neutral-50/50 dark:bg-neutral-950 space-y-4">
+                <div className="w-full md:w-1/2 p-6 overflow-hidden bg-neutral-50/50 dark:bg-neutral-950 space-y-3.5">
                   <div className="border-b border-neutral-200 dark:border-neutral-800 pb-2">
                     <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-medium">
                       Live Preview
@@ -136,9 +143,44 @@ export const InteractiveStudioShowcase: React.FC = () => {
                   </div>
 
                   {/* Clean Markdown Blockquote / Callout */}
-                  <blockquote className="border-l-2 border-brand-500 dark:border-brand-400 bg-neutral-100/70 dark:bg-neutral-900/60 p-3 rounded-r-lg text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
-                    High-reliability local-first notes specification. All documents persist locally in IndexedDB with 0ms typing latency and zero cloud dependency.
+                  <blockquote className="border-l-2 border-brand-500 dark:border-brand-400 bg-neutral-100/70 dark:bg-neutral-900/60 p-2.5 rounded-r-lg text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
+                    High-reliability local-first notes specification. All documents persist locally in IndexedDB with 0ms typing latency.
                   </blockquote>
+
+                  {/* Rendered Interactive Task List with Checkboxes */}
+                  <ul className="space-y-1.5 py-0.5 text-xs text-neutral-800 dark:text-neutral-200 select-none">
+                    {tasks.map((t) => (
+                      <li 
+                        key={t.id} 
+                        onClick={() => {
+                          setTasks((prev) =>
+                            prev.map((item) => (item.id === t.id ? { ...item, checked: !item.checked } : item))
+                          );
+                        }}
+                        className="flex items-center gap-2 cursor-pointer group/task hover:text-neutral-950 dark:hover:text-white"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={t.checked}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setTasks((prev) =>
+                              prev.map((item) => (item.id === t.id ? { ...item, checked: !item.checked } : item))
+                            );
+                          }}
+                          className="w-3.5 h-3.5 rounded text-brand-600 accent-neutral-900 dark:accent-white cursor-pointer"
+                          aria-label={t.label}
+                        />
+                        <span className={`text-[11.5px] transition-all ${
+                          t.checked 
+                            ? 'line-through text-neutral-400 dark:text-neutral-500 font-normal' 
+                            : 'font-medium text-neutral-800 dark:text-neutral-200'
+                        }`}>
+                          {t.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
 
                   {/* Rendered Pipe Table - Clean Monochrome */}
                   <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden text-xs">
