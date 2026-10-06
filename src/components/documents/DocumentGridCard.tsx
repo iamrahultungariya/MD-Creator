@@ -1,5 +1,5 @@
-import React from 'react';
-import { FileText, Copy, Pin, Trash2, RotateCcw, Clock } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { SpotlightCard } from '../common/SpotlightCard';
@@ -31,7 +31,25 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
   onDelete,
   onRestore,
 }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const isDimmed = isAnyHovered && !isHovered;
+
+  // Close mobile micro-popover on outside click
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   return (
     <SpotlightCard
@@ -60,7 +78,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
       }`}
     >
       <div>
-        {/* Card Header: Icon, Title & Reveal-on-Hover Action Dock */}
+        {/* Card Header: Icon, Title & Reveal-on-Hover Action Dock / Mobile Menu */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0 flex-1 font-sans">
             <div
@@ -83,8 +101,8 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
             </div>
           </div>
 
-          {/* Right Header: Amber Pinned Badge (always visible when pinned) OR Action Dock (reveals on hover) */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Right Header: Amber Pinned Badge, Desktop Hover Actions, and Mobile 3-Dots Menu */}
+          <div className="flex items-center gap-1.5 shrink-0" ref={mobileMenuRef}>
             {/* Glowing Amber Pin Badge when pinned and not hovered */}
             {doc.isPinned && currentTab === 'active' && !isHovered && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs font-sans">
@@ -93,9 +111,9 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
               </span>
             )}
 
-            {/* Action Buttons: Reveal on hover with smooth fade & slide */}
+            {/* Desktop Action Buttons: Reveal on hover with smooth fade & slide */}
             <div
-              className={`flex items-center gap-1 transition-all duration-200 ${
+              className={`hidden sm:flex items-center gap-1 transition-all duration-200 ${
                 isHovered
                   ? 'opacity-100 translate-y-0 pointer-events-auto'
                   : 'opacity-0 translate-y-1 pointer-events-none'
@@ -147,6 +165,110 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </>
+              )}
+            </div>
+
+            {/* Mobile Touch Micro-Interaction: 3-Dots Button & Popover */}
+            <div className="relative sm:hidden">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMobileMenuOpen((prev) => !prev);
+                }}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                  isMobileMenuOpen
+                    ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white'
+                    : 'text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
+                title="Document actions"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {/* Mobile Micro-Popover Menu */}
+              {isMobileMenuOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1.5 z-50 min-w-[165px] p-1.5 rounded-xl bg-white/95 dark:bg-[#18181c]/95 backdrop-blur-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl animate-in fade-in zoom-in-95 duration-150 font-sans text-left"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {currentTab === 'active' ? (
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          onTogglePin(e, doc.id);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                          doc.isPinned
+                            ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                            : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        <Pin className={`w-3.5 h-3.5 ${doc.isPinned ? 'fill-current' : ''}`} />
+                        <span>{doc.isPinned ? 'Unpin Note' : 'Pin to Top'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          onDuplicate(e, doc.id);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Duplicate Note</span>
+                      </button>
+
+                      <div className="my-1 border-t border-neutral-100 dark:border-neutral-800" />
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          onDelete(e, doc.id, doc.title);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Move to Trash</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          onRestore(e, doc.id);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Restore Note</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          onDelete(e, doc.id, doc.title);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Forever</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

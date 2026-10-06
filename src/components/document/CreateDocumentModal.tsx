@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   X, 
@@ -14,6 +14,7 @@ import {
   Layers 
 } from 'lucide-react';
 import { saveDocument } from '../../db';
+import { useAllDocumentTags } from '../../hooks/useDocuments';
 import { MARKDOWN_TEMPLATES } from '../../data/templates';
 
 interface CreateDocumentModalProps {
@@ -111,23 +112,36 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const customTagInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch all existing workspace tags to suggest in the modal
+  const { data: dbTags = [] } = useAllDocumentTags();
 
   const [title, setTitle] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('blank');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [customTags, setCustomTags] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Compute union of all displayable tags (presets + workspace tags + custom added tags)
+  const allAvailableTags = useMemo(() => {
+    const workspaceTags = dbTags.filter((t) => t && t !== 'All');
+    return Array.from(new Set([...PRESET_TAGS, ...workspaceTags, ...customTags, ...selectedTags]));
+  }, [dbTags, customTags, selectedTags]);
 
   // Initialize defaults on open & prefetch editor chunk
   useEffect(() => {
     if (isOpen) {
-      // Eagerly prefetch EditorPage so opening the new document is instantaneous
       import('../../pages/EditorPage').catch(() => {});
       const now = new Date();
       const dateStr = now.toISOString().slice(0, 10);
       setTitle(`Note ${dateStr}`);
       setSelectedTemplateId('blank');
-      setSelectedTags(defaultFolderTag ? [defaultFolderTag] : ['Drafts']);
+      // Set initial tags
+      const initialTag = defaultFolderTag && defaultFolderTag !== 'All' ? defaultFolderTag : 'Drafts';
+      setSelectedTags([initialTag]);
+      setCustomTags(defaultFolderTag && !PRESET_TAGS.includes(defaultFolderTag) ? [defaultFolderTag] : []);
       setCustomTagInput('');
       setTimeout(() => inputRef.current?.select(), 50);
     }
@@ -151,12 +165,18 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
     );
   };
 
-  const handleAddCustomTag = (e: React.KeyboardEvent | React.MouseEvent) => {
-    if ('key' in e && e.key !== 'Enter') return;
-    e.preventDefault();
-    const trimmed = customTagInput.trim();
-    if (trimmed && !selectedTags.includes(trimmed)) {
-      setSelectedTags([...selectedTags, trimmed]);
+  const handleAddCustomTag = (e?: React.KeyboardEvent | React.MouseEvent) => {
+    if (e && 'key' in e && e.key !== 'Enter' && e.key !== ',') return;
+    if (e) e.preventDefault();
+
+    const trimmed = customTagInput.trim().replace(/^#+/, '').replace(/,+$/, '');
+    if (trimmed) {
+      if (!selectedTags.includes(trimmed)) {
+        setSelectedTags((prev) => [...prev, trimmed]);
+      }
+      if (!customTags.includes(trimmed)) {
+        setCustomTags((prev) => [...prev, trimmed]);
+      }
       setCustomTagInput('');
     }
   };
@@ -172,6 +192,16 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
         finalTitle = `${finalTitle}.md`;
       }
 
+      // Auto-commit any pending custom tag typed in the input
+      let finalTags = [...selectedTags];
+      const pendingTag = customTagInput.trim().replace(/^#+/, '').replace(/,+$/, '');
+      if (pendingTag && !finalTags.includes(pendingTag)) {
+        finalTags.push(pendingTag);
+      }
+      if (finalTags.length === 0) {
+        finalTags = ['Drafts'];
+      }
+
       const chosenTemplate =
         STARTER_TEMPLATES.find((t) => t.id === selectedTemplateId) || STARTER_TEMPLATES[0];
 
@@ -183,7 +213,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
         newId,
         finalTitle,
         chosenTemplate.content,
-        selectedTags.length > 0 ? selectedTags : ['Drafts']
+        finalTags
       );
 
       onClose();
@@ -331,47 +361,67 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
 
           {/* Tags & Folders */}
           <div>
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300 mb-2">
-              <Tag className="w-3 h-3 text-neutral-400" />
-              <span>Workspace Tags</span>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300">
+                <Tag className="w-3 h-3 text-neutral-400" />
+                <span>Workspace Tags</span>
+              </div>
+              <span className="text-[10px] text-neutral-400">
+                {selectedTags.length} selected
+              </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5">
-              {PRESET_TAGS.map((tag) => {
+            {/* Dynamic Tags Pills List (Always displays all active tags including custom tags!) */}
+            <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-lg bg-neutral-50/50 dark:bg-neutral-800/30 border border-neutral-200/70 dark:border-neutral-800 min-h-[46px]">
+              {allAvailableTags.map((tag) => {
                 const isSelected = selectedTags.includes(tag);
                 return (
                   <button
                     key={tag}
                     type="button"
                     onClick={() => toggleTag(tag)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer border ${
+                    className={`group px-2.5 py-1 rounded-md text-[11px] font-medium transition-all cursor-pointer border flex items-center gap-1.5 ${
                       isSelected
                         ? 'border-[#8257F5] bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] font-bold shadow-2xs'
-                        : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/40 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
+                        : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'
                     }`}
                   >
-                    {tag}
+                    <span>#{tag}</span>
+                    {isSelected && (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleTag(tag);
+                        }}
+                        className="opacity-60 group-hover:opacity-100 hover:text-rose-500 transition-opacity"
+                        title="Remove tag"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </span>
+                    )}
                   </button>
                 );
               })}
 
               {/* Custom Tag Input */}
-              <div className="inline-flex items-center gap-1 pl-2">
+              <div className="inline-flex items-center gap-1 pl-1">
                 <input
+                  ref={customTagInputRef}
                   type="text"
                   placeholder="+ Add tag..."
                   value={customTagInput}
                   onChange={(e) => setCustomTagInput(e.target.value)}
                   onKeyDown={handleAddCustomTag}
-                  className="w-24 px-2 py-0.5 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 bg-transparent text-[11px] placeholder:text-neutral-400 focus:outline-none focus:border-[#8257F5]"
+                  className="w-28 px-2 py-1 rounded-md border border-dashed border-neutral-300 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/60 text-[11px] placeholder:text-neutral-400 focus:outline-none focus:border-[#8257F5] text-neutral-900 dark:text-white"
                 />
                 {customTagInput.trim() && (
                   <button
                     type="button"
-                    onClick={handleAddCustomTag}
-                    className="p-1 rounded bg-[#8257F5] text-white hover:bg-[#7245e6] cursor-pointer"
+                    onClick={() => handleAddCustomTag()}
+                    className="p-1 rounded-md bg-[#8257F5] text-white hover:bg-[#7245e6] cursor-pointer transition-colors shadow-2xs"
+                    title="Add tag"
                   >
-                    <Plus className="w-2.5 h-2.5" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 )}
               </div>

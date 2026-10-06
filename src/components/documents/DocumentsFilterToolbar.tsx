@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, LayoutGrid, List } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Search, ChevronDown, LayoutGrid, List, Check } from 'lucide-react';
 
 interface DocumentsFilterToolbarProps {
   search: string;
@@ -21,6 +21,7 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
   setViewMode,
 }) => {
   const [isMoreTagsOpen, setIsMoreTagsOpen] = useState(false);
+  const [tagFilterQuery, setTagFilterQuery] = useState('');
   const moreTagsRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,16 +43,34 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
 
   // Close more tags popover on outside click
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    if (!isMoreTagsOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (moreTagsRef.current && !moreTagsRef.current.contains(e.target as Node)) {
         setIsMoreTagsOpen(false);
+        setTagFilterQuery('');
       }
     };
-    if (isMoreTagsOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [isMoreTagsOpen]);
+
+  // First 5 tags shown directly in pills
+  const primaryTags = allTags.slice(0, 5);
+  // Remaining overflow tags
+  const overflowTags = allTags.slice(5);
+
+  // Filtered overflow tags when user searches in the dropdown
+  const filteredOverflowTags = useMemo(() => {
+    if (!tagFilterQuery.trim()) return overflowTags;
+    const q = tagFilterQuery.toLowerCase().trim().replace(/^#+/, '');
+    return overflowTags.filter((t) => t.toLowerCase().includes(q));
+  }, [overflowTags, tagFilterQuery]);
+
+  const isOverflowTagActive = overflowTags.includes(activeTag);
 
   return (
     <div className="p-2.5 sm:p-3 rounded-xl bg-neutral-50/70 dark:bg-[#121217] border border-neutral-200/80 dark:border-neutral-800 mb-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between font-sans">
@@ -75,72 +94,113 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
 
       {/* Tag Pills & View Switcher Row */}
       <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-        {/* Tag Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none flex-1 sm:flex-initial">
-          {allTags.slice(0, 5).map((tag) => (
-            <button
-              key={tag}
-              onClick={() => {
-                setActiveTag(tag);
-                setIsMoreTagsOpen(false);
-              }}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer font-sans ${
-                activeTag === tag
-                  ? 'bg-brand-600 text-white shadow-2xs font-bold border border-brand-600'
-                  : 'bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
+        {/* Tag Pills & More Button Container: Non-overflowing wrapper so popover floats freely */}
+        <div className="flex items-center gap-1.5 flex-1 sm:flex-initial min-w-0">
+          {/* Scrollable first 5 primary tags */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-w-0">
+            {primaryTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => {
+                  setActiveTag(tag);
+                  setIsMoreTagsOpen(false);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer font-sans ${
+                  activeTag === tag
+                    ? 'bg-brand-600 text-white shadow-2xs font-bold border border-brand-600'
+                    : 'bg-white dark:bg-neutral-900 border border-neutral-200/70 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
 
+          {/* '+N More' Dropdown Container - OUTSIDE the overflow-x-auto element to prevent clipping */}
           {allTags.length > 5 && (
             <div className="relative shrink-0" ref={moreTagsRef}>
               <button
                 type="button"
                 onClick={() => setIsMoreTagsOpen((prev) => !prev)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1 font-sans ${
-                  allTags.slice(5).includes(activeTag)
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 font-sans ${
+                  isOverflowTagActive
                     ? 'bg-brand-600 text-white shadow-2xs border border-brand-600'
                     : isMoreTagsOpen
-                    ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white'
+                    ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white border border-transparent'
                     : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/70 dark:border-neutral-800'
                 }`}
-                title="View more tags"
+                title="View more workspace tags"
               >
                 <span>
-                  {allTags.slice(5).includes(activeTag)
+                  {isOverflowTagActive
                     ? `#${activeTag}`
-                    : `+${allTags.length - 5} More`}
+                    : `+${overflowTags.length} More`}
                 </span>
-                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isMoreTagsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    isMoreTagsOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
 
-              {/* Overflow Tags Dropdown */}
+              {/* Overflow Tags Dropdown (clean floating popover with vertical scrolling) */}
               {isMoreTagsOpen && (
-                <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-1.5 z-40 w-52 max-h-60 overflow-y-auto p-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl animate-in fade-in zoom-in-95 duration-150 font-sans">
-                  <div className="px-2 py-1 text-[11px] font-semibold text-neutral-400 font-sans border-b border-neutral-100 dark:border-neutral-800 mb-1">
-                    More Tags ({allTags.length - 5})
+                <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 w-60 max-h-72 p-1.5 rounded-xl bg-white dark:bg-[#18181c] border border-neutral-200/90 dark:border-neutral-800 shadow-2xl animate-in fade-in zoom-in-95 duration-150 font-sans flex flex-col">
+                  {/* Dropdown Header */}
+                  <div className="px-2.5 py-1.5 text-[11px] font-bold text-neutral-500 dark:text-neutral-400 border-b border-neutral-100 dark:border-neutral-800/80 mb-1.5 flex items-center justify-between shrink-0">
+                    <span>More Tags</span>
+                    <span className="font-mono text-[10px] bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-neutral-500">
+                      {overflowTags.length} tags
+                    </span>
                   </div>
-                  <div className="flex flex-col gap-0.5">
-                    {allTags.slice(5).map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => {
-                          setActiveTag(tag);
-                          setIsMoreTagsOpen(false);
-                        }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-md text-xs font-medium flex items-center justify-between transition-colors cursor-pointer font-sans ${
-                          activeTag === tag
-                            ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold'
-                            : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-                        }`}
-                      >
-                        <span className="truncate">#{tag}</span>
-                        {activeTag === tag && <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />}
-                      </button>
-                    ))}
+
+                  {/* Filter Search Input for rapid tag lookup if > 6 overflow tags */}
+                  {overflowTags.length > 6 && (
+                    <div className="px-1.5 pb-1.5 shrink-0">
+                      <input
+                        type="text"
+                        value={tagFilterQuery}
+                        onChange={(e) => setTagFilterQuery(e.target.value)}
+                        placeholder="Search tags..."
+                        autoFocus
+                        className="w-full px-2.5 py-1 rounded-md text-[11px] border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/60 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-brand-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* Vertically Scrollable Tag List */}
+                  <div className="overflow-y-auto max-h-52 space-y-0.5 pr-0.5 scrollbar-thin">
+                    {filteredOverflowTags.length > 0 ? (
+                      filteredOverflowTags.map((tag) => {
+                        const isSelected = activeTag === tag;
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              setActiveTag(tag);
+                              setIsMoreTagsOpen(false);
+                              setTagFilterQuery('');
+                            }}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold'
+                                : 'hover:bg-neutral-100 dark:hover:bg-neutral-800/80 text-neutral-700 dark:text-neutral-300'
+                            }`}
+                          >
+                            <span className="truncate">#{tag}</span>
+                            {isSelected && (
+                              <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="py-4 text-center text-[11px] text-neutral-400 italic">
+                        No tags match "{tagFilterQuery}"
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -152,14 +212,22 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
         <div className="flex items-center gap-0.5 bg-neutral-200/50 dark:bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-200/60 dark:border-neutral-700/60 text-neutral-400 shrink-0">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-1 rounded-md cursor-pointer transition-colors ${viewMode === 'grid' ? 'text-neutral-950 dark:text-white bg-white dark:bg-neutral-700 shadow-2xs' : 'hover:text-neutral-900 dark:hover:text-white'}`}
+            className={`p-1 rounded-md cursor-pointer transition-colors ${
+              viewMode === 'grid'
+                ? 'text-neutral-950 dark:text-white bg-white dark:bg-neutral-700 shadow-2xs'
+                : 'hover:text-neutral-900 dark:hover:text-white'
+            }`}
             title="Grid View"
           >
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-1 rounded-md cursor-pointer transition-colors ${viewMode === 'list' ? 'text-neutral-950 dark:text-white bg-white dark:bg-neutral-700 shadow-2xs' : 'hover:text-neutral-900 dark:hover:text-white'}`}
+            className={`p-1 rounded-md cursor-pointer transition-colors ${
+              viewMode === 'list'
+                ? 'text-neutral-950 dark:text-white bg-white dark:bg-neutral-700 shadow-2xs'
+                : 'hover:text-neutral-900 dark:hover:text-white'
+            }`}
             title="List View"
           >
             <List className="w-3.5 h-3.5" />
