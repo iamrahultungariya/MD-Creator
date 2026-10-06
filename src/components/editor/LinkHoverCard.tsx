@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ExternalLink, Globe, WifiOff, Loader2 } from 'lucide-react';
-import { getLinkPreview, LinkPreviewData, RecognizedPlatform } from '../../services/linkPreviewService';
+import { ExternalLink, Link2, WifiOff, Loader2, Play, Globe } from 'lucide-react';
+import { getLinkPreview, LinkPreviewData } from '../../services/linkPreviewService';
 
 interface LinkHoverCardProps {
   url: string;
@@ -12,44 +12,461 @@ interface LinkHoverCardProps {
   onClose: () => void;
 }
 
-export const PlatformBadgeIcon: React.FC<{ platform: RecognizedPlatform }> = ({ platform }) => {
-  switch (platform) {
-    case 'youtube':
-      return (
-        <svg className="w-3.5 h-3.5 text-red-600 fill-current shrink-0" viewBox="0 0 24 24">
-          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-        </svg>
-      );
-    case 'x':
-      return (
-        <svg className="w-3 h-3 text-neutral-900 dark:text-white fill-current shrink-0" viewBox="0 0 24 24">
-          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-        </svg>
-      );
-    case 'instagram':
-      return (
-        <svg className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-        </svg>
-      );
-    case 'threads':
-      return (
-        <svg className="w-3 h-3 text-neutral-900 dark:text-white fill-current shrink-0" viewBox="0 0 24 24">
-          <path d="M12.186 24C5.467 24 0 18.533 0 11.814 0 5.094 5.467 0 12.186 0c6.719 0 12.186 5.094 12.186 11.814 0 .545-.04 1.082-.12 1.608h-4.34c.036-.312.054-.628.054-.95 0-4.305-3.485-7.79-7.78-7.79-4.296 0-7.78 3.485-7.78 7.79 0 4.304 3.484 7.789 7.78 7.789 2.502 0 4.708-1.183 6.108-3.003l3.473 2.577C19.743 22.25 16.208 24 12.186 24z"/>
-        </svg>
-      );
-    case 'github':
-      return (
-        <svg className="w-3.5 h-3.5 text-neutral-900 dark:text-white fill-current shrink-0" viewBox="0 0 24 24">
-          <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-        </svg>
-      );
-    case 'generic':
-    default:
-      return <Globe className="w-3.5 h-3.5 text-brand-500 shrink-0" />;
+/**
+ * Twitter / X Blue Verified Checkmark Badge
+ */
+const VerifiedBadge: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    className={`${className} text-[#1D9BF0] fill-current shrink-0 inline-block align-middle`}
+    viewBox="0 0 24 24"
+    aria-label="Verified account"
+  >
+    <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.79-4-4-4-.495 0-.965.084-1.4.238C14.55 2.475 13.18 1.6 11.6 1.6c-1.58 0-2.95.875-3.6 2.148-.435-.154-.905-.238-1.4-.238-2.21 0-4 1.79-4 4 0 .495.084.965.238 1.4C1.575 9.55.7 10.92.7 12.5c0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.79 4 4 4 .495 0 .965-.084 1.4-.238.65 1.273 2.02 2.148 3.6 2.148 1.58 0 2.95-.875 3.6-2.148.435.154.905.238 1.4.238 2.21 0 4-1.79 4-4 0-.495-.084-.965-.238-1.4 1.273-.65 2.148-2.02 2.148-3.6zm-12.02 4.08l-3.56-3.56 1.41-1.41 2.15 2.15 5.56-5.56 1.41 1.41-6.97 6.97z" />
+  </svg>
+);
+
+/**
+ * YouTube SVG Icon
+ */
+const YouTubeIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={`${className} text-[#FF0000] fill-current shrink-0`} viewBox="0 0 24 24">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+  </svg>
+);
+
+/**
+ * Helper to produce a clean URL display string (e.g. x.com/username)
+ */
+function getDisplayUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const domain = parsed.hostname.replace(/^www\./, '');
+    const path = parsed.pathname !== '/' ? parsed.pathname : '';
+    return `${domain}${path}`;
+  } catch {
+    return url.replace(/^https?:\/\//, '');
   }
+}
+
+/**
+ * X (formerly Twitter) Profile Card (Image 1 UX: banner, overlapping avatar, handle, bio, url pill + button)
+ */
+const XProfileCard: React.FC<{
+  data: LinkPreviewData;
+  url: string;
+  onOpen: (e: React.MouseEvent) => void;
+}> = ({ data, url, onOpen }) => {
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  const displayUrl = getDisplayUrl(url);
+  const handle = data.handle || `@${data.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`;
+  const displayName = data.name || data.title.split('(')[0].trim() || 'X User';
+  const bio = data.description || 'View profile, thoughts, and media on X.';
+  const avatarSrc = data.avatar || data.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8257F5&color=fff&size=160&bold=true`;
+
+  return (
+    <div className="flex flex-col">
+      {/* Banner Area */}
+      <div className="relative w-full h-28 bg-neutral-900 overflow-hidden">
+        {data.banner && !bannerFailed ? (
+          <img
+            src={data.banner}
+            alt="Profile banner"
+            onError={() => setBannerFailed(true)}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          /* Confirmed Aesthetic Fallback Banner (twilight sunset gradient atmosphere) */
+          <div className="w-full h-full bg-gradient-to-r from-[#3b2d71] via-[#63489e] to-[#c87974] relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-200 via-purple-300 to-transparent" />
+            <div className="absolute right-4 top-3 text-[11px] font-mono text-white/50 tracking-wider">
+              ✦ ✦
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Profile Header Row (Avatar overlapping banner bottom left + Name/Handle on right) */}
+      <div className="px-5 relative flex items-start gap-3.5">
+        {/* Overlapping Circular Avatar */}
+        <div className="-mt-9 shrink-0 relative z-10">
+          <img
+            src={!avatarFailed ? avatarSrc : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8257F5&color=fff&size=160&bold=true`}
+            alt={displayName}
+            onError={() => setAvatarFailed(true)}
+            className="w-[68px] h-[68px] rounded-full object-cover border-[3.5px] border-white dark:border-[#18181c] shadow-md bg-neutral-100 dark:bg-neutral-800"
+          />
+        </div>
+
+        {/* Name, Verified Badge & Handle */}
+        <div className="pt-2 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h4
+              onClick={onOpen}
+              className="font-bold text-[16px] text-neutral-900 dark:text-white truncate leading-tight hover:text-brand-500 cursor-pointer transition-colors"
+            >
+              {displayName}
+            </h4>
+            <VerifiedBadge className="w-4 h-4" />
+          </div>
+          <p className="text-[13px] text-neutral-500 dark:text-neutral-400 font-medium truncate leading-snug mt-0.5">
+            {handle}
+          </p>
+        </div>
+      </div>
+
+      {/* Bio / Description */}
+      <div className="px-5 pt-3 pb-3">
+        <p className="text-[12.5px] text-neutral-700 dark:text-neutral-300 leading-relaxed line-clamp-3">
+          {bio}
+        </p>
+      </div>
+
+      {/* Bottom Action Area (Left: URL Pill | Right: Visit Profile Button) */}
+      <div className="px-5 pb-4 pt-1 flex items-center gap-2">
+        <div
+          onClick={onOpen}
+          className="flex-1 min-w-0 bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200/70 dark:hover:bg-neutral-700/60 rounded-xl px-3 py-2 text-[12px] text-neutral-600 dark:text-neutral-300 flex items-center gap-2 cursor-pointer transition-colors border border-neutral-200/40 dark:border-neutral-700/40"
+          title={url}
+        >
+          <Link2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+          <span className="truncate font-mono text-[11.5px]">{displayUrl}</span>
+        </div>
+
+        <button
+          onClick={onOpen}
+          className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+        >
+          <span>Visit Profile</span>
+          <span className="text-[13px] leading-none">→</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Instagram Profile Card (Image 2 UX: centered avatar with sparkles, centered name/handle, full-width pill + button)
+ */
+const InstagramProfileCard: React.FC<{
+  data: LinkPreviewData;
+  url: string;
+  onOpen: (e: React.MouseEvent) => void;
+}> = ({ data, url, onOpen }) => {
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  const displayUrl = getDisplayUrl(url);
+  const handle = data.handle || `@${data.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`;
+  const displayName = data.name || data.title.split('(')[0].trim() || 'Instagram User';
+  const bio = data.description || 'View photos, reels, and stories shared on Instagram.';
+  const avatarSrc = data.avatar || data.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8257F5&color=fff&size=160&bold=true`;
+
+  return (
+    <div className="flex flex-col items-center px-6 pt-7 pb-5 text-center">
+      {/* Centered Avatar with Playful Sparkle Accents */}
+      <div className="relative inline-block mb-3">
+        {/* Top-left Sparkle Star */}
+        <span className="absolute -top-1 -left-3 text-brand-400 dark:text-brand-300 text-sm select-none animate-pulse">
+          ✦
+        </span>
+        {/* Top-right subtle accent lines */}
+        <span className="absolute -top-2 -right-2 text-neutral-400 dark:text-neutral-500 text-xs font-mono select-none">
+          彡
+        </span>
+        {/* Bottom-right Sparkle Star */}
+        <span className="absolute bottom-2 -right-4 text-brand-400 dark:text-brand-300 text-xs select-none">
+          ✦
+        </span>
+
+        {/* Circular Avatar */}
+        <div className="relative w-20 h-20 rounded-full p-[2.5px] bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600 shadow-md">
+          <img
+            src={!avatarFailed ? avatarSrc : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=8257F5&color=fff&size=160&bold=true`}
+            alt={displayName}
+            onError={() => setAvatarFailed(true)}
+            className="w-full h-full rounded-full object-cover border-2 border-white dark:border-[#18181c] bg-white dark:bg-neutral-800"
+          />
+        </div>
+      </div>
+
+      {/* Centered Name with Verified Badge */}
+      <div className="flex items-center justify-center gap-1.5 w-full">
+        <h4
+          onClick={onOpen}
+          className="font-bold text-[17px] text-neutral-900 dark:text-white truncate hover:text-brand-500 cursor-pointer transition-colors"
+        >
+          {displayName}
+        </h4>
+        <VerifiedBadge className="w-4 h-4" />
+      </div>
+
+      {/* Centered Handle */}
+      <p className="text-[13px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5">
+        {handle}
+      </p>
+
+      {/* Centered Bio */}
+      <p className="text-[12.5px] text-neutral-600 dark:text-neutral-300 leading-relaxed mt-2.5 px-1 line-clamp-3">
+        {bio}
+      </p>
+
+      {/* Bottom Action Area: Full-width URL pill, then Full-width Visit Profile button */}
+      <div className="w-full mt-4 flex flex-col gap-2.5">
+        <div
+          onClick={onOpen}
+          className="w-full bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200/70 dark:hover:bg-neutral-700/60 rounded-xl px-3.5 py-2.5 text-[12px] text-neutral-600 dark:text-neutral-300 flex items-center justify-between cursor-pointer transition-colors border border-neutral-200/40 dark:border-neutral-700/40"
+          title={url}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Link2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            <span className="truncate font-mono text-[11.5px]">{displayUrl}</span>
+          </div>
+          <ExternalLink className="w-3.5 h-3.5 text-neutral-400 shrink-0 ml-1.5" />
+        </div>
+
+        <button
+          onClick={onOpen}
+          className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white text-[13px] font-semibold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
+        >
+          <span>Visit Profile</span>
+          <span className="text-[14px] leading-none">→</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * YouTube Video & Channel Card (Rich 16:9 thumbnail, Play overlay, Watch Video action)
+ */
+const YouTubeCard: React.FC<{
+  data: LinkPreviewData;
+  url: string;
+  onOpen: (e: React.MouseEvent) => void;
+}> = ({ data, url, onOpen }) => {
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const displayUrl = getDisplayUrl(url);
+  const isVideo = data.mediaType === 'video';
+
+  if (isVideo) {
+    const thumbUrl = data.banner || data.image || `https://i.ytimg.com/vi/default/hqdefault.jpg`;
+    return (
+      <div className="flex flex-col">
+        {/* 16:9 Video Thumbnail with Play Button Overlay */}
+        <div
+          onClick={onOpen}
+          className="relative w-full aspect-video bg-neutral-950 overflow-hidden cursor-pointer group"
+        >
+          {!thumbFailed ? (
+            <img
+              src={thumbUrl}
+              alt={data.title}
+              onError={() => setThumbFailed(true)}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+              <YouTubeIcon className="w-12 h-12 opacity-40" />
+            </div>
+          )}
+
+          {/* YouTube Top Badge */}
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-black/75 backdrop-blur-xs text-white px-2 py-0.5 rounded-md text-[10px] font-bold shadow-sm">
+            <YouTubeIcon className="w-3 h-3" />
+            <span>YouTube</span>
+          </div>
+
+          {/* Translucent Play Overlay Button */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/35 transition-colors">
+            <div className="w-11 h-11 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+              <Play className="w-5 h-5 fill-current ml-0.5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Video Title & Creator */}
+        <div className="px-5 pt-3 pb-2">
+          <h4
+            onClick={onOpen}
+            className="font-bold text-[13.5px] text-neutral-900 dark:text-white line-clamp-2 leading-snug hover:text-red-600 dark:hover:text-red-400 cursor-pointer transition-colors"
+          >
+            {data.title}
+          </h4>
+          <p className="text-[12px] text-neutral-500 dark:text-neutral-400 font-medium flex items-center gap-1.5 mt-1.5">
+            <YouTubeIcon className="w-3.5 h-3.5" />
+            <span className="truncate">{data.authorName || 'YouTube Creator'}</span>
+          </p>
+        </div>
+
+        {/* Action Bar */}
+        <div className="px-5 pb-4 pt-1 flex items-center gap-2">
+          <div
+            onClick={onOpen}
+            className="flex-1 min-w-0 bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200/70 dark:hover:bg-neutral-700/60 rounded-xl px-3 py-2 text-[12px] text-neutral-600 dark:text-neutral-300 flex items-center gap-2 cursor-pointer transition-colors border border-neutral-200/40 dark:border-neutral-700/40"
+            title={url}
+          >
+            <Link2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            <span className="truncate font-mono text-[11.5px]">{displayUrl}</span>
+          </div>
+
+          <button
+            onClick={onOpen}
+            className="bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+          >
+            <span>Watch Video</span>
+            <span className="text-[13px] leading-none">→</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // YouTube Channel Card
+  const channelName = data.name || data.authorName || 'YouTube Channel';
+  const handle = data.handle || `@${channelName.toLowerCase().replace(/\s+/g, '')}`;
+  const avatarSrc = data.avatar || data.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=FF0000&color=fff&size=160&bold=true`;
+
+  return (
+    <div className="flex flex-col">
+      {/* Header Banner */}
+      <div className="w-full h-20 bg-gradient-to-r from-red-600 via-rose-600 to-red-800 relative overflow-hidden flex items-center justify-between px-4">
+        <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded-full text-white text-[10px] font-semibold">
+          <YouTubeIcon className="w-3.5 h-3.5" />
+          <span>Channel</span>
+        </div>
+      </div>
+
+      {/* Channel Avatar & Info */}
+      <div className="px-5 relative flex items-start gap-3.5">
+        <div className="-mt-7 shrink-0 relative z-10">
+          <img
+            src={avatarSrc}
+            alt={channelName}
+            className="w-16 h-16 rounded-full object-cover border-[3.5px] border-white dark:border-[#18181c] shadow-md bg-white dark:bg-neutral-800"
+          />
+        </div>
+        <div className="pt-2 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <h4
+              onClick={onOpen}
+              className="font-bold text-[16px] text-neutral-900 dark:text-white truncate leading-tight hover:text-red-600 cursor-pointer transition-colors"
+            >
+              {channelName}
+            </h4>
+            <VerifiedBadge className="w-4 h-4" />
+          </div>
+          <p className="text-[13px] text-neutral-500 dark:text-neutral-400 font-medium truncate mt-0.5">
+            {handle}
+          </p>
+        </div>
+      </div>
+
+      <div className="px-5 pt-3 pb-3">
+        <p className="text-[12.5px] text-neutral-700 dark:text-neutral-300 leading-relaxed line-clamp-2">
+          {data.description || 'Watch official videos, music, and streams on YouTube.'}
+        </p>
+      </div>
+
+      {/* Action Bar */}
+      <div className="px-5 pb-4 pt-1 flex items-center gap-2">
+        <div
+          onClick={onOpen}
+          className="flex-1 min-w-0 bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200/70 dark:hover:bg-neutral-700/60 rounded-xl px-3 py-2 text-[12px] text-neutral-600 dark:text-neutral-300 flex items-center gap-2 cursor-pointer transition-colors border border-neutral-200/40 dark:border-neutral-700/40"
+          title={url}
+        >
+          <Link2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+          <span className="truncate font-mono text-[11.5px]">{displayUrl}</span>
+        </div>
+
+        <button
+          onClick={onOpen}
+          className="bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+        >
+          <span>Visit Channel</span>
+          <span className="text-[13px] leading-none">→</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Generic Web Card (Modernized fallback layout)
+ */
+const GenericWebCard: React.FC<{
+  data: LinkPreviewData;
+  url: string;
+  onOpen: (e: React.MouseEvent) => void;
+}> = ({ data, url, onOpen }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+  const displayUrl = getDisplayUrl(url);
+
+  return (
+    <div className="flex flex-col">
+      {/* Optional Top Media Banner */}
+      {data.image && !imageFailed && (
+        <div className="w-full h-28 overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+          <img
+            src={data.image}
+            alt={data.title}
+            onError={() => setImageFailed(true)}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="px-5 pt-3.5 pb-2">
+        {/* Domain & Favicon */}
+        <div className="flex items-center gap-1.5 mb-1.5">
+          {data.favicon ? (
+            <img src={data.favicon} alt="" className="w-3.5 h-3.5 rounded-xs shrink-0" />
+          ) : (
+            <Globe className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+          )}
+          <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide truncate">
+            {data.domain}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h4
+          onClick={onOpen}
+          className="font-bold text-[14px] text-neutral-900 dark:text-white line-clamp-2 leading-snug hover:text-brand-500 cursor-pointer transition-colors"
+        >
+          {data.title || displayUrl}
+        </h4>
+
+        {/* Description */}
+        {data.description && (
+          <p className="text-[12px] text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed mt-1">
+            {data.description}
+          </p>
+        )}
+      </div>
+
+      {/* Action Bar */}
+      <div className="px-5 pb-4 pt-1 flex items-center gap-2">
+        <div
+          onClick={onOpen}
+          className="flex-1 min-w-0 bg-neutral-100 dark:bg-neutral-800/80 hover:bg-neutral-200/70 dark:hover:bg-neutral-700/60 rounded-xl px-3 py-2 text-[12px] text-neutral-600 dark:text-neutral-300 flex items-center gap-2 cursor-pointer transition-colors border border-neutral-200/40 dark:border-neutral-700/40"
+          title={url}
+        >
+          <Link2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+          <span className="truncate font-mono text-[11.5px]">{displayUrl}</span>
+        </div>
+
+        <button
+          onClick={onOpen}
+          className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+        >
+          <span>Visit Site</span>
+          <span className="text-[13px] leading-none">→</span>
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
@@ -83,15 +500,15 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
 
   if (!isOpen || !targetRect) return null;
 
-  // Position calculation with viewport edge clamping
-  const CARD_WIDTH = 300;
-  const ESTIMATED_HEIGHT = 160;
-  const PADDING = 12;
+  // Sizing & Positioning calculations with edge clamping
+  const CARD_WIDTH = 340;
+  const ESTIMATED_HEIGHT = 280;
+  const PADDING = 14;
 
-  let top = targetRect.bottom + 8;
+  let top = targetRect.bottom + 10;
   // If card overflows bottom of viewport, flip to render above the link
   if (top + ESTIMATED_HEIGHT > window.innerHeight - PADDING) {
-    top = Math.max(PADDING, targetRect.top - ESTIMATED_HEIGHT - 8);
+    top = Math.max(PADDING, targetRect.top - ESTIMATED_HEIGHT - 10);
   }
 
   let left = targetRect.left;
@@ -120,112 +537,42 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
         width: `${CARD_WIDTH}px`,
         zIndex: 99999,
       }}
-      className="rounded-2xl bg-white/95 dark:bg-[#18181c]/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl p-3 text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in zoom-in-95 duration-150 transition-all pointer-events-auto"
+      className="rounded-3xl bg-white dark:bg-[#18181c] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in zoom-in-95 duration-150 transition-all pointer-events-auto"
     >
-      {/* Top Header: Platform Identity & Domain */}
-      <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-neutral-100 dark:border-neutral-800/80">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <PlatformBadgeIcon platform={data?.platform || 'generic'} />
-          <span className="text-[11px] font-semibold truncate text-neutral-700 dark:text-neutral-300">
-            {data?.domain || 'Web Link'}
-          </span>
-          {data?.isOfflineFallback && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 shrink-0">
-              <WifiOff className="w-2.5 h-2.5" />
-              <span>Offline</span>
-            </span>
-          )}
+      {/* Offline Status Badge */}
+      {data?.isOfflineFallback && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 py-1 flex items-center justify-center gap-1.5 text-[10px] font-mono text-amber-600 dark:text-amber-400">
+          <WifiOff className="w-3 h-3" />
+          <span>Offline preview (cached or offline fallback)</span>
         </div>
+      )}
 
-        <button
-          onClick={handleOpenLink}
-          className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shrink-0"
-          title="Open in new tab"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Main Body: Live Media Preview or Synthetic Platform Card */}
+      {/* Loading Skeleton */}
       {isLoading && !data ? (
-        <div className="py-6 flex items-center justify-center gap-2 text-xs text-neutral-400 font-mono">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-500" />
+        <div className="py-12 flex flex-col items-center justify-center gap-2.5 text-xs text-neutral-400 font-mono">
+          <Loader2 className="w-5 h-5 animate-spin text-brand-500" />
           <span>Fetching preview...</span>
         </div>
       ) : (
-        <div className="space-y-2">
-          {/* Specialized X Profile Layout vs Standard OpenGraph Banner */}
-          {data?.platform === 'x' && data?.image ? (
-            <div className="flex items-start gap-3 pt-0.5 pb-1">
-              <img
-                src={data.image}
-                alt={data.title}
-                className="w-12 h-12 rounded-full object-cover shrink-0 border border-neutral-200 dark:border-neutral-700 shadow-2xs"
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = 'none';
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <h5 
-                  onClick={handleOpenLink}
-                  className="text-xs font-bold leading-snug line-clamp-1 text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
-                >
-                  {data.title}
-                </h5>
-                {data.description && (
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-3 leading-relaxed mt-1">
-                    {data.description}
-                  </p>
-                )}
-              </div>
-            </div>
+        /* App-Specific Bespoke Card Views */
+        <>
+          {data?.platform === 'x' ? (
+            <XProfileCard data={data} url={url} onOpen={handleOpenLink} />
+          ) : data?.platform === 'instagram' ? (
+            <InstagramProfileCard data={data} url={url} onOpen={handleOpenLink} />
+          ) : data?.platform === 'youtube' ? (
+            <YouTubeCard data={data} url={url} onOpen={handleOpenLink} />
           ) : (
-            <>
-              {/* Optional OpenGraph Banner Image */}
-              {data?.image && (
-                <div className="w-full h-28 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-700/50">
-                  <img
-                    src={data.image}
-                    alt={data.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Title */}
-              <h5 
-                onClick={handleOpenLink}
-                className="text-xs font-bold leading-snug line-clamp-2 text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
-              >
-                {data?.title || url}
-              </h5>
-
-              {/* Description */}
-              {data?.description && (
-                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
-                  {data.description}
-                </p>
-              )}
-            </>
+            <GenericWebCard data={data || {
+              url,
+              domain: 'web',
+              title: url,
+              platform: 'generic',
+              isOfflineFallback: false,
+              status: 'fallback'
+            }} url={url} onOpen={handleOpenLink} />
           )}
-
-          {/* Footer Action Bar */}
-          <div className="pt-1.5 flex items-center justify-between text-[10px] text-neutral-400">
-            <span className="truncate max-w-[190px] font-mono opacity-75">
-              {url.replace(/^https?:\/\//, '')}
-            </span>
-            <button
-              onClick={handleOpenLink}
-              className="text-brand-600 dark:text-brand-400 font-semibold hover:underline flex items-center gap-0.5 cursor-pointer shrink-0"
-            >
-              <span>Visit</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>,
     document.body
