@@ -85,7 +85,6 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
       <rect width="100" height="100" rx="50" fill="#0C0A14"/>
       <circle cx="50" cy="44" r="21" fill="#1E192D"/>
       <path d="M32 35C35 22 65 22 68 35C58 28 42 28 32 35Z" fill="#A855F7"/>
-      {/* Studio Headphones */}
       <path d="M24 44C24 28 34 18 50 18C66 18 76 28 76 44" stroke="#8257F5" stroke-width="4.5" stroke-linecap="round"/>
       <rect x="22" y="38" width="7" height="15" rx="3.5" fill="#A855F7"/>
       <rect x="71" y="38" width="7" height="15" rx="3.5" fill="#A855F7"/>
@@ -117,7 +116,6 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
       <rect width="100" height="100" rx="50" fill="#101712"/>
       <circle cx="50" cy="42" r="22" fill="#1C2920"/>
       <path d="M30 38C35 22 65 22 70 38C60 30 40 30 30 38Z" fill="#34D399"/>
-      {/* Little Sprout Leaf */}
       <path d="M50 20C50 14 56 12 60 14C60 18 56 20 50 20Z" fill="#10B981"/>
       <circle cx="43" cy="43" r="2.5" fill="#FFFFFF"/>
       <circle cx="57" cy="43" r="2.5" fill="#FFFFFF"/>
@@ -133,7 +131,6 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
       <rect width="100" height="100" rx="50" fill="#1C1318"/>
       <circle cx="50" cy="42" r="22" fill="#2E1D26"/>
       <path d="M32 32C42 20 62 20 68 30C58 26 44 26 32 32Z" fill="#F43F5E"/>
-      {/* Sleek Modern Visor / Frame */}
       <path d="M33 40H67V46C67 48 65 50 63 50H37C35 50 33 48 33 46V40Z" fill="#FB7185" fill-opacity="0.85"/>
       <line x1="33" y1="43" x2="67" y2="43" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.8"/>
       <path d="M47 54H53" stroke="#FDA4AF" stroke-width="2" stroke-linecap="round"/>

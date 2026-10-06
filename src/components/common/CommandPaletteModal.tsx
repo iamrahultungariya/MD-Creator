@@ -80,6 +80,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      import('../../pages/EditorPage').catch(() => {});
       loadDocuments();
     }
   }, [isOpen, loadDocuments]);

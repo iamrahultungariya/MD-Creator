@@ -154,34 +154,62 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
         </div>
       ) : (
         <div className="space-y-2">
-          {/* Optional OpenGraph Banner Image */}
-          {data?.image && (
-            <div className="w-full h-28 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-700/50">
+          {/* Specialized X Profile Layout vs Standard OpenGraph Banner */}
+          {data?.platform === 'x' && data?.image ? (
+            <div className="flex items-start gap-3 pt-0.5 pb-1">
               <img
                 src={data.image}
                 alt={data.title}
-                className="w-full h-full object-cover"
+                className="w-12 h-12 rounded-full object-cover shrink-0 border border-neutral-200 dark:border-neutral-700 shadow-2xs"
                 onError={(e) => {
-                  // If image fails to load (CORS or broken hotlink), hide the container
-                  (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
+                  (e.currentTarget as HTMLElement).style.display = 'none';
                 }}
               />
+              <div className="min-w-0 flex-1">
+                <h5 
+                  onClick={handleOpenLink}
+                  className="text-xs font-bold leading-snug line-clamp-1 text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
+                >
+                  {data.title}
+                </h5>
+                {data.description && (
+                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-3 leading-relaxed mt-1">
+                    {data.description}
+                  </p>
+                )}
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Optional OpenGraph Banner Image */}
+              {data?.image && (
+                <div className="w-full h-28 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/50 dark:border-neutral-700/50">
+                  <img
+                    src={data.image}
+                    alt={data.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
 
-          {/* Title */}
-          <h5 
-            onClick={handleOpenLink}
-            className="text-xs font-bold leading-snug line-clamp-2 text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
-          >
-            {data?.title || url}
-          </h5>
+              {/* Title */}
+              <h5 
+                onClick={handleOpenLink}
+                className="text-xs font-bold leading-snug line-clamp-2 text-neutral-900 dark:text-neutral-100 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer transition-colors"
+              >
+                {data?.title || url}
+              </h5>
 
-          {/* Description */}
-          {data?.description && (
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
-              {data.description}
-            </p>
+              {/* Description */}
+              {data?.description && (
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                  {data.description}
+                </p>
+              )}
+            </>
           )}
 
           {/* Footer Action Bar */}

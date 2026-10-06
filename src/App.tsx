@@ -133,9 +133,11 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Defer non-critical storage initialization and session checks until idle
+  // Defer non-critical storage initialization, session checks & eager prefetch until idle
   useEffect(() => {
     const initAppServices = () => {
+      // Eagerly preload EditorPage chunk in the background so document opening is instantaneous
+      import('./pages/EditorPage').catch(() => {});
       import('./db/seed')
         .then((m) => m.seedInitialDocuments())
         .catch(console.error);

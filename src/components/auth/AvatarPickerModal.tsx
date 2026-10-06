@@ -11,9 +11,12 @@ interface AvatarPickerModalProps {
 export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, onClose }) => {
   const { user, refreshProfile } = useAuthStore();
   const [selectedId, setSelectedId] = useState<string>(() => {
-    // Detect if current avatarUrl matches any preset
+    const savedPreset = typeof window !== 'undefined' ? localStorage.getItem('md_writer_avatar_preset') : null;
+    if (savedPreset && AVATAR_PRESETS.some((p) => p.id === savedPreset)) {
+      return savedPreset;
+    }
     const current = user?.avatarUrl || '';
-    const found = AVATAR_PRESETS.find((p) => current.includes(encodeURIComponent(p.svg.trim())));
+    const found = AVATAR_PRESETS.find((p) => current.includes(p.id) || current.includes(encodeURIComponent(p.svg.trim())));
     return found ? found.id : 'scribe';
   });
 
@@ -22,7 +25,8 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
   const handleApply = async () => {
     const avatarDataUrl = getPresetAvatarUrl(selectedId);
     
-    // 1. Save to local storage for immediate persistence
+    // 1. Save both preset ID and data URL to localStorage for instant reliable restore
+    localStorage.setItem('md_writer_avatar_preset', selectedId);
     localStorage.setItem('md_writer_custom_avatar', avatarDataUrl);
 
     // 2. Update auth store state directly
@@ -35,13 +39,17 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
       });
     }
 
-    // 3. Try to sync to Supabase user metadata if available
+    // 3. Sync to Supabase user metadata AND profiles table if available
     try {
       const { supabase } = await import('../../lib/supabase');
       if (supabase && user?.id) {
         await supabase.auth.updateUser({
-          data: { avatar_url: avatarDataUrl }
+          data: { avatar_url: avatarDataUrl, avatar_preset: selectedId }
         });
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: avatarDataUrl })
+          .eq('id', user.id);
       }
     } catch {
       // Offline fallback: already saved locally
@@ -56,24 +64,24 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-16 sm:pt-20 bg-black/50 backdrop-blur-xs select-none animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-lg my-auto rounded-xl bg-white border border-neutral-200/90 shadow-2xl shadow-neutral-900/15 overflow-hidden flex flex-col text-neutral-900 font-sans"
+        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-neutral-900 dark:text-neutral-100 font-sans animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/60 shrink-0">
+        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#8257F5]/10 text-[#8257F5] flex items-center justify-center border border-[#8257F5]/20">
+            <div className="w-8 h-8 rounded-lg bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] flex items-center justify-center border border-[#8257F5]/20">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-neutral-950">
+              <h3 className="text-sm font-bold text-neutral-950 dark:text-white">
                 Choose Character Avatar
               </h3>
-              <p className="text-[11px] text-neutral-500">
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 Distinctive MD Writer personas for your workspace profile
               </p>
             </div>
@@ -81,7 +89,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-800 hover:bg-neutral-100 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-800 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             title="Close (Esc)"
           >
             <X className="w-4 h-4" />
@@ -89,7 +97,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
         </div>
 
         {/* 8-Avatar Grid */}
-        <div className="p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-[min(50vh,380px)] overflow-y-auto">
+        <div className="p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-4 gap-3 overflow-y-auto">
           {AVATAR_PRESETS.map((preset) => {
             const isSelected = selectedId === preset.id;
             const avatarUrl = getPresetAvatarUrl(preset.id);
@@ -100,8 +108,8 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
                 onClick={() => setSelectedId(preset.id)}
                 className={`group p-3 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-2 relative ${
                   isSelected
-                    ? 'border-[#8257F5] bg-[#8257F5]/5 shadow-xs ring-1 ring-[#8257F5]'
-                    : 'border-neutral-200/80 bg-neutral-50/60 hover:border-neutral-300 hover:bg-neutral-100/70 text-neutral-900'
+                    ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 shadow-xs ring-1 ring-[#8257F5]'
+                    : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 text-neutral-900 dark:text-neutral-100'
                 }`}
               >
                 {/* Active check pill */}
@@ -115,15 +123,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
                   src={avatarUrl}
                   alt={preset.name}
                   className={`w-13 h-13 rounded-full object-cover transition-transform group-hover:scale-105 ${
-                    isSelected ? 'ring-2 ring-[#8257F5] ring-offset-2 ring-offset-white' : ''
+                    isSelected ? 'ring-2 ring-[#8257F5] ring-offset-2 ring-offset-white dark:ring-offset-neutral-900' : ''
                   }`}
                 />
 
                 <div className="min-w-0">
-                  <div className="text-xs font-bold text-neutral-900 truncate">
+                  <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">
                     {preset.name}
                   </div>
-                  <div className="text-[10px] text-neutral-500 truncate">
+                  <div className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate">
                     {preset.tagline}
                   </div>
                 </div>
@@ -133,15 +141,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
         </div>
 
         {/* Footer Actions */}
-        <div className="px-5 py-3 border-t border-neutral-100 flex items-center justify-between bg-neutral-50/60 shrink-0">
-          <span className="text-[11px] text-neutral-400 font-mono">
+        <div className="px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
+          <span className="text-[11px] text-neutral-400 dark:text-neutral-500 font-mono">
             100% Vector • Offline Stored
           </span>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               Cancel
             </button>

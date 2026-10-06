@@ -15,6 +15,48 @@ export interface LinkPreviewData {
 // In-memory cache to guarantee 0ms latency for repeated link hovers
 const previewCache = new Map<string, LinkPreviewData>();
 
+const LOCAL_STORAGE_CACHE_KEY = 'md_writer_link_previews_v2';
+
+function loadCachedPreview(url: string): LinkPreviewData | null {
+  if (previewCache.has(url)) {
+    return previewCache.get(url)!;
+  }
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_CACHE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed[url]) {
+          previewCache.set(url, parsed[url]);
+          return parsed[url];
+        }
+      }
+    } catch {
+      // Ignore localStorage parse error
+    }
+  }
+  return null;
+}
+
+function saveCachedPreview(url: string, data: LinkPreviewData) {
+  previewCache.set(url, data);
+  if (typeof window !== 'undefined' && window.localStorage && data.status === 'success') {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_CACHE_KEY);
+      const parsed = stored ? JSON.parse(stored) : {};
+      parsed[url] = data;
+      // Keep cache bounded to last 60 entries
+      const keys = Object.keys(parsed);
+      if (keys.length > 60) {
+        delete parsed[keys[0]];
+      }
+      localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(parsed));
+    } catch {
+      // Ignore quota exceeded errors
+    }
+  }
+}
+
 /**
  * Detect platform based on domain hostname
  */
@@ -57,6 +99,80 @@ export function extractCleanDomain(url: string): string {
 }
 
 /**
+ * Extract YouTube video ID if available
+ */
+function extractYouTubeVideoId(url: string): string | null {
+  try {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve X / Twitter profile directly via vxtwitter (CORS-enabled, zero-auth) with unavatar fallback
+ */
+async function resolveXProfile(url: string): Promise<LinkPreviewData | null> {
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    if (parts.length === 0) return null;
+
+    const username = parts[0];
+    const reservedWords = ['home', 'explore', 'notifications', 'messages', 'i', 'search', 'settings', 'tos', 'privacy'];
+    if (reservedWords.includes(username.toLowerCase())) return null;
+
+    // Fast-path: query vxtwitter API which returns full bio & avatar with CORS: *
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 2800);
+      const res = await fetch(`https://api.vxtwitter.com/${username}`, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.name || data.screen_name)) {
+          const avatarUrl = data.profile_image_url
+            ? data.profile_image_url.replace('_normal.', '_400x400.')
+            : `https://unavatar.io/x/${username}`;
+
+          return {
+            url,
+            domain: 'X (formerly Twitter)',
+            title: `${data.name || username} (@${data.screen_name || username})`,
+            description: data.description || `View @${username}'s profile and posts on X.`,
+            image: avatarUrl,
+            platform: 'x',
+            isOfflineFallback: false,
+            status: 'success',
+          };
+        }
+      }
+    } catch {
+      // vxtwitter timed out or failed, try unavatar fallback below
+    }
+
+    // Fallback: unavatar.io gives live Twitter profile image directly with CORS: *
+    return {
+      url,
+      domain: 'X (formerly Twitter)',
+      title: `@${username} on X`,
+      description: `View @${username}'s profile, thoughts, and media on X.`,
+      image: `https://unavatar.io/x/${username}`,
+      platform: 'x',
+      isOfflineFallback: false,
+      status: 'success',
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Generate bespoke synthetic preview for recognized platforms or universal offline fallback
  */
 export function generateSyntheticPreview(url: string, platform: RecognizedPlatform, isOffline: boolean): LinkPreviewData {
@@ -69,27 +185,46 @@ export function generateSyntheticPreview(url: string, platform: RecognizedPlatfo
     // ignore
   }
 
+  // Check YouTube thumbnail
+  const ytVideoId = extractYouTubeVideoId(url);
+  if (ytVideoId) {
+    return {
+      url,
+      domain: 'YouTube',
+      title: 'YouTube Video',
+      description: 'Watch video, listen to music, and explore creator channels on YouTube.',
+      image: `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`,
+      platform: 'youtube',
+      isOfflineFallback: isOffline,
+      status: 'fallback',
+    };
+  }
+
   switch (platform) {
     case 'youtube':
       return {
         url,
         domain: 'YouTube',
-        title: pathname.length > 1 ? `YouTube Video: ${pathname.replace(/^\/(watch\?v=)?/, '')}` : 'YouTube Video & Streaming',
+        title: pathname.length > 1 ? `YouTube: ${pathname.replace(/^\/(watch\?v=)?/, '')}` : 'YouTube Video & Streaming',
         description: 'Watch video, listen to music, and explore creator channels on YouTube.',
         platform: 'youtube',
         isOfflineFallback: isOffline,
         status: 'fallback',
       };
-    case 'x':
+    case 'x': {
+      const parts = pathname.split('/').filter(Boolean);
+      const user = parts.length > 0 ? parts[0] : '';
       return {
         url,
         domain: 'X (formerly Twitter)',
-        title: pathname.length > 1 ? `@${pathname.replace(/^\//, '').split('/')[0]} on X` : 'X • Discover what’s happening',
+        title: user ? `@${user} on X` : 'X • Discover what’s happening',
         description: 'See live reactions, breaking news, threads, and media on X.',
+        image: user ? `https://unavatar.io/x/${user}` : undefined,
         platform: 'x',
         isOfflineFallback: isOffline,
         status: 'fallback',
       };
+    }
     case 'instagram':
       return {
         url,
@@ -110,16 +245,19 @@ export function generateSyntheticPreview(url: string, platform: RecognizedPlatfo
         isOfflineFallback: isOffline,
         status: 'fallback',
       };
-    case 'github':
+    case 'github': {
+      const cleanPath = pathname.replace(/^\//, '');
       return {
         url,
         domain: 'GitHub',
-        title: pathname.length > 1 ? `GitHub Repository: ${pathname.replace(/^\//, '')}` : 'GitHub • Build and Ship Software',
+        title: cleanPath ? `GitHub: ${cleanPath}` : 'GitHub • Build and Ship Software',
         description: 'Explore open source code, repositories, issues, and developer projects.',
+        image: cleanPath ? `https://opengraph.githubassets.com/1/${cleanPath}` : undefined,
         platform: 'github',
         isOfflineFallback: isOffline,
         status: 'fallback',
       };
+    }
     case 'generic':
     default:
       return {
@@ -129,6 +267,7 @@ export function generateSyntheticPreview(url: string, platform: RecognizedPlatfo
         description: isOffline
           ? 'Link saved in document. Reconnect to the internet for live page details.'
           : 'External web page. Click to open in a new browser tab.',
+        favicon: `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
         platform: 'generic',
         isOfflineFallback: isOffline,
         status: 'fallback',
@@ -138,13 +277,14 @@ export function generateSyntheticPreview(url: string, platform: RecognizedPlatfo
 
 /**
  * Multi-Tier Link Preview Fetcher:
- * Tier 1: Live OpenGraph metadata via Microlink with 2500ms timeout
- * Tier 2: Recognized platform synthetic card (YouTube, X, Instagram, Threads, GitHub)
- * Tier 3: Universal offline card
+ * Tier 0: In-memory & Persistent localStorage Cache (0ms latency, survives reloads)
+ * Tier 1: Platform-specific direct resolvers (X/Twitter via vxtwitter + unavatar, YouTube HQ thumbnails)
+ * Tier 2: Live OpenGraph metadata via Microlink with 2500ms timeout
+ * Tier 3: Universal fallback with Google favicon / synthetic card
  */
 export async function getLinkPreview(url: string): Promise<LinkPreviewData> {
-  // Check memory cache first
-  const cached = previewCache.get(url);
+  // Check memory & persistent storage cache first
+  const cached = loadCachedPreview(url);
   if (cached && cached.status !== 'loading') {
     return cached;
   }
@@ -152,14 +292,40 @@ export async function getLinkPreview(url: string): Promise<LinkPreviewData> {
   const platform = detectPlatform(url);
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
-  // If offline, instantly return Tier 2/3 fallback
+  // If offline, instantly return fallback
   if (!isOnline) {
     const offlinePreview = generateSyntheticPreview(url, platform, true);
-    previewCache.set(url, offlinePreview);
+    saveCachedPreview(url, offlinePreview);
     return offlinePreview;
   }
 
-  // Attempt Tier 1: Microlink API metadata fetch
+  // Tier 1: Specialized platform resolvers
+  if (platform === 'x') {
+    const xPreview = await resolveXProfile(url);
+    if (xPreview) {
+      saveCachedPreview(url, xPreview);
+      return xPreview;
+    }
+  }
+
+  // YouTube instant thumbnail if video ID found
+  const ytVideoId = extractYouTubeVideoId(url);
+  if (platform === 'youtube' && ytVideoId) {
+    const ytPreview: LinkPreviewData = {
+      url,
+      domain: 'YouTube',
+      title: 'YouTube Video',
+      description: 'Watch video, listen to music, and explore creator channels on YouTube.',
+      image: `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`,
+      platform: 'youtube',
+      isOfflineFallback: false,
+      status: 'success',
+    };
+    saveCachedPreview(url, ytPreview);
+    return ytPreview;
+  }
+
+  // Tier 2: Microlink API metadata fetch for general web pages
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2500);
@@ -174,37 +340,35 @@ export async function getLinkPreview(url: string): Promise<LinkPreviewData> {
 
     clearTimeout(timeout);
 
-    if (!response.ok) {
-      throw new Error(`Microlink responded with status ${response.status}`);
+    if (response.ok) {
+      const payload = await response.json();
+      if (payload.status === 'success' && payload.data) {
+        const data = payload.data;
+        const cleanDomain = data.publisher || extractCleanDomain(url);
+        const title = data.title || extractCleanDomain(url);
+
+        const resolvedPreview: LinkPreviewData = {
+          url,
+          domain: cleanDomain,
+          title: title.length > 120 ? `${title.slice(0, 117)}...` : title,
+          description: data.description ? (data.description.length > 140 ? `${data.description.slice(0, 137)}...` : data.description) : undefined,
+          image: data.image?.url || undefined,
+          favicon: data.logo?.url || `https://www.google.com/s2/favicons?domain=${extractCleanDomain(url)}&sz=64`,
+          platform,
+          isOfflineFallback: false,
+          status: 'success',
+        };
+
+        saveCachedPreview(url, resolvedPreview);
+        return resolvedPreview;
+      }
     }
-
-    const payload = await response.json();
-    if (payload.status === 'success' && payload.data) {
-      const data = payload.data;
-      const cleanDomain = data.publisher || extractCleanDomain(url);
-      const title = data.title || extractCleanDomain(url);
-
-      const resolvedPreview: LinkPreviewData = {
-        url,
-        domain: cleanDomain,
-        title: title.length > 120 ? `${title.slice(0, 117)}...` : title,
-        description: data.description ? (data.description.length > 140 ? `${data.description.slice(0, 137)}...` : data.description) : undefined,
-        image: data.image?.url || undefined,
-        favicon: data.logo?.url || undefined,
-        platform,
-        isOfflineFallback: false,
-        status: 'success',
-      };
-
-      previewCache.set(url, resolvedPreview);
-      return resolvedPreview;
-    }
-
-    throw new Error('Incomplete metadata returned');
-  } catch (err) {
-    // Tier 1 failed or timed out -> Fall back to Tier 2 (Platform synthetic) or Tier 3 (Universal)
-    const fallbackPreview = generateSyntheticPreview(url, platform, false);
-    previewCache.set(url, fallbackPreview);
-    return fallbackPreview;
+  } catch {
+    // Microlink timed out or rate-limited -> fall back cleanly
   }
+
+  // Tier 3: High quality synthetic fallback with domain favicon
+  const fallbackPreview = generateSyntheticPreview(url, platform, false);
+  saveCachedPreview(url, fallbackPreview);
+  return fallbackPreview;
 }

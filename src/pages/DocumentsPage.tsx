@@ -67,6 +67,11 @@ export const DocumentsPage: React.FC = () => {
   const togglePinMutation = useTogglePin();
   const { data: allTags = ['All'] } = useAllDocumentTags();
 
+  // Prefetch EditorPage chunk so document clicks open instantaneously (0ms lag)
+  useEffect(() => {
+    import('./EditorPage').catch(() => {});
+  }, []);
+
   // Auto-dismiss clone notification toast
   useEffect(() => {
     if (cloneToast) {
@@ -209,7 +214,7 @@ export const DocumentsPage: React.FC = () => {
               <StorageLimitRing variant="badge" />
             </div>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              IndexedDB local storage · 0ms typing latency · 100% private
+              Local workspace · Offline-first IndexedDB storage
             </p>
           </div>
 

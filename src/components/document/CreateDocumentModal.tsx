@@ -118,9 +118,11 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
   const [customTagInput, setCustomTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize defaults on open
+  // Initialize defaults on open & prefetch editor chunk
   useEffect(() => {
     if (isOpen) {
+      // Eagerly prefetch EditorPage so opening the new document is instantaneous
+      import('../../pages/EditorPage').catch(() => {});
       const now = new Date();
       const dateStr = now.toISOString().slice(0, 10);
       setTitle(`Note ${dateStr}`);
@@ -219,11 +221,11 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pt-16 sm:pt-20 bg-black/60 backdrop-blur-xs select-none animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl my-auto rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans"
+        className="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col max-h-[90vh] text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

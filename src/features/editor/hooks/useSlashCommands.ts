@@ -153,6 +153,48 @@ export function useSlashCommands({
           return;
         }
 
+        if (snippet === '__ACTION_EXPORT_MD__') {
+          ed.setSelectionRange(from, cursor);
+          ed.replaceSelection('');
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
+          onExportMd?.();
+          return;
+        }
+
+        if (snippet === '__ACTION_INSERT_DATE__') {
+          const dateStr = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          });
+          ed.setSelectionRange(from, cursor);
+          ed.replaceSelection(dateStr);
+          const updated = ed.getValue();
+          setContent(updated);
+          executeSave(updated, title);
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
+          ed.focus();
+          return;
+        }
+
+        if (snippet === '__ACTION_INSERT_TIME__') {
+          const timeStr = new Date().toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          ed.setSelectionRange(from, cursor);
+          ed.replaceSelection(timeStr);
+          const updated = ed.getValue();
+          setContent(updated);
+          executeSave(updated, title);
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
+          ed.focus();
+          return;
+        }
+
         ed.setSelectionRange(from, cursor);
         ed.replaceSelection(snippet);
         const updated = ed.getValue();
@@ -197,7 +239,61 @@ export function useSlashCommands({
         return;
       }
 
-      const nextContent = cleanBefore + snippet + afterCursor;
+      if (snippet === '__ACTION_OPEN_FIND__') {
+        setContent(cleanBefore + afterCursor);
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        onOpenFind?.();
+        return;
+      }
+
+      if (snippet === '__ACTION_OPEN_REPLACE__') {
+        setContent(cleanBefore + afterCursor);
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        onOpenReplace?.();
+        return;
+      }
+
+      if (snippet === '__ACTION_OPEN_TEMPLATES__') {
+        setContent(cleanBefore + afterCursor);
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        onOpenTemplates?.();
+        return;
+      }
+
+      if (snippet === '__ACTION_OPEN_PDF_STUDIO__') {
+        setContent(cleanBefore + afterCursor);
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        onOpenPdfStudio?.();
+        return;
+      }
+
+      if (snippet === '__ACTION_EXPORT_MD__') {
+        setContent(cleanBefore + afterCursor);
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        onExportMd?.();
+        return;
+      }
+
+      let insertion = snippet;
+      if (snippet === '__ACTION_INSERT_DATE__') {
+        insertion = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } else if (snippet === '__ACTION_INSERT_TIME__') {
+        insertion = new Date().toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      const nextContent = cleanBefore + insertion + afterCursor;
       setContent(nextContent);
       setIsSlashMenuOpen(false);
       setSlashQuery('');
@@ -207,7 +303,7 @@ export function useSlashCommands({
         if (textareaRef?.current) {
           const prevScroll = textareaRef.current.scrollTop;
           textareaRef.current.focus({ preventScroll: true });
-          const newPos = cleanBefore.length + snippet.length;
+          const newPos = cleanBefore.length + insertion.length;
           textareaRef.current.setSelectionRange(newPos, newPos);
           textareaRef.current.scrollTop = prevScroll;
           updateCursorPosition?.();
@@ -216,7 +312,7 @@ export function useSlashCommands({
 
       executeSave(nextContent, title);
     },
-    [content, title, setContent, executeSave, textareaRef, updateCursorPosition, onOpenTableBuilder, onOpenTemplates, onOpenMathStudio, onOpenImageModal, onExportMd, onOpenPdfStudio]
+    [content, title, setContent, executeSave, textareaRef, updateCursorPosition, onOpenTableBuilder, onOpenTemplates, onOpenMathStudio, onOpenImageModal, onExportMd, onOpenPdfStudio, onOpenFind, onOpenReplace]
   );
 
   // Keyboard navigation, smart lists, tab indent, auto-pairing and find shortcuts
