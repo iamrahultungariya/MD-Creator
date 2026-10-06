@@ -63,11 +63,27 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
 
   const contentRef = useRef<string>(content);
   contentRef.current = content;
+  const titleRef = useRef<string>(title);
+  titleRef.current = title;
+  const isSavedRef = useRef<boolean>(isSaved);
+  isSavedRef.current = isSaved;
 
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSnapshotContentRef = useRef<string>('');
   const lastLocalEditTimeRef = useRef<number>(0);
+
+  // Flush pending auto-save immediately on navigation / unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+      if (!isSavedRef.current && contentRef.current !== undefined && docId) {
+        saveDocument(docId, titleRef.current, contentRef.current, docMetadata?.tags).catch(console.warn);
+      }
+    };
+  }, [docId, docMetadata?.tags]);
 
   // 1. Load document from Dexie on mount or ID change
   useEffect(() => {
@@ -92,6 +108,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
         setTitle(meta?.title || 'Untitled.md');
         setContent(text);
         contentRef.current = text;
+        titleRef.current = meta?.title || 'Untitled.md';
         lastSnapshotContentRef.current = text;
         setIsSaved(true);
       }

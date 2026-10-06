@@ -7,10 +7,6 @@ import { SpotlightCard } from '../common/SpotlightCard';
 interface DocumentGridCardProps {
   doc: DocumentMetadata;
   currentTab: 'active' | 'trash';
-  isHovered?: boolean;
-  isAnyHovered?: boolean;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
   onOpen: (id: string) => void;
   onDuplicate: (e: React.MouseEvent, id: string) => void;
   onTogglePin: (e: React.MouseEvent, id: string) => void;
@@ -18,13 +14,9 @@ interface DocumentGridCardProps {
   onRestore: (e: React.MouseEvent, id: string) => void;
 }
 
-export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
+export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
   doc,
   currentTab,
-  isHovered = false,
-  isAnyHovered = false,
-  onMouseEnter,
-  onMouseLeave,
   onOpen,
   onDuplicate,
   onTogglePin,
@@ -33,7 +25,6 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const isDimmed = isAnyHovered && !isHovered;
 
   // Close mobile micro-popover on outside click
   useEffect(() => {
@@ -53,15 +44,12 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
 
   return (
     <SpotlightCard
-      isDimmed={isDimmed}
       spotlightRadius={300}
       spotlightBorderColor={
         doc.isPinned
           ? 'rgba(245, 158, 11, 0.55)'
           : undefined
       }
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       onClick={() => {
         if (currentTab === 'trash') {
           onRestore({ stopPropagation: () => {} } as any, doc.id);
@@ -69,10 +57,8 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
           onOpen(doc.id);
         }
       }}
-      className={`p-6 bg-white/90 dark:bg-[#121217]/90 backdrop-blur-xl border cursor-pointer select-none active:scale-[0.99] ${
-        isHovered
-          ? 'shadow-2xl shadow-neutral-950/10 dark:shadow-black/60 -translate-y-1 border-neutral-300 dark:border-neutral-700 z-10'
-          : currentTab === 'trash'
+      className={`p-6 bg-white/90 dark:bg-[#121217]/90 backdrop-blur-xl border cursor-pointer select-none active:scale-[0.99] transition-all duration-150 hover:-translate-y-1 hover:shadow-xl ${
+        currentTab === 'trash'
           ? 'border-red-200/50 dark:border-red-950/50 shadow-xs'
           : 'border-neutral-200/80 dark:border-neutral-800/80 shadow-xs hover:border-neutral-300/80 dark:hover:border-neutral-700/80'
       }`}
@@ -82,14 +68,10 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0 flex-1 font-sans">
             <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
-                isHovered ? 'scale-105' : ''
-              } ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
                 currentTab === 'trash'
                   ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
-                  : isHovered
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
-                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -104,8 +86,8 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
           {/* Right Header: Amber Pinned Badge, Desktop Hover Actions, and Mobile 3-Dots Menu */}
           <div className="flex items-center gap-1.5 shrink-0" ref={mobileMenuRef}>
             {/* Glowing Amber Pin Badge when pinned and not hovered */}
-            {doc.isPinned && currentTab === 'active' && !isHovered && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs font-sans">
+            {doc.isPinned && currentTab === 'active' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs font-sans group-hover:hidden">
                 <Pin className="w-2.5 h-2.5 fill-current" />
                 <span>Pinned</span>
               </span>
@@ -113,11 +95,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
 
             {/* Desktop Action Buttons: Reveal on hover with smooth fade & slide */}
             <div
-              className={`hidden sm:flex items-center gap-1 transition-all duration-200 ${
-                isHovered
-                  ? 'opacity-100 translate-y-0 pointer-events-auto'
-                  : 'opacity-0 translate-y-1 pointer-events-none'
-              }`}
+              className="hidden sm:flex items-center gap-1 transition-all duration-150 opacity-0 translate-y-1 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
             >
               {currentTab === 'active' ? (
                 <>
@@ -314,4 +292,4 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = ({
       </div>
     </SpotlightCard>
   );
-};
+});

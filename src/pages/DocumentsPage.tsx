@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, Suspense } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -50,7 +50,6 @@ export const DocumentsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
-  const [hoveredDocId, setHoveredDocId] = useState<string | null>(null);
   const [cloneToast, setCloneToast] = useState<{ title: string; id: string } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -110,7 +109,11 @@ export const DocumentsPage: React.FC = () => {
     navigate(`/editor/${id}`);
   };
 
-  const handleDuplicate = async (e: React.MouseEvent, id: string) => {
+  const handleOpen = useCallback((id: string) => {
+    navigate(`/editor/${id}`);
+  }, [navigate]);
+
+  const handleDuplicate = useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
       const doc = documents.find((d) => d.id === id);
@@ -122,12 +125,12 @@ export const DocumentsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to duplicate doc', err);
     }
-  };
+  }, [documents, duplicateDocMutation]);
 
-  const handleRestore = (e: React.MouseEvent, id: string) => {
+  const handleRestore = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     restoreDocMutation.mutate(id);
-  };
+  }, [restoreDocMutation]);
 
   const handleEmptyTrash = async () => {
     if (trashCount === 0) return;
@@ -149,7 +152,7 @@ export const DocumentsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string, title: string) => {
+  const handleDelete = useCallback(async (e: React.MouseEvent, id: string, title: string) => {
     e.stopPropagation();
     if (currentTab === 'active') {
       const confirmed = await confirm({
@@ -186,12 +189,12 @@ export const DocumentsPage: React.FC = () => {
         deleteDocMutation.mutate({ id, permanent: true });
       }
     }
-  };
+  }, [currentTab, confirm, deleteDocMutation]);
 
-  const handleTogglePin = (e: React.MouseEvent, id: string) => {
+  const handleTogglePin = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     togglePinMutation.mutate(id);
-  };
+  }, [togglePinMutation]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
@@ -379,11 +382,7 @@ export const DocumentsPage: React.FC = () => {
                 <DocumentGridCard
                   doc={doc}
                   currentTab={currentTab}
-                  isHovered={hoveredDocId === doc.id}
-                  isAnyHovered={Boolean(hoveredDocId)}
-                  onMouseEnter={() => setHoveredDocId(doc.id)}
-                  onMouseLeave={() => setHoveredDocId(null)}
-                  onOpen={(id) => navigate(`/editor/${id}`)}
+                  onOpen={handleOpen}
                   onDuplicate={handleDuplicate}
                   onTogglePin={handleTogglePin}
                   onDelete={handleDelete}
@@ -410,11 +409,7 @@ export const DocumentsPage: React.FC = () => {
                 <DocumentListItem
                   doc={doc}
                   currentTab={currentTab}
-                  isHovered={hoveredDocId === doc.id}
-                  isAnyHovered={Boolean(hoveredDocId)}
-                  onMouseEnter={() => setHoveredDocId(doc.id)}
-                  onMouseLeave={() => setHoveredDocId(null)}
-                  onOpen={(id) => navigate(`/editor/${id}`)}
+                  onOpen={handleOpen}
                   onDuplicate={handleDuplicate}
                   onTogglePin={handleTogglePin}
                   onDelete={handleDelete}

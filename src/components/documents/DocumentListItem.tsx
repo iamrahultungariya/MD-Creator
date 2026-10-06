@@ -7,10 +7,6 @@ import { formatRelativeTime } from '../../utils/dateUtils';
 interface DocumentListItemProps {
   doc: DocumentMetadata;
   currentTab: 'active' | 'trash';
-  isHovered?: boolean;
-  isAnyHovered?: boolean;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
   onOpen: (id: string) => void;
   onDuplicate: (e: React.MouseEvent, id: string) => void;
   onTogglePin: (e: React.MouseEvent, id: string) => void;
@@ -18,13 +14,9 @@ interface DocumentListItemProps {
   onRestore: (e: React.MouseEvent, id: string) => void;
 }
 
-export const DocumentListItem: React.FC<DocumentListItemProps> = ({
+export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
   doc,
   currentTab,
-  isHovered = false,
-  isAnyHovered = false,
-  onMouseEnter,
-  onMouseLeave,
   onOpen,
   onDuplicate,
   onTogglePin,
@@ -33,7 +25,6 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const isDimmed = isAnyHovered && !isHovered;
 
   const mouseX = useMotionValue(-1000);
   const mouseY = useMotionValue(-1000);
@@ -70,8 +61,6 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
 
   return (
     <div
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       onMouseMove={handleMouseMove}
       onClick={() => {
         if (currentTab === 'trash') {
@@ -80,13 +69,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
           onOpen(doc.id);
         }
       }}
-      className={`group relative overflow-hidden p-4 flex items-center justify-between transition-all duration-200 cursor-pointer select-none active:scale-[0.995] ${
-        isDimmed ? 'opacity-55' : 'opacity-100'
-      } ${
-        isHovered
-          ? 'bg-neutral-100/70 dark:bg-neutral-800/60 shadow-xs'
-          : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'
-      }`}
+      className="group relative overflow-hidden p-4 flex items-center justify-between transition-colors duration-150 cursor-pointer select-none active:scale-[0.995] hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
     >
       {/* Dynamic Mouse-Following Subtle Row Spotlight */}
       <motion.div
@@ -98,14 +81,10 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
 
       <div className="relative z-10 flex items-center gap-3.5 min-w-0 pr-4 flex-1 font-sans">
         <div
-          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
-            isHovered ? 'scale-105' : ''
-          } ${
+          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
             currentTab === 'trash'
               ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
-              : isHovered
-              ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
-              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -137,9 +116,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
 
         {/* Desktop Action Buttons: Reveal on hover */}
         <div
-          className={`hidden sm:flex items-center gap-1 transition-all duration-200 ${
-            isHovered ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}
+          className="hidden sm:flex items-center gap-1 transition-all duration-150 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
         >
           {currentTab === 'active' ? (
             <>
@@ -296,4 +273,4 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = ({
       </div>
     </div>
   );
-};
+});

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { fastCountWords } from '../utils/textCounters';
+import { queryClient } from '../lib/queryClient';
 
 export interface DocumentMetadata {
   id: string;
@@ -139,6 +140,24 @@ export async function getDocumentContent(id: string): Promise<string> {
 }
 
 /**
+ * Invalidates React Query caches across the app so newly created/edited documents
+ * and tag counts reflect immediately with 0ms lag without requiring a manual page refresh.
+ */
+export function notifyDocumentStoreChanged(docId?: string): void {
+  try {
+    queryClient.invalidateQueries({ queryKey: ['documents'] });
+    queryClient.invalidateQueries({ queryKey: ['trash-count'] });
+    queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
+    queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    if (docId) {
+      queryClient.invalidateQueries({ queryKey: ['document-content', docId] });
+    }
+  } catch (err) {
+    console.warn('[Db] Failed to invalidate query cache', err);
+  }
+}
+
+/**
  * Saves full document content: caches it in Dexie and updates metadata snippet.
  */
 export async function saveDocument(id: string, title: string, content: string, tags: string[] = []): Promise<void> {
@@ -182,6 +201,8 @@ export async function saveDocument(id: string, title: string, content: string, t
       });
     }
   });
+
+  notifyDocumentStoreChanged(id);
 }
 
 /**
@@ -213,6 +234,8 @@ export async function deleteDocument(id: string, permanent = false): Promise<voi
       deletedAt: Date.now()
     });
   }
+
+  notifyDocumentStoreChanged(id);
 }
 
 /**
@@ -223,6 +246,8 @@ export async function restoreDocument(id: string): Promise<void> {
     isDeleted: false,
     deletedAt: undefined
   });
+
+  notifyDocumentStoreChanged(id);
 }
 
 /**
@@ -241,6 +266,7 @@ export async function emptyTrash(): Promise<number> {
     }
   });
 
+  notifyDocumentStoreChanged();
   return ids.length;
 }
 
@@ -270,6 +296,7 @@ export async function togglePinDocument(id: string): Promise<boolean> {
   if (!doc) return false;
   const newPinned = !doc.isPinned;
   await db.documents.update(id, { isPinned: newPinned });
+  notifyDocumentStoreChanged(id);
   return newPinned;
 }
 

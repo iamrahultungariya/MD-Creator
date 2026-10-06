@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -10,9 +9,9 @@ import {
   RotateCcw, 
   FileText, 
   X, 
-  Palette,
-  HelpCircle,
-  ArrowLeft
+  Palette, 
+  HelpCircle, 
+  ArrowLeft 
 } from 'lucide-react';
 import { parseSlides, SlideData } from '../../utils/slideParser';
 import { MarkdownPreview } from '../../components/editor/MarkdownPreview';
@@ -31,7 +30,6 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   title: _title,
   onExit,
 }) => {
-  const navigate = useNavigate();
   const slides = useMemo(() => parseSlides(content), [content]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [theme, setTheme] = useState<PresentationTheme>('dark');
@@ -84,14 +82,21 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
     }
   };
 
-  // Touch swipe support for mobile presentations
+  const THEMES: PresentationTheme[] = ['dark', 'paper', 'sepia', 'nordic'];
+  const cycleTheme = () => {
+    setTheme((prev) => {
+      const nextIdx = (THEMES.indexOf(prev) + 1) % THEMES.length;
+      return THEMES[nextIdx];
+    });
+  };
+
+  // Touch swipe and tap support for mobile presentations
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartXRef.current = e.touches[0].clientX;
     touchStartYRef.current = e.touches[0].clientY;
-    setIsHudVisible(true);
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
@@ -99,13 +104,17 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
     const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
     const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
 
-    // Detect horizontal swipe > 45px with dominant X movement
-    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+    // Detect horizontal swipe > 40px with dominant X movement
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25) {
       if (deltaX < 0) {
         nextSlide();
       } else {
         prevSlide();
       }
+      setIsHudVisible(true);
+    } else if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
+      // Tap detected - toggle HUD visibility
+      setIsHudVisible((prev) => !prev);
     }
     touchStartXRef.current = null;
     touchStartYRef.current = null;
@@ -271,30 +280,24 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
     >
       {/* Top Floating Mini Header (Exit & Slide Jumper) */}
       <div 
-        className={`absolute top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-40 flex items-center justify-between pointer-events-none transition-opacity duration-200 font-sans ${
+        className={`fixed top-2.5 sm:top-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-40 flex items-center justify-between pointer-events-none transition-opacity duration-200 font-sans ${
           isHudVisible ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
           <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                onExit();
-              }
-            }}
-            className="px-3 py-1.5 rounded-lg bg-black/70 hover:bg-black/90 text-white backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md border border-white/10 transition-all active:scale-95 font-sans"
-            title="Back to Previous Page / Mode (Esc)"
+            onClick={onExit}
+            className="px-3 py-1.5 min-h-[38px] rounded-lg bg-black/70 hover:bg-black/90 text-white backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md border border-white/10 transition-all active:scale-95 font-sans"
+            title="Exit Presentation Deck (Esc)"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back</span>
+            <span>Exit</span>
             <kbd className="hidden sm:inline font-sans text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md ml-0.5">Esc</kbd>
           </button>
 
           <button
             onClick={() => setShowHelp((prev) => !prev)}
-            className="p-2 rounded-lg bg-black/70 hover:bg-black/90 text-white/80 hover:text-white backdrop-blur-md cursor-pointer border border-white/10 transition-all active:scale-95"
+            className="hidden sm:flex p-2 rounded-lg bg-black/70 hover:bg-black/90 text-white/80 hover:text-white backdrop-blur-md cursor-pointer border border-white/10 transition-all active:scale-95"
             title="Keyboard Shortcuts (?)"
           >
             <HelpCircle className="w-3.5 h-3.5" />
@@ -302,15 +305,15 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         </div>
 
         {/* Slide Counter Selector */}
-        <div className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-xs font-sans font-medium border border-white/10 shadow-md">
+        <div className="flex items-center gap-1 sm:gap-1.5 pointer-events-auto bg-black/70 backdrop-blur-md px-2.5 sm:px-3 py-1.5 min-h-[38px] rounded-lg text-white text-xs font-sans font-medium border border-white/10 shadow-md">
           <select
             value={currentSlideIndex}
             onChange={(e) => goToSlide(Number(e.target.value))}
-            className="bg-transparent text-white font-sans text-xs focus:outline-none cursor-pointer max-w-[130px] sm:max-w-none truncate"
+            className="bg-transparent text-white font-sans text-xs focus:outline-none cursor-pointer max-w-[120px] sm:max-w-xs truncate"
           >
             {slides.map((s, idx) => (
               <option key={s.index} value={idx} className="bg-neutral-900 text-white">
-                Slide {idx + 1}: {s.title.slice(0, 20)}
+                Slide {idx + 1}: {s.title.slice(0, 24)}
               </option>
             ))}
           </select>
@@ -320,67 +323,76 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       </div>
 
       {/* Main Slide Stage */}
-      <div className="flex-1 flex items-center justify-center p-3 pt-14 pb-20 sm:p-8 md:p-14 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-2.5 sm:p-8 md:p-14 pt-14 pb-20 sm:pt-16 sm:pb-24 overflow-hidden w-full">
         <div 
-          className={`w-full max-w-5xl rounded-xl sm:rounded-2xl p-5 sm:p-10 md:p-16 shadow-2xl transition-all duration-300 border flex flex-col justify-center min-h-[50vh] sm:min-h-[60vh] max-h-[82vh] overflow-y-auto select-text font-sans ${currentTheme.card} ${currentTheme.border}`}
+          className={`w-full max-w-5xl rounded-xl sm:rounded-2xl p-4 sm:p-10 md:p-16 shadow-2xl transition-all duration-300 border flex flex-col justify-start sm:justify-center h-full max-h-[calc(100dvh-7.5rem)] sm:max-h-[82vh] overflow-y-auto overscroll-contain select-text font-sans ${currentTheme.card} ${currentTheme.border}`}
         >
-          <div className={`prose prose-base sm:prose-lg md:prose-xl lg:prose-2xl max-w-none text-inherit leading-relaxed font-sans ${currentTheme.prose}`}>
+          <div className={`prose prose-sm sm:prose-base md:prose-lg lg:prose-xl max-w-none text-inherit leading-relaxed font-sans ${currentTheme.prose}`}>
             <MarkdownPreview content={currentSlide.body} className="text-inherit" />
           </div>
         </div>
       </div>
 
-      {/* Slide Navigation Click Zones (Invisible on mobile, swipe used instead) */}
+      {/* Slide Navigation Buttons: Accessible on both Mobile & Desktop */}
       <button
         onClick={prevSlide}
         disabled={currentSlideIndex === 0}
-        className={`hidden sm:block absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-black/40 hover:bg-black/80 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl active:scale-95 ${
-          currentSlideIndex === 0 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-70 hover:opacity-100 hover:scale-105' : 'opacity-0'
+        className={`fixed left-1.5 sm:left-4 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-3 rounded-xl bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl active:scale-95 disabled:opacity-0 disabled:pointer-events-none ${
+          currentSlideIndex === 0 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-80 sm:opacity-70 sm:hover:opacity-100 hover:scale-105' : 'opacity-0 pointer-events-none'
         }`}
         title="Previous Slide (← / Backspace)"
+        aria-label="Previous Slide"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
       </button>
 
       <button
         onClick={nextSlide}
         disabled={currentSlideIndex === totalSlides - 1}
-        className={`hidden sm:block absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-black/40 hover:bg-black/80 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl active:scale-95 ${
-          currentSlideIndex === totalSlides - 1 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-70 hover:opacity-100 hover:scale-105' : 'opacity-0'
+        className={`fixed right-1.5 sm:right-4 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-3 rounded-xl bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl active:scale-95 disabled:opacity-0 disabled:pointer-events-none ${
+          currentSlideIndex === totalSlides - 1 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-80 sm:opacity-70 sm:hover:opacity-100 hover:scale-105' : 'opacity-0 pointer-events-none'
         }`}
         title="Next Slide (→ / Space / Enter)"
+        aria-label="Next Slide"
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
       </button>
 
       {/* Speaker Notes Drawer (Optional) */}
       {isNotesOpen && (
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-neutral-900/95 text-neutral-200 border border-neutral-700/80 rounded-xl p-4 backdrop-blur-xl shadow-2xl z-40 text-xs font-sans animate-in slide-in-from-bottom-2 duration-150">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800 font-semibold text-neutral-400">
-            <div className="flex items-center gap-1.5 text-white font-sans font-bold">
-              <FileText className="w-3.5 h-3.5 text-amber-400" />
-              <span>Speaker Notes (Slide {currentSlideIndex + 1})</span>
+        <>
+          <div 
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
+            onClick={() => setIsNotesOpen(false)}
+          />
+          <div className="fixed bottom-18 sm:bottom-20 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-neutral-900/95 text-neutral-200 border border-neutral-700/80 rounded-xl p-4 backdrop-blur-xl shadow-2xl z-40 text-xs font-sans animate-in slide-in-from-bottom-2 duration-150">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800 font-semibold text-neutral-400">
+              <div className="flex items-center gap-1.5 text-white font-sans font-bold">
+                <FileText className="w-3.5 h-3.5 text-amber-400" />
+                <span>Speaker Notes (Slide {currentSlideIndex + 1})</span>
+              </div>
+              <button
+                onClick={() => setIsNotesOpen(false)}
+                className="text-neutral-400 hover:text-white cursor-pointer p-1 rounded-md hover:bg-neutral-800 transition-colors"
+                aria-label="Close Notes"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => setIsNotesOpen(false)}
-              className="text-neutral-400 hover:text-white cursor-pointer p-1 rounded-md hover:bg-neutral-800 transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            <div className="max-h-36 sm:max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed font-sans">
+              {currentSlide.notes || (
+                <span className="text-neutral-500 italic">
+                  No speaker notes for this slide. Add notes in markdown using:
+                  <br />
+                  <code className="text-amber-400 font-sans text-[11px]">&lt;!-- note: your notes here --&gt;</code>
+                </span>
+              )}
+            </div>
           </div>
-          <div className="max-h-36 overflow-y-auto whitespace-pre-wrap leading-relaxed font-sans">
-            {currentSlide.notes || (
-              <span className="text-neutral-500 italic">
-                No speaker notes for this slide. Add notes in markdown using:
-                <br />
-                <code className="text-amber-400 font-sans text-[11px]">&lt;!-- note: your notes here --&gt;</code>
-              </span>
-            )}
-          </div>
-        </div>
+        </>
       )}
 
-      {/* Keyboard Shortcuts Help Modal */}
+      {/* Keyboard Shortcuts Help Modal (Desktop) */}
       {showHelp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 font-sans">
           <div className="bg-neutral-900 text-white border border-neutral-700 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
@@ -410,29 +422,31 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
       {/* Bottom Floating Presenter HUD */}
       <div
-        className={`absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-200 select-none max-w-[calc(100vw-1rem)] font-sans ${
+        className={`fixed bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-200 select-none max-w-[calc(100vw-1.5rem)] font-sans ${
           isHudVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="flex items-center gap-1.5 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-neutral-950/90 text-neutral-300 backdrop-blur-xl border border-white/10 shadow-2xl text-xs overflow-x-auto no-scrollbar font-sans">
+        <div className="flex items-center gap-1 sm:gap-2.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-neutral-950/90 text-neutral-300 backdrop-blur-xl border border-white/10 shadow-2xl text-xs font-sans">
           {/* Previous / Next */}
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             <button
               onClick={prevSlide}
               disabled={currentSlideIndex === 0}
-              className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
+              className="p-1 sm:p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all active:scale-95"
               title="Previous Slide"
+              aria-label="Previous Slide"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-sans text-xs text-white font-bold px-1.5 whitespace-nowrap">
+            <span className="font-sans text-xs text-white font-bold px-1 whitespace-nowrap">
               {currentSlideIndex + 1} <span className="text-neutral-500 font-normal">/ {totalSlides}</span>
             </span>
             <button
               onClick={nextSlide}
               disabled={currentSlideIndex === totalSlides - 1}
-              className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all"
+              className="p-1 sm:p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all active:scale-95"
               title="Next Slide"
+              aria-label="Next Slide"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -440,8 +454,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
           <div className="h-3.5 w-px bg-white/15 shrink-0" />
 
-          {/* Presenter Stopwatch */}
-          <div className="flex items-center gap-1 sm:gap-1.5 font-sans text-xs text-neutral-300 shrink-0">
+          {/* Presenter Stopwatch (Desktop only to prevent mobile HUD blowout) */}
+          <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 font-sans text-xs text-neutral-300 shrink-0">
             <button
               onClick={() => setIsTimerRunning((prev) => !prev)}
               className="p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
@@ -452,19 +466,29 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             <span className="font-semibold text-white tracking-wider">{formatTimer(timerSeconds)}</span>
             <button
               onClick={() => setTimerSeconds(0)}
-              className="hidden sm:inline-flex p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
+              className="p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white cursor-pointer"
               title="Reset stopwatch"
             >
               <RotateCcw className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="h-3.5 w-px bg-white/15 shrink-0" />
+          <div className="hidden sm:block h-3.5 w-px bg-white/15 shrink-0" />
 
-          {/* Theme switcher */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Mobile Theme Toggle Button (cycles theme on tap) */}
+          <button
+            onClick={cycleTheme}
+            className="sm:hidden p-1 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all shrink-0"
+            title={`Current theme: ${theme} (Tap to cycle)`}
+            aria-label="Cycle presentation theme"
+          >
+            <Palette className="w-3.5 h-3.5 text-neutral-300" />
+          </button>
+
+          {/* Desktop Theme switcher */}
+          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
             <Palette className="w-3.5 h-3.5 text-neutral-400 mr-0.5" />
-            {(['dark', 'paper', 'sepia', 'nordic'] as PresentationTheme[]).map((t) => (
+            {THEMES.map((t) => (
               <button
                 key={t}
                 onClick={() => setTheme(t)}
@@ -484,10 +508,11 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           {/* Speaker Notes Toggle */}
           <button
             onClick={() => setIsNotesOpen((prev) => !prev)}
-            className={`p-1.5 rounded-lg cursor-pointer transition-all shrink-0 ${
+            className={`p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg cursor-pointer transition-all shrink-0 ${
               isNotesOpen ? 'bg-amber-500 text-neutral-950 font-bold shadow-xs' : 'hover:bg-white/10 text-neutral-300 hover:text-white'
             }`}
             title="Toggle Speaker Notes (N)"
+            aria-label="Toggle Speaker Notes"
           >
             <FileText className="w-3.5 h-3.5" />
           </button>
@@ -495,8 +520,9 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all shrink-0"
+            className="p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all shrink-0"
             title="Toggle Fullscreen (F)"
+            aria-label="Toggle Fullscreen"
           >
             {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
@@ -504,7 +530,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       </div>
 
       {/* Bottom Progress Bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+      <div className="fixed bottom-0 left-0 right-0 h-1 bg-black/20 z-40">
         <div
           className="h-full bg-brand-500 dark:bg-brand-400 transition-all duration-300 ease-out"
           style={{ width: `${progressPercent}%` }}

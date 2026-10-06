@@ -34,6 +34,8 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
 
   return useQuery({
     queryKey: ['documents', searchQuery, activeTag, showTrash],
+    staleTime: 0,
+    refetchOnMount: 'always',
     placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<DocumentMetadata[]> => {
       let docs = await db.documents.toArray();
@@ -74,6 +76,8 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
 export function useTrashCount() {
   return useQuery({
     queryKey: ['trash-count'],
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => {
       return await db.documents.filter(d => Boolean(d.isDeleted)).count();
     }
@@ -83,6 +87,8 @@ export function useTrashCount() {
 export function useAllDocumentTags() {
   return useQuery({
     queryKey: ['all-document-tags'],
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => {
       const docs = await db.documents.filter(d => !d.isDeleted).toArray();
       const tags = Array.from(new Set(docs.flatMap(d => d.tags || []))).filter(Boolean);
@@ -108,6 +114,8 @@ export function useDocumentContent(id: string | null | undefined) {
 export function useStorageStats() {
   return useQuery({
     queryKey: ['storage-stats'],
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => {
       return await getStorageStats();
     }
