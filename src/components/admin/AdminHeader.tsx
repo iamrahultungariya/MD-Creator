@@ -5,6 +5,7 @@ import {
   MessageSquare, 
   Bug, 
   BarChart3, 
+  Activity,
   RefreshCw, 
   ExternalLink
 } from 'lucide-react';
@@ -39,6 +40,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       id: 'overview',
       label: 'Overview',
       icon: BarChart3,
+    },
+    {
+      id: 'analytics',
+      label: 'User Analytics',
+      icon: Activity,
     },
     {
       id: 'blogs',

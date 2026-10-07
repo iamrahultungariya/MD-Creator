@@ -13,13 +13,15 @@ import {
   Globe, 
   FolderTree,
   Printer,
-  Check
+  Check,
+  Cloud
 } from 'lucide-react';
 import { ViewMode } from '../types';
 import { DocumentMetadata } from '../../../db';
 import { PwaInstallButton } from '../../../components/common/PwaInstallButton';
 import { EditorMobileOverflowMenu } from './EditorMobileOverflowMenu';
 import { EditorToolsMenu } from './EditorToolsMenu';
+import { useAuthStore } from '../../../stores/useAuthStore';
 
 interface EditorHeaderProps {
   viewMode: ViewMode;
@@ -55,6 +57,7 @@ interface EditorHeaderProps {
   setIsExportMenuOpen?: (open: boolean | ((prev: boolean) => boolean)) => void;
   onOpenPublish?: () => void;
   onOpenLocalFolder?: () => void;
+  onOpenAuth?: () => void;
   mobileTab?: 'edit' | 'preview';
   onSelectMobileTab?: (tab: 'edit' | 'preview') => void;
 }
@@ -108,10 +111,12 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   setIsExportMenuOpen: _setIsExportMenuOpen,
   onOpenPublish,
   onOpenLocalFolder,
+  onOpenAuth,
   mobileTab: _mobileTab = 'edit',
   onSelectMobileTab: _onSelectMobileTab,
 }) => {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   const [isFilesMenuOpen, setIsFilesMenuOpen] = useState(false);
   const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
   const [isOverflowMenuOpen, setIsOverflowMenuOpen] = useState(false);
@@ -204,8 +209,27 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               className="bg-transparent font-bold text-xs sm:text-sm text-neutral-950 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500/40 dark:focus:ring-brand-400/40 rounded-md px-2 py-1 w-auto min-w-[120px] max-w-[180px] md:max-w-[260px] lg:max-w-[340px] truncate transition-colors font-sans hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40"
               title="Click to rename document"
             />
-            <div className="flex items-center gap-1.5 text-xs font-sans shrink-0 pl-1 font-medium">
+            <div className="flex items-center gap-2 text-xs font-sans shrink-0 pl-1 font-medium">
               {renderSaveIndicator(true)}
+              {user?.id ? (
+                <div 
+                  className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 font-sans"
+                  title={`Cloud backup active: ${user.email}`}
+                >
+                  <Cloud className="w-3 h-3 text-emerald-500" />
+                  <span>Synced</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenAuth}
+                  className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 border border-neutral-200 dark:border-neutral-700/60 transition-all cursor-pointer shadow-2xs font-sans"
+                  title="Notes saved locally in this browser. Click to back up to cloud."
+                >
+                  <Cloud className="w-3 h-3 text-neutral-400" />
+                  <span>Back Up</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

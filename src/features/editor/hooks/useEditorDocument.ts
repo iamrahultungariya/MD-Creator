@@ -8,6 +8,7 @@ import {
   createRevisionSnapshot, 
   DocumentMetadata 
 } from '../../../db';
+import { IDLE_COALESCE_MS } from '../../../utils/deltaCompression';
 import { syncDocumentToSupabase, isSupabaseConfigured, supabase } from '../../../lib/supabase';
 import { useConfirm } from '../../../stores/useConfirmStore';
 import { MarkdownTemplate } from '../../../data/templates';
@@ -254,26 +255,42 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     [docId, docMetadata?.tags]
   );
 
-  // 5. Auto-save debounce (4.0s idle) and snapshot debounce (30s)
+  // 5. Auto-save debounce (4.0s idle) and Revision Coalescing (45s idle / 30-60s window)
   const queueAutoSave = useCallback(
     (newContent: string, currentTitle: string) => {
       lastLocalEditTimeRef.current = Date.now();
       setIsSaved(false);
 
+      // Fast silent local draft saving (Dexie IndexedDB)
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = setTimeout(() => {
         executeSave(newContent, currentTitle);
       }, 4000);
 
+      // Intelligent revision coalescing: does not spam revision history on every keystroke.
+      // Only creates an auto-revision when the user pauses typing for 45s AND has modified at least 15 characters.
       if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
       snapshotTimerRef.current = setTimeout(() => {
-        if (newContent !== lastSnapshotContentRef.current && newContent.trim()) {
+        const charDiff = Math.abs(newContent.length - lastSnapshotContentRef.current.length);
+        if (charDiff >= 15 && newContent.trim()) {
           lastSnapshotContentRef.current = newContent;
-          createRevisionSnapshot(docId, currentTitle, newContent, 'Auto-snapshot');
+          createRevisionSnapshot(docId, currentTitle, newContent, 'Coalesced Revision (45s Idle)');
         }
-      }, 30000);
+      }, IDLE_COALESCE_MS);
     },
     [docId, executeSave]
+  );
+
+  // Manual Checkpoint creator (immediate, skips idle delay)
+  const createManualCheckpoint = useCallback(
+    async (reason = 'Manual Checkpoint') => {
+      if (!content.trim()) return undefined;
+      lastSnapshotContentRef.current = content;
+      const revId = await createRevisionSnapshot(docId, title, content, reason);
+      onToast?.('📌 Revision checkpoint saved');
+      return revId;
+    },
+    [docId, title, content, onToast]
   );
 
   // Toggle interactive task in preview
@@ -463,5 +480,6 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     handleInsertTableFromModal,
     handleExportMd,
     handleCopyMarkdown,
+    createManualCheckpoint,
   };
 }

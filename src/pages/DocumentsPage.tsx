@@ -10,7 +10,8 @@ import {
   Trash,
   FolderTree,
   Copy,
-  X
+  X,
+  Cloud
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { DocumentGridCard } from '../components/documents/DocumentGridCard';
@@ -19,16 +20,18 @@ import { DocumentsFilterToolbar } from '../components/documents/DocumentsFilterT
 import { 
   useDocuments, 
   useDeleteDocument, 
-  useTogglePin,
-  useTrashCount,
-  useRestoreDocument,
-  useEmptyTrash,
-  useDuplicateDocument,
-  useAllDocumentTags
+  useTogglePin, 
+  useTrashCount, 
+  useRestoreDocument, 
+  useEmptyTrash, 
+  useDuplicateDocument, 
+  useAllDocumentTags 
 } from '../hooks/useDocuments';
 import { saveDocument } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
+import { useAuthStore } from '../stores/useAuthStore';
+import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 
 const CreateDocumentModal = React.lazy(() =>
   import('../components/document/CreateDocumentModal').then((m) => ({ default: m.CreateDocumentModal }))
@@ -52,7 +55,9 @@ export const DocumentsPage: React.FC = () => {
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
   const [cloneToast, setCloneToast] = useState<{ title: string; id: string } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
+  const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -215,9 +220,27 @@ export const DocumentsPage: React.FC = () => {
                 · {documents.length} notes
               </span>
               <StorageLimitRing variant="badge" />
+
+              {/* Cloud Backup Status Pill */}
+              {user?.id ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-sans">
+                  <Cloud className="w-3.5 h-3.5" />
+                  <span>Cloud Synced</span>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsAuthOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/60 cursor-pointer transition-colors shadow-2xs font-sans"
+                  title="Your notes are currently saved only in this browser. Click to back up to cloud."
+                >
+                  <Cloud className="w-3.5 h-3.5" />
+                  <span>Back Up to Cloud</span>
+                </button>
+              )}
             </div>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              Local workspace · Offline-first IndexedDB storage
+              Local browser workspace • Auto-saving active
             </p>
           </div>
 
@@ -488,6 +511,12 @@ export const DocumentsPage: React.FC = () => {
           />
         </React.Suspense>
       )}
+
+      {/* Quick Auth Modal for Cloud Sync */}
+      <QuickAuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
     </div>
   );
 };

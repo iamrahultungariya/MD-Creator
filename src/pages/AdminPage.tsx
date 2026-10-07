@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
@@ -7,6 +8,9 @@ import { BlogCategory } from '../data/blogArticles';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { useAdminData } from '../hooks/useAdminData';
 
+const ActiveUserDashboard = React.lazy(() =>
+  import('../components/admin/analytics/ActiveUserDashboard').then((m) => ({ default: m.ActiveUserDashboard }))
+);
 const AdminOverviewTab = React.lazy(() =>
   import('../components/admin/AdminOverviewTab').then((m) => ({ default: m.AdminOverviewTab }))
 );
@@ -46,7 +50,30 @@ export const AdminPage: React.FC = () => {
   });
 
   // Admin Dashboard State
-  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlTab = (searchParams.get('tab') as AdminTab) || 'overview';
+  const validTabs: AdminTab[] = ['overview', 'analytics', 'blogs', 'reviews', 'feedback'];
+  const [activeTab, setActiveTabState] = useState<AdminTab>(
+    validTabs.includes(urlTab) ? urlTab : 'overview'
+  );
+
+  const setActiveTab = (tab: AdminTab) => {
+    setActiveTabState(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (tab === 'overview') next.delete('tab');
+      else next.set('tab', tab);
+      return next;
+    });
+  };
+
+  // Sync tab if URL changes
+  useEffect(() => {
+    if (urlTab && validTabs.includes(urlTab) && urlTab !== activeTab) {
+      setActiveTabState(urlTab);
+    }
+  }, [urlTab]);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Modals state
@@ -222,6 +249,11 @@ export const AdminPage: React.FC = () => {
               onApproveBlog={handleApproveBlog}
               onApproveReview={handleApproveReview}
             />
+          )}
+
+          {/* Tab 1.5: User Analytics & Telemetry */}
+          {activeTab === 'analytics' && (
+            <ActiveUserDashboard onRefresh={loadAdminData} />
           )}
 
           {/* Tab 2: Blogs Management */}

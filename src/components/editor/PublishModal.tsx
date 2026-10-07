@@ -21,6 +21,9 @@ import {
 } from '../../services/publishService';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { SocialCardGeneratorModal } from '../share/SocialCardGeneratorModal';
+import { useAuthStore } from '../../stores/useAuthStore';
+import { QuickAuthModal } from '../auth/QuickAuthModal';
+import { telemetryService } from '../../services/telemetryService';
 
 interface PublishModalProps {
   isOpen: boolean;
@@ -46,7 +49,9 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
+  const { user } = useAuthStore();
   const hasCloud = isSupabaseConfigured();
 
   // Load publication status on mount/open
@@ -88,6 +93,11 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   };
 
   const handlePublish = async () => {
+    if (!user?.id) {
+      setIsAuthOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
@@ -99,6 +109,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     setIsSubmitting(false);
 
     if (res.success) {
+      telemetryService.trackFeatureUsed('web_publish');
       setPublishedRecord({
         id: '',
         document_id: docId,
@@ -311,24 +322,42 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 </div>
               </>
             ) : (
-              <div className="flex items-center justify-end gap-2 w-full font-sans">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-3.5 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 text-xs font-semibold cursor-pointer font-sans transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handlePublish}
-                  disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95 font-sans"
-                >
-                  {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>Publish to Web</span>
-                </button>
+              <div className="space-y-3 w-full font-sans">
+                {!user?.id && (
+                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center justify-between gap-3 text-neutral-800 dark:text-neutral-200">
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-neutral-950 dark:text-white">Account Required to Publish</div>
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400">Keep your public URL linked to you so you can update or unpublish it.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAuthOpen(true)}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs transition-colors shrink-0 cursor-pointer shadow-2xs"
+                    >
+                      Connect Account
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 w-full font-sans">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-3.5 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 text-xs font-semibold cursor-pointer font-sans transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePublish}
+                    disabled={isSubmitting}
+                    className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95 font-sans"
+                  >
+                    {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Publish to Web</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -341,6 +370,13 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         title={title}
         content={content}
         slug={customSlug}
+      />
+
+      {/* Floating Quick Auth Modal */}
+      <QuickAuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onSuccess={() => handlePublish()}
       />
     </div>
   );

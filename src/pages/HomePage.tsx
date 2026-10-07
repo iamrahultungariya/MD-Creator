@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
 import { BentoFeatures } from '../components/home/BentoFeatures';
+import { RoadmapSection } from '../components/home/RoadmapSection';
 
 // Code-split heavy below-the-fold sections and interactive modals on-demand
 const ReviewsSection = React.lazy(() =>
@@ -60,19 +61,22 @@ export const HomePage: React.FC = () => {
           onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
 
+        {/* Dedicated Product Roadmap & What's New */}
+        <RoadmapSection />
+
         {/* 3-Column Minimal Verified Community Reviews */}
         <Suspense fallback={<div className="h-32" />}>
           <ReviewsSection />
         </Suspense>
 
-        {/* Notion-Style Bottom Call-to-Action */}
+        {/* Grounded & Honest Bottom Call-to-Action */}
         <section className="py-20 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/30 text-center font-sans">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
-              Ready to write clearer documents?
+              Ready to write focused documents?
             </h2>
             <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto leading-relaxed">
-              No credit cards, no monthly subscriptions, and no lock-in. Just your thoughts and clean, beautifully rendered markdown.
+              Your thoughts, checklists, and notes preserved cleanly in plain text. Auto-saves as you type, with direct export to PDF, Word, or Markdown.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
@@ -80,7 +84,7 @@ export const HomePage: React.FC = () => {
                 onClick={() => navigate('/editor')}
                 className="w-full sm:w-auto px-7 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01] font-sans"
               >
-                <span>Open Markdown Studio</span>
+                <span>Open Editor</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
@@ -94,7 +98,7 @@ export const HomePage: React.FC = () => {
             </div>
 
             <p className="text-xs text-neutral-400 font-mono pt-4">
-              Free forever • 100% Offline • Works in any browser
+              Works 100% Offline • Export to PDF, Word &amp; Markdown • Quick &apos;/&apos; Slash Commands
             </p>
           </div>
         </section>

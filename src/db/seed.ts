@@ -2,6 +2,26 @@ import { db, saveDocument, getDocumentContent } from './index';
 
 export const INITIAL_SEED_DOCUMENTS = [
   {
+    id: 'doc-getting-started',
+    title: 'Welcome to MD Writer.md',
+    tags: ['Welcome', 'Notes'],
+    content: `# Welcome to MD Writer
+
+Start writing your notes, documents, or ideas here. Everything auto-saves continuously as you type.
+
+### Helpful Shortcuts to Get Started:
+- Type \`/\` on any blank line to insert tables, math formulas, checklists, or callouts.
+- Press <kbd>Ctrl+M</kbd> to transform your document into an interactive slide presentation.
+- Press <kbd>Ctrl+P</kbd> or click **Export** to save your work as formatted **PDF**, Microsoft **Word (.docx)**, or plain **Markdown (.md)**.
+- Press <kbd>Ctrl+K</kbd> to open the Command Palette and search tools.
+
+---
+
+> [!TIP]
+> **Found a bug or have a suggestion?** You can report glitches or suggest improvements directly through our feedback desk.
+`
+  },
+  {
     id: 'doc-master-user-guide',
     title: 'MD Writer — User Guide & Quick Reference.md',
     tags: ['Guide', 'Reference', 'Documentation'],

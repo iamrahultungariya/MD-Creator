@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, MessageSquare } from 'lucide-react';
+import { BookOpen, MessageSquare, Activity, ArrowRight } from 'lucide-react';
 import { AdminStats, Article, UserReview, AdminTab } from '../../types/admin';
 import { AdminStatsCards } from './AdminStatsCards';
 
@@ -26,11 +26,41 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-black text-white tracking-tight mb-1">
-          Moderation Command Center
+          Moderation &amp; Telemetry Command Center
         </h2>
         <p className="text-xs text-neutral-400">
-          Live telemetry and pending editorial queues across MD Writer community.
+          Live user activity metrics and pending editorial queues across MD Writer.
         </p>
+      </div>
+
+      {/* Active User Telemetry Banner */}
+      <div 
+        onClick={() => onNavigateTab('analytics')}
+        className="p-5 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-neutral-900 to-neutral-900 border border-emerald-500/30 hover:border-emerald-500/50 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+      >
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+            <Activity className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                Live User Activity &amp; Feature Adoption Telemetry
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                New
+              </span>
+            </div>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              Track daily visitors, active writers (DAU), average writing duration, and most clicked features.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 shrink-0">
+          <span>Open Telemetry Dashboard</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </div>
       </div>
 
       <AdminStatsCards

@@ -19,18 +19,18 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
         {/* Top Minimal Pill Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100/90 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700/80 text-neutral-700 dark:text-neutral-300 text-xs font-medium mb-6 select-none shadow-2xs">
           <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-          <span>100% Free &amp; Local-First Markdown Studio</span>
+          <span>Markdown Editor with Auto-Save &amp; Multi-Format Export</span>
         </div>
 
-        {/* Refined Centered Slogan with Interactive Hover Trigger */}
+        {/* Refined Centered Slogan */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold text-neutral-950 dark:text-white tracking-[-0.035em] leading-[1.12] max-w-4xl mx-auto mb-6">
-          A quiet space for markdown <br className="hidden sm:inline" />
-          and focused <WritingHoverTrigger />.
+          A clean, distraction-free space <br className="hidden sm:inline" />
+          for your notes and <WritingHoverTrigger />.
         </h1>
 
         {/* Subtitle */}
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-8">
-          Write distraction-free in plain text. Instant local storage, zero formatting friction, and clean export without paywalls.
+          Write in plain text without clutter. Insert tables and formulas with <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-xs">/</kbd> slash commands, auto-save continuously, and export directly to PDF, Word, or Markdown.
         </p>
 
         {/* Action Buttons */}
@@ -39,7 +39,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
             onClick={() => navigate('/editor')}
             className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-7 py-3 rounded-lg font-semibold text-sm shadow-xs hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2 group hover:scale-[1.01] font-sans"
           >
-            <span>Start Writing — It&apos;s Free</span>
+            <span>Open Editor</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
 
@@ -58,19 +58,19 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
         <div className="flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs text-neutral-500 dark:text-neutral-400 mb-14">
           <div className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[2.5]" />
-            <span className="font-semibold text-neutral-800 dark:text-neutral-200">100% Offline-First</span>
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200">Auto-saves as you type</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 stroke-[2.5]" />
-            <span>No sign-up required</span>
+            <span>Export to PDF, Word &amp; Markdown</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Check className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400 stroke-[2.5]" />
-            <span>Export to PDF &amp; Word</span>
+            <span>Quick &apos;/&apos; Slash Commands</span>
           </div>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-            <span>Zero data lock-in</span>
+            <span>Works 100% Offline</span>
           </div>
         </div>
 

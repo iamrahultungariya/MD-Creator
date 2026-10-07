@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './stores/useAuthStore';
@@ -35,6 +35,12 @@ const RecordingHud = React.lazy(() =>
 );
 const ClipStudioModal = React.lazy(() =>
   import('./features/clip-studio/components/ClipStudioModal').then((m) => ({ default: m.ClipStudioModal }))
+);
+const OnboardingModal = React.lazy(() =>
+  import('./components/onboarding/OnboardingModal').then((m) => ({ default: m.OnboardingModal }))
+);
+const QuickAuthModal = React.lazy(() =>
+  import('./components/auth/QuickAuthModal').then((m) => ({ default: m.QuickAuthModal }))
 );
 import { useRecorderStore } from './features/clip-studio/stores/useRecorderStore';
 import { usePreferencesStore } from './stores/usePreferencesStore';
@@ -95,6 +101,27 @@ export const App: React.FC = () => {
   const isPreferencesOpen = usePreferencesStore((s) => s.isOpen);
   const openPreferences = usePreferencesStore((s) => s.openPreferences);
   const togglePreferences = usePreferencesStore((s) => s.togglePreferences);
+
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Trigger Onboarding modal on first visit (except for exempt routes like preview shares, admin, or auth)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isDone = localStorage.getItem('md_writer_onboarding_completed') === 'true';
+      const path = window.location.pathname;
+      const isExempt = 
+        path.startsWith('/p/') || 
+        path.startsWith('/share/') || 
+        path.startsWith('/admin') || 
+        path.startsWith('/auth') || 
+        path.startsWith('/feedback');
+
+      if (!isDone && !isExempt) {
+        setIsOnboardingOpen(true);
+      }
+    }
+  }, []);
 
   // Global listeners for Preferences (Ctrl+, / Cmd+, and custom event)
   useEffect(() => {
@@ -199,6 +226,27 @@ export const App: React.FC = () => {
       {isPreferencesOpen && (
         <Suspense fallback={null}>
           <PreferencesModal />
+        </Suspense>
+      )}
+
+      {/* First-Visit Interactive Onboarding Modal */}
+      {isOnboardingOpen && (
+        <Suspense fallback={null}>
+          <OnboardingModal
+            isOpen={isOnboardingOpen}
+            onClose={() => setIsOnboardingOpen(false)}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+          />
+        </Suspense>
+      )}
+
+      {/* Modern App-Themed Cloud Sync Auth Modal */}
+      {isAuthModalOpen && (
+        <Suspense fallback={null}>
+          <QuickAuthModal
+            isOpen={isAuthModalOpen}
+            onClose={() => setIsAuthModalOpen(false)}
+          />
         </Suspense>
       )}
 

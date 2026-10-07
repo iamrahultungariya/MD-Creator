@@ -16,6 +16,9 @@ import { useMarkdownWorker } from '../hooks/useMarkdownWorker';
 import { CodeMirrorEditorHandle } from '../features/editor/components/CodeMirrorEditor';
 import { writeLocalFile } from '../services/localFolderService';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
+import { QuickAuthModal } from '../components/auth/QuickAuthModal';
+import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
+import { telemetryService } from '../services/telemetryService';
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +33,7 @@ export const EditorPage: React.FC = () => {
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [findMode, setFindMode] = useState<'find' | 'replace'>('find');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     isCurrentUserAdmin().then(setIsAdmin);
@@ -89,6 +93,7 @@ export const EditorPage: React.FC = () => {
   const handleExportDocx = useCallback(async () => {
     try {
       showToast('Exporting to Word (.docx)...', 2000);
+      telemetryService.trackFeatureUsed('docx_export');
       const { exportToDocx } = await import('../features/docx-export/services/docxExportService');
       await exportToDocx(doc.title || 'Untitled', doc.content);
       showToast('Word document (.docx) exported successfully!');
@@ -97,6 +102,13 @@ export const EditorPage: React.FC = () => {
       showToast('Export failed. Please try again.');
     }
   }, [doc.title, doc.content, showToast]);
+
+  // Track presentation deck mode
+  useEffect(() => {
+    if (viewMode === 'present') {
+      telemetryService.trackFeatureUsed('presentation_deck');
+    }
+  }, [viewMode]);
 
   // Insert formula snippet from KaTeX Studio at cursor
   const handleInsertFormulaAtCursor = useCallback(
@@ -262,6 +274,13 @@ export const EditorPage: React.FC = () => {
     };
   }, [workerStats]);
 
+  // Track active writer telemetry when words are composed
+  useEffect(() => {
+    if (stats.words > 0) {
+      telemetryService.trackActiveWriter(stats.words);
+    }
+  }, [stats.words]);
+
   return (
     <div
       className="h-[100dvh] min-h-[100dvh] flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors overflow-hidden"
@@ -320,6 +339,7 @@ export const EditorPage: React.FC = () => {
           setIsExportMenuOpen={modals.setIsExportMenuOpen}
           onOpenPublish={() => modals.setIsPublishModalOpen(true)}
           onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
           mobileTab={mobileTab}
           onSelectMobileTab={setMobileTab}
         />
@@ -460,6 +480,19 @@ export const EditorPage: React.FC = () => {
         isSocialCardOpen={modals.isSocialCardOpen}
         onCloseSocialCard={() => modals.setIsSocialCardOpen(false)}
         onToast={showToast}
+      />
+
+      {/* Floating Quick Cloud Backup / Auth Modal */}
+      <QuickAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => showToast('☁️ Cloud backup active! Notes synced.')}
+      />
+
+      {/* Gentle Floating Safety Prompt (120+ words) */}
+      <CloudSyncNudgeToast
+        wordCount={stats.words}
+        onOpenAuth={() => setIsAuthModalOpen(true)}
       />
     </div>
   );
