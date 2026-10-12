@@ -11,7 +11,6 @@ import {
   Lock, 
   ShieldAlert, 
   Sparkles,
-  Loader2,
   PenTool
 } from 'lucide-react';
 import { getPublicDocumentBySlug, PublicDocumentView } from '../services/publishService';
