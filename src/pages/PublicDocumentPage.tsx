@@ -11,6 +11,7 @@ import {
   Lock, 
   ShieldAlert, 
   Sparkles,
+  Loader2,
   PenTool
 } from 'lucide-react';
 import { getPublicDocumentBySlug, PublicDocumentView } from '../services/publishService';
@@ -31,6 +32,7 @@ export const PublicDocumentPage: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -100,9 +102,9 @@ export const PublicDocumentPage: React.FC = () => {
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) return;
+    if (!password.trim() || isVerifyingPassword) return;
 
-    setStatus('loading');
+    setIsVerifyingPassword(true);
     getPublicDocumentBySlug(slug, password)
       .then((res) => {
         setStatus(res.status);
@@ -112,6 +114,9 @@ export const PublicDocumentPage: React.FC = () => {
       })
       .catch(() => {
         setStatus('not_found');
+      })
+      .finally(() => {
+        setIsVerifyingPassword(false);
       });
   };
 
@@ -221,9 +226,17 @@ export const PublicDocumentPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-colors cursor-pointer shadow-2xs"
+              disabled={isVerifyingPassword}
+              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-semibold text-xs transition-colors cursor-pointer shadow-2xs flex items-center justify-center gap-2"
             >
-              Unlock Page
+              {isVerifyingPassword ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Verifying Passphrase...</span>
+                </>
+              ) : (
+                <span>Unlock Page</span>
+              )}
             </button>
           </form>
         </div>
