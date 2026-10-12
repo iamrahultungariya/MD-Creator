@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical } from 'lucide-react';
+import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 import { SpotlightCard } from '../common/SpotlightCard';
@@ -12,6 +12,9 @@ interface DocumentGridCardProps {
   onTogglePin: (e: React.MouseEvent, id: string) => void;
   onDelete: (e: React.MouseEvent, id: string, title: string) => void;
   onRestore: (e: React.MouseEvent, id: string) => void;
+  isSelectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
@@ -22,6 +25,9 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
   onTogglePin,
   onDelete,
   onRestore,
+  isSelectionMode = false,
+  isSelected = false,
+  onToggleSelect,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -51,14 +57,18 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
           : undefined
       }
       onClick={() => {
-        if (currentTab === 'trash') {
+        if (isSelectionMode) {
+          onToggleSelect?.(doc.id);
+        } else if (currentTab === 'trash') {
           onRestore({ stopPropagation: () => {} } as any, doc.id);
         } else {
           onOpen(doc.id);
         }
       }}
       className={`p-6 bg-white/90 dark:bg-[#121217]/90 backdrop-blur-xl border cursor-pointer select-none active:scale-[0.99] transition-all duration-150 hover:-translate-y-1 hover:shadow-xl ${
-        currentTab === 'trash'
+        isSelected
+          ? 'border-brand-500 ring-2 ring-brand-500/30 dark:border-brand-500'
+          : currentTab === 'trash'
           ? 'border-red-200/50 dark:border-red-950/50 shadow-xs'
           : 'border-neutral-200/80 dark:border-neutral-800/80 shadow-xs hover:border-neutral-300/80 dark:hover:border-neutral-700/80'
       }`}
@@ -67,15 +77,31 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
         {/* Card Header: Icon, Title & Reveal-on-Hover Action Dock / Mobile Menu */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0 flex-1 font-sans">
-            <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
-                currentTab === 'trash'
-                  ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
-                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-            </div>
+            {isSelectionMode ? (
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect?.(doc.id);
+                }}
+                className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                  isSelected
+                    ? 'bg-brand-600 border-brand-600 text-white shadow-2xs'
+                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-transparent'
+                }`}
+              >
+                <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+              </div>
+            ) : (
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
+                  currentTab === 'trash'
+                    ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <h3 className="font-bold text-sm text-neutral-950 dark:text-white truncate">
                 {doc.title}

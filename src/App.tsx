@@ -30,19 +30,12 @@ const ToolbarSettingsModal = React.lazy(() =>
 const PreferencesModal = React.lazy(() =>
   import('./components/common/PreferencesModal').then((m) => ({ default: m.PreferencesModal }))
 );
-const RecordingHud = React.lazy(() =>
-  import('./features/clip-studio/components/RecordingHud').then((m) => ({ default: m.RecordingHud }))
-);
-const ClipStudioModal = React.lazy(() =>
-  import('./features/clip-studio/components/ClipStudioModal').then((m) => ({ default: m.ClipStudioModal }))
-);
 const OnboardingModal = React.lazy(() =>
   import('./components/onboarding/OnboardingModal').then((m) => ({ default: m.OnboardingModal }))
 );
 const QuickAuthModal = React.lazy(() =>
   import('./components/auth/QuickAuthModal').then((m) => ({ default: m.QuickAuthModal }))
 );
-import { useRecorderStore } from './features/clip-studio/stores/useRecorderStore';
 import { usePreferencesStore } from './stores/usePreferencesStore';
 
 
@@ -94,10 +87,6 @@ export const App: React.FC = () => {
   const isConfirmOpen = useConfirmStore((s) => s.isOpen);
   const isToolbarSettingsOpen = useToolbarSettingsStore((s) => s.isOpen);
   const cmd = useCommandPalette();
-  const isRecording = useRecorderStore((s) => s.isRecording);
-  const isStudioOpen = useRecorderStore((s) => s.isStudioOpen);
-  const recordedClip = useRecorderStore((s) => s.recordedClip);
-  const closeStudio = useRecorderStore((s) => s.closeStudio);
   const isPreferencesOpen = usePreferencesStore((s) => s.isOpen);
   const openPreferences = usePreferencesStore((s) => s.openPreferences);
   const togglePreferences = usePreferencesStore((s) => s.togglePreferences);
@@ -143,22 +132,6 @@ export const App: React.FC = () => {
   }, [openPreferences, togglePreferences]);
 
   // Global Screen Recording shortcut (Ctrl+Alt+R / Cmd+Alt+R) - Works on ANY page without document requirement!
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'r') {
-        e.preventDefault();
-        const state = useRecorderStore.getState();
-        if (state.isRecording) {
-          state.stopRecording();
-        } else {
-          state.startRecording();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // Defer non-critical storage initialization, session checks & eager prefetch until idle
   useEffect(() => {
@@ -204,23 +177,6 @@ export const App: React.FC = () => {
       )}
 
 
-      {/* Floating Screen Recording HUD */}
-      {isRecording && (
-        <Suspense fallback={null}>
-          <RecordingHud />
-        </Suspense>
-      )}
-
-      {/* Social Clip Studio Review Modal */}
-      {isStudioOpen && (
-        <Suspense fallback={null}>
-          <ClipStudioModal
-            isOpen={isStudioOpen}
-            onClose={closeStudio}
-            recordedClip={recordedClip}
-          />
-        </Suspense>
-      )}
 
       {/* Global Preferences Modal (Ctrl+,) */}
       {isPreferencesOpen && (

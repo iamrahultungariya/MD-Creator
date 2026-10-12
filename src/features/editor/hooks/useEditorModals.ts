@@ -16,7 +16,6 @@ export function useEditorModals() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
-  const [isClipStudioOpen, setIsClipStudioOpen] = useState(false);
   const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
 
   return {
@@ -50,8 +49,6 @@ export function useEditorModals() {
     setIsPublishModalOpen,
     isLocalFolderOpen,
     setIsLocalFolderOpen,
-    isClipStudioOpen,
-    setIsClipStudioOpen,
     isSocialCardOpen,
     setIsSocialCardOpen,
   };

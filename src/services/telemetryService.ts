@@ -24,7 +24,7 @@ export type TrackedFeature =
   | 'mermaid_diagram'
   | 'presentation_deck'
   | 'focus_sprint'
-  | 'clip_studio'
+  | 'mimo_ai'
   | 'web_publish'
   | 'starter_templates'
   | 'local_vault';
@@ -319,7 +319,7 @@ class TelemetryService {
       mermaid_diagram: { label: 'Generated live Mermaid diagram', category: 'tool' },
       presentation_deck: { label: 'Switched to Presentation slide deck', category: 'view' },
       focus_sprint: { label: 'Started timed Focus Sprint session', category: 'writing' },
-      clip_studio: { label: 'Captured screen recording clip', category: 'tool' },
+      mimo_ai: { label: 'Collaborated with Mimo AI companion', category: 'tool' },
       web_publish: { label: 'Generated shareable public link', category: 'export' },
       starter_templates: { label: 'Loaded curated starter template', category: 'writing' },
       local_vault: { label: 'Mounted local disk folder vault', category: 'tool' },

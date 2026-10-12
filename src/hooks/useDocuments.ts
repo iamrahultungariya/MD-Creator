@@ -14,6 +14,7 @@ import {
   getStorageStats 
 } from '../db';
 import { pullCloudDocuments, deleteDocumentFromSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { searchDocumentsFullText } from '../utils/searchEngine';
 
 export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = false) {
   const queryClient = useQueryClient();
@@ -53,13 +54,7 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
       }
 
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        docs = docs.filter(
-          doc =>
-            doc.title.toLowerCase().includes(q) ||
-            doc.snippet.toLowerCase().includes(q) ||
-            doc.tags.some(t => t.toLowerCase().includes(q))
-        );
+        docs = await searchDocumentsFullText(docs, searchQuery);
       }
 
       // Pinned first, then sorted by updatedAt descending

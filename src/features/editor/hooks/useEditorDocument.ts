@@ -326,6 +326,21 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     [docId, docMetadata]
   );
 
+  // Toggle AI exclusion for this document
+  const handleToggleAiExclusion = useCallback(
+    async (isExcluded: boolean) => {
+      if (!docMetadata) return;
+      await db.documents.update(docId, { isAiExcluded: isExcluded });
+      setDocMetadata({ ...docMetadata, isAiExcluded: isExcluded });
+      onToast?.(
+        isExcluded
+          ? '🛡️ Document shielded from AI scan. Mimo cannot read this note.'
+          : '✨ Document AI scanning enabled.'
+      );
+    },
+    [docId, docMetadata, onToast]
+  );
+
   // Delete document
   const handleDeleteCurrentDoc = useCallback(async () => {
     const ok = await confirm({
@@ -473,6 +488,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     queueAutoSave,
     handleToggleTask,
     handleUpdateTags,
+    handleToggleAiExclusion,
     handleDeleteCurrentDoc,
     handleClearContent,
     handleRestoreRevision,

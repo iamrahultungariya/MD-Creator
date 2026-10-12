@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
 import { BentoFeatures } from '../components/home/BentoFeatures';
+import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
 import { RoadmapSection } from '../components/home/RoadmapSection';
 
 // Code-split heavy below-the-fold sections and interactive modals on-demand
@@ -60,6 +61,9 @@ export const HomePage: React.FC = () => {
           onExploreFeatures={() => navigate('/editor')} 
           onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
+
+        {/* Flagship AI Markdown Companion Showcase */}
+        <MimoShowcaseSection />
 
         {/* Dedicated Product Roadmap & What's New */}
         <RoadmapSection />

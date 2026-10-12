@@ -3,6 +3,7 @@ import { COMMANDS } from '../../../components/editor/SlashCommandMenu';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
 import { handleEditorAutoPair } from '../utils/editorAutoPair';
 import { handleEditorListShortcuts } from '../utils/editorListShortcuts';
+import { useMimoStore } from '../../mimo';
 
 interface UseSlashCommandsOptions {
   content: string;
@@ -162,6 +163,15 @@ export function useSlashCommands({
           return;
         }
 
+        if (snippet === '__ACTION_OPEN_MIMO__') {
+          ed.setSelectionRange(from, cursor);
+          ed.replaceSelection('');
+          setIsSlashMenuOpen(false);
+          setSlashQuery('');
+          useMimoStore.getState().setIsOpen(true);
+          return;
+        }
+
         if (snippet === '__ACTION_INSERT_DATE__') {
           const dateStr = new Date().toLocaleDateString('en-US', {
             year: 'numeric',
@@ -276,6 +286,14 @@ export function useSlashCommands({
         setIsSlashMenuOpen(false);
         setSlashQuery('');
         onExportMd?.();
+        return;
+      }
+
+      if (snippet === '__ACTION_OPEN_MIMO__') {
+        setContent(cleanBefore + afterCursor);
+        setIsSlashMenuOpen(false);
+        setSlashQuery('');
+        useMimoStore.getState().setIsOpen(true);
         return;
       }
 

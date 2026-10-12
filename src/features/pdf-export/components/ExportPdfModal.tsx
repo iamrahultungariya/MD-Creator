@@ -243,7 +243,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               title="Print Document or Save as Vector PDF (Ctrl+P / Cmd+P)"
             >
               <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
-              <span className="hidden xs:inline">Print / Save as PDF</span>
+              <span className="hidden xs:inline">Print / Vector PDF (Searchable)</span>
               <span className="xs:hidden">Print</span>
             </button>
 

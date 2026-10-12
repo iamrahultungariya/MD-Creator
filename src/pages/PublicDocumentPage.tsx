@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getPublicDocumentBySlug, PublicDocumentView } from '../services/publishService';
 import { MarkdownPreview } from '../components/editor/MarkdownPreview';
+import { PageLoader } from '../components/common/PageLoader';
 
 const SocialCardGeneratorModal = React.lazy(() =>
   import('../components/share/SocialCardGeneratorModal').then((m) => ({ default: m.SocialCardGeneratorModal }))
@@ -173,12 +174,7 @@ export const PublicDocumentPage: React.FC = () => {
 
   // 1. Loading State
   if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#111114] text-neutral-600 dark:text-neutral-400 gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="text-xs font-mono">Loading published page...</p>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // 2. Password Prompt

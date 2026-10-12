@@ -11,12 +11,14 @@ import {
   FolderTree,
   Copy,
   X,
-  Cloud
+  Cloud,
+  CheckSquare
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { DocumentGridCard } from '../components/documents/DocumentGridCard';
 import { DocumentListItem } from '../components/documents/DocumentListItem';
 import { DocumentsFilterToolbar } from '../components/documents/DocumentsFilterToolbar';
+import { BatchActionsBar } from '../components/documents/BatchActionsBar';
 import { 
   useDocuments, 
   useDeleteDocument, 
@@ -27,7 +29,7 @@ import {
   useDuplicateDocument, 
   useAllDocumentTags 
 } from '../hooks/useDocuments';
-import { saveDocument } from '../db';
+import { saveDocument, getDocumentContent } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -201,6 +203,89 @@ export const DocumentsPage: React.FC = () => {
     togglePinMutation.mutate(id);
   }, [togglePinMutation]);
 
+  // Batch multi-select state
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [isBatchMode, setIsBatchMode] = useState(false);
+
+  // Clear batch selection on tab change
+  useEffect(() => {
+    setSelectedDocIds(new Set());
+    setIsBatchMode(false);
+  }, [currentTab]);
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedDocIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+    setIsBatchMode(true);
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedDocIds(new Set(documents.map((d) => d.id)));
+  }, [documents]);
+
+  const handleDeselectAll = useCallback(() => {
+    setSelectedDocIds(new Set());
+  }, []);
+
+  const handleExitBatchMode = useCallback(() => {
+    setSelectedDocIds(new Set());
+    setIsBatchMode(false);
+  }, []);
+
+  const handleBatchDelete = useCallback(async () => {
+    const count = selectedDocIds.size;
+    if (count === 0) return;
+
+    const confirmed = await confirm({
+      title: currentTab === 'trash' ? `Permanently Delete ${count} Document(s)?` : `Move ${count} Document(s) to Trash?`,
+      message: currentTab === 'trash'
+        ? `This will permanently remove ${count} document(s) from your device. This action cannot be undone.`
+        : `Move ${count} selected document(s) to the Recycle Bin?`,
+      confirmText: currentTab === 'trash' ? `Delete ${count} Permanently` : `Move ${count} to Trash`,
+      cancelText: 'Cancel',
+      variant: 'danger',
+      icon: 'trash',
+    });
+
+    if (confirmed) {
+      for (const id of selectedDocIds) {
+        await deleteDocMutation.mutateAsync({ id, permanent: currentTab === 'trash' });
+      }
+      setSelectedDocIds(new Set());
+      setIsBatchMode(false);
+    }
+  }, [selectedDocIds, currentTab, confirm, deleteDocMutation]);
+
+  const handleBatchExport = useCallback(async () => {
+    const selected = documents.filter((d) => selectedDocIds.has(d.id));
+    if (selected.length === 0) return;
+
+    for (const doc of selected) {
+      try {
+        const content = await getDocumentContent(doc.id);
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = doc.title.endsWith('.md') ? doc.title : `${doc.title}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        await new Promise((r) => setTimeout(r, 120));
+      } catch (err) {
+        console.error('Failed to export doc', doc.id, err);
+      }
+    }
+  }, [documents, selectedDocIds]);
+
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
       <Navbar 
@@ -275,6 +360,25 @@ export const DocumentsPage: React.FC = () => {
             >
               <FolderTree className="w-3.5 h-3.5 text-neutral-400" />
               <span>Local Folder</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (isBatchMode) {
+                  handleExitBatchMode();
+                } else {
+                  setIsBatchMode(true);
+                }
+              }}
+              className={`justify-center px-3.5 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+                isBatchMode
+                  ? 'bg-brand-500/10 border-brand-500/30 text-brand-600 dark:text-brand-400 font-bold'
+                  : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+              }`}
+              title="Toggle multi-select batch actions"
+            >
+              <CheckSquare className="w-3.5 h-3.5" />
+              <span>{isBatchMode ? 'Cancel Select' : 'Select'}</span>
             </button>
 
             <button
@@ -410,6 +514,9 @@ export const DocumentsPage: React.FC = () => {
                   onTogglePin={handleTogglePin}
                   onDelete={handleDelete}
                   onRestore={handleRestore}
+                  isSelectionMode={isBatchMode}
+                  isSelected={selectedDocIds.has(doc.id)}
+                  onToggleSelect={handleToggleSelect}
                 />
               </motion.div>
             ))}
@@ -437,12 +544,30 @@ export const DocumentsPage: React.FC = () => {
                   onTogglePin={handleTogglePin}
                   onDelete={handleDelete}
                   onRestore={handleRestore}
+                  isSelectionMode={isBatchMode}
+                  isSelected={selectedDocIds.has(doc.id)}
+                  onToggleSelect={handleToggleSelect}
                 />
               </motion.div>
             ))}
           </div>
         )}
         </div>
+
+        {/* Floating Batch Actions Bar */}
+        <AnimatePresence>
+          {isBatchMode && (
+            <BatchActionsBar
+              selectedCount={selectedDocIds.size}
+              totalCount={documents.length}
+              onSelectAll={handleSelectAll}
+              onDeselectAll={handleDeselectAll}
+              onBatchDelete={handleBatchDelete}
+              onBatchExport={handleBatchExport}
+              onExitMode={handleExitBatchMode}
+            />
+          )}
+        </AnimatePresence>
 
       </main>
 

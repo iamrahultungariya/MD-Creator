@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useMotionTemplate } from 'framer-motion';
-import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical } from 'lucide-react';
+import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
@@ -12,6 +12,9 @@ interface DocumentListItemProps {
   onTogglePin: (e: React.MouseEvent, id: string) => void;
   onDelete: (e: React.MouseEvent, id: string, title: string) => void;
   onRestore: (e: React.MouseEvent, id: string) => void;
+  isSelectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
@@ -22,6 +25,9 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
   onTogglePin,
   onDelete,
   onRestore,
+  isSelectionMode = false,
+  isSelected = false,
+  onToggleSelect,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -63,13 +69,19 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
     <div
       onMouseMove={handleMouseMove}
       onClick={() => {
-        if (currentTab === 'trash') {
+        if (isSelectionMode) {
+          onToggleSelect?.(doc.id);
+        } else if (currentTab === 'trash') {
           onRestore({ stopPropagation: () => {} } as any, doc.id);
         } else {
           onOpen(doc.id);
         }
       }}
-      className="group relative overflow-hidden p-4 flex items-center justify-between transition-colors duration-150 cursor-pointer select-none active:scale-[0.995] hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+      className={`group relative overflow-hidden p-4 flex items-center justify-between transition-colors duration-150 cursor-pointer select-none active:scale-[0.995] ${
+        isSelected
+          ? 'bg-brand-50/60 dark:bg-brand-950/20'
+          : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'
+      }`}
     >
       {/* Dynamic Mouse-Following Subtle Row Spotlight */}
       <motion.div
@@ -80,15 +92,31 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
       />
 
       <div className="relative z-10 flex items-center gap-3.5 min-w-0 pr-4 flex-1 font-sans">
-        <div
-          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
-            currentTab === 'trash'
-              ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
-              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-        </div>
+        {isSelectionMode ? (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect?.(doc.id);
+            }}
+            className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+              isSelected
+                ? 'bg-brand-600 border-brand-600 text-white shadow-2xs'
+                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-transparent'
+            }`}
+          >
+            <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+          </div>
+        ) : (
+          <div
+            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
+              currentTab === 'trash'
+                ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm text-neutral-900 dark:text-white truncate">

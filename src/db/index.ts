@@ -26,6 +26,7 @@ export interface DocumentMetadata {
   wordCount: number;
   isDeleted?: boolean;
   deletedAt?: number;
+  isAiExcluded?: boolean;
 }
 
 export interface CachedContent {

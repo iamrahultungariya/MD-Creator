@@ -12,7 +12,8 @@ import {
   BarChart2, 
   Info, 
   BookOpen, 
-  HardDrive
+  HardDrive,
+  ShieldCheck
 } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 
@@ -36,6 +37,7 @@ interface DocumentDrawerProps {
   onDeleteDocument?: () => void;
   onClearContent?: () => void;
   initialTab?: 'outline' | 'stats' | 'info';
+  onToggleAiExclusion?: (isExcluded: boolean) => void;
 }
 
 export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
@@ -51,6 +53,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
   onDeleteDocument,
   onClearContent,
   initialTab = 'outline',
+  onToggleAiExclusion,
 }) => {
   const [activeTab, setActiveTab] = useState<'outline' | 'stats' | 'info'>(initialTab);
   const [newTag, setNewTag] = useState('');
@@ -382,6 +385,50 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
                       <span className="font-mono text-neutral-700 dark:text-neutral-300">
                         ~{Math.max(1, Math.round(content.length / 1024))} KB
                       </span>
+                    </div>
+                  </section>
+
+                  {/* Privacy & AI Shield */}
+                  <section className="space-y-2.5 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Privacy Vault &amp; AI</span>
+                      </h4>
+                      {metadata?.isAiExcluded && (
+                        <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                          Shield Active
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200/70 dark:border-neutral-700/70 space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <span className="text-xs font-semibold text-neutral-900 dark:text-white block">
+                            Exclude from AI Scan
+                          </span>
+                          <span className="text-[10px] text-neutral-500 dark:text-neutral-400 leading-tight block mt-0.5">
+                            Keep 100% offline. Mimo AI is strictly barred from reading or scanning this document.
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => onToggleAiExclusion?.(!metadata?.isAiExcluded)}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                            metadata?.isAiExcluded ? 'bg-amber-600' : 'bg-neutral-300 dark:bg-neutral-700'
+                          }`}
+                          role="switch"
+                          aria-checked={!!metadata?.isAiExcluded}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                              metadata?.isAiExcluded ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </section>
 

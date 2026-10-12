@@ -242,6 +242,33 @@ export const COMMANDS: CommandItem[] = [
     insertSnippet: '[Link title](https://example.com)',
     category: 'Rich Blocks',
   },
+  {
+    id: 'private-vault',
+    title: 'Private Shield Block',
+    description: 'Shield confidential text or notes from all AI scans',
+    iconName: 'shield',
+    shortcut: '/private',
+    insertSnippet: '<private>\n// Confidential notes: shielded from AI models\n</private>\n',
+    category: 'Rich Blocks',
+  },
+  {
+    id: 'private-password',
+    title: 'Password / API Secret Mask',
+    description: 'Safely store passwords or tokens (auto-redacted from AI)',
+    iconName: 'key',
+    shortcut: '/password',
+    insertSnippet: 'password: <private>your-secret-password-here</private>\n',
+    category: 'Rich Blocks',
+  },
+  {
+    id: 'private-address',
+    title: 'Private Address / PII Mask',
+    description: 'Keep location or PII shielded from cloud/AI processing',
+    iconName: 'map-pin',
+    shortcut: '/address',
+    insertSnippet: 'address: <private>123 Private Street, Suite 400</private>\n',
+    category: 'Rich Blocks',
+  },
 
   // 3. GitHub Callouts
   {
@@ -291,6 +318,15 @@ export const COMMANDS: CommandItem[] = [
   },
 
   // 4. Media & Tools
+  {
+    id: 'mimo',
+    title: 'Mimo AI Companion',
+    description: 'Ask Mimo, generate outlines or propose non-destructive diffs',
+    iconName: 'sparkles',
+    shortcut: '/mimo',
+    insertSnippet: '__ACTION_OPEN_MIMO__',
+    category: 'Media & Tools',
+  },
   {
     id: 'image',
     title: 'Embed Image',

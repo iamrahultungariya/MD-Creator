@@ -52,14 +52,13 @@ export default defineConfig({
           '**/vendor-pdf*',
           '**/vendor-docx*',
           '**/vendor-katex*',
-          '**/clipRender.worker*',
           '**/*KaTeX_*',
           '**/*.map'
         ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: /.*(vendor-(mermaid|pdf|docx|media-encoders|katex)|KaTeX_).*\.(js|woff2|woff|ttf)$/,
+            urlPattern: /.*(vendor-(mermaid|pdf|docx|genai|katex)|KaTeX_).*\.(js|woff2|woff|ttf)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'heavy-dynamic-chunks',
@@ -125,8 +124,8 @@ export default defineConfig({
             if (id.includes('@codemirror') || id.includes('codemirror')) {
               return 'vendor-codemirror';
             }
-            if (id.includes('mp4-muxer') || id.includes('gifenc')) {
-              return 'vendor-media-encoders';
+            if (id.includes('@google/genai')) {
+              return 'vendor-genai';
             }
             if (
               id.includes('react-markdown') ||
@@ -158,7 +157,13 @@ export default defineConfig({
             if (id.includes('html2pdf.js') || id.includes('jspdf') || id.includes('html2canvas')) {
               return 'vendor-pdf';
             }
-            if (id.includes('lucide-react') || id.includes('zustand') || id.includes('clsx') || id.includes('tailwind-merge')) {
+            if (id.includes('lucide-react')) {
+              if (id.includes('/icons/')) {
+                return undefined;
+              }
+              return 'vendor-ui';
+            }
+            if (id.includes('zustand') || id.includes('clsx') || id.includes('tailwind-merge')) {
               return 'vendor-ui';
             }
           }

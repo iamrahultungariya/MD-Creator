@@ -11,7 +11,6 @@ import {
   Sigma, 
   GitFork, 
   Timer, 
-  Video, 
   Share2, 
   RefreshCw, 
   ArrowUpRight, 
@@ -23,7 +22,8 @@ import {
   HardDrive,
   ShieldCheck,
   UserCheck,
-  PieChart
+  PieChart,
+  Sparkles
 } from 'lucide-react';
 import { telemetryService, DailyMetricRecord, TrackedFeature, SurveyResponse } from '../../../services/telemetryService';
 
@@ -112,7 +112,7 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = () => {
       { id: 'katex_math', name: 'KaTeX Math Formulas', icon: Sigma, color: 'text-sky-400', bg: 'bg-sky-500/10' },
       { id: 'focus_sprint', name: 'Focus Sprint Timer', icon: Timer, color: 'text-orange-400', bg: 'bg-orange-500/10' },
       { id: 'mermaid_diagram', name: 'Mermaid Diagrams', icon: GitFork, color: 'text-pink-400', bg: 'bg-pink-500/10' },
-      { id: 'clip_studio', name: 'Screen Clip Studio', icon: Video, color: 'text-teal-400', bg: 'bg-teal-500/10' },
+      { id: 'mimo_ai', name: 'Mimo AI Companion', icon: Sparkles, color: 'text-purple-400', bg: 'bg-purple-500/10' },
       { id: 'web_publish', name: 'Web Publishing', icon: Share2, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
     ];
 

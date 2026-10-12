@@ -37,9 +37,6 @@ const PublishModal = React.lazy(() =>
 const LocalFolderDrawer = React.lazy(() =>
   import('../../../components/editor/LocalFolderDrawer').then((m) => ({ default: m.LocalFolderDrawer }))
 );
-const ClipStudioModal = React.lazy(() =>
-  import('../../clip-studio/components/ClipStudioModal').then((m) => ({ default: m.ClipStudioModal }))
-);
 const SocialCardGeneratorModal = React.lazy(() =>
   import('../../../components/share/SocialCardGeneratorModal').then((m) => ({ default: m.SocialCardGeneratorModal }))
 );
@@ -55,6 +52,7 @@ interface EditorModalsContainerProps {
   isDrawerOpen: boolean;
   onCloseDrawer: () => void;
   onUpdateTags: (tags: string[]) => Promise<void>;
+  onToggleAiExclusion?: (isExcluded: boolean) => Promise<void> | void;
   onDeleteCurrentDoc: () => Promise<void>;
   onClearContent: () => Promise<void>;
   isSwitcherOpen: boolean;
@@ -91,8 +89,6 @@ interface EditorModalsContainerProps {
   onCloseLocalFolder?: () => void;
   onOpenLocalFolder?: () => void;
   onSelectLocalFile?: (fileHandle: FileSystemFileHandle, fileName: string, content: string) => void;
-  isClipStudioOpen?: boolean;
-  onCloseClipStudio?: () => void;
   isSocialCardOpen?: boolean;
   onCloseSocialCard?: () => void;
   onToast?: (message: string) => void;
@@ -109,6 +105,7 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   isDrawerOpen,
   onCloseDrawer,
   onUpdateTags,
+  onToggleAiExclusion,
   onDeleteCurrentDoc,
   onClearContent,
   isSwitcherOpen,
@@ -145,8 +142,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   onCloseLocalFolder,
   onOpenLocalFolder,
   onSelectLocalFile,
-  isClipStudioOpen = false,
-  onCloseClipStudio,
   isSocialCardOpen = false,
   onCloseSocialCard,
   onToast,
@@ -165,6 +160,7 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           onSelectHeading={onSelectHeading}
           initialTab={isOutlineOpen ? 'outline' : 'stats'}
           onUpdateTags={onUpdateTags}
+          onToggleAiExclusion={onToggleAiExclusion}
           wordCount={wordCount}
           charCount={charCount}
           lineCount={lineCount}
@@ -272,14 +268,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
         />
       )}
 
-      {isClipStudioOpen && (
-        <ClipStudioModal
-          isOpen={isClipStudioOpen}
-          onClose={onCloseClipStudio || (() => {})}
-          title={title}
-          content={content}
-        />
-      )}
 
       {isSocialCardOpen && (
         <SocialCardGeneratorModal

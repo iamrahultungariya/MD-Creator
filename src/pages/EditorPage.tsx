@@ -19,6 +19,11 @@ import { isCurrentUserAdmin } from '../utils/adminAuth';
 import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
 import { telemetryService } from '../services/telemetryService';
+import { MimoEditorDiffBanner, useMimoStore } from '../features/mimo';
+
+const MimoDrawer = React.lazy(() =>
+  import('../features/mimo').then((m) => ({ default: m.MimoDrawer }))
+);
 
 export const EditorPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -246,6 +251,10 @@ export const EditorPage: React.FC = () => {
         setFindMode('replace');
         setIsFindOpen(true);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        useMimoStore.getState().setIsOpen(!useMimoStore.getState().isOpen);
+      }
       if (
         ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') ||
         (e.altKey && e.key.toLowerCase() === 'm')
@@ -319,7 +328,6 @@ export const EditorPage: React.FC = () => {
           onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
           onOpenDrawer={() => modals.setIsDrawerOpen(true)}
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
-          onOpenClipStudio={() => modals.setIsClipStudioOpen(true)}
           onOpenSocialCard={() => modals.setIsSocialCardOpen(true)}
           isAdmin={isAdmin}
           onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
@@ -344,6 +352,15 @@ export const EditorPage: React.FC = () => {
           onSelectMobileTab={setMobileTab}
         />
       )}
+
+      {/* Mimo In-Editor Diff Review Banner */}
+      <MimoEditorDiffBanner
+        content={doc.content}
+        setContent={doc.setContent}
+        executeSave={doc.executeSave}
+        title={doc.title}
+        onToast={showToast}
+      />
 
       {/* Main Workspace (Split View, Textarea, Markdown Preview, FX) */}
       <EditorWorkspace
@@ -439,6 +456,7 @@ export const EditorPage: React.FC = () => {
         isDrawerOpen={modals.isDrawerOpen}
         onCloseDrawer={() => modals.setIsDrawerOpen(false)}
         onUpdateTags={doc.handleUpdateTags}
+        onToggleAiExclusion={doc.handleToggleAiExclusion}
         onDeleteCurrentDoc={doc.handleDeleteCurrentDoc}
         onClearContent={doc.handleClearContent}
         isSwitcherOpen={modals.isSwitcherOpen}
@@ -475,8 +493,6 @@ export const EditorPage: React.FC = () => {
         onCloseLocalFolder={() => modals.setIsLocalFolderOpen(false)}
         onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
         onSelectLocalFile={handleSelectLocalFile}
-        isClipStudioOpen={modals.isClipStudioOpen}
-        onCloseClipStudio={() => modals.setIsClipStudioOpen(false)}
         isSocialCardOpen={modals.isSocialCardOpen}
         onCloseSocialCard={() => modals.setIsSocialCardOpen(false)}
         onToast={showToast}
@@ -494,6 +510,20 @@ export const EditorPage: React.FC = () => {
         wordCount={stats.words}
         onOpenAuth={() => setIsAuthModalOpen(true)}
       />
+
+      {/* Mimo AI Markdown Companion Drawer (Lazy-loaded) */}
+      <React.Suspense fallback={null}>
+        <MimoDrawer
+          docId={doc.docId}
+          title={doc.title}
+          content={doc.content}
+          setContent={doc.setContent}
+          executeSave={doc.executeSave}
+          onToast={showToast}
+          isAiExcluded={doc.docMetadata?.isAiExcluded}
+          cursorLine={cursorPos.line}
+        />
+      </React.Suspense>
     </div>
   );
 };
