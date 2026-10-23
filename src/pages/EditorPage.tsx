@@ -20,6 +20,7 @@ import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
 import { telemetryService } from '../services/telemetryService';
 import { MimoEditorDiffBanner, useMimoStore } from '../features/mimo';
+import { FEATURE_FLAGS } from '../config/features';
 
 const MimoDrawer = React.lazy(() =>
   import('../features/mimo').then((m) => ({ default: m.MimoDrawer }))
@@ -354,13 +355,15 @@ export const EditorPage: React.FC = () => {
       )}
 
       {/* Mimo In-Editor Diff Review Banner */}
-      <MimoEditorDiffBanner
-        content={doc.content}
-        setContent={doc.setContent}
-        executeSave={doc.executeSave}
-        title={doc.title}
-        onToast={showToast}
-      />
+      {FEATURE_FLAGS.mimo && (
+        <MimoEditorDiffBanner
+          content={doc.content}
+          setContent={doc.setContent}
+          executeSave={doc.executeSave}
+          title={doc.title}
+          onToast={showToast}
+        />
+      )}
 
       {/* Main Workspace (Split View, Textarea, Markdown Preview, FX) */}
       <EditorWorkspace
@@ -512,18 +515,20 @@ export const EditorPage: React.FC = () => {
       />
 
       {/* Mimo AI Markdown Companion Drawer (Lazy-loaded) */}
-      <React.Suspense fallback={null}>
-        <MimoDrawer
-          docId={doc.docId}
-          title={doc.title}
-          content={doc.content}
-          setContent={doc.setContent}
-          executeSave={doc.executeSave}
-          onToast={showToast}
-          isAiExcluded={doc.docMetadata?.isAiExcluded}
-          cursorLine={cursorPos.line}
-        />
-      </React.Suspense>
+      {FEATURE_FLAGS.mimo && (
+        <React.Suspense fallback={null}>
+          <MimoDrawer
+            docId={doc.docId}
+            title={doc.title}
+            content={doc.content}
+            setContent={doc.setContent}
+            executeSave={doc.executeSave}
+            onToast={showToast}
+            isAiExcluded={doc.docMetadata?.isAiExcluded}
+            cursorLine={cursorPos.line}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };

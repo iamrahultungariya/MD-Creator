@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckSquare, Trash2, Download, X } from 'lucide-react';
+import { CheckSquare, Trash2, Download, X, Share2 } from 'lucide-react';
 
 interface BatchActionsBarProps {
   selectedCount: number;
@@ -9,6 +9,7 @@ interface BatchActionsBarProps {
   onDeselectAll: () => void;
   onBatchDelete: () => void;
   onBatchExport: () => void;
+  onBatchShare: () => void;
   onExitMode: () => void;
 }
 
@@ -19,6 +20,7 @@ export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
   onDeselectAll,
   onBatchDelete,
   onBatchExport,
+  onBatchShare,
   onExitMode,
 }) => {
   const isAllSelected = selectedCount === totalCount && totalCount > 0;
@@ -29,7 +31,7 @@ export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
       animate={{ y: 0, opacity: 1, scale: 1 }}
       exit={{ y: 80, opacity: 0, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto bg-neutral-950/90 dark:bg-neutral-900/95 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-white/10 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 font-sans text-xs select-none"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-2xl w-[94%] sm:w-auto bg-neutral-950/90 dark:bg-neutral-900/95 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-white/10 flex items-center justify-between sm:justify-start gap-2.5 sm:gap-3.5 font-sans text-xs select-none"
       role="region"
       aria-label="Batch Actions"
     >
@@ -49,6 +51,18 @@ export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
       >
         <CheckSquare className="w-3.5 h-3.5 text-neutral-400" />
         <span>{isAllSelected ? 'Deselect All' : `Select All (${totalCount})`}</span>
+      </button>
+
+      {/* Bulk Share Button */}
+      <button
+        type="button"
+        disabled={selectedCount === 0}
+        onClick={onBatchShare}
+        className="px-2.5 py-1.5 rounded-lg bg-brand-600/30 hover:bg-brand-600/40 text-brand-300 hover:text-brand-200 border border-brand-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 cursor-pointer font-semibold"
+        title="Share selected documents as a bundle"
+      >
+        <Share2 className="w-3.5 h-3.5 text-brand-400" />
+        <span>Bulk Share</span>
       </button>
 
       {/* Export Selected Markdown Button */}

@@ -97,6 +97,8 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
           tags: doc.tags || [],
           is_pinned: doc.isPinned || false,
           is_favorite: doc.isFavorite || false,
+          is_deleted: doc.isDeleted || false,
+          deleted_at: doc.deletedAt ? new Date(doc.deletedAt).toISOString() : null,
           word_count: doc.wordCount || 0,
           size_bytes: doc.sizeBytes || 0,
           updated_at: new Date(doc.updatedAt).toISOString()
@@ -130,16 +132,65 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
   );
 }
 
+/**
+ * Synchronizes document pin state to Supabase.
+ */
+export async function syncDocumentPinToSupabase(id: string, isPinned: boolean): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    const { error } = await supabase
+      .from('documents')
+      .update({
+        is_pinned: isPinned,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Synchronizes soft trash/restore deletion state to Supabase.
+ */
+export async function syncDocumentTrashToSupabase(id: string, isDeleted: boolean): Promise<boolean> {
+  if (!supabase) return false;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    const { error } = await supabase
+      .from('documents')
+      .update({
+        is_deleted: isDeleted,
+        deleted_at: isDeleted ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
 let lastPullTimestamp = 0;
 
 /**
  * Pulls all documents belonging to the authenticated user from Supabase into Dexie.
  * Throttled to at most once per 60s, protected by 3.5s timeout and parallelized.
  */
-export async function pullCloudDocuments(): Promise<number> {
+export async function pullCloudDocuments(force = false): Promise<number> {
   if (!supabase) return 0;
   // Throttle cloud pulls so rapid navigation doesn't trigger redundant network waterfalls
-  if (Date.now() - lastPullTimestamp < 60000) {
+  if (!force && Date.now() - lastPullTimestamp < 30000) {
     return 0;
   }
   lastPullTimestamp = Date.now();
@@ -197,8 +248,10 @@ export async function pullCloudDocuments(): Promise<number> {
                 updatedAt: cloudUpdated,
                 lastOpenedAt: cloudDoc.last_opened_at ? new Date(cloudDoc.last_opened_at).getTime() : Date.now(),
                 openCount: 1,
-                isPinned: cloudDoc.is_pinned || false,
-                isFavorite: cloudDoc.is_favorite || false,
+                isPinned: Boolean(cloudDoc.is_pinned),
+                isFavorite: Boolean(cloudDoc.is_favorite),
+                isDeleted: Boolean(cloudDoc.is_deleted),
+                deletedAt: cloudDoc.deleted_at ? new Date(cloudDoc.deleted_at).getTime() : undefined,
                 wordCount: cloudDoc.word_count || 0,
                 sizeBytes: cloudDoc.size_bytes || 0
               });
@@ -231,22 +284,22 @@ let lastSyncAllTimestamp = 0;
  * Performs bi-directional synchronization between Dexie (IndexedDB) and Supabase Cloud.
  * Throttled to once every 2 minutes, non-blocking and batched.
  */
-export async function syncAllDocuments(): Promise<{ pulled: number; pushed: number }> {
-  if (!supabase) return { pulled: 0, pushed: 0 };
-  if (Date.now() - lastSyncAllTimestamp < 120000) {
-    return { pulled: 0, pushed: 0 };
+export async function syncAllDocuments(force = false): Promise<{ pulled: number; pushed: number; syncedTitles: string[] }> {
+  if (!supabase) return { pulled: 0, pushed: 0, syncedTitles: [] };
+  if (!force && Date.now() - lastSyncAllTimestamp < 30000) {
+    return { pulled: 0, pushed: 0, syncedTitles: [] };
   }
   lastSyncAllTimestamp = Date.now();
 
   try {
     const isPro = await isUserProForSync();
-    if (!isPro) return { pulled: 0, pushed: 0 };
+    if (!isPro) return { pulled: 0, pushed: 0, syncedTitles: [] };
 
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return { pulled: 0, pushed: 0 };
+    if (!session?.user) return { pulled: 0, pushed: 0, syncedTitles: [] };
 
     // 1. Pull latest cloud documents first
-    const pulled = await pullCloudDocuments();
+    const pulled = await pullCloudDocuments(force);
 
     // 2. Push any local documents that don't exist in cloud or are newer (in parallel batches)
     const localDocs = await db.documents.toArray();
@@ -268,10 +321,10 @@ export async function syncAllDocuments(): Promise<{ pulled: number; pushed: numb
       );
     }
 
-    return { pulled, pushed };
+    return { pulled, pushed, syncedTitles: docsToSync.map(d => d.title).slice(0, 10) };
   } catch (err) {
     console.warn('[Supabase SyncAll] Sync failed:', err);
-    return { pulled: 0, pushed: 0 };
+    return { pulled: 0, pushed: 0, syncedTitles: [] };
   }
 }
 

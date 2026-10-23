@@ -16,6 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useMimoStore, MimoAvatar } from '../../mimo';
+import { FEATURE_FLAGS } from '../../../config/features';
 
 interface EditorMobileOverflowMenuProps {
   isOpen: boolean;
@@ -78,24 +79,26 @@ export const EditorMobileOverflowMenu: React.FC<EditorMobileOverflowMenuProps> =
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute right-0 mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150 space-y-1 font-sans">
             {/* Mimo AI Assistant */}
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                useMimoStore.getState().setIsOpen(true);
-              }}
-              className="w-full text-left px-2.5 py-2 rounded-lg bg-violet-50/70 dark:bg-violet-950/40 hover:bg-violet-100 border border-violet-200/60 dark:border-violet-800/60 flex items-center justify-between text-violet-700 dark:text-violet-300 cursor-pointer font-sans"
-            >
-              <div className="flex items-center gap-2.5">
-                <MimoAvatar size="xs" state="happy" />
-                <div>
-                  <div className="font-bold text-violet-950 dark:text-violet-100 flex items-center gap-1">
-                    <span>Mimo ✦ AI Companion</span>
+            {FEATURE_FLAGS.mimo && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  useMimoStore.getState().setIsOpen(true);
+                }}
+                className="w-full text-left px-2.5 py-2 rounded-lg bg-violet-50/70 dark:bg-violet-950/40 hover:bg-violet-100 border border-violet-200/60 dark:border-violet-800/60 flex items-center justify-between text-violet-700 dark:text-violet-300 cursor-pointer font-sans"
+              >
+                <div className="flex items-center gap-2.5">
+                  <MimoAvatar size="xs" state="happy" />
+                  <div>
+                    <div className="font-bold text-violet-950 dark:text-violet-100 flex items-center gap-1">
+                      <span>Mimo ✦ AI Companion</span>
+                    </div>
+                    <div className="text-[10px] text-violet-500">Intelligent Markdown co-writer</div>
                   </div>
-                  <div className="text-[10px] text-violet-500">Intelligent Markdown co-writer</div>
                 </div>
-              </div>
-              <span className="text-[10px] font-semibold text-violet-600 bg-violet-100 dark:bg-violet-900/60 px-1.5 py-0.5 rounded">Ctrl+J</span>
-            </button>
+                <span className="text-[10px] font-semibold text-violet-600 bg-violet-100 dark:bg-violet-900/60 px-1.5 py-0.5 rounded">Ctrl+J</span>
+              </button>
+            )}
 
             {/* File & Publishing Section */}
             <div className="px-2.5 py-1 text-[11px] font-semibold text-neutral-400 font-sans">

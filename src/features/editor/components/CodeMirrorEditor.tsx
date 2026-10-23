@@ -79,6 +79,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
 
   // Avoid recreating editor or full doc re-parsing on typing
   const lastInternalDocRef = useRef<string>(value);
+  const isExternalDispatchRef = useRef<boolean>(false);
 
   // Keep latest callbacks in refs to avoid recreating editor on prop changes
   const onChangeRef = useRef(onChange);
@@ -133,6 +134,8 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         if (!viewRef.current) return;
         const current = viewRef.current.state.doc.toString();
         if (current !== val) {
+          isExternalDispatchRef.current = true;
+          lastInternalDocRef.current = val;
           viewRef.current.dispatch({
             changes: { from: 0, to: current.length, insert: val },
           });
@@ -244,6 +247,17 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     // Update listener extension: debounced content update & cursor telemetry
     const updateListener = EditorView.updateListener.of((update: ViewUpdate) => {
       if (update.docChanged) {
+        // Guard: External programmatic update (e.g. document loaded from DB) should never mark doc as unsaved
+        if (isExternalDispatchRef.current) {
+          isExternalDispatchRef.current = false;
+          if (changeTimerRef.current) {
+            clearTimeout(changeTimerRef.current);
+            changeTimerRef.current = null;
+          }
+          pendingChangeRef.current = false;
+          return;
+        }
+
         pendingChangeRef.current = true;
         if (changeTimerRef.current) {
           clearTimeout(changeTimerRef.current);
@@ -253,8 +267,10 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
           if (viewRef.current && pendingChangeRef.current) {
             pendingChangeRef.current = false;
             const newDoc = viewRef.current.state.doc.toString();
-            lastInternalDocRef.current = newDoc;
-            onChangeRef.current?.(newDoc);
+            if (newDoc !== lastInternalDocRef.current) {
+              lastInternalDocRef.current = newDoc;
+              onChangeRef.current?.(newDoc);
+            }
           }
         }, 60);
 
@@ -441,6 +457,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     lastInternalDocRef.current = value;
     const currentDoc = viewRef.current.state.doc.toString();
     if (value !== currentDoc) {
+      isExternalDispatchRef.current = true;
       const scrollDOM = viewRef.current.scrollDOM;
       const prevScrollTop = scrollDOM.scrollTop;
       const prevScrollLeft = scrollDOM.scrollLeft;

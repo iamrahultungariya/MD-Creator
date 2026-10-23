@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Globe, 
+  Eye, 
+  Edit3, 
   Copy, 
   Check, 
   ExternalLink, 
@@ -43,6 +45,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const [publishedRecord, setPublishedRecord] = useState<PublishedRecord | null>(null);
   const [customSlug, setCustomSlug] = useState('');
   const [enablePassword, setEnablePassword] = useState(false);
+  const [permissionMode, setPermissionMode] = useState<'view' | 'edit'>('view');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,6 +69,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
           setPublishedRecord(record);
           setCustomSlug(record.slug);
           setEnablePassword(Boolean(record.is_password_protected));
+          setPermissionMode((record.permission_mode as 'view' | 'edit') || 'view');
         } else {
           setPublishedRecord(null);
           setCustomSlug(generateSlug(title));
@@ -104,6 +108,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
     const res = await publishDocument(docId, title, content, {
       slug: customSlug,
       password: enablePassword ? password : '',
+      permissionMode,
     });
 
     setIsSubmitting(false);
@@ -235,6 +240,46 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 placeholder="my-article-slug"
                 className="w-full px-3 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white font-sans text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
               />
+            </div>
+
+            {/* Permission Mode (View Only vs View & Edit) */}
+            <div className="space-y-1.5 font-sans">
+              <label className="font-semibold text-neutral-700 dark:text-neutral-300 block font-sans">
+                Sharing Permissions
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPermissionMode('view')}
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-0.5 ${
+                    permissionMode === 'view'
+                      ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-1 ring-brand-500/30 font-semibold'
+                      : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-white">
+                    <Eye className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                    <span>View Only</span>
+                  </div>
+                  <span className="text-[10px] text-neutral-500">Read-only link</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPermissionMode('edit')}
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-0.5 ${
+                    permissionMode === 'edit'
+                      ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40 ring-1 ring-indigo-500/30 font-semibold'
+                      : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-900 dark:text-white">
+                    <Edit3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <span>View & Edit</span>
+                  </div>
+                  <span className="text-[10px] text-neutral-500">Recipients can propose edits (auto-snapshot protected)</span>
+                </button>
+              </div>
             </div>
 
             {/* Password Protection Option */}

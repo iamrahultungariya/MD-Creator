@@ -13,7 +13,14 @@ import {
   togglePinDocument, 
   getStorageStats 
 } from '../db';
-import { pullCloudDocuments, deleteDocumentFromSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { 
+  pullCloudDocuments, 
+  deleteDocumentFromSupabase, 
+  syncDocumentToSupabase, 
+  syncDocumentPinToSupabase, 
+  syncDocumentTrashToSupabase, 
+  isSupabaseConfigured 
+} from '../lib/supabase';
 import { searchDocumentsFullText } from '../utils/searchEngine';
 
 export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = false) {
@@ -121,7 +128,15 @@ export function useCreateDocument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ title, content }: { title?: string; content?: string }) => {
-      return await createNewDocument(title, content);
+      const id = await createNewDocument(title, content);
+      if (isSupabaseConfigured()) {
+        const meta = await db.documents.get(id);
+        const actualContent = await getDocumentContent(id);
+        if (meta) {
+          syncDocumentToSupabase(meta, actualContent).catch(console.warn);
+        }
+      }
+      return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
@@ -151,8 +166,12 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
       await deleteDocument(id, permanent);
-      if (permanent && isSupabaseConfigured()) {
-        deleteDocumentFromSupabase(id).catch(console.warn);
+      if (isSupabaseConfigured()) {
+        if (permanent) {
+          deleteDocumentFromSupabase(id).catch(console.warn);
+        } else {
+          syncDocumentTrashToSupabase(id, true).catch(console.warn);
+        }
       }
     },
     onSuccess: () => {
@@ -169,6 +188,9 @@ export function useRestoreDocument() {
   return useMutation({
     mutationFn: async (id: string) => {
       await restoreDocument(id);
+      if (isSupabaseConfigured()) {
+        syncDocumentTrashToSupabase(id, false).catch(console.warn);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
@@ -210,7 +232,15 @@ export function useDuplicateDocument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      return await duplicateDocument(id);
+      const newId = await duplicateDocument(id);
+      if (isSupabaseConfigured()) {
+        const meta = await db.documents.get(newId);
+        const actualContent = await getDocumentContent(newId);
+        if (meta) {
+          syncDocumentToSupabase(meta, actualContent).catch(console.warn);
+        }
+      }
+      return newId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
@@ -224,7 +254,11 @@ export function useTogglePin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      return await togglePinDocument(id);
+      const newPinned = await togglePinDocument(id);
+      if (isSupabaseConfigured()) {
+        syncDocumentPinToSupabase(id, newPinned).catch(console.warn);
+      }
+      return newPinned;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });

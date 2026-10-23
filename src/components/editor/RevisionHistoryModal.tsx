@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, 
   RotateCcw, 
-  FileText, 
   Plus, 
   Clock,
   Layers,
@@ -12,6 +11,7 @@ import {
 import { DocumentRevision, getDocumentRevisions, createRevisionSnapshot } from '../../db';
 import { useConfirm } from '../../stores/useConfirmStore';
 import { APP_VERSION_LABEL } from '../../config/version';
+import { DiffViewer } from '../common/DiffViewer';
 
 interface RevisionHistoryModalProps {
   isOpen: boolean;
@@ -35,6 +35,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
   const [selectedRevision, setSelectedRevision] = useState<DocumentRevision | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [viewType, setViewType] = useState<'diff' | 'raw'>('diff');
 
   const loadRevisions = async () => {
     setIsLoading(true);
@@ -217,14 +218,36 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
           <div className="flex-1 flex flex-col bg-white dark:bg-[#121118] overflow-hidden font-sans">
             {selectedRevision ? (
               <>
-                <div className="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/40 dark:bg-[#181620]/60 text-xs">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-neutral-400" />
-                    <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                      Checkpoint Content Preview
-                    </span>
-                    <span className="text-neutral-400">•</span>
-                    <span className="text-neutral-500 font-mono">
+                <div className="px-5 py-2.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/40 dark:bg-[#181620]/60 text-xs shrink-0">
+                  <div className="flex items-center gap-3">
+                    {/* View Switcher: Diff vs Raw */}
+                    <div className="inline-flex rounded-lg bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setViewType('diff')}
+                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                          viewType === 'diff'
+                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-xs font-semibold'
+                            : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                        }`}
+                      >
+                        Diff vs Current
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewType('raw')}
+                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                          viewType === 'raw'
+                            ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-xs font-semibold'
+                            : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                        }`}
+                      >
+                        Raw Snapshot
+                      </button>
+                    </div>
+
+                    <span className="text-neutral-400 hidden sm:inline">•</span>
+                    <span className="text-neutral-500 font-mono text-[11px] hidden sm:inline">
                       {new Date(selectedRevision.timestamp).toLocaleString()}
                     </span>
                   </div>
@@ -238,9 +261,20 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
                   </button>
                 </div>
 
-                <div className="flex-1 p-5 overflow-y-auto font-mono text-xs text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap leading-relaxed select-text bg-neutral-50/20 dark:bg-neutral-950/20">
-                  {selectedRevision.content}
-                </div>
+                {viewType === 'diff' ? (
+                  <div className="flex-1 p-3 overflow-hidden flex flex-col">
+                    <DiffViewer
+                      original={selectedRevision.content}
+                      modified={currentContent}
+                      defaultOnlyDiffs={true}
+                      className="flex-1"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1 p-5 overflow-y-auto font-mono text-xs text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap leading-relaxed select-text bg-neutral-50/20 dark:bg-neutral-950/20">
+                    {selectedRevision.content}
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex-1 flex items-center justify-center p-8 text-center text-neutral-400 text-xs">

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Command, X } from 'lucide-react';
 import { DynamicIcon, type IconName } from '../common/DynamicIcon';
+import { FEATURE_FLAGS } from '../../config/features';
 
 export interface CommandItem {
   id: string;
@@ -13,7 +14,7 @@ export interface CommandItem {
   category: 'Structure' | 'Rich Blocks' | 'Callouts' | 'Media & Tools';
 }
 
-export const COMMANDS: CommandItem[] = [
+const ALL_COMMANDS: CommandItem[] = [
   // 1. Structure
   {
     id: 'h1',
@@ -580,3 +581,5 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
     </div>
   );
 };
+
+export const COMMANDS: CommandItem[] = FEATURE_FLAGS.mimo ? ALL_COMMANDS : ALL_COMMANDS.filter(c => c.id !== 'mimo');

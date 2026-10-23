@@ -6,6 +6,7 @@ import { Hero } from '../components/home/Hero';
 import { BentoFeatures } from '../components/home/BentoFeatures';
 import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
 import { RoadmapSection } from '../components/home/RoadmapSection';
+import { FEATURE_FLAGS } from '../config/features';
 
 // Code-split heavy below-the-fold sections and interactive modals on-demand
 const ReviewsSection = React.lazy(() =>
@@ -63,7 +64,7 @@ export const HomePage: React.FC = () => {
         />
 
         {/* Flagship AI Markdown Companion Showcase */}
-        <MimoShowcaseSection />
+        {FEATURE_FLAGS.mimo && <MimoShowcaseSection />}
 
         {/* Dedicated Product Roadmap & What's New */}
         <RoadmapSection />

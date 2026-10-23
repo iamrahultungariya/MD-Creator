@@ -23,6 +23,7 @@ import { EditorMobileOverflowMenu } from './EditorMobileOverflowMenu';
 import { EditorToolsMenu } from './EditorToolsMenu';
 import { useAuthStore } from '../../../stores/useAuthStore';
 import { useMimoStore, MimoAvatar } from '../../mimo';
+import { FEATURE_FLAGS } from '../../../config/features';
 
 interface EditorHeaderProps {
   viewMode: ViewMode;
@@ -430,19 +431,21 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             </button>
 
             {/* Mimo AI Assistant Trigger */}
-            <button
-              onClick={() => setIsMimoOpen(!isMimoOpen)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs font-sans ${
-                isMimoOpen
-                  ? 'bg-violet-600 text-white border-transparent shadow-xs'
-                  : 'border-violet-200 dark:border-violet-800/80 bg-violet-50/70 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-300'
-              }`}
-              title="Mimo ✦ AI Markdown Companion (Ctrl+J)"
-            >
-              <MimoAvatar size="xs" state={isMimoOpen ? 'excited' : 'happy'} />
-              <span className="font-bold">Mimo</span>
-              <span className="text-[10px] text-violet-400 font-mono hidden xl:inline">✦</span>
-            </button>
+            {FEATURE_FLAGS.mimo && (
+              <button
+                onClick={() => setIsMimoOpen(!isMimoOpen)}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs font-sans ${
+                  isMimoOpen
+                    ? 'bg-violet-600 text-white border-transparent shadow-xs'
+                    : 'border-violet-200 dark:border-violet-800/80 bg-violet-50/70 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-300'
+                }`}
+                title="Mimo ✦ AI Markdown Companion (Ctrl+J)"
+              >
+                <MimoAvatar size="xs" state={isMimoOpen ? 'excited' : 'happy'} />
+                <span className="font-bold">Mimo</span>
+                <span className="text-[10px] text-violet-400 font-mono hidden xl:inline">✦</span>
+              </button>
+            )}
 
             {/* Consolidated Tools & Studio Dropdown Menu */}
             <EditorToolsMenu

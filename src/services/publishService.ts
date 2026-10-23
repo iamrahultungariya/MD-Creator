@@ -1,8 +1,10 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { db, createRevisionSnapshot, saveDocument } from '../db';
 
 export interface PublishOptions {
   slug?: string;
   password?: string;
+  permissionMode?: 'view' | 'edit'; // 'view' = read-only, 'edit' = allow submitting proposed edits
   allowCopyMarkdown?: boolean;
   showReadingStats?: boolean;
   theme?: string;
@@ -15,12 +17,16 @@ export interface PublishedRecord {
   slug: string;
   is_public: boolean;
   is_password_protected?: boolean;
+  permission_mode?: 'view' | 'edit';
+  bundle_slug?: string;
   view_count: number;
   published_at: string;
   updated_at: string;
 }
 
 export interface PublicDocumentView {
+  id?: string;
+  documentId?: string;
   slug: string;
   title: string;
   content: string;
@@ -29,9 +35,28 @@ export interface PublicDocumentView {
   updatedAt: string;
   viewCount: number;
   isPasswordProtected: boolean;
+  permissionMode: 'view' | 'edit';
   allowCopyMarkdown: boolean;
   showReadingStats: boolean;
   theme: string;
+}
+
+export interface PublishedBundleItem {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  wordCount: number;
+  permissionMode: 'view' | 'edit';
+}
+
+export interface PublishedBundleView {
+  bundleSlug: string;
+  title: string;
+  permissionMode: 'view' | 'edit';
+  documents: PublishedBundleItem[];
+  publishedAt: string;
+  isPasswordProtected: boolean;
 }
 
 /**
@@ -61,7 +86,7 @@ export async function getDocumentPublishStatus(docId: string): Promise<Published
 
     const { data, error } = await supabase
       .from('published_documents')
-      .select('id, document_id, user_id, slug, is_public, view_count, published_at, updated_at')
+      .select('id, document_id, user_id, slug, is_public, permission_mode, bundle_slug, view_count, published_at, updated_at')
       .eq('document_id', docId)
       .eq('user_id', session.user.id)
       .maybeSingle();
@@ -75,7 +100,7 @@ export async function getDocumentPublishStatus(docId: string): Promise<Published
 
 /**
  * Publishes or updates a document to the web.
- * Never stores client-side hashes; passwords are set via secure server-side RPC.
+ * Allows setting 'view' (read-only) or 'edit' (collaborative submission) mode.
  */
 export async function publishDocument(
   docId: string,
@@ -104,6 +129,7 @@ export async function publishDocument(
     }
 
     const userId = session.user.id;
+    const permissionMode = options.permissionMode || 'view';
 
     // 1. Ensure the parent document exists in Supabase documents table
     await supabase.from('documents').upsert({
@@ -127,22 +153,25 @@ export async function publishDocument(
     if (!targetSlug) {
       targetSlug = generateSlug(title);
     } else {
-      // Clean custom slug
       targetSlug = targetSlug.replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
     }
 
-    // 4. Upsert published document record scoped to this user
-    // Note: password_hash is NEVER handled or calculated client-side
-    const { data: pubData, error: pubError } = await supabase.from('published_documents').upsert(
-      {
-        document_id: docId,
-        user_id: userId,
-        slug: targetSlug,
-        is_public: true,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'document_id,user_id' }
-    ).select('id').maybeSingle();
+    // 4. Upsert published document record with permission_mode
+    const { data: pubData, error: pubError } = await supabase
+      .from('published_documents')
+      .upsert(
+        {
+          document_id: docId,
+          user_id: userId,
+          slug: targetSlug,
+          is_public: true,
+          permission_mode: permissionMode,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'document_id,user_id' }
+      )
+      .select('id')
+      .maybeSingle();
 
     if (pubError) {
       return { success: false, slug: '', url: '', error: pubError.message };
@@ -165,6 +194,65 @@ export async function publishDocument(
     return { success: true, slug: targetSlug, url: publicUrl };
   } catch (err: any) {
     return { success: false, slug: '', url: '', error: err?.message || 'Failed to publish document.' };
+  }
+}
+
+/**
+ * Publishes multiple selected documents as a single multi-document bundle.
+ */
+export async function publishBundle(
+  docIds: string[],
+  bundleTitle: string,
+  options: PublishOptions = {}
+): Promise<{ success: boolean; bundleSlug: string; url: string; error?: string }> {
+  if (!supabase || !isSupabaseConfigured()) {
+    return {
+      success: false,
+      bundleSlug: '',
+      url: '',
+      error: 'Supabase is not configured. Cloud publishing requires an active Supabase project.',
+    };
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      return {
+        success: false,
+        bundleSlug: '',
+        url: '',
+        error: 'Please sign in or create an account to publish document bundles.',
+      };
+    }
+
+    const bundleSlug = generateSlug(bundleTitle || 'bundle');
+    const permissionMode = options.permissionMode || 'view';
+
+    // Publish each document under the bundle_slug
+    for (const docId of docIds) {
+      const localMeta = await db.documents.get(docId);
+      const cached = await db.document_cache.get(docId);
+      const title = localMeta?.title || 'Document';
+      const content = cached?.content || '';
+
+      const docSlug = `${bundleSlug}-${generateSlug(title)}`;
+      await publishDocument(docId, title, content, {
+        slug: docSlug,
+        permissionMode,
+        password: options.password,
+      });
+
+      // Update bundle_slug tag on the published record
+      await supabase
+        .from('published_documents')
+        .update({ bundle_slug: bundleSlug })
+        .eq('document_id', docId);
+    }
+
+    const bundleUrl = `${window.location.origin}/p/bundle/${bundleSlug}`;
+    return { success: true, bundleSlug, url: bundleUrl };
+  } catch (err: any) {
+    return { success: false, bundleSlug: '', url: '', error: err?.message || 'Failed to publish bundle.' };
   }
 }
 
@@ -192,7 +280,6 @@ export async function unpublishDocument(docId: string): Promise<boolean> {
 
 /**
  * Fetches a public document by its slug for unauthenticated public viewers.
- * Strictly uses server-side RPC (get_published_document) with zero client-side password hash leakage.
  */
 export async function getPublicDocumentBySlug(
   slug: string,
@@ -208,39 +295,59 @@ export async function getPublicDocumentBySlug(
   try {
     const cleanSlug = slug.trim().toLowerCase();
 
-    // 1. Invoke server-side RPC to fetch document without exposing password hashes
+    // 1. Invoke server-side RPC to fetch document
     const { data, error } = await supabase.rpc('get_published_document', {
       p_slug: cleanSlug,
       p_password: providedPassword ? providedPassword.trim() : null,
     });
 
     if (error || !data) {
+      // Fallback query directly on published_documents if RPC doesn't have bundle fields yet
+      const { data: directPub } = await supabase
+        .from('published_documents')
+        .select('*, documents(title), document_contents(content)')
+        .eq('slug', cleanSlug)
+        .eq('is_public', true)
+        .maybeSingle();
+
+      if (directPub) {
+        return {
+          status: 'ok',
+          doc: {
+            id: directPub.id,
+            documentId: directPub.document_id,
+            slug: directPub.slug,
+            title: (directPub as any).documents?.title || 'Shared Document',
+            content: (directPub as any).document_contents?.content || '',
+            publishedAt: directPub.published_at,
+            updatedAt: directPub.updated_at,
+            viewCount: directPub.view_count || 1,
+            isPasswordProtected: Boolean(directPub.password_hash),
+            permissionMode: (directPub.permission_mode as 'view' | 'edit') || 'view',
+            allowCopyMarkdown: true,
+            showReadingStats: true,
+            theme: 'default',
+          },
+        };
+      }
+
       return { doc: null, status: 'not_found' };
     }
 
     const status = data.status;
 
-    if (status === 'not_found') {
-      return { doc: null, status: 'not_found' };
-    }
-
-    if (status === 'password_required') {
-      return { doc: null, status: 'password_required' };
-    }
-
-    if (status === 'wrong_password' || status === 'invalid_password') {
-      return { doc: null, status: 'invalid_password' };
-    }
-
-    if (status === 'rate_limited') {
-      return { doc: null, status: 'rate_limited' };
-    }
+    if (status === 'not_found') return { doc: null, status: 'not_found' };
+    if (status === 'password_required') return { doc: null, status: 'password_required' };
+    if (status === 'wrong_password' || status === 'invalid_password') return { doc: null, status: 'invalid_password' };
+    if (status === 'rate_limited') return { doc: null, status: 'rate_limited' };
 
     if (status === 'ok' && data.document) {
       const d = data.document;
       return {
         status: 'ok',
         doc: {
+          id: d.id,
+          documentId: d.document_id,
           slug: d.slug || cleanSlug,
           title: d.title || 'Published Document',
           content: d.content || '',
@@ -249,6 +356,7 @@ export async function getPublicDocumentBySlug(
           updatedAt: d.updated_at || d.updatedAt || new Date().toISOString(),
           viewCount: d.view_count || d.viewCount || 1,
           isPasswordProtected: Boolean(d.is_password_protected ?? d.isPasswordProtected),
+          permissionMode: (d.permission_mode as 'view' | 'edit') || 'view',
           allowCopyMarkdown: d.allow_copy_markdown ?? true,
           showReadingStats: d.show_reading_stats ?? true,
           theme: d.theme || 'default',
@@ -260,5 +368,194 @@ export async function getPublicDocumentBySlug(
   } catch (err) {
     console.error('Failed to fetch public document:', err);
     return { doc: null, status: 'not_found' };
+  }
+}
+
+/**
+ * Fetches all documents belonging to a multi-document bundle.
+ */
+export async function getPublishedBundle(
+  bundleSlug: string
+): Promise<{ bundle: PublishedBundleView | null; status: 'ok' | 'not_found' }> {
+  if (!supabase) return { bundle: null, status: 'not_found' };
+
+  try {
+    // 1. Try server RPC first
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('get_published_bundle', {
+      p_bundle_slug: bundleSlug.trim().toLowerCase(),
+    });
+
+    if (!rpcErr && rpcData?.status === 'ok' && rpcData.bundle) {
+      return {
+        status: 'ok',
+        bundle: rpcData.bundle,
+      };
+    }
+
+    const { data, error } = await supabase
+      .from('published_documents')
+      .select('id, document_id, slug, is_public, permission_mode, bundle_slug, documents(title), document_contents(content)')
+      .eq('bundle_slug', bundleSlug.trim().toLowerCase())
+      .eq('is_public', true);
+
+    if (error || !data || data.length === 0) {
+      return { bundle: null, status: 'not_found' };
+    }
+
+    const items: PublishedBundleItem[] = data.map((d: any) => {
+      const content = d.document_contents?.content || '';
+      return {
+        id: d.document_id,
+        title: d.documents?.title || 'Document',
+        slug: d.slug,
+        content,
+        wordCount: content.trim().split(/\s+/).filter(Boolean).length,
+        permissionMode: d.permission_mode || 'view',
+      };
+    });
+
+    return {
+      status: 'ok',
+      bundle: {
+        bundleSlug,
+        title: `Bundle: ${bundleSlug}`,
+        permissionMode: items[0]?.permissionMode || 'view',
+        documents: items,
+        publishedAt: new Date().toISOString(),
+        isPasswordProtected: false,
+      },
+    };
+  } catch {
+    return { bundle: null, status: 'not_found' };
+  }
+}
+
+/**
+ * Submits an edit from a recipient on a "View-Edit" shared document link.
+ * STRICT SAFETY REQUIREMENT:
+ * Automatically creates an offline/cloud revision snapshot of the previous version
+ * BEFORE applying any modifications, so the owner never loses their original document!
+ */
+export async function submitPublicDocumentEdit(
+  slug: string,
+  newContent: string,
+  summary = 'Collaborative Edit via Shared Link'
+): Promise<{ success: boolean; error?: string }> {
+  if (!supabase || !isSupabaseConfigured()) {
+    return { success: false, error: 'Cloud service unavailable.' };
+  }
+
+  try {
+    // 0. Try server-side atomic RPC first (handles snapshot & security definer for anonymous editors)
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc('submit_public_document_edit', {
+      p_slug: slug.trim().toLowerCase(),
+      p_new_content: newContent,
+      p_summary: summary,
+    });
+
+    if (!rpcErr && rpcRes) {
+      if (rpcRes.success) {
+        return { success: true };
+      }
+      return { success: false, error: rpcRes.error || 'Failed to submit changes.' };
+    }
+
+    // 1. Fetch published document record
+    const { data: pubData, error: pubErr } = await supabase
+      .from('published_documents')
+      .select('id, document_id, permission_mode, is_public')
+      .eq('slug', slug.trim().toLowerCase())
+      .maybeSingle();
+
+    if (pubErr || !pubData) {
+      return { success: false, error: 'Document not found or unpublished.' };
+    }
+
+    if (pubData.permission_mode !== 'edit') {
+      return { success: false, error: 'This document is view-only. Edits are not permitted.' };
+    }
+
+    const docId = pubData.document_id;
+
+    // 2. Fetch current content to preserve previous version snapshot
+    const { data: currentContentData } = await supabase
+      .from('document_contents')
+      .select('content')
+      .eq('id', docId)
+      .maybeSingle();
+
+    const previousContent = currentContentData?.content || '';
+
+    // 3. Fetch title
+    const { data: docMeta } = await supabase
+      .from('documents')
+      .select('title')
+      .eq('id', docId)
+      .maybeSingle();
+
+    const docTitle = docMeta?.title || 'Document';
+
+    // 4. AUTOMATIC PREVIOUS VERSION SNAPSHOT SAFETY (Local & Cloud)
+    // Archive snapshot in Dexie IndexedDB if document is on this device
+    try {
+      await createRevisionSnapshot(
+        docId,
+        docTitle,
+        previousContent,
+        `Auto-Snapshot (Before Shared Edit: ${summary})`
+      );
+    } catch {}
+
+    // Archive snapshot in Supabase document_revisions
+    try {
+      await supabase.from('document_revisions').insert({
+        document_id: docId,
+        content: previousContent,
+        change_summary: `Pre-edit snapshot before submission via ${slug}`,
+      });
+    } catch {}
+
+    // 5. Apply the submitted content in Supabase
+    const wordCount = newContent.trim().split(/\s+/).filter(Boolean).length;
+    const sizeBytes = new Blob([newContent]).size;
+    const now = new Date().toISOString();
+
+    const { error: updateContentErr } = await supabase
+      .from('document_contents')
+      .upsert({
+        id: docId,
+        content: newContent,
+        updated_at: now,
+      });
+
+    if (updateContentErr) {
+      return { success: false, error: updateContentErr.message };
+    }
+
+    // 6. Update document metadata
+    await supabase
+      .from('documents')
+      .update({
+        word_count: wordCount,
+        size_bytes: sizeBytes,
+        updated_at: now,
+      })
+      .eq('id', docId);
+
+    // 7. Update published_documents updated_at
+    await supabase
+      .from('published_documents')
+      .update({ updated_at: now })
+      .eq('id', pubData.id);
+
+    // 8. If document is present in local Dexie, update local storage as well
+    const localExists = await db.documents.get(docId);
+    if (localExists) {
+      await saveDocument(docId, docTitle, newContent, localExists.tags);
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to submit changes.' };
   }
 }

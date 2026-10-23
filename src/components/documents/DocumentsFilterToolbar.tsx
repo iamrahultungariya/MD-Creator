@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, ChevronDown, LayoutGrid, List, Check } from 'lucide-react';
+import { Search, ChevronDown, LayoutGrid, List, Check, X, RotateCcw } from 'lucide-react';
 
 interface DocumentsFilterToolbarProps {
   search: string;
@@ -9,6 +9,7 @@ interface DocumentsFilterToolbarProps {
   setActiveTag: (tag: string) => void;
   viewMode: 'grid' | 'list';
   setViewMode: (mode: 'grid' | 'list') => void;
+  onResetFilters?: () => void;
 }
 
 export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
@@ -19,11 +20,28 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
   setActiveTag,
   viewMode,
   setViewMode,
+  onResetFilters,
 }) => {
   const [isMoreTagsOpen, setIsMoreTagsOpen] = useState(false);
   const [tagFilterQuery, setTagFilterQuery] = useState('');
+  const [inputValue, setInputValue] = useState(search);
   const moreTagsRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync internal input value if external search changes (e.g. on reset)
+  useEffect(() => {
+    setInputValue(search);
+  }, [search]);
+
+  // Debounce search dispatch (180ms) so typing never blocks or lags the UI
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputValue !== search) {
+        setSearch(inputValue);
+      }
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [inputValue, search, setSearch]);
 
   // Global '/' keyboard shortcut to focus search
   useEffect(() => {
@@ -71,22 +89,45 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
   }, [overflowTags, tagFilterQuery]);
 
   const isOverflowTagActive = overflowTags.includes(activeTag);
+  const hasActiveFilter = (activeTag && activeTag !== 'All') || inputValue.trim().length > 0;
+
+  const handleClearSearch = () => {
+    setInputValue('');
+    setSearch('');
+    searchInputRef.current?.focus();
+  };
+
+  const handleResetAll = () => {
+    setInputValue('');
+    setSearch('');
+    setActiveTag('All');
+    onResetFilters?.();
+  };
 
   return (
     <div className="p-2.5 sm:p-3 rounded-xl bg-neutral-50/70 dark:bg-[#121217] border border-neutral-200/80 dark:border-neutral-800 mb-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between font-sans">
-      {/* Search Bar with '/' Shortcut Hint */}
+      {/* Search Bar with '/' Shortcut Hint & Clear Button */}
       <div className="relative w-full sm:w-80">
-        <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+        <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           ref={searchInputRef}
           type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           placeholder="Filter notes by title or content..."
-          className="w-full pl-9 pr-8 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-sans text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+          className="w-full pl-9 pr-9 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-sans text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
         />
-        {!search && (
-          <kbd className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-sans font-semibold text-neutral-400 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800">
+        {inputValue ? (
+          <button
+            type="button"
+            onClick={handleClearSearch}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 cursor-pointer"
+            title="Clear search"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <kbd className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-sans font-semibold text-neutral-400 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 pointer-events-none">
             /
           </kbd>
         )}
@@ -94,6 +135,19 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
 
       {/* Tag Pills & View Switcher Row */}
       <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+        {/* Reset filter badge if filtered */}
+        {hasActiveFilter && (
+          <button
+            type="button"
+            onClick={handleResetAll}
+            className="px-2 py-1 rounded-lg text-[11px] font-medium bg-neutral-200/60 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+            title="Reset active tag and search"
+          >
+            <RotateCcw className="w-3 h-3 text-neutral-500" />
+            <span className="hidden xs:inline">Reset</span>
+          </button>
+        )}
+
         {/* Tag Pills & More Button Container: Non-overflowing wrapper so popover floats freely */}
         <div className="flex items-center gap-1.5 flex-1 sm:flex-initial min-w-0">
           {/* Scrollable first 5 primary tags */}
@@ -117,7 +171,7 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
             ))}
           </div>
 
-          {/* '+N More' Dropdown Container - OUTSIDE the overflow-x-auto element to prevent clipping */}
+          {/* '+N More' Dropdown Container */}
           {allTags.length > 5 && (
             <div className="relative shrink-0" ref={moreTagsRef}>
               <button
@@ -144,7 +198,7 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
                 />
               </button>
 
-              {/* Overflow Tags Dropdown (clean floating popover with vertical scrolling) */}
+              {/* Overflow Tags Dropdown */}
               {isMoreTagsOpen && (
                 <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 w-60 max-h-72 p-1.5 rounded-xl bg-white dark:bg-[#18181c] border border-neutral-200/90 dark:border-neutral-800 shadow-2xl animate-in fade-in zoom-in-95 duration-150 font-sans flex flex-col">
                   {/* Dropdown Header */}

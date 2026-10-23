@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useMimoStore, MimoAvatar } from '../../mimo';
+import { FEATURE_FLAGS } from '../../../config/features';
 
 interface EditorToolsMenuProps {
   isOpen: boolean;
@@ -78,26 +79,28 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
               Writing Studio Tools
             </div>
 
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                useMimoStore.getState().setIsOpen(true);
-              }}
-              className="w-full text-left px-3 py-2 rounded-lg bg-violet-50/70 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200/60 dark:border-violet-800/60 flex items-center justify-between text-violet-700 dark:text-violet-300 cursor-pointer group transition-colors font-sans mb-1"
-            >
-              <div className="flex items-center gap-2.5">
-                <MimoAvatar size="xs" state="happy" />
-                <div>
-                  <div className="font-bold text-violet-950 dark:text-violet-100 flex items-center gap-1.5">
-                    <span>Mimo ✦ AI Companion</span>
+            {FEATURE_FLAGS.mimo && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  useMimoStore.getState().setIsOpen(true);
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg bg-violet-50/70 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200/60 dark:border-violet-800/60 flex items-center justify-between text-violet-700 dark:text-violet-300 cursor-pointer group transition-colors font-sans mb-1"
+              >
+                <div className="flex items-center gap-2.5">
+                  <MimoAvatar size="xs" state="happy" />
+                  <div>
+                    <div className="font-bold text-violet-950 dark:text-violet-100 flex items-center gap-1.5">
+                      <span>Mimo ✦ AI Companion</span>
+                    </div>
+                    <div className="text-[10px] text-violet-500">Intelligent Markdown co-writer</div>
                   </div>
-                  <div className="text-[10px] text-violet-500">Intelligent Markdown co-writer</div>
                 </div>
-              </div>
-              <kbd className="text-[10px] font-medium text-violet-600 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/60 border border-violet-200/80 dark:border-violet-700/80 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">
-                Ctrl+J
-              </kbd>
-            </button>
+                <kbd className="text-[10px] font-medium text-violet-600 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/60 border border-violet-200/80 dark:border-violet-700/80 px-1.5 py-0.5 rounded-md shadow-2xs font-sans">
+                  Ctrl+J
+                </kbd>
+              </button>
+            )}
 
             <button
               onClick={() => {

@@ -34,6 +34,7 @@ import { useConfirm } from '../stores/useConfirmStore';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
 import { useAuthStore } from '../stores/useAuthStore';
 import { QuickAuthModal } from '../components/auth/QuickAuthModal';
+import { useDocumentFilterStore } from '../stores/useDocumentFilterStore';
 
 const CreateDocumentModal = React.lazy(() =>
   import('../components/document/CreateDocumentModal').then((m) => ({ default: m.CreateDocumentModal }))
@@ -47,17 +48,32 @@ const LocalFolderDrawer = React.lazy(() =>
 const Footer = React.lazy(() =>
   import('../components/home/Footer').then((m) => ({ default: m.Footer }))
 );
+const BulkShareModal = React.lazy(() =>
+  import('../components/share/BulkShareModal').then((m) => ({ default: m.BulkShareModal }))
+);
+const CloudSyncModal = React.lazy(() =>
+  import('../components/common/CloudSyncModal').then((m) => ({ default: m.CloudSyncModal }))
+);
 
 export const DocumentsPage: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<'active' | 'trash'>('active');
-  const [search, setSearch] = useState('');
-  const [activeTag, setActiveTag] = useState('All');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const {
+    currentTab,
+    setCurrentTab,
+    searchQuery: search,
+    setSearchQuery: setSearch,
+    activeTag,
+    setActiveTag,
+    viewMode,
+    setViewMode,
+    resetFilters,
+  } = useDocumentFilterStore();
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
   const [cloneToast, setCloneToast] = useState<{ title: string; id: string } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isBulkShareOpen, setIsBulkShareOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -339,6 +355,15 @@ export const DocumentsPage: React.FC = () => {
             </button>
 
             <button
+              onClick={() => setIsSyncModalOpen(true)}
+              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              title="Interactive multi-device cloud sync"
+            >
+              <Cloud className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span>Sync</span>
+            </button>
+
+            <button
               onClick={() => fileInputRef.current?.click()}
               className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
@@ -461,6 +486,7 @@ export const DocumentsPage: React.FC = () => {
           setActiveTag={setActiveTag}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          onResetFilters={resetFilters}
         />
 
         {/* Documents Content */}
@@ -564,6 +590,7 @@ export const DocumentsPage: React.FC = () => {
               onDeselectAll={handleDeselectAll}
               onBatchDelete={handleBatchDelete}
               onBatchExport={handleBatchExport}
+              onBatchShare={() => setIsBulkShareOpen(true)}
               onExitMode={handleExitBatchMode}
             />
           )}
@@ -642,6 +669,28 @@ export const DocumentsPage: React.FC = () => {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
       />
+
+      {/* Multi-Document Bulk Share Modal */}
+      {isBulkShareOpen && (
+        <React.Suspense fallback={null}>
+          <BulkShareModal
+            isOpen={isBulkShareOpen}
+            onClose={() => setIsBulkShareOpen(false)}
+            selectedDocIds={selectedDocIds}
+            documents={documents}
+          />
+        </React.Suspense>
+      )}
+
+      {/* Entertaining Interactive Cloud Sync Modal */}
+      {isSyncModalOpen && (
+        <React.Suspense fallback={null}>
+          <CloudSyncModal
+            isOpen={isSyncModalOpen}
+            onClose={() => setIsSyncModalOpen(false)}
+          />
+        </React.Suspense>
+      )}
     </div>
   );
 };
