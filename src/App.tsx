@@ -7,6 +7,8 @@ import { useToolbarSettingsStore } from './stores/useToolbarSettingsStore';
 import { PageLoader } from './components/common/PageLoader';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { PageTransition } from './components/common/PageTransition';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { usePreferencesStore } from './stores/usePreferencesStore';
 
 // Lazy-loaded route chunks
 const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -36,8 +38,6 @@ const OnboardingModal = React.lazy(() =>
 const QuickAuthModal = React.lazy(() =>
   import('./components/auth/QuickAuthModal').then((m) => ({ default: m.QuickAuthModal }))
 );
-import { usePreferencesStore } from './stores/usePreferencesStore';
-
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -46,41 +46,45 @@ const AppRoutes: React.FC = () => {
   // STRICT REQUIREMENT: Zero animations on editor typing canvas (0ms typing latency)
   if (isEditor) {
     return (
-      <Suspense fallback={<PageLoader />}>
-        <Routes location={location} key="editor-routes">
-          <Route path="/editor" element={<EditorPage />} />
-          <Route path="/editor/:id" element={<EditorPage />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes location={location} key="editor-routes">
+            <Route path="/editor" element={<EditorPage />} />
+            <Route path="/editor/:id" element={<EditorPage />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     );
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader />}><HomePage /></Suspense></PageTransition>} />
-        <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense></PageTransition>} />
-        <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense></PageTransition>} />
-        <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></PageTransition>} />
-        <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></PageTransition>} />
-        <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-        <Route path="/p/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-        <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-        <Route path="/share/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-        {/* Graceful redirects for pruned pages */}
-        <Route path="/showcase" element={<Navigate to="/" replace />} />
-        <Route path="/record" element={<Navigate to="/" replace />} />
-        <Route path="/studio" element={<Navigate to="/" replace />} />
-        <Route path="/updates" element={<Navigate to="/" replace />} />
-        <Route path="/changelog" element={<Navigate to="/" replace />} />
-        <Route path="/about" element={<Navigate to="/" replace />} />
-        <Route path="/pricing" element={<Navigate to="/" replace />} />
-        <Route path="/blog" element={<Navigate to="/" replace />} />
-        <Route path="/features" element={<Navigate to="/" replace />} />
-        <Route path="/settings" element={<Navigate to="/editor" replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AnimatePresence>
+    <ErrorBoundary>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader />}><HomePage /></Suspense></PageTransition>} />
+          <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense></PageTransition>} />
+          <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense></PageTransition>} />
+          <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></PageTransition>} />
+          <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></PageTransition>} />
+          <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/p/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/share/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          {/* Graceful redirects for pruned pages */}
+          <Route path="/showcase" element={<Navigate to="/" replace />} />
+          <Route path="/record" element={<Navigate to="/" replace />} />
+          <Route path="/studio" element={<Navigate to="/" replace />} />
+          <Route path="/updates" element={<Navigate to="/" replace />} />
+          <Route path="/changelog" element={<Navigate to="/" replace />} />
+          <Route path="/about" element={<Navigate to="/" replace />} />
+          <Route path="/pricing" element={<Navigate to="/" replace />} />
+          <Route path="/blog" element={<Navigate to="/" replace />} />
+          <Route path="/features" element={<Navigate to="/" replace />} />
+          <Route path="/settings" element={<Navigate to="/editor" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
+    </ErrorBoundary>
   );
 };
 
@@ -133,16 +137,19 @@ export const App: React.FC = () => {
     };
   }, [openPreferences, togglePreferences]);
 
-  // Global Screen Recording shortcut (Ctrl+Alt+R / Cmd+Alt+R) - Works on ANY page without document requirement!
-
   // Defer non-critical storage initialization, session checks & eager prefetch until idle
   useEffect(() => {
     const initAppServices = () => {
-      // Eagerly preload EditorPage chunk in the background so document opening is instantaneous
-      import('./pages/EditorPage').catch(() => {});
-      import('./db/seed')
-        .then((m) => m.seedInitialDocuments())
-        .catch(console.error);
+      const path = typeof window !== 'undefined' ? window.location.pathname : '';
+      const isPublicShare = path.startsWith('/p/') || path.startsWith('/share/');
+
+      // Only preload full EditorPage and seed sample documents if not an external public share reader
+      if (!isPublicShare) {
+        import('./pages/EditorPage').catch(() => {});
+        import('./db/seed')
+          .then((m) => m.seedInitialDocuments())
+          .catch(console.error);
+      }
       checkAuth().catch(console.error);
     };
 
@@ -157,58 +164,63 @@ export const App: React.FC = () => {
 
   return (
     <BrowserRouter>
-      {/* Global Confirm Dialog */}
-      {isConfirmOpen && (
-        <Suspense fallback={null}>
-          <GlobalConfirmDialog />
-        </Suspense>
-      )}
+      <ErrorBoundary>
+        {/* Global Confirm Dialog */}
+        {isConfirmOpen && (
+          <Suspense fallback={null}>
+            <GlobalConfirmDialog />
+          </Suspense>
+        )}
 
-      {/* Command Palette Modal */}
-      {cmd.isOpen && (
-        <Suspense fallback={null}>
-          <CommandPaletteModal isOpen={cmd.isOpen} onClose={cmd.closePalette} />
-        </Suspense>
-      )}
+        {/* Command Palette Modal */}
+        {cmd.isOpen && (
+          <Suspense fallback={null}>
+            <CommandPaletteModal isOpen={cmd.isOpen} onClose={cmd.closePalette} />
+          </Suspense>
+        )}
 
-      {/* Floating Toolbar Settings Modal */}
-      {isToolbarSettingsOpen && (
-        <Suspense fallback={null}>
-          <ToolbarSettingsModal />
-        </Suspense>
-      )}
+        {/* Floating Toolbar Settings Modal */}
+        {isToolbarSettingsOpen && (
+          <Suspense fallback={null}>
+            <ToolbarSettingsModal />
+          </Suspense>
+        )}
 
+        {/* Global Preferences Modal (Ctrl+,) */}
+        {isPreferencesOpen && (
+          <Suspense fallback={null}>
+            <PreferencesModal />
+          </Suspense>
+        )}
 
+        {/* First-Visit Interactive Onboarding Modal */}
+        {isOnboardingOpen && (
+          <Suspense fallback={null}>
+            <OnboardingModal
+              isOpen={isOnboardingOpen}
+              onClose={() => {
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('md_writer_onboarding_completed', 'true');
+                }
+                setIsOnboardingOpen(false);
+              }}
+              onOpenAuth={() => setIsAuthModalOpen(true)}
+            />
+          </Suspense>
+        )}
 
-      {/* Global Preferences Modal (Ctrl+,) */}
-      {isPreferencesOpen && (
-        <Suspense fallback={null}>
-          <PreferencesModal />
-        </Suspense>
-      )}
+        {/* Modern App-Themed Cloud Sync Auth Modal */}
+        {isAuthModalOpen && (
+          <Suspense fallback={null}>
+            <QuickAuthModal
+              isOpen={isAuthModalOpen}
+              onClose={() => setIsAuthModalOpen(false)}
+            />
+          </Suspense>
+        )}
 
-      {/* First-Visit Interactive Onboarding Modal */}
-      {isOnboardingOpen && (
-        <Suspense fallback={null}>
-          <OnboardingModal
-            isOpen={isOnboardingOpen}
-            onClose={() => setIsOnboardingOpen(false)}
-            onOpenAuth={() => setIsAuthModalOpen(true)}
-          />
-        </Suspense>
-      )}
-
-      {/* Modern App-Themed Cloud Sync Auth Modal */}
-      {isAuthModalOpen && (
-        <Suspense fallback={null}>
-          <QuickAuthModal
-            isOpen={isAuthModalOpen}
-            onClose={() => setIsAuthModalOpen(false)}
-          />
-        </Suspense>
-      )}
-
-      <AppRoutes />
+        <AppRoutes />
+      </ErrorBoundary>
     </BrowserRouter>
   );
 };

@@ -13,11 +13,13 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { UserReview } from '../../services/reviewsStorage';
+import { useConfirm } from '../../stores/useConfirmStore';
 
 interface AdminReviewsTabProps {
   reviews: UserReview[];
   onApprove: (reviewId: string) => Promise<void>;
   onReject: (reviewId: string) => Promise<void>;
+  onUnpublish?: (reviewId: string) => Promise<void>;
   onDelete: (reviewId: string) => Promise<void>;
   onToggleVerified?: (reviewId: string, currentVerified: boolean) => Promise<void>;
 }
@@ -26,6 +28,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
   reviews,
   onApprove,
   onReject,
+  onUnpublish,
   onDelete,
   onToggleVerified,
 }) => {
@@ -33,10 +36,19 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [ratingFilter, setRatingFilter] = useState<number | 'all'>('all');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const confirm = useConfirm();
 
-  const pendingCount = reviews.filter((r) => r.status === 'pending').length;
-  const approvedCount = reviews.filter((r) => r.status === 'approved').length;
-  const rejectedCount = reviews.filter((r) => r.status === 'rejected').length;
+  const { pendingCount, approvedCount, rejectedCount } = useMemo(() => {
+    let pending = 0;
+    let approved = 0;
+    let rejected = 0;
+    for (const r of reviews) {
+      if (r.status === 'pending') pending++;
+      else if (r.status === 'approved') approved++;
+      else if (r.status === 'rejected') rejected++;
+    }
+    return { pendingCount: pending, approvedCount: approved, rejectedCount: rejected };
+  }, [reviews]);
 
   const filteredReviews = useMemo(() => {
     return reviews.filter((rev) => {
@@ -282,7 +294,7 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
                     {/* Revert to Pending */}
                     {isApproved && (
                       <button
-                        onClick={() => handleAction(() => onReject(rev.id), rev.id)}
+                        onClick={() => handleAction(() => (onUnpublish ? onUnpublish(rev.id) : onReject(rev.id)), rev.id)}
                         disabled={isBusy}
                         className="px-2.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-amber-300 font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
                         title="Unpublish review from homepage"
@@ -297,8 +309,9 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
                     {/* Toggle Verified Writer */}
                     {onToggleVerified && (
                       <button
-                        onClick={() => onToggleVerified(rev.id, Boolean(rev.verified))}
-                        className={`p-1.5 rounded-xl border transition-colors cursor-pointer ${
+                        onClick={() => handleAction(() => onToggleVerified(rev.id, Boolean(rev.verified)), rev.id)}
+                        disabled={isBusy}
+                        className={`p-1.5 rounded-xl border transition-colors cursor-pointer disabled:opacity-50 ${
                           rev.verified
                             ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
                             : 'bg-neutral-800 text-neutral-400 hover:text-white border-neutral-700/60'
@@ -311,7 +324,17 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
 
                     {/* Delete */}
                     <button
-                      onClick={() => handleAction(() => onDelete(rev.id), rev.id)}
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: 'Delete Review',
+                          message: `Are you sure you want to permanently delete the review from ${rev.name}?`,
+                          variant: 'danger',
+                          confirmText: 'Delete Permanently',
+                        });
+                        if (ok) {
+                          handleAction(() => onDelete(rev.id), rev.id);
+                        }
+                      }}
                       disabled={isBusy}
                       className="p-1.5 rounded-xl bg-neutral-800 hover:bg-rose-950/80 text-neutral-400 hover:text-rose-400 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
                       title="Delete review"

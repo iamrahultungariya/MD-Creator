@@ -15,6 +15,7 @@ import {
   Archive
 } from 'lucide-react';
 import { FeedbackItem, FeedbackStatus, FeedbackCategory, FeedbackPriority } from '../../types/admin';
+import { useConfirm } from '../../stores/useConfirmStore';
 
 interface AdminFeedbackTabProps {
   feedbacks: FeedbackItem[];
@@ -33,11 +34,18 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
   const [priorityFilter, setPriorityFilter] = useState<'all' | FeedbackPriority>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const confirm = useConfirm();
 
-  const newCount = feedbacks.filter((f) => f.status === 'new').length;
-  const inReviewCount = feedbacks.filter((f) => f.status === 'in_review').length;
-  const resolvedCount = feedbacks.filter((f) => f.status === 'resolved').length;
-  const archivedCount = feedbacks.filter((f) => f.status === 'archived').length;
+  const { newCount, inReviewCount, resolvedCount, archivedCount } = useMemo(() => {
+    let newC = 0, inRev = 0, res = 0, arch = 0;
+    for (const f of feedbacks) {
+      if (f.status === 'new') newC++;
+      else if (f.status === 'in_review') inRev++;
+      else if (f.status === 'resolved') res++;
+      else if (f.status === 'archived') arch++;
+    }
+    return { newCount: newC, inReviewCount: inRev, resolvedCount: res, archivedCount: arch };
+  }, [feedbacks]);
 
   const filteredFeedbacks = useMemo(() => {
     return feedbacks.filter((fb) => {
@@ -67,6 +75,14 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
   };
 
   const handleDelete = async (id: string) => {
+    const ok = await confirm({
+      title: 'Delete Feedback Entry',
+      message: 'Are you sure you want to permanently delete this user feedback entry?',
+      variant: 'danger',
+      confirmText: 'Delete Permanently',
+    });
+    if (!ok) return;
+
     try {
       setProcessingId(id);
       await onDelete(id);

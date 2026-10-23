@@ -215,6 +215,26 @@ export function useAdminData({
     showToast('⚠️ Blog marked as rejected.');
   };
 
+  const handleUnpublishBlog = async (articleId: string) => {
+    if (supabase && isUuid(articleId)) {
+      const { error } = await supabase
+        .from('blog_articles')
+        .update({ status: 'pending' })
+        .eq('id', articleId);
+
+      if (error) {
+        showToast(`⚠️ Failed to unpublish blog: ${error.message}`);
+        return;
+      }
+    }
+
+    setArticles((prev) =>
+      prev.map((art) => (art.id === articleId ? { ...art, status: 'pending' as const } : art))
+    );
+    showToast('↩️ Blog article unpublished and moved to pending drafts.');
+  };
+
+
   const handleDeleteBlog = async (articleId: string) => {
     if (!window.confirm('Delete this article record permanently? This cannot be undone.')) {
       return;
@@ -306,6 +326,26 @@ export function useAdminData({
     );
     showToast('⚠️ Review marked as rejected.');
   };
+
+  const handleUnpublishReview = async (reviewId: string) => {
+    if (supabase && isUuid(reviewId)) {
+      const { error } = await supabase
+        .from('community_reviews')
+        .update({ status: 'pending' })
+        .eq('id', reviewId);
+
+      if (error) {
+        showToast(`⚠️ Failed to unpublish review: ${error.message}`);
+        return;
+      }
+    }
+
+    setReviews((prev) =>
+      prev.map((rev) => (rev.id === reviewId ? { ...rev, status: 'pending' as const } : rev))
+    );
+    showToast('↩️ Review unpublished and moved to pending moderation queue.');
+  };
+
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!window.confirm('Delete this user review record permanently?')) {
@@ -489,10 +529,12 @@ export function useAdminData({
     loadAdminData,
     handleApproveBlog,
     handleRejectBlog,
+    handleUnpublishBlog,
     handleDeleteBlog,
     handleToggleFeaturedBlog,
     handleApproveReview,
     handleRejectReview,
+    handleUnpublishReview,
     handleDeleteReview,
     handleToggleVerifiedReview,
     handleUpdateFeedbackStatus,

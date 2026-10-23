@@ -161,10 +161,12 @@ export const AdminPage: React.FC = () => {
     loadAdminData,
     handleApproveBlog,
     handleRejectBlog,
+    handleUnpublishBlog,
     handleDeleteBlog,
     handleToggleFeaturedBlog,
     handleApproveReview,
     handleRejectReview,
+    handleUnpublishReview,
     handleDeleteReview,
     handleToggleVerifiedReview,
     handleUpdateFeedbackStatus,
@@ -272,6 +274,7 @@ export const AdminPage: React.FC = () => {
                 articles={articles}
                 onApprove={handleApproveBlog}
                 onReject={handleRejectBlog}
+                onUnpublish={handleUnpublishBlog}
                 onDelete={async (id) => {
                   await handleDeleteBlog(id);
                   if (previewArticle?.id === id) setPreviewArticle(null);
@@ -299,6 +302,7 @@ export const AdminPage: React.FC = () => {
                 reviews={reviews}
                 onApprove={handleApproveReview}
                 onReject={handleRejectReview}
+                onUnpublish={handleUnpublishReview}
                 onDelete={handleDeleteReview}
                 onToggleVerified={handleToggleVerifiedReview}
               />

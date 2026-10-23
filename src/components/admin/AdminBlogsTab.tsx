@@ -14,11 +14,13 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { Article, BlogCategory, CATEGORIES } from '../../data/blogArticles';
+import { useConfirm } from '../../stores/useConfirmStore';
 
 interface AdminBlogsTabProps {
   articles: Article[];
   onApprove: (articleId: string) => Promise<void>;
   onReject: (articleId: string) => Promise<void>;
+  onUnpublish?: (articleId: string) => Promise<void>;
   onDelete: (articleId: string) => Promise<void>;
   onToggleFeatured?: (articleId: string, currentFeatured: boolean) => Promise<void>;
   onPreview: (article: Article) => void;
@@ -29,6 +31,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
   articles,
   onApprove,
   onReject,
+  onUnpublish,
   onDelete,
   onToggleFeatured,
   onPreview,
@@ -38,10 +41,19 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'published' | 'rejected'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'All' | BlogCategory>('All');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const confirm = useConfirm();
 
-  const pendingCount = articles.filter((a) => a.status === 'pending').length;
-  const publishedCount = articles.filter((a) => a.status === 'published').length;
-  const rejectedCount = articles.filter((a) => a.status === 'rejected').length;
+  const { pendingCount, publishedCount, rejectedCount } = useMemo(() => {
+    let pending = 0;
+    let published = 0;
+    let rejected = 0;
+    for (const a of articles) {
+      if (a.status === 'pending') pending++;
+      else if (a.status === 'published') published++;
+      else if (a.status === 'rejected') rejected++;
+    }
+    return { pendingCount: pending, publishedCount: published, rejectedCount: rejected };
+  }, [articles]);
 
   const filteredArticles = useMemo(() => {
     return articles.filter((art) => {
@@ -248,6 +260,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                       <img
                         src={article.author.avatar}
                         alt={article.author.name}
+                        referrerPolicy="no-referrer"
                         className="w-6 h-6 rounded-full object-cover ring-1 ring-neutral-700"
                       />
                       <span className="text-xs font-semibold text-neutral-200">
@@ -301,7 +314,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                     {/* Unpublish Button (If already published) */}
                     {isPublished && (
                       <button
-                        onClick={() => handleAction(() => onReject(article.id), article.id)}
+                        onClick={() => handleAction(() => (onUnpublish ? onUnpublish(article.id) : onReject(article.id)), article.id)}
                         disabled={isBusy}
                         className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-amber-400 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
                         title="Unpublish from live blog"
@@ -314,8 +327,9 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                     {/* Toggle Featured */}
                     {onToggleFeatured && isPublished && (
                       <button
-                        onClick={() => onToggleFeatured(article.id, Boolean(article.featured))}
-                        className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                        onClick={() => handleAction(() => onToggleFeatured(article.id, Boolean(article.featured)), article.id)}
+                        disabled={isBusy}
+                        className={`p-2 rounded-xl border transition-colors cursor-pointer disabled:opacity-50 ${
                           article.featured
                             ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 hover:bg-amber-500/30'
                             : 'bg-neutral-800 text-neutral-400 hover:text-amber-400 border-neutral-700/60'
@@ -328,7 +342,17 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
 
                     {/* Delete Button */}
                     <button
-                      onClick={() => handleAction(() => onDelete(article.id), article.id)}
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: 'Delete Article Record',
+                          message: `Are you sure you want to permanently delete "${article.title}"?`,
+                          variant: 'danger',
+                          confirmText: 'Delete Permanently',
+                        });
+                        if (ok) {
+                          handleAction(() => onDelete(article.id), article.id);
+                        }
+                      }}
                       disabled={isBusy}
                       className="p-2 rounded-xl bg-neutral-800 hover:bg-rose-950/80 text-neutral-400 hover:text-rose-400 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
                       title="Delete permanently"

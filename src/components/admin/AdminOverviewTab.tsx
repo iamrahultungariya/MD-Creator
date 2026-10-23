@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BookOpen, MessageSquare, Activity, ArrowRight } from 'lucide-react';
 import { AdminStats, Article, UserReview, AdminTab } from '../../types/admin';
 import { AdminStatsCards } from './AdminStatsCards';
@@ -22,6 +22,15 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
   onApproveBlog,
   onApproveReview,
 }) => {
+  const pendingArticles = useMemo(
+    () => articles.filter((a) => a.status === 'pending').slice(0, 3),
+    [articles]
+  );
+  const pendingReviews = useMemo(
+    () => reviews.filter((r) => r.status === 'pending').slice(0, 3),
+    [reviews]
+  );
+
   return (
     <div className="space-y-8">
       <div>
@@ -86,34 +95,31 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
             </button>
           </div>
 
-          {articles.filter((a) => a.status === 'pending').slice(0, 3).length === 0 ? (
+          {pendingArticles.length === 0 ? (
             <p className="text-xs text-neutral-500 py-4 text-center">
               ✨ No blog submissions waiting for review.
             </p>
           ) : (
             <div className="space-y-2.5">
-              {articles
-                .filter((a) => a.status === 'pending')
-                .slice(0, 3)
-                .map((art) => (
-                  <div
-                    key={art.id}
-                    className="p-3.5 rounded-2xl bg-neutral-950/70 border border-neutral-800 flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-bold text-white truncate">{art.title}</h4>
-                      <p className="text-[11px] text-neutral-400">
-                        By {art.author.name} • {art.category}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => onApproveBlog(art.id)}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-xs font-bold cursor-pointer shrink-0"
-                    >
-                      Approve
-                    </button>
+              {pendingArticles.map((art) => (
+                <div
+                  key={art.id}
+                  className="p-3.5 rounded-2xl bg-neutral-950/70 border border-neutral-800 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-bold text-white truncate">{art.title}</h4>
+                    <p className="text-[11px] text-neutral-400">
+                      By {art.author.name} • {art.category}
+                    </p>
                   </div>
-                ))}
+                  <button
+                    onClick={() => onApproveBlog(art.id)}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-xs font-bold cursor-pointer shrink-0"
+                  >
+                    Approve
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -133,36 +139,33 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
             </button>
           </div>
 
-          {reviews.filter((r) => r.status === 'pending').slice(0, 3).length === 0 ? (
+          {pendingReviews.length === 0 ? (
             <p className="text-xs text-neutral-500 py-4 text-center">
               ✨ No pending reviews waiting for moderation.
             </p>
           ) : (
             <div className="space-y-2.5">
-              {reviews
-                .filter((r) => r.status === 'pending')
-                .slice(0, 3)
-                .map((rev) => (
-                  <div
-                    key={rev.id}
-                    className="p-3.5 rounded-2xl bg-neutral-950/70 border border-neutral-800 flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-xs font-bold text-white truncate">
-                        {rev.name} ({rev.rating}★)
-                      </h4>
-                      <p className="text-[11px] text-neutral-400 line-clamp-1 italic">
-                        "{rev.content}"
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => onApproveReview(rev.id)}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-xs font-bold cursor-pointer shrink-0"
-                    >
-                      Approve
-                    </button>
+              {pendingReviews.map((rev) => (
+                <div
+                  key={rev.id}
+                  className="p-3.5 rounded-2xl bg-neutral-950/70 border border-neutral-800 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-bold text-white truncate">
+                      {rev.name} ({rev.rating}★)
+                    </h4>
+                    <p className="text-[11px] text-neutral-400 line-clamp-1 italic">
+                      "{rev.content}"
+                    </p>
                   </div>
-                ))}
+                  <button
+                    onClick={() => onApproveReview(rev.id)}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 text-xs font-bold cursor-pointer shrink-0"
+                  >
+                    Approve
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

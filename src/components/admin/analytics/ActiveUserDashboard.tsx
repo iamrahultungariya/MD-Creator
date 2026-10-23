@@ -31,30 +31,33 @@ interface ActiveUserDashboardProps {
   onRefresh?: () => void;
 }
 
-export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = () => {
+export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefresh }) => {
   const [timeRange, setTimeRange] = useState<7 | 14 | 30>(14);
   const [hoveredPoint, setHoveredPoint] = useState<DailyMetricRecord | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   // Fetch telemetry records based on time range
   const dailyMetrics = useMemo(() => {
     return telemetryService.getDailyMetrics(timeRange);
-  }, [timeRange, isRefreshing]);
+  }, [timeRange, refreshTick]);
 
   const recentFeed = useMemo(() => {
     return telemetryService.getRecentActivityFeed();
-  }, [isRefreshing]);
+  }, [refreshTick]);
 
   const surveyMetrics = useMemo(() => {
     return telemetryService.getSurveyMetrics();
-  }, [isRefreshing]);
+  }, [refreshTick]);
 
   const surveyResponses = useMemo(() => {
     return telemetryService.getSurveyResponses();
-  }, [isRefreshing]);
+  }, [refreshTick]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
+    setRefreshTick((t) => t + 1);
+    if (onRefresh) onRefresh();
     setTimeout(() => setIsRefreshing(false), 400);
   };
 
@@ -151,17 +154,26 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = () => {
   };
 
   // Generate SVG path for Visitors
-  const visitorLineD = `M ${dailyMetrics.map((d, i) => `${getX(i)},${getY(d.visitors)}`).join(' L ')}`;
-  const visitorAreaD = `${visitorLineD} L ${getX(dailyMetrics.length - 1)},${chartHeight - 10} L ${getX(0)},${chartHeight - 10} Z`;
+  const visitorLineD = dailyMetrics.length > 0
+    ? `M ${dailyMetrics.map((d, i) => `${getX(i)},${getY(d.visitors)}`).join(' L ')}`
+    : '';
+  const visitorAreaD = dailyMetrics.length > 0
+    ? `${visitorLineD} L ${getX(dailyMetrics.length - 1)},${chartHeight - 10} L ${getX(0)},${chartHeight - 10} Z`
+    : '';
 
   // Generate SVG path for Active Writers
-  const writerLineD = `M ${dailyMetrics.map((d, i) => `${getX(i)},${getY(d.activeWriters)}`).join(' L ')}`;
-  const writerAreaD = `${writerLineD} L ${getX(dailyMetrics.length - 1)},${chartHeight - 10} L ${getX(0)},${chartHeight - 10} Z`;
+  const writerLineD = dailyMetrics.length > 0
+    ? `M ${dailyMetrics.map((d, i) => `${getX(i)},${getY(d.activeWriters)}`).join(' L ')}`
+    : '';
+  const writerAreaD = dailyMetrics.length > 0
+    ? `${writerLineD} L ${getX(dailyMetrics.length - 1)},${chartHeight - 10} L ${getX(0)},${chartHeight - 10} Z`
+    : '';
 
-  // Format short date (e.g. Oct 5)
+  // Format short date (e.g. Oct 5) - normalize with T00:00:00 to prevent UTC midnight date shift
   const formatShortDate = (isoStr: string) => {
-    const d = new Date(isoStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const normalized = isoStr.includes('T') ? isoStr : `${isoStr}T00:00:00`;
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? isoStr : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (

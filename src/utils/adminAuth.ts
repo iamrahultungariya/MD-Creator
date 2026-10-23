@@ -8,8 +8,12 @@ let cachedAdminStatus: { userId: string; isAdmin: boolean; timestamp: number } |
  * with fast-path for the project owner, local dev bypass, and 1.5s timeout protection.
  */
 export async function isCurrentUserAdmin(userId?: string | null): Promise<boolean> {
-  // 1. Check local dev bypass key
-  if (typeof window !== 'undefined' && localStorage.getItem('md_writer_admin_dev_bypass') === 'true') {
+  // 1. Check local dev bypass key (strictly development environment only)
+  if (
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    localStorage.getItem('md_writer_admin_dev_bypass') === 'true'
+  ) {
     return true;
   }
 
@@ -22,10 +26,13 @@ export async function isCurrentUserAdmin(userId?: string | null): Promise<boolea
       const activeUserId = userId || session?.user?.id;
       const userEmail = session?.user?.email?.toLowerCase();
 
-      // 2. Owner fast-path
+      // 2. Owner fast-path via configured environment variables
+      const configuredOwnerEmail = import.meta.env.VITE_OWNER_EMAIL?.toLowerCase();
+      const configuredOwnerId = import.meta.env.VITE_OWNER_ID;
+
       if (
-        userEmail === 'tungariyarahul08@gmail.com' ||
-        activeUserId === 'a2016098-c81c-4981-ad2b-b50667d24bf5'
+        (configuredOwnerEmail && userEmail === configuredOwnerEmail) ||
+        (configuredOwnerId && activeUserId === configuredOwnerId)
       ) {
         return true;
       }

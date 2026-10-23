@@ -14,7 +14,7 @@ export const AdminAccessDenied: React.FC<AdminAccessDeniedProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isLocalDev = import.meta.env.DEV && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   if (isChecking) {
     return (
@@ -54,15 +54,14 @@ export const AdminAccessDenied: React.FC<AdminAccessDeniedProps> = ({
               <span>Role Assigned:</span>
               <span className="text-amber-400 font-semibold uppercase font-mono">Contributor / User</span>
             </div>
-            <div className="pt-2 border-t border-neutral-800/80 text-[11px] text-neutral-500 flex items-start gap-1.5">
-              <Terminal className="w-3.5 h-3.5 shrink-0 mt-0.5 text-neutral-400" />
-              <span>
-                To grant admin privileges in Supabase, run: <br />
-                <code className="text-amber-300/90 font-mono text-[10px]">
-                  INSERT INTO public.user_roles (user_id, role) VALUES ('{user.id}', 'admin');
-                </code>
-              </span>
-            </div>
+            {isLocalDev && (
+              <div className="pt-2 border-t border-neutral-800/80 text-[11px] text-neutral-500 flex items-start gap-1.5">
+                <Terminal className="w-3.5 h-3.5 shrink-0 mt-0.5 text-neutral-400" />
+                <span>
+                  Local Development: Admin privileges can be granted via Supabase Dashboard roles or by setting <code className="text-amber-300/90 font-mono text-[10px]">VITE_OWNER_EMAIL</code> in <code className="text-amber-300/90 font-mono text-[10px]">.env</code>.
+                </span>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-neutral-950/70 border border-neutral-800 rounded-2xl p-4 mb-6 text-xs text-center text-neutral-400">
@@ -81,7 +80,7 @@ export const AdminAccessDenied: React.FC<AdminAccessDeniedProps> = ({
             </button>
           ) : null}
 
-          {/* Dev Bypass Button for local testing */}
+          {/* Dev Bypass Button strictly for local dev testing */}
           {isLocalDev && onEnableDevBypass && (
             <button
               onClick={onEnableDevBypass}

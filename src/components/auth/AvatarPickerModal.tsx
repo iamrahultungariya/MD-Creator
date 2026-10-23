@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, Sparkles } from 'lucide-react';
 import { AVATAR_PRESETS, getPresetAvatarUrl } from './avatarPresets';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -19,6 +19,17 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
     const found = AVATAR_PRESETS.find((p) => current.includes(p.id) || current.includes(encodeURIComponent(p.svg.trim())));
     return found ? found.id : 'scribe';
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -56,7 +67,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
     }
 
     if (refreshProfile) {
-      refreshProfile().catch(() => {});
+      await refreshProfile().catch(() => {});
     }
 
     onClose();
@@ -108,26 +119,28 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
                 onClick={() => setSelectedId(preset.id)}
                 className={`group p-3 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-2 relative ${
                   isSelected
-                    ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 shadow-xs ring-1 ring-[#8257F5]'
-                    : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/70 text-neutral-900 dark:text-neutral-100'
+                    ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 ring-2 ring-[#8257F5]/40 shadow-sm'
+                    : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50'
                 }`}
               >
-                {/* Active check pill */}
+                {/* Selected Checkmark Badge */}
                 {isSelected && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#8257F5] text-white flex items-center justify-center text-[10px]">
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#8257F5] text-white flex items-center justify-center shadow-xs">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
                   </span>
                 )}
 
-                <img
-                  src={avatarUrl}
-                  alt={preset.name}
-                  className={`w-13 h-13 rounded-full object-cover transition-transform group-hover:scale-105 ${
-                    isSelected ? 'ring-2 ring-[#8257F5] ring-offset-2 ring-offset-white dark:ring-offset-neutral-900' : ''
-                  }`}
-                />
+                {/* Avatar SVG Preview Circle */}
+                <div className="w-14 h-14 rounded-full p-1 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                  <img
+                    src={avatarUrl}
+                    alt={preset.name}
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
 
-                <div className="min-w-0">
+                {/* Avatar Info */}
+                <div className="w-full">
                   <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">
                     {preset.name}
                   </div>
@@ -142,24 +155,20 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
         {/* Footer Actions */}
         <div className="px-5 py-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
-          <span className="text-[11px] text-neutral-400 dark:text-neutral-500 font-mono">
-            100% Vector • Offline Stored
-          </span>
+          <button
+            onClick={onClose}
+            className="px-3.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+          >
+            Cancel
+          </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onClose}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleApply}
-              className="px-4 py-1.5 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white font-semibold text-xs transition-colors shadow-xs cursor-pointer"
-            >
-              Apply Character
-            </button>
-          </div>
+          <button
+            onClick={handleApply}
+            className="px-4 py-1.5 rounded-lg bg-[#8257F5] hover:bg-[#7245E5] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>Apply Avatar</span>
+          </button>
         </div>
       </div>
     </div>

@@ -124,7 +124,6 @@
 .cm-dimmed-line {
   opacity: 0.28 !important;
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  filter: blur(0.2px);
 }
 .cm-dimmed-line:hover {
   opacity: 0.7 !important;
@@ -301,15 +300,15 @@ article mark,
 
 /* Backward compatibility aliases */
 .font-serif-reading {
-  font-family: var(--font-lexend);
+  font-family: var(--font-serif);
 }
 
 .font-sans-reading {
-  font-family: var(--font-arial);
+  font-family: var(--font-sans);
 }
 
 .font-mono-reading {
-  font-family: var(--font-lato);
+  font-family: var(--font-mono);
 }
 
 /* Document Writer Styling for CodeMirror 6 (Prose Writing feel, not Code IDE) */

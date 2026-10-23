@@ -5,6 +5,7 @@ import { queryClient } from './lib/queryClient';
 import { App } from './App';
 import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
+import '@fontsource-variable/literata';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
@@ -20,6 +21,12 @@ if (typeof window !== 'undefined') {
       event.preventDefault();
       event.stopImmediatePropagation?.();
     }
+  });
+
+  // Auto-recover from dynamic chunk load errors during new deployments (prevents white screen)
+  window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    window.location.reload();
   });
 }
 
