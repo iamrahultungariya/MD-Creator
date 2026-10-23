@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { 
+import {
+  Loader2,
   FileText, 
   Copy, 
   Check, 
