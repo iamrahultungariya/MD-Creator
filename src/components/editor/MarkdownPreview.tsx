@@ -25,7 +25,7 @@ const MermaidBlock = React.lazy(() =>
 
 // Static plugin arrays to avoid re-constructing the unified AST processor pipeline on every render/keystroke
 const STATIC_REMARK_PLUGINS: any[] = [remarkGfm, remarkMath, remarkBreaks];
-const STATIC_REHYPE_PLUGINS: any[] = [rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], rehypeKatex, rehypeHighlight];
+const STATIC_REHYPE_PLUGINS: any[] = [rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], [rehypeKatex, { output: 'htmlAndMathml', strict: false, throwOnError: false }], rehypeHighlight];
 
 interface MarkdownPreviewProps {
   content: string;

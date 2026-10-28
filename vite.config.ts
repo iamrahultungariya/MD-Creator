@@ -118,7 +118,7 @@ export default defineConfig({
             if (id.includes('mermaid')) {
               return 'vendor-mermaid';
             }
-            if (id.includes('katex')) {
+            if ((id.includes('/node_modules/katex/') || id.includes('\\node_modules\\katex\\')) && !id.endsWith('.css')) {
               return 'vendor-katex';
             }
             if (id.includes('@codemirror') || id.includes('codemirror')) {

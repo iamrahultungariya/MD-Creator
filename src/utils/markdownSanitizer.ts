@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify';
-import { defaultSchema, Options as SanitizeOptions } from 'rehype-sanitize';
+import { defaultSchema, type Options as SanitizeOptions } from 'rehype-sanitize';
 
 /**
  * Custom rehype-sanitize schema for MD Writer.
@@ -48,7 +48,13 @@ const ALLOWED_HTML_TAGS = new Set([
 ]);
 
 // Hook DOMPurify to strip dangerous styles and full-screen hijacks
-DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
+const purifyInstance: any = (DOMPurify as any)?.sanitize
+  ? DOMPurify
+  : typeof DOMPurify === 'function'
+  ? (DOMPurify as any)(typeof window !== 'undefined' ? window : undefined)
+  : DOMPurify;
+
+if (typeof purifyInstance?.addHook === 'function') purifyInstance.addHook('uponSanitizeAttribute', (_node: any, data: any) => {
   if (data.attrName === 'style') {
     data.attrValue = data.attrValue
       .replace(/position\s*:\s*(fixed|absolute|sticky)\s*;?/gi, '')
@@ -126,7 +132,7 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   });
 
   // 5. Sanitize with DOMPurify to guarantee unclosed tags are balanced & event handlers removed
-  sanitized = DOMPurify.sanitize(sanitized, {
+  sanitized = (typeof purifyInstance?.sanitize === 'function') ? purifyInstance.sanitize(sanitized, {
     FORBID_TAGS: [
       'form', 'input', 'button', 'script', 'iframe', 'frame', 'object',
       'embed', 'applet', 'meta', 'link', 'base', 'textarea', 'select', 'style', 'svg'
@@ -139,7 +145,7 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
     ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|image):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     ALLOW_DATA_ATTR: false,
     KEEP_CONTENT: true,
-  });
+  }) : sanitized;
 
   // 6. Restore markdown blockquote markers (DOMPurify converts '>' in text to '&gt;')
   sanitized = sanitized.replace(/^([ \t]*)(?:&gt;[ \t]?)+/gm, (match) => {
