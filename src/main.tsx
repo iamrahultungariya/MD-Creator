@@ -10,24 +10,44 @@ import 'katex/dist/katex.min.css';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
 
-// Suppress benign browser extension runtime message channel closed errors
+// Suppress benign browser extension runtime errors and Workbox offline/CSP font cache misses
 if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
     const msg = event?.reason?.message || String(event?.reason || '');
     if (
       msg.includes('message channel closed') ||
       msg.includes('listener indicated an asynchronous response') ||
-      msg.includes('runtime.lastError')
+      msg.includes('runtime.lastError') ||
+      msg.includes('chrome-extension://') ||
+      msg.includes('moz-extension://') ||
+      msg.includes('no-response') ||
+      msg.includes('net::ERR_FAILED')
     ) {
       event.preventDefault();
       event.stopImmediatePropagation?.();
     }
   });
 
-  // Auto-recover from dynamic chunk load errors during new deployments (prevents white screen)
-  window.addEventListener('vite:preloadError', (event) => {
+  // Auto-recover from dynamic chunk load errors during new deployments with strict loop prevention
+  window.addEventListener('vite:preloadError', (event: any) => {
     event.preventDefault();
-    window.location.reload();
+    const payloadUrl = String(event?.payload?.message || event?.payload || '');
+    if (
+      payloadUrl.includes('chrome-extension://') ||
+      payloadUrl.includes('moz-extension://') ||
+      payloadUrl.includes('safari-extension://')
+    ) {
+      return;
+    }
+    const lastReload = Number(sessionStorage.getItem('md_writer_preload_reload') || '0');
+    const now = Date.now();
+    // Allow at most one reload every 60 seconds to strictly prevent infinite reload loops
+    if (now - lastReload > 60000) {
+      sessionStorage.setItem('md_writer_preload_reload', String(now));
+      window.location.reload();
+    } else {
+      console.warn('Vite preload error detected but reload throttled to prevent loop:', event);
+    }
   });
 }
 

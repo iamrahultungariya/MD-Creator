@@ -18,13 +18,32 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Ignore third-party extension errors so app component tree is never destroyed
+    const isExtensionError = 
+      error?.message?.includes('chrome-extension://') ||
+      error?.message?.includes('moz-extension://') ||
+      error?.message?.includes('safari-extension://');
+    if (isExtensionError) {
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an unhandled error:', error, errorInfo);
 
-    // Auto-reload if dynamic chunk failed to load due to a new deployment
+    // Completely ignore third-party browser extensions errors (never trigger auto-reloads)
+    const isExtensionError = 
+      error?.message?.includes('chrome-extension://') ||
+      error?.message?.includes('moz-extension://') ||
+      error?.message?.includes('safari-extension://') ||
+      errorInfo?.componentStack?.includes('chrome-extension://');
+
+    if (isExtensionError) {
+      return;
+    }
+
+    // Auto-reload if dynamic chunk failed to load due to a new deployment (strictly throttled)
     const isChunkLoadError = 
       error?.message?.includes('dynamically imported module') ||
       error?.message?.includes('Loading chunk') ||
@@ -32,9 +51,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     if (isChunkLoadError && typeof window !== 'undefined') {
       const reloadKey = 'md_writer_chunk_reload_attempt';
-      const lastAttempt = sessionStorage.getItem(reloadKey);
-      if (!lastAttempt) {
-        sessionStorage.setItem(reloadKey, String(Date.now()));
+      const lastAttempt = Number(sessionStorage.getItem(reloadKey) || '0');
+      const now = Date.now();
+      // Strict 60-second cooldown so it can NEVER loop reload
+      if (now - lastAttempt > 60000) {
+        sessionStorage.setItem(reloadKey, String(now));
         window.location.reload();
       }
     }
