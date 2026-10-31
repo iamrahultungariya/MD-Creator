@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { db, DocumentMetadata } from '../db';
+import { db, DocumentMetadata, notifyDocumentStoreChanged } from '../db';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -181,19 +181,51 @@ export async function syncDocumentTrashToSupabase(id: string, isDeleted: boolean
   }
 }
 
-let lastPullTimestamp = 0;
+const LAST_PULL_KEY = 'md_writer_last_cloud_pull_ts';
+const LAST_SYNC_KEY = 'md_writer_last_cloud_sync_ts';
+
+export function getLastCloudPullTime(): number {
+  try {
+    const val = localStorage.getItem(LAST_PULL_KEY);
+    return val ? parseInt(val, 10) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setLastCloudPullTime(ts: number): void {
+  try {
+    localStorage.setItem(LAST_PULL_KEY, String(ts));
+  } catch {}
+}
+
+export function getLastCloudSyncTime(): number {
+  try {
+    const val = localStorage.getItem(LAST_SYNC_KEY);
+    return val ? parseInt(val, 10) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setLastCloudSyncTime(ts: number): void {
+  try {
+    localStorage.setItem(LAST_SYNC_KEY, String(ts));
+  } catch {}
+}
 
 /**
  * Pulls all documents belonging to the authenticated user from Supabase into Dexie.
- * Throttled to at most once per 60s, protected by 3.5s timeout and parallelized.
+ * Throttled to at most once per 15s (unless forced), protected by 4.5s timeout and parallelized.
  */
 export async function pullCloudDocuments(force = false): Promise<number> {
   if (!supabase) return 0;
   // Throttle cloud pulls so rapid navigation doesn't trigger redundant network waterfalls
-  if (!force && Date.now() - lastPullTimestamp < 30000) {
+  const lastPull = getLastCloudPullTime();
+  if (!force && Date.now() - lastPull < 15000) {
     return 0;
   }
-  lastPullTimestamp = Date.now();
+  setLastCloudPullTime(Date.now());
 
   return withTimeout(
     (async () => {
@@ -216,7 +248,8 @@ export async function pullCloudDocuments(force = false): Promise<number> {
         for (const cloudDoc of cloudDocs) {
           const localDoc = await db.documents.get(cloudDoc.id);
           const cloudUpdated = new Date(cloudDoc.updated_at).getTime();
-          if (!localDoc || cloudUpdated > localDoc.updatedAt) {
+          // 1s threshold prevents race condition churn from clock skew
+          if (!localDoc || cloudUpdated > localDoc.updatedAt + 1000) {
             pendingDocs.push(cloudDoc);
           }
         }
@@ -267,29 +300,32 @@ export async function pullCloudDocuments(force = false): Promise<number> {
           );
         }
 
+        if (pulledCount > 0) {
+          notifyDocumentStoreChanged();
+        }
+
         return pulledCount;
       } catch (err) {
         console.warn('[Supabase Pull] Failed to pull documents:', err);
         return 0;
       }
     })(),
-    4000,
+    4500,
     0
   );
 }
 
-let lastSyncAllTimestamp = 0;
-
 /**
  * Performs bi-directional synchronization between Dexie (IndexedDB) and Supabase Cloud.
- * Throttled to once every 2 minutes, non-blocking and batched.
+ * Throttled to once every 20s (unless forced), non-blocking, dirty-tracked and batched.
  */
 export async function syncAllDocuments(force = false): Promise<{ pulled: number; pushed: number; syncedTitles: string[] }> {
   if (!supabase) return { pulled: 0, pushed: 0, syncedTitles: [] };
-  if (!force && Date.now() - lastSyncAllTimestamp < 30000) {
+  const lastSync = getLastCloudSyncTime();
+  if (!force && Date.now() - lastSync < 20000) {
     return { pulled: 0, pushed: 0, syncedTitles: [] };
   }
-  lastSyncAllTimestamp = Date.now();
+  setLastCloudSyncTime(Date.now());
 
   try {
     const isPro = await isUserProForSync();
@@ -298,14 +334,29 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return { pulled: 0, pushed: 0, syncedTitles: [] };
 
-    // 1. Pull latest cloud documents first
+    // 1. Pull latest cloud documents first (passes force flag)
     const pulled = await pullCloudDocuments(force);
 
-    // 2. Push any local documents that don't exist in cloud or are newer (in parallel batches)
+    // 2. Fetch lightweight cloud metadata mapping (id -> updated_at) to avoid blind O(N) pushes
+    const { data: cloudMetas } = await supabase
+      .from('documents')
+      .select('id, updated_at')
+      .eq('user_id', session.user.id);
+
+    const cloudMap = new Map<string, number>();
+    if (cloudMetas) {
+      for (const cm of cloudMetas) {
+        cloudMap.set(cm.id, new Date(cm.updated_at).getTime());
+      }
+    }
+
+    // 3. Only push local documents that are missing in cloud OR modified locally since last cloud update
     const localDocs = await db.documents.toArray();
-    const docsToSync = localDocs.filter(
-      (d) => !(d.id === 'doc-getting-started' && d.tags?.includes('Guide'))
-    );
+    const docsToSync = localDocs.filter((d) => {
+      if (d.id === 'doc-getting-started' && d.tags?.includes('Guide')) return false;
+      const cloudTime = cloudMap.get(d.id);
+      return cloudTime === undefined || d.updatedAt > cloudTime + 1000;
+    });
 
     let pushed = 0;
     const BATCH_SIZE = 4;
@@ -319,6 +370,10 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
           if (synced) pushed++;
         })
       );
+    }
+
+    if (pushed > 0) {
+      notifyDocumentStoreChanged();
     }
 
     return { pulled, pushed, syncedTitles: docsToSync.map(d => d.title).slice(0, 10) };

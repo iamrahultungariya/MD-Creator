@@ -8,9 +8,11 @@ import {
   Trash2, 
   Download, 
   CheckCircle2, 
-  HardDrive
+  HardDrive,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
-import { db, emptyTrash } from '../../db';
+import { db, emptyTrash, deleteDocumentRevisions, deleteAllRevisions } from '../../db';
 import { SOFT_LIMIT_MB, SOFT_LIMIT_BYTES } from './StorageLimitRing';
 
 interface StorageDetailsModalProps {
@@ -31,11 +33,25 @@ interface StorageBreakdown {
   totalBytes: number;
 }
 
+export interface DocRevisionSummary {
+  docId: string;
+  title: string;
+  count: number;
+  lastDate: number;
+  totalBytes: number;
+}
+
 function formatBytes(bytes: number): string {
   if (!bytes || bytes <= 0) return '0 KB';
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatDate(ts: number): string {
+  if (!ts) return 'Never';
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
@@ -54,6 +70,11 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
     imageBytes: 0,
     totalBytes: 0,
   });
+  const [docRevisions, setDocRevisions] = useState<DocRevisionSummary[]>([]);
+  const [isRevisionsExpanded, setIsRevisionsExpanded] = useState(false);
+  const [isPurgingAllRevs, setIsPurgingAllRevs] = useState(false);
+  const [purgingDocId, setPurgingDocId] = useState<string | null>(null);
+  const [revsPurgedSuccess, setRevsPurgedSuccess] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [isPurgingTrash, setIsPurgingTrash] = useState(false);
@@ -77,9 +98,38 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
 
       const allRevisions = await db.revisions.toArray();
       let revisionBytes = 0;
+      const docMap = new Map(allDocs.map(d => [d.id, d.title]));
+      const revGroupMap = new Map<string, DocRevisionSummary>();
+
       for (const rev of allRevisions) {
-        revisionBytes += new Blob([rev.content || '']).size;
+        const size = (rev.storedSizeBytes && rev.storedSizeBytes > 0)
+          ? rev.storedSizeBytes
+          : rev.deltaData
+          ? new Blob([rev.deltaData]).size
+          : new Blob([rev.content || '']).size;
+
+        revisionBytes += size;
+
+        const docId = rev.documentId;
+        const existing = revGroupMap.get(docId);
+        if (existing) {
+          existing.count++;
+          existing.totalBytes += size;
+          if (rev.timestamp > existing.lastDate) {
+            existing.lastDate = rev.timestamp;
+          }
+        } else {
+          revGroupMap.set(docId, {
+            docId,
+            title: docMap.get(docId) || rev.title || 'Untitled Document',
+            count: 1,
+            lastDate: rev.timestamp,
+            totalBytes: size,
+          });
+        }
       }
+
+      setDocRevisions(Array.from(revGroupMap.values()).sort((a, b) => b.totalBytes - a.totalBytes));
 
       const allImages = await db.images.toArray();
       let imageBytes = 0;
@@ -190,6 +240,35 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
       console.error('Failed to purge trash:', err);
     } finally {
       setIsPurgingTrash(false);
+    }
+  };
+
+  const handlePurgeDocRevisions = async (docId: string) => {
+    setPurgingDocId(docId);
+    try {
+      await deleteDocumentRevisions(docId);
+      await fetchBreakdown();
+      if (onStorageChanged) onStorageChanged();
+    } catch (err) {
+      console.error('Failed to purge doc revisions:', err);
+    } finally {
+      setPurgingDocId(null);
+    }
+  };
+
+  const handlePurgeAllRevisions = async () => {
+    if (breakdown.revisionCount === 0) return;
+    setIsPurgingAllRevs(true);
+    try {
+      await deleteAllRevisions();
+      setRevsPurgedSuccess(true);
+      await fetchBreakdown();
+      if (onStorageChanged) onStorageChanged();
+      setTimeout(() => setRevsPurgedSuccess(false), 3000);
+    } catch (err) {
+      console.error('Failed to purge all revisions:', err);
+    } finally {
+      setIsPurgingAllRevs(false);
     }
   };
 
@@ -356,6 +435,94 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
             </div>
           </div>
 
+          {/* Document Revisions Breakdown Section */}
+          <div className="rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setIsRevisionsExpanded(!isRevisionsExpanded)}
+              className="w-full px-3.5 py-2.5 flex items-center justify-between text-left hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer select-none"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <History className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
+                  Document Revisions Breakdown
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                  {docRevisions.length} notes
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[11px] text-neutral-500 font-medium">
+                  {formatBytes(breakdown.revisionBytes)}
+                </span>
+                {isRevisionsExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-neutral-400" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-neutral-400" />
+                )}
+              </div>
+            </button>
+
+            {isRevisionsExpanded && (
+              <div className="border-t border-neutral-200/70 dark:border-neutral-800 p-3 space-y-2.5">
+                <div className="flex items-center justify-between text-[11px] text-neutral-500">
+                  <span>Delta history snapshots stored per note</span>
+                  {breakdown.revisionCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handlePurgeAllRevisions}
+                      disabled={isPurgingAllRevs}
+                      className="text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer disabled:opacity-50"
+                    >
+                      {isPurgingAllRevs ? 'Purging...' : 'Purge All Revisions'}
+                    </button>
+                  )}
+                </div>
+
+                {docRevisions.length === 0 ? (
+                  <div className="py-4 text-center text-xs text-neutral-400">
+                    No revision history snapshots found in this vault.
+                  </div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                    {docRevisions.map((item) => (
+                      <div
+                        key={item.docId}
+                        className="px-2.5 py-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-neutral-900 dark:text-white truncate">
+                            {item.title}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-neutral-400 mt-0.5">
+                            <span>{item.count} snapshots</span>
+                            <span>•</span>
+                            <span>Last: {formatDate(item.lastDate)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-mono text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                            {formatBytes(item.totalBytes)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handlePurgeDocRevisions(item.docId)}
+                            disabled={purgingDocId === item.docId}
+                            title="Delete revisions for this note"
+                            className="p-1 rounded text-neutral-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Storage Information Note */}
           <div className="p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 flex items-start gap-2.5 text-neutral-600 dark:text-neutral-400">
             <HardDrive className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
@@ -401,6 +568,13 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
               <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Trash emptied!</span>
+              </span>
+            )}
+
+            {revsPurgedSuccess && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>All revisions purged!</span>
               </span>
             )}
           </div>

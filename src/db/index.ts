@@ -164,6 +164,7 @@ export async function getDocumentContent(id: string): Promise<string> {
 export function notifyDocumentStoreChanged(docId?: string): void {
   try {
     queryClient.invalidateQueries({ queryKey: ['documents'] });
+    queryClient.invalidateQueries({ queryKey: ['active-document-count'] });
     queryClient.invalidateQueries({ queryKey: ['trash-count'] });
     queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
     queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
@@ -482,6 +483,25 @@ export async function getDocumentRevisions(documentId: string): Promise<Document
  */
 export async function deleteDocumentRevisions(documentId: string): Promise<void> {
   await db.revisions.where('documentId').equals(documentId).delete();
+  notifyDocumentStoreChanged();
+}
+
+/**
+ * Deletes a single revision by its numeric ID.
+ */
+export async function deleteRevision(id: number): Promise<void> {
+  await db.revisions.delete(id);
+  notifyDocumentStoreChanged();
+}
+
+/**
+ * Permanently deletes all historical revisions across the entire vault.
+ */
+export async function deleteAllRevisions(): Promise<number> {
+  const count = await db.revisions.count();
+  await db.revisions.clear();
+  notifyDocumentStoreChanged();
+  return count;
 }
 
 /**

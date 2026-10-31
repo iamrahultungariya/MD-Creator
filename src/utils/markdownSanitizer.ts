@@ -27,11 +27,30 @@ export const markdownSanitizeSchema: SanitizeOptions = {
     td: ['align', 'className'],
     input: ['type', 'checked', 'disabled'],
     img: ['src', 'alt', 'title', 'className', 'loading'],
-    a: ['href', 'title', 'target', 'rel', 'className']
+    a: ['href', 'title', 'target', 'rel', 'className'],
+    math: ['xmlns', 'display'],
+    annotation: ['encoding'],
+    mo: ['stretchy', 'fence', 'separator'],
+    mi: ['mathvariant'],
+    mn: [],
+    msup: [],
+    msub: [],
+    msubsup: [],
+    mfrac: ['linethickness'],
+    mtext: [],
+    mspace: ['width', 'height', 'depth'],
+    mtable: ['align', 'rowspacing', 'columnspacing'],
+    mtr: [],
+    mtd: ['columnalign', 'rowalign'],
+    msqrt: [],
+    mroot: []
   },
   tagNames: [
     ...(defaultSchema.tagNames || []),
-    'kbd', 'mark', 'sub', 'sup', 'details', 'summary', 'input'
+    'kbd', 'mark', 'sub', 'sup', 'details', 'summary', 'input',
+    'math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub',
+    'msubsup', 'mfrac', 'mtext', 'mspace', 'mover', 'munder', 'munderover',
+    'mtable', 'mtr', 'mtd', 'msqrt', 'mroot'
   ],
   protocols: {
     ...defaultSchema.protocols,
@@ -44,7 +63,8 @@ export const markdownSanitizeSchema: SanitizeOptions = {
  * Valid HTML tags allowed in MD Writer markdown documents
  */
 const ALLOWED_HTML_TAGS = new Set([
-  'details', 'summary', 'kbd', 'br', 'hr', 'span', 'div', 'p', 'b', 'i', 'strong', 'em', 'sub', 'sup', 'mark', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'ul', 'ol', 'li', 'blockquote', 'a', 'img'
+  'details', 'summary', 'kbd', 'br', 'hr', 'span', 'div', 'p', 'b', 'i', 'strong', 'em', 'sub', 'sup', 'mark', 'code', 'pre', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'ul', 'ol', 'li', 'blockquote', 'a', 'img',
+  'math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'msubsup', 'mfrac', 'mtext', 'mspace', 'mover', 'munder', 'munderover', 'mtable', 'mtr', 'mtd', 'msqrt', 'mroot'
 ]);
 
 // Hook DOMPurify to strip dangerous styles and full-screen hijacks
@@ -65,20 +85,51 @@ if (typeof purifyInstance?.addHook === 'function') purifyInstance.addHook('uponS
 });
 
 /**
+ * Normalizes LaTeX math delimiters (ChatGPT-style \( ... \) and \[ ... \]) into standard Markdown math syntax.
+ */
+export function normalizeMathDelimiters(content: string): string {
+  if (!content) return '';
+
+  // 1. Convert display math: \[ ... \] or \\[ ... \\] to $$ ... $$
+  let normalized = content.replace(/(?:\\\\\[|\\\[)([\s\S]*?)(?:\\\\\]|\\\])/g, (_, math) => {
+    return `\n$$\n${math.trim()}\n$$\n`;
+  });
+
+  // 2. Convert inline math: \( ... \) or \\( ... \\) to $ ... $
+  normalized = normalized.replace(/(?:\\\\\([ \t]*|\\\([ \t]*)([^\n]+?)(?:[ \t]*\\\\\)|[ \t]*\\\))/g, (_, math) => {
+    return `$${math.trim()}$`;
+  });
+
+  return normalized;
+}
+
+/**
  * Sanitizes raw markdown before feeding into ReactMarkdown AST.
  * 1. Blocks active XSS and phishing forms (<form>, <input>, scripts, event handlers).
  * 2. Neutralizes malicious CSS bleeding (position: fixed, z-index 9999 UI hijacks).
  * 3. Repairs unclosed tags to prevent markdown bleed into parent DOM.
  * 4. Preserves legitimate code fences and mathematical operators (<20, < 1GB).
+ * 5. Normalizes and protects KaTeX math ($$, $, \(...\), \[...\]).
  */
 export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   if (!rawMarkdown) return '';
 
-  // 1. Protect code blocks (``` and `) AND math blocks ($$ and $) from modification
-  const protectedBlocks: string[] = [];
-  let sanitized = rawMarkdown.replace(/(```[\s\S]*?```|`[^`\n]+`|\$\$[\s\S]*?\$\$|\$(?!\s)[^\$\n]+(?<!\s)\$)/g, (match) => {
-    const placeholder = `%%PROTECTED_BLOCK_${protectedBlocks.length}%%`;
-    protectedBlocks.push(match);
+  // 1. Protect code blocks (``` and `) from modification
+  const protectedCodeBlocks: string[] = [];
+  let sanitized = rawMarkdown.replace(/(```[\s\S]*?```|`[^`\n]+`)/g, (match) => {
+    const placeholder = `%%PROTECTED_CODE_${protectedCodeBlocks.length}%%`;
+    protectedCodeBlocks.push(match);
+    return placeholder;
+  });
+
+  // 1.1 Normalize ChatGPT / LaTeX math delimiters into standard Markdown math ($$ and $)
+  sanitized = normalizeMathDelimiters(sanitized);
+
+  // 1.2 Protect math blocks ($$ and $) from DOMPurify & HTML escaping
+  const protectedMathBlocks: string[] = [];
+  sanitized = sanitized.replace(/(\$\$[\s\S]*?\$\$|\$(?!\s)[^\$\n]+(?<!\s)\$)/g, (match) => {
+    const placeholder = `%%PROTECTED_MATH_${protectedMathBlocks.length}%%`;
+    protectedMathBlocks.push(match);
     return placeholder;
   });
 
@@ -155,9 +206,14 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
   // 7. Fix isolated '>' on its own line when immediately inside or adjacent to parentheses
   sanitized = sanitized.replace(/\(\s*\n>\s*\n/g, '(&gt; ');
 
-  // 8. Restore protected blocks (code fences, inline code, display & inline KaTeX math)
-  sanitized = sanitized.replace(/%%PROTECTED_BLOCK_(\d+)%%/g, (_, index) => {
-    return protectedBlocks[Number(index)] || '';
+  // 8. Restore protected math blocks (KaTeX)
+  sanitized = sanitized.replace(/%%PROTECTED_MATH_(\d+)%%/g, (_, index) => {
+    return protectedMathBlocks[Number(index)] || '';
+  });
+
+  // 9. Restore protected code blocks (code fences, inline code)
+  sanitized = sanitized.replace(/%%PROTECTED_CODE_(\d+)%%/g, (_, index) => {
+    return protectedCodeBlocks[Number(index)] || '';
   });
 
   return sanitized;

@@ -121,6 +121,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         user_id: '',
         slug: res.slug,
         is_public: true,
+        permission_mode: permissionMode,
         is_password_protected: enablePassword,
         view_count: publishedRecord?.view_count || 0,
         published_at: new Date().toISOString(),

@@ -83,13 +83,13 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                   e.stopPropagation();
                   onToggleSelect?.(doc.id);
                 }}
-                className={`w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-brand-600 border-brand-600 text-white shadow-2xs'
-                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-transparent'
+                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 text-transparent'
                 }`}
               >
-                <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+                <Check className={`w-3 h-3 stroke-[2.5] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
               </div>
             ) : (
               <div

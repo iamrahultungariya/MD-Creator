@@ -17,7 +17,6 @@ import {
   Globe2
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { telemetryService } from '../../services/telemetryService';
 import { APP_VERSION_LABEL } from '../../config/version';
 
 interface QuickAuthModalProps {
@@ -62,7 +61,6 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
     if (mode === 'signup') {
       const res = await signUp(cleanEmail, password, name.trim());
       if (res.success) {
-        telemetryService.bindSurveyToEmail(cleanEmail);
         setSuccessMsg('Account created. Backing up your documents to cloud sync...');
         setTimeout(() => {
           onSuccess?.();
@@ -74,7 +72,6 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
     } else {
       const res = await signIn(cleanEmail, password);
       if (res.success) {
-        telemetryService.bindSurveyToEmail(cleanEmail);
         setSuccessMsg('Signed in. Syncing your documents...');
         setTimeout(() => {
           onSuccess?.();

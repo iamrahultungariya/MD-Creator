@@ -157,28 +157,53 @@ export async function publishDocument(
     }
 
     // 4. Upsert published document record with permission_mode
-    const { data: pubData, error: pubError } = await supabase
+    // Check if a record already exists for this document to avoid conflict key constraint errors
+    const { data: existingPub } = await supabase
       .from('published_documents')
-      .upsert(
-        {
-          document_id: docId,
-          user_id: userId,
+      .select('id, slug')
+      .eq('document_id', docId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    let publishedId: string | undefined;
+
+    if (existingPub?.id) {
+      publishedId = existingPub.id;
+      const { error: updateError } = await supabase
+        .from('published_documents')
+        .update({
           slug: targetSlug,
           is_public: true,
           permission_mode: permissionMode,
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'document_id,user_id' }
-      )
-      .select('id')
-      .maybeSingle();
+        })
+        .eq('id', existingPub.id);
 
-    if (pubError) {
-      return { success: false, slug: '', url: '', error: pubError.message };
+      if (updateError) {
+        return { success: false, slug: '', url: '', error: updateError.message };
+      }
+    } else {
+      const { data: pubData, error: pubError } = await supabase
+        .from('published_documents')
+        .upsert(
+          {
+            document_id: docId,
+            user_id: userId,
+            slug: targetSlug,
+            is_public: true,
+            permission_mode: permissionMode,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'slug' }
+        )
+        .select('id')
+        .maybeSingle();
+
+      if (pubError) {
+        return { success: false, slug: '', url: '', error: pubError.message };
+      }
+      publishedId = pubData?.id;
     }
-
-    // 5. If password was specified, set it securely via server RPC
-    const publishedId = pubData?.id;
     if (publishedId && options.password !== undefined) {
       const pwd = options.password.trim();
       const { error: pwdErr } = await supabase.rpc('set_publish_password', {

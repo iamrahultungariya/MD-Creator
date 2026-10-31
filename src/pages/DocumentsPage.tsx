@@ -24,6 +24,7 @@ import {
   useDeleteDocument, 
   useTogglePin, 
   useTrashCount, 
+  useActiveDocumentCount,
   useRestoreDocument, 
   useEmptyTrash, 
   useDuplicateDocument, 
@@ -81,6 +82,7 @@ export const DocumentsPage: React.FC = () => {
   const confirm = useConfirm();
 
   const { data: documents = [], isLoading } = useDocuments(search, activeTag, currentTab === 'trash');
+  const { data: activeCount = 0 } = useActiveDocumentCount();
   const { data: trashCount = 0 } = useTrashCount();
   const deleteDocMutation = useDeleteDocument();
   const restoreDocMutation = useRestoreDocument();
@@ -318,7 +320,7 @@ export const DocumentsPage: React.FC = () => {
                 Documents Vault
               </h1>
               <span className="text-xs text-neutral-400 dark:text-neutral-500 font-sans font-medium">
-                · {documents.length} notes
+                · {currentTab === 'trash' ? `${trashCount} in trash` : `${activeCount} notes`}
               </span>
               <StorageLimitRing variant="badge" />
 
@@ -429,7 +431,7 @@ export const DocumentsPage: React.FC = () => {
             <FileText className="w-3.5 h-3.5" />
             <span>All Documents</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-sans font-semibold">
-              {documents.length}
+              {activeCount}
             </span>
           </button>
 

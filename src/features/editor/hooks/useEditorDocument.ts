@@ -74,9 +74,17 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
   const lastSnapshotContentRef = useRef<string>('');
   const lastLocalEditTimeRef = useRef<number>(0);
 
-  // Flush pending auto-save immediately on navigation / unmount
+  // Flush pending auto-save immediately on navigation / unmount / beforeunload
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!isSavedRef.current && contentRef.current !== undefined && docId) {
+        saveDocument(docId, titleRef.current, contentRef.current, docMetadata?.tags).catch(console.warn);
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
       }
@@ -261,11 +269,11 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
       lastLocalEditTimeRef.current = Date.now();
       setIsSaved(false);
 
-      // Fast silent local draft saving (Dexie IndexedDB)
+      // Fast silent local draft saving (Dexie IndexedDB - 1.5s idle)
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = setTimeout(() => {
         executeSave(newContent, currentTitle);
-      }, 4000);
+      }, 1500);
 
       // Intelligent revision coalescing: does not spam revision history on every keystroke.
       // Only creates an auto-revision when the user pauses typing for 45s AND has modified at least 15 characters.

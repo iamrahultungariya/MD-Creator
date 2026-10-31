@@ -17,7 +17,6 @@ import {
   Loader2 
 } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
-import { telemetryService } from '../services/telemetryService';
 
 export const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<'signin' | 'signup'>('signup');
@@ -48,7 +47,6 @@ export const AuthPage: React.FC = () => {
     if (mode === 'signin') {
       const res = await signIn(cleanEmail, password);
       if (res.success) {
-        telemetryService.bindSurveyToEmail(cleanEmail);
         navigate('/documents');
       } else {
         setFormError(res.error || 'Failed to sign in.');
@@ -56,7 +54,6 @@ export const AuthPage: React.FC = () => {
     } else {
       const res = await signUp(cleanEmail, password, name.trim());
       if (res.success) {
-        telemetryService.bindSurveyToEmail(cleanEmail);
         navigate('/documents');
       } else {
         setFormError(res.error || 'Failed to create account.');

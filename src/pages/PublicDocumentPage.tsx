@@ -24,7 +24,9 @@ import {
   Code,
   CheckCircle2,
   FolderOpen,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { 
   getPublicDocumentBySlug, 
@@ -54,7 +56,7 @@ export const PublicDocumentPage: React.FC = () => {
 
   const [status, setStatus] = useState<'loading' | 'ok' | 'not_found' | 'password_required' | 'invalid_password' | 'rate_limited'>('loading');
   const [password, setPassword] = useState('');
-  const [theme, setTheme] = useState<'default' | 'paper' | 'sepia' | 'nordic' | 'dark'>('default');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isCopied, setIsCopied] = useState(false);
   const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
@@ -280,41 +282,23 @@ if (!password.trim() || isVerifyingPassword) return;
     }, 20);
   };
 
-  // Theme palettes
-  const themeClasses: Record<string, { bg: string; text: string; headerBg: string; border: string }> = {
-    default: {
-      bg: 'bg-white dark:bg-[#111114]',
-      text: 'text-neutral-900 dark:text-neutral-100',
-      headerBg: 'bg-white/90 dark:bg-[#111114]/90',
-      border: 'border-neutral-200/80 dark:border-neutral-800/80',
-    },
-    paper: {
-      bg: 'bg-[#faf8f5]',
-      text: 'text-[#1c1917]',
-      headerBg: 'bg-[#faf8f5]/90',
-      border: 'border-[#e7e5e4]',
-    },
-    sepia: {
-      bg: 'bg-[#fbf0d9]',
-      text: 'text-[#382618]',
-      headerBg: 'bg-[#fbf0d9]/90',
-      border: 'border-[#eedfc3]',
-    },
-    nordic: {
-      bg: 'bg-[#181d24]',
-      text: 'text-[#d8dee9]',
-      headerBg: 'bg-[#181d24]/90',
-      border: 'border-[#27303d]',
+  // Theme palettes: Minimal clean Light vs Dark
+  const themeClasses: Record<'light' | 'dark', { bg: string; text: string; headerBg: string; border: string }> = {
+    light: {
+      bg: 'bg-white',
+      text: 'text-neutral-900',
+      headerBg: 'bg-white/90',
+      border: 'border-neutral-200/80',
     },
     dark: {
-      bg: 'bg-[#090a0d]',
-      text: 'text-[#f3f4f6]',
-      headerBg: 'bg-[#090a0d]/90',
-      border: 'border-neutral-800',
+      bg: 'bg-[#0e0d14]',
+      text: 'text-neutral-100',
+      headerBg: 'bg-[#0e0d14]/90',
+      border: 'border-neutral-800/80',
     },
   };
 
-  const currentTheme = themeClasses[theme] || themeClasses.default;
+  const currentTheme = themeClasses[theme] || themeClasses.light;
   const wordCount = (doc?.permissionMode === 'edit' ? editableContent : doc?.content || '')
     .trim()
     .split(/\s+/)
@@ -494,23 +478,26 @@ disabled={isVerifyingPassword}
             </div>
           )}
 
-                    {/* Theme Palette Dots */}
-          <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full border border-current/15">
-            {(['default', 'paper', 'sepia', 'nordic', 'dark'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTheme(t)}
-                className={`w-3 h-3 rounded-full border transition-all cursor-pointer ${
-                  t === 'default' ? 'bg-neutral-500 border-neutral-400' :
-                  t === 'paper' ? 'bg-[#faf8f5] border-neutral-300' :
-                  t === 'sepia' ? 'bg-[#fbf0d9] border-amber-300' :
-                  t === 'nordic' ? 'bg-[#181d24] border-blue-400' :
-                  'bg-[#090a0d] border-neutral-700'
-                } ${theme === t ? 'ring-2 ring-brand-500 scale-110' : 'opacity-60 hover:opacity-100'}`}
-                title={`Theme: ${t}`}
-              />
-            ))}
-          </div>
+                    {/* Light / Dark Mode Toggle */}
+          <button
+            type="button"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-current/15 hover:bg-current/5 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label="Toggle Theme"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline text-[11px]">Light</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-neutral-600" />
+                <span className="hidden md:inline text-[11px]">Dark</span>
+              </>
+            )}
+          </button>
 
           {/* Social Card Button */}
           <button

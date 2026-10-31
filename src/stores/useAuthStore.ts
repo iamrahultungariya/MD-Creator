@@ -134,7 +134,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             proExpiresAt,
           };
           set({ user: profile, isLoading: false });
-          syncAllDocuments().catch(console.warn);
+          syncAllDocuments(true).catch(console.warn);
           return;
         }
       } catch (err) {
@@ -198,7 +198,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           proExpiresAt,
         };
         set({ user: profile, isLoading: false });
-        syncAllDocuments().catch(console.warn);
+        syncAllDocuments(true).catch(console.warn);
         return { success: true };
       }
     }
@@ -251,7 +251,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           proExpiresAt: isPromo ? PROMO_FREE_PRO_UNTIL : null,
         };
         set({ user: profile, isLoading: false });
-        syncAllDocuments().catch(console.warn);
+        syncAllDocuments(true).catch(console.warn);
         return { success: true };
       }
     }

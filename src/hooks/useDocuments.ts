@@ -75,6 +75,17 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
   });
 }
 
+export function useActiveDocumentCount() {
+  return useQuery({
+    queryKey: ['active-document-count'],
+    staleTime: 0,
+    refetchOnMount: 'always',
+    queryFn: async () => {
+      return await db.documents.filter(d => !d.isDeleted).count();
+    }
+  });
+}
+
 export function useTrashCount() {
   return useQuery({
     queryKey: ['trash-count'],
