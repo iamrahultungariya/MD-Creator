@@ -11,6 +11,13 @@ export type MimoActivityType =
 
 export type ThinkingLevel = 'AUTO' | 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
 
+export type MimoIntentType =
+  | 'GENERAL_QA'
+  | 'DOC_QUERY'
+  | 'DOC_TRANSFORM'
+  | 'CREATIVE_EXPANSION'
+  | 'CHAT_BANTER';
+
 export interface ActivityTelemetry {
   type: MimoActivityType;
   title: string;
@@ -41,6 +48,29 @@ export interface MimoDiffHunk {
   isDiscarded?: boolean;
 }
 
+export interface MimoToolCall {
+  id: string;
+  name:
+    | 'insert_at_bottom'
+    | 'insert_at_top'
+    | 'insert_at_cursor'
+    | 'generate_table'
+    | 'insert_katex_formula'
+    | 'set_document_title'
+    | 'export_document';
+  arguments: {
+    content?: string;
+    description?: string;
+    latex?: string;
+    displayMode?: boolean;
+    title?: string;
+    format?: 'docx' | 'pdf' | 'html' | 'markdown';
+    [key: string]: any;
+  };
+  isApplied?: boolean;
+  isDiscarded?: boolean;
+}
+
 export interface MimoMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -48,8 +78,11 @@ export interface MimoMessage {
   thoughtText?: string;
   activity?: ActivityTelemetry;
   diffHunk?: MimoDiffHunk;
+  toolCall?: MimoToolCall;
   timestamp: number;
   enhancedPromptOriginal?: string;
+  intent?: MimoIntentType;
+  hasSelectionContext?: boolean;
 }
 
 export interface MimoQuotaState {
@@ -62,3 +95,4 @@ export interface MimoQuotaState {
 }
 
 export type MimoQuickAction = 'write' | 'improve' | 'summarize' | 'explain' | 'translate';
+

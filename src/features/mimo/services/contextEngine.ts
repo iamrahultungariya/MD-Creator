@@ -13,7 +13,7 @@ export interface PreparedContext {
   docId: string;
   docTitle: string;
   rawContent: string;
-  contextMode: 'summary' | 'full_safe' | 'chunked_loc_guarded';
+  contextMode: 'summary' | 'full_safe' | 'chunked_loc_guarded' | 'selection_focused';
   contextText: string;
   linesAnalyzed: number;
   totalDocLines: number;
@@ -21,6 +21,8 @@ export interface PreparedContext {
   headings: string[];
   guardrailTriggered: boolean;
   activeRange?: { start: number; end: number };
+  selectedText?: string;
+  activeHeadingPath?: string;
 }
 
 // In-memory LRU cache of document summaries
@@ -109,11 +111,35 @@ export function getOrCreateDocumentSummary(docId: string, title: string, content
 }
 
 /**
+ * Resolves the hierarchical heading breadcrumb path at the current cursor line.
+ * e.g. "Python Basics > Functions > Decorators"
+ */
+export function findActiveHeadingPath(lines: string[], cursorLine: number): string {
+  const target = Math.max(0, Math.min(lines.length - 1, cursorLine - 1));
+  const stack: { level: number; text: string }[] = [];
+
+  for (let i = 0; i <= target; i++) {
+    const line = lines[i];
+    const match = line.match(/^(#{1,6})\s+(.+)$/);
+    if (match) {
+      const level = match[1].length;
+      const text = match[2].trim();
+      while (stack.length > 0 && stack[stack.length - 1].level >= level) {
+        stack.pop();
+      }
+      stack.push({ level, text });
+    }
+  }
+
+  return stack.map((s) => s.text).join(' > ');
+}
+
+/**
  * Intelligent context preparation:
+ * - Selected text present: Returns focused selection context with active heading breadcrumbs.
  * - Casual greeting ("hi", "hello"): Returns lightweight AST summary (minimal tokens).
- * - Any document task (summarize, translate, explain, edit, improve, Q&A):
- *   - <= 1000 LOC: Full document context so Mimo knows every section, table, and line.
- *   - > 1000 LOC: Strict Guardrail triggers. Chunks around active cursor (+-120 lines) + full outline.
+ * - <= 1000 LOC: Full document context so Mimo knows every section, table, and line.
+ * - > 1000 LOC: Strict Guardrail triggers. Chunks around active cursor (+-120 lines) + full outline.
  */
 export function prepareMimoContext(options: {
   docId: string;
@@ -121,19 +147,61 @@ export function prepareMimoContext(options: {
   content: string;
   userPrompt: string;
   cursorLine?: number;
+  selectedText?: string;
   forceFullScan?: boolean;
 }): PreparedContext {
-  const { docId, title, content, userPrompt, cursorLine = 1, forceFullScan = false } = options;
+  const {
+    docId,
+    title,
+    content,
+    userPrompt,
+    cursorLine = 1,
+    selectedText,
+    forceFullScan = false,
+  } = options;
   const lines = content.split('\n');
   const totalDocLines = lines.length;
   const summary = getOrCreateDocumentSummary(docId, title, content);
+  const activeHeadingPath = findActiveHeadingPath(lines, cursorLine);
 
   const promptClean = userPrompt.trim().toLowerCase().replace(/[!?.,]/g, '');
   const isPureGreeting =
     !forceFullScan &&
+    !selectedText &&
     /^(hi|hello|hey|hola|namaste|kaise ho|who are you|help|thanks|thank you|shukriya)$/.test(promptClean);
 
-  // Case 1: Pure casual greeting -> Use cached AST summary to save tokens
+  // Case 1: Active User Selection (Highest Priority Focus)
+  if (selectedText && selectedText.trim().length > 0) {
+    const trimmedSelection = selectedText.trim();
+    const selLines = trimmedSelection.split('\n').length;
+    const pathStr = activeHeadingPath ? `\nActive Section: "${activeHeadingPath}"` : '';
+    const outlineHeader =
+      summary.headingsSummary.length > 0
+        ? `\nDocument Outline:\n${summary.headingsSummary.join('\n')}\n`
+        : '';
+
+    return {
+      docId,
+      docTitle: summary.title,
+      rawContent: content,
+      contextMode: 'selection_focused',
+      contextText: `Active Document: "${summary.title}" (${totalDocLines} LOC, ${summary.wordCount} words)${pathStr}
+⚡ User has SELECTED this specific text snippet in the editor (Lines around ${cursorLine}, ${selLines} lines selected):
+\`\`\`markdown
+${trimmedSelection}
+\`\`\`
+${outlineHeader}`,
+      linesAnalyzed: selLines,
+      totalDocLines,
+      totalWords: summary.wordCount,
+      headings: summary.headingsSummary,
+      guardrailTriggered: false,
+      selectedText: trimmedSelection,
+      activeHeadingPath,
+    };
+  }
+
+  // Case 2: Pure casual greeting -> Use cached AST summary to save tokens
   if (isPureGreeting) {
     const outlineStr =
       summary.headingsSummary.length > 0 ? `\nDocument Outline:\n${summary.headingsSummary.join('\n')}` : '';
@@ -151,31 +219,34 @@ export function prepareMimoContext(options: {
       totalWords: summary.wordCount,
       headings: summary.headingsSummary,
       guardrailTriggered: false,
+      activeHeadingPath,
     };
   }
 
-  // Case 2: Under 1000 LOC safe limit -> Provide complete document so Mimo has 100% accuracy
+  // Case 3: Under 1000 LOC safe limit -> Provide complete document so Mimo has 100% accuracy
   if (totalDocLines <= 1000) {
     const outlineHeader =
       summary.headingsSummary.length > 0
         ? `Document Outline:\n${summary.headingsSummary.join('\n')}\n\n`
         : '';
+    const pathStr = activeHeadingPath ? `Current Section: "${activeHeadingPath}"\n` : '';
 
     return {
       docId,
       docTitle: summary.title,
       rawContent: content,
       contextMode: 'full_safe',
-      contextText: `Active Document Title: "${summary.title}" (ID: ${docId}, Total Lines: ${totalDocLines}, Words: ${summary.wordCount}, Cursor at Line: ${cursorLine})\n${outlineHeader}Full Document Markdown Content:\n\`\`\`markdown\n${content}\n\`\`\``,
+      contextText: `Active Document Title: "${summary.title}" (ID: ${docId}, Total Lines: ${totalDocLines}, Words: ${summary.wordCount}, Cursor at Line: ${cursorLine})\n${pathStr}${outlineHeader}Full Document Markdown Content:\n\`\`\`markdown\n${content}\n\`\`\``,
       linesAnalyzed: totalDocLines,
       totalDocLines,
       totalWords: summary.wordCount,
       headings: summary.headingsSummary,
       guardrailTriggered: false,
+      activeHeadingPath,
     };
   }
 
-  // Case 3: >1000 LOC -> STRICT GUARDRAIL TRIGGERED
+  // Case 4: >1000 LOC -> STRICT GUARDRAIL TRIGGERED
   const safeRadius = 120;
   const targetLine = Math.max(1, Math.min(cursorLine, totalDocLines));
   const startLine = Math.max(1, targetLine - safeRadius);
@@ -183,6 +254,7 @@ export function prepareMimoContext(options: {
 
   const chunkLines = lines.slice(startLine - 1, endLine);
   const chunkText = chunkLines.join('\n');
+  const pathStr = activeHeadingPath ? `Current Section: "${activeHeadingPath}"\n` : '';
 
   return {
     docId,
@@ -191,7 +263,7 @@ export function prepareMimoContext(options: {
     contextMode: 'chunked_loc_guarded',
     contextText: `⚠️ Large Document Guardrail Active (${totalDocLines} LOC total > 1000 LOC limit).
 Active Document Title: "${summary.title}"
-Analyzed Range: Lines ${startLine} to ${endLine} (around active cursor line ${targetLine}).
+${pathStr}Analyzed Range: Lines ${startLine} to ${endLine} (around active cursor line ${targetLine}).
 Full Document Outline:
 ${summary.headingsSummary.join('\n')}
 
@@ -205,5 +277,6 @@ ${chunkText}
     headings: summary.headingsSummary,
     guardrailTriggered: true,
     activeRange: { start: startLine, end: endLine },
+    activeHeadingPath,
   };
 }

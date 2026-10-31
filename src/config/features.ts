@@ -7,7 +7,7 @@ export const FEATURE_FLAGS = {
    * Mimo AI Assistant (chatbot drawer, inline diff banner, showcase, toolbar buttons)
    * Isolated temporarily while optimizing and undergoing testing.
    */
-  mimo: false,
+  mimo: true,
 
   /**
    * Bulk multi-document sharing bundle links

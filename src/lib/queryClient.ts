@@ -3,9 +3,9 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Offline-first Dexie IndexedDB queries have 0 network latency, keep immediately reactive
-      refetchOnMount: 'always',
-      refetchOnWindowFocus: true,
+      staleTime: 30_000, // 30s cache for fast local navigation; DB mutations invalidate explicitly
+      refetchOnMount: false, // Respect staleTime on mount, eliminate redundant IndexedDB round-trips
+      refetchOnWindowFocus: false, // Offline-first IndexedDB: prevent aggressive refetches on focus/tab switch
       retry: 1
     }
   }

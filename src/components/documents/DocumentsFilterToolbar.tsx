@@ -12,7 +12,7 @@ interface DocumentsFilterToolbarProps {
   onResetFilters?: () => void;
 }
 
-export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
+export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = React.memo(({
   search,
   setSearch,
   allTags,
@@ -290,4 +290,6 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = ({
       </div>
     </div>
   );
-};
+});
+
+DocumentsFilterToolbar.displayName = 'DocumentsFilterToolbar';

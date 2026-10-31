@@ -157,22 +157,90 @@ export async function getDocumentContent(id: string): Promise<string> {
   return fallbackContent;
 }
 
+export type InvalidationScope = 'all' | 'pin' | 'trash' | 'save' | 'content';
+
+// Set of query keys pending invalidation in current microtask batch
+const pendingInvalidations = new Set<string>();
+let batchScheduled = false;
+
+function flushInvalidations() {
+  batchScheduled = false;
+  if (pendingInvalidations.size === 0) return;
+
+  const keysToInvalidate = Array.from(pendingInvalidations);
+  pendingInvalidations.clear();
+
+  for (const key of keysToInvalidate) {
+    try {
+      if (key.startsWith('document-content:')) {
+        const id = key.substring('document-content:'.length);
+        queryClient.invalidateQueries({ queryKey: ['document-content', id] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
+    } catch (err) {
+      console.warn('[Db] Invalidation error for key:', key, err);
+    }
+  }
+}
+
+function queueQueryInvalidation(queryKey: string) {
+  pendingInvalidations.add(queryKey);
+  if (!batchScheduled) {
+    batchScheduled = true;
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(flushInvalidations);
+    } else {
+      setTimeout(flushInvalidations, 0);
+    }
+  }
+}
+
 /**
- * Invalidates React Query caches across the app so newly created/edited documents
- * and tag counts reflect immediately with 0ms lag without requiring a manual page refresh.
+ * P2: Microtask-batched, scoped query invalidation engine.
+ * Coalesces rapid sequential DB operations (e.g. bulk delete, multiple saves)
+ * into a single unified query refresh, eliminating redundant network/IndexedDB waterfalls.
  */
-export function notifyDocumentStoreChanged(docId?: string): void {
+export function notifyDocumentStoreChanged(docId?: string, scope: InvalidationScope = 'all'): void {
   try {
-    queryClient.invalidateQueries({ queryKey: ['documents'] });
-    queryClient.invalidateQueries({ queryKey: ['active-document-count'] });
-    queryClient.invalidateQueries({ queryKey: ['trash-count'] });
-    queryClient.invalidateQueries({ queryKey: ['all-document-tags'] });
-    queryClient.invalidateQueries({ queryKey: ['storage-stats'] });
+    queueQueryInvalidation('documents');
+
+    if (scope === 'pin') {
+      return;
+    }
+
+    if (scope === 'trash') {
+      queueQueryInvalidation('active-document-count');
+      queueQueryInvalidation('trash-count');
+      return;
+    }
+
+    if (scope === 'save') {
+      queueQueryInvalidation('all-document-tags');
+      queueQueryInvalidation('storage-stats');
+      if (docId) {
+        queueQueryInvalidation(`document-content:${docId}`);
+      }
+      return;
+    }
+
+    if (scope === 'content') {
+      if (docId) {
+        queueQueryInvalidation(`document-content:${docId}`);
+      }
+      return;
+    }
+
+    // Default 'all'
+    queueQueryInvalidation('active-document-count');
+    queueQueryInvalidation('trash-count');
+    queueQueryInvalidation('all-document-tags');
+    queueQueryInvalidation('storage-stats');
     if (docId) {
-      queryClient.invalidateQueries({ queryKey: ['document-content', docId] });
+      queueQueryInvalidation(`document-content:${docId}`);
     }
   } catch (err) {
-    console.warn('[Db] Failed to invalidate query cache', err);
+    console.warn('[Db] Failed to queue query invalidation', err);
   }
 }
 
@@ -221,7 +289,7 @@ export async function saveDocument(id: string, title: string, content: string, t
     }
   });
 
-  notifyDocumentStoreChanged(id);
+  notifyDocumentStoreChanged(id, 'save');
 }
 
 /**
@@ -254,7 +322,7 @@ export async function deleteDocument(id: string, permanent = false): Promise<voi
     });
   }
 
-  notifyDocumentStoreChanged(id);
+  notifyDocumentStoreChanged(id, 'trash');
 }
 
 /**
@@ -266,7 +334,7 @@ export async function restoreDocument(id: string): Promise<void> {
     deletedAt: undefined
   });
 
-  notifyDocumentStoreChanged(id);
+  notifyDocumentStoreChanged(id, 'trash');
 }
 
 /**
@@ -285,7 +353,7 @@ export async function emptyTrash(): Promise<number> {
     }
   });
 
-  notifyDocumentStoreChanged();
+  notifyDocumentStoreChanged(undefined, 'trash');
   return ids.length;
 }
 
@@ -315,7 +383,7 @@ export async function togglePinDocument(id: string): Promise<boolean> {
   if (!doc) return false;
   const newPinned = !doc.isPinned;
   await db.documents.update(id, { isPinned: newPinned });
-  notifyDocumentStoreChanged(id);
+  notifyDocumentStoreChanged(id, 'pin');
   return newPinned;
 }
 

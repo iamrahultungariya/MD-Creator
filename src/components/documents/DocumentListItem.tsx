@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, useMotionValue, useMotionTemplate } from 'framer-motion';
 import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
-interface DocumentListItemProps {
+export interface DocumentListItemProps {
   doc: DocumentMetadata;
   currentTab: 'active' | 'trash';
   onOpen: (id: string) => void;
@@ -32,9 +31,6 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  const mouseX = useMotionValue(-1000);
-  const mouseY = useMotionValue(-1000);
-
   // Close mobile micro-popover on outside click
   useEffect(() => {
     if (!isMobileMenuOpen) return;
@@ -51,23 +47,8 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
     };
   }, [isMobileMenuOpen]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { left, top } = e.currentTarget.getBoundingClientRect();
-    mouseX.set(e.clientX - left);
-    mouseY.set(e.clientY - top);
-  };
-
-  const surfaceBackground = useMotionTemplate`
-    radial-gradient(
-      280px circle at ${mouseX}px ${mouseY}px,
-      var(--spotlight-surface, rgba(59, 130, 246, 0.06)),
-      transparent 75%
-    )
-  `;
-
   return (
     <div
-      onMouseMove={handleMouseMove}
       onClick={() => {
         if (isSelectionMode) {
           onToggleSelect?.(doc.id);
@@ -77,20 +58,12 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
           onOpen(doc.id);
         }
       }}
-      className={`group relative overflow-hidden p-4 flex items-center justify-between transition-colors duration-150 cursor-pointer select-none active:scale-[0.995] ${
+      className={`group relative overflow-hidden p-4 flex items-center justify-between transition-colors duration-150 cursor-pointer select-none active:scale-[0.998] ${
         isSelected
-          ? 'bg-brand-50/60 dark:bg-brand-950/20'
-          : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/40'
+          ? 'bg-brand-50/70 dark:bg-brand-950/30'
+          : 'hover:bg-neutral-50/90 dark:hover:bg-neutral-800/50'
       }`}
     >
-      {/* Dynamic Mouse-Following Subtle Row Spotlight */}
-      <motion.div
-        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"
-        style={{
-          background: surfaceBackground,
-        }}
-      />
-
       <div className="relative z-10 flex items-center gap-3.5 min-w-0 pr-4 flex-1 font-sans">
         {isSelectionMode ? (
           <div
@@ -142,13 +115,14 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
           <span>{formatRelativeTime(doc.updatedAt)}</span>
         </span>
 
-        {/* Desktop Action Buttons: Reveal on hover */}
+        {/* Desktop Action Buttons: Reveal on hover with crisp transitions */}
         <div
           className="hidden sm:flex items-center gap-1 transition-all duration-150 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
         >
           {currentTab === 'active' ? (
             <>
               <button
+                type="button"
                 onClick={(e) => onDuplicate(e, doc.id)}
                 className="p-1.5 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60 rounded-lg transition-colors cursor-pointer text-neutral-400"
                 title="Duplicate / Clone document"
@@ -156,6 +130,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
                 <Copy className="w-4 h-4" />
               </button>
               <button
+                type="button"
                 onClick={(e) => onTogglePin(e, doc.id)}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                   doc.isPinned
@@ -167,6 +142,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
                 <Pin className={`w-4 h-4 ${doc.isPinned ? 'fill-current' : ''}`} />
               </button>
               <button
+                type="button"
                 onClick={(e) => onDelete(e, doc.id, doc.title)}
                 className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                 title="Move to Recycle Bin"
@@ -177,6 +153,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
           ) : (
             <>
               <button
+                type="button"
                 onClick={(e) => onRestore(e, doc.id)}
                 className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                 title="Restore document"
@@ -185,6 +162,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
                 <span>Restore</span>
               </button>
               <button
+                type="button"
                 onClick={(e) => onDelete(e, doc.id, doc.title)}
                 className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
                 title="Permanently delete forever"
@@ -302,3 +280,5 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
     </div>
   );
 });
+
+DocumentListItem.displayName = 'DocumentListItem';

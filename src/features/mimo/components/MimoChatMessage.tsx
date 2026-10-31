@@ -2,25 +2,52 @@ import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { Copy, Check } from 'lucide-react';
-import { MimoMessage } from '../types/mimoTypes';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import 'katex/dist/katex.min.css';
+import { normalizeMathDelimiters } from '../../../utils/markdownSanitizer';
+import { Copy, Check, ArrowDownToLine } from 'lucide-react';
+import { MimoMessage, MimoToolCall } from '../types/mimoTypes';
 import { MimoAvatar } from './MimoAvatar';
-import { MimoActivityCard } from './MimoActivityCard';
+import { MimoThoughtBlock } from './MimoThoughtBlock';
 import { MimoDiffCard } from './MimoDiffCard';
+import { MimoToolCallCard } from './MimoToolCallCard';
 
 interface MimoChatMessageProps {
   message: MimoMessage;
   onApplyDiff?: (hunkId?: string) => void;
   onDiscardDiff?: (hunkId?: string) => void;
+  onInsertSnippet?: (snippet: string) => void;
+  onApplyToolCall?: (toolCall: MimoToolCall) => void;
+  onDiscardToolCall?: (toolCallId: string) => void;
+  onUndoToolCall?: (toolCall: MimoToolCall) => void;
 }
+
+
+// Static plugin arrays to avoid re-constructing the unified AST processor pipeline on every token chunk/render
+const STATIC_CHAT_REMARK_PLUGINS: any[] = [remarkGfm, remarkMath, remarkBreaks];
+const STATIC_CHAT_REHYPE_PLUGINS: any[] = [
+  rehypeRaw,
+  [rehypeKatex, { output: 'htmlAndMathml', strict: false, throwOnError: false }],
+];
 
 export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
   message,
   onApplyDiff,
   onDiscardDiff,
+  onInsertSnippet,
+  onApplyToolCall,
+  onDiscardToolCall,
+  onUndoToolCall,
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
+  const [insertedCodeIndex, setInsertedCodeIndex] = useState<number | null>(null);
+
+  const normalizedText = React.useMemo(() => {
+    return normalizeMathDelimiters(message.text || '');
+  }, [message.text]);
 
   const handleCopyFullText = () => {
     if (!message.text) return;
@@ -35,20 +62,26 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
     setTimeout(() => setCopiedCodeIndex(null), 1800);
   };
 
+  const handleInsertCode = (code: string, idx: number) => {
+    onInsertSnippet?.(code);
+    setInsertedCodeIndex(idx);
+    setTimeout(() => setInsertedCodeIndex(null), 1800);
+  };
+
   if (message.role === 'user') {
     return (
-      <div className="flex justify-end my-2">
+      <div className="flex flex-col items-end my-2 space-y-1">
+        {message.hasSelectionContext && (
+          <span className="text-[10px] text-violet-600 dark:text-violet-400 font-medium px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/60 border border-violet-200/60 dark:border-violet-800/60">
+            ✂️ Focused on Selected Text
+          </span>
+        )}
         <div className="max-w-[88%] px-4 py-3 rounded-2xl rounded-tr-xs bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 text-xs font-sans shadow-xs whitespace-pre-wrap leading-relaxed select-text">
           {message.text}
         </div>
       </div>
     );
   }
-
-  // Filter out any unwanted internal debug strings from thoughtText
-  const cleanThoughts = (message.thoughtText || '')
-    .replace(/^Prompt evaluated:[\s\S]*?Thinking budget:.*?\n*/gi, '')
-    .trim();
 
   return (
     <div className="flex flex-col gap-2 my-3 select-text font-sans">
@@ -82,26 +115,19 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
         )}
       </div>
 
-      {/* Single Inline Activity Telemetry Card */}
-      {message.activity && <MimoActivityCard activity={message.activity} />}
-
-      {/* Real Model Thoughts Accordion (only if genuine thoughts exist) */}
-      {cleanThoughts && cleanThoughts.length > 5 && (
-        <details className="text-[11px] bg-neutral-100/70 dark:bg-neutral-900/60 rounded-xl p-2.5 border border-neutral-200/70 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono">
-          <summary className="cursor-pointer font-semibold text-violet-600 dark:text-violet-400 select-none">
-            ✦ Reasoning Process
-          </summary>
-          <div className="mt-2 whitespace-pre-wrap leading-relaxed">
-            {cleanThoughts}
-          </div>
-        </details>
-      )}
+      {/* Unified Thought & Reasoning Block */}
+      <MimoThoughtBlock
+        activity={message.activity}
+        thoughtText={message.thoughtText}
+        isStreaming={!message.text && (!message.activity || !message.activity.isDone)}
+      />
 
       {/* Rich Formatted Markdown Response Body */}
       {message.text && (
         <div className="p-4 rounded-2xl rounded-tl-xs bg-neutral-50/90 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs leading-relaxed shadow-2xs space-y-2">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkBreaks]}
+            remarkPlugins={STATIC_CHAT_REMARK_PLUGINS}
+            rehypePlugins={STATIC_CHAT_REHYPE_PLUGINS}
             components={{
               h1: ({ children }) => (
                 <h1 className="text-base font-bold text-neutral-950 dark:text-white mt-3 mb-1 border-b border-neutral-200 dark:border-neutral-800 pb-1">
@@ -177,22 +203,43 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                   <div className="relative my-2 rounded-xl overflow-hidden border border-neutral-800 bg-neutral-950 text-neutral-200 font-mono text-[11px]">
                     <div className="flex items-center justify-between px-3 py-1.5 bg-neutral-900/90 border-b border-neutral-800 text-[10px] text-neutral-400">
                       <span>{lang || 'code'}</span>
-                      <button
-                        onClick={() => handleCopyCode(codeString, codeId)}
-                        className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
-                      >
-                        {copiedCodeIndex === codeId ? (
-                          <>
-                            <Check className="w-3 h-3 text-emerald-400" />
-                            <span>Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3 h-3" />
-                            <span>Copy</span>
-                          </>
+                      <div className="flex items-center gap-2.5">
+                        {onInsertSnippet && (
+                          <button
+                            onClick={() => handleInsertCode(codeString, codeId)}
+                            className="flex items-center gap-1 text-violet-400 hover:text-violet-200 transition-colors cursor-pointer"
+                            title="Insert into editor at cursor"
+                          >
+                            {insertedCodeIndex === codeId ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-400 font-semibold">Inserted</span>
+                              </>
+                            ) : (
+                              <>
+                                <ArrowDownToLine className="w-3 h-3" />
+                                <span>Insert</span>
+                              </>
+                            )}
+                          </button>
                         )}
-                      </button>
+                        <button
+                          onClick={() => handleCopyCode(codeString, codeId)}
+                          className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+                        >
+                          {copiedCodeIndex === codeId ? (
+                            <>
+                              <Check className="w-3 h-3 text-emerald-400" />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <pre className="p-3 overflow-x-auto leading-relaxed whitespace-pre font-mono">
                       <code>{children}</code>
@@ -202,9 +249,20 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
               },
             }}
           >
-            {message.text}
+            {normalizedText}
           </ReactMarkdown>
         </div>
+      )}
+
+
+      {/* Interactive Tool Call Action Card if present */}
+      {message.toolCall && (
+        <MimoToolCallCard
+          toolCall={message.toolCall}
+          onApply={() => onApplyToolCall?.(message.toolCall!)}
+          onDiscard={() => onDiscardToolCall?.(message.toolCall!.id)}
+          onUndo={onUndoToolCall ? () => onUndoToolCall(message.toolCall!) : undefined}
+        />
       )}
 
       {/* Diff Hunk Card if present */}

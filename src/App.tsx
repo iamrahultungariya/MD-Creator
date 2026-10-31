@@ -9,6 +9,7 @@ import { useCommandPalette } from './hooks/useCommandPalette';
 import { PageTransition } from './components/common/PageTransition';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { usePreferencesStore } from './stores/usePreferencesStore';
+import { useUpdateModalStore } from './stores/useUpdateModalStore';
 
 // Lazy-loaded route chunks
 const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -31,6 +32,12 @@ const ToolbarSettingsModal = React.lazy(() =>
 );
 const PreferencesModal = React.lazy(() =>
   import('./components/common/PreferencesModal').then((m) => ({ default: m.PreferencesModal }))
+);
+const UpdateAvailableModal = React.lazy(() =>
+  import('./components/common/UpdateAvailableModal').then((m) => ({ default: m.UpdateAvailableModal }))
+);
+const MimoIntroModal = React.lazy(() =>
+  import('./components/common/MimoIntroModal').then((m) => ({ default: m.MimoIntroModal }))
 );
 
 const AppRoutes: React.FC = () => {
@@ -91,6 +98,12 @@ export const App: React.FC = () => {
   const openPreferences = usePreferencesStore((s) => s.openPreferences);
   const togglePreferences = usePreferencesStore((s) => s.togglePreferences);
 
+  const isUpdateOpen = useUpdateModalStore((s) => s.isUpdateOpen);
+  const isMimoIntroOpen = useUpdateModalStore((s) => s.isMimoIntroOpen);
+  const openUpdate = useUpdateModalStore((s) => s.openUpdate);
+  const openMimoIntro = useUpdateModalStore((s) => s.openMimoIntro);
+  const checkAndAutoOpen = useUpdateModalStore((s) => s.checkAndAutoOpen);
+
   // Global listeners for Preferences (Ctrl+, / Cmd+, and custom event)
   useEffect(() => {
     const handleOpenPref = () => openPreferences();
@@ -109,6 +122,24 @@ export const App: React.FC = () => {
       window.removeEventListener('keydown', handlePrefKeyDown);
     };
   }, [openPreferences, togglePreferences]);
+
+  // Global listeners for Update & Mimo Intro modals + auto-open check
+  useEffect(() => {
+    const handleOpenUpdate = () => openUpdate();
+    const handleOpenMimoIntro = () => openMimoIntro();
+    window.addEventListener('open-update-modal', handleOpenUpdate);
+    window.addEventListener('open-mimo-intro-modal', handleOpenMimoIntro);
+
+    const timer = setTimeout(() => {
+      checkAndAutoOpen();
+    }, 700);
+
+    return () => {
+      window.removeEventListener('open-update-modal', handleOpenUpdate);
+      window.removeEventListener('open-mimo-intro-modal', handleOpenMimoIntro);
+      clearTimeout(timer);
+    };
+  }, [openUpdate, openMimoIntro, checkAndAutoOpen]);
 
   // Defer non-critical storage initialization, session checks & eager prefetch until idle
   useEffect(() => {
@@ -163,6 +194,20 @@ export const App: React.FC = () => {
         {isPreferencesOpen && (
           <Suspense fallback={null}>
             <PreferencesModal />
+          </Suspense>
+        )}
+
+        {/* Global Update Available Modal (v3.0.0) */}
+        {isUpdateOpen && (
+          <Suspense fallback={null}>
+            <UpdateAvailableModal />
+          </Suspense>
+        )}
+
+        {/* Global Mimo Introduction Modal */}
+        {isMimoIntroOpen && (
+          <Suspense fallback={null}>
+            <MimoIntroModal />
           </Suspense>
         )}
 

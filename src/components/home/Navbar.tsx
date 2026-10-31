@@ -191,9 +191,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           <span className="font-semibold text-sm sm:text-base text-neutral-950 dark:text-white tracking-tight">
             MD Writer
           </span>
-          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              window.dispatchEvent(new CustomEvent('open-update-modal'));
+            }}
+            className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 hover:bg-brand-500/20 hover:border-brand-500/40 transition-colors cursor-pointer"
+            title="View what's new in v3.0.0"
+          >
             {APP_VERSION_LABEL}
-          </span>
+          </button>
         </div>
 
         {/* Center Desktop Navigation (Clean, spacious, decluttered) */}

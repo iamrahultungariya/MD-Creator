@@ -16,6 +16,7 @@ import {
   CornerDownLeft,
   X,
   Command,
+  Sparkles,
 } from 'lucide-react';
 import { db, DocumentMetadata, createNewDocument } from '../../db';
 import { useThemeStore } from '../../stores/useThemeStore';
@@ -254,6 +255,34 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       shortcut: 'Storage',
       perform: () => {
         setIsStorageModalOpen(true);
+      },
+    });
+
+    list.push({
+      id: 'action-whats-new',
+      title: "What's New in v3.0.0",
+      category: 'Actions & Navigation',
+      description: 'Explore the latest features, performance numbers, and Mimo AI upgrades',
+      icon: Sparkles,
+      iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
+      shortcut: 'v3.0.0',
+      perform: () => {
+        window.dispatchEvent(new CustomEvent('open-update-modal'));
+        onClose();
+      },
+    });
+
+    list.push({
+      id: 'action-mimo-intro',
+      title: 'Meet Mimo AI ✦ Companion',
+      category: 'Actions & Navigation',
+      description: 'Learn about your intelligent agentic pair writer & co-pilot',
+      icon: Sparkles,
+      iconColor: 'text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/20 border-violet-500/20',
+      shortcut: 'Mimo',
+      perform: () => {
+        window.dispatchEvent(new CustomEvent('open-mimo-intro-modal'));
+        onClose();
       },
     });
 

@@ -9,7 +9,6 @@ import {
   FileText,
   PenTool,
   BookOpen,
-  HelpCircle,
   Languages,
   ShieldCheck,
   ShieldAlert,
@@ -20,10 +19,10 @@ import { MimoChatMessage } from './MimoChatMessage';
 import { MimoQuotaRing } from './MimoQuotaRing';
 import { MimoApiKeyModal } from './MimoApiKeyModal';
 import { MimoPrivacyModal } from './MimoPrivacyModal';
-import { MimoQuickAction, MimoActivityType, ActivityTelemetry } from '../types/mimoTypes';
+import { MimoQuickAction, MimoActivityType, ActivityTelemetry, MimoToolCall } from '../types/mimoTypes';
 import { enhanceUserPrompt } from '../services/promptRouter';
 import { prepareMimoContext } from '../services/contextEngine';
-import { extractDiffHunkFromResponse, computeLineDiff } from '../services/diffService';
+import { extractDiffHunkFromResponse, extractToolCallFromResponse, computeLineDiff } from '../services/diffService';
 import { streamMimoResponse } from '../services/mimoGeminiService';
 import { telemetryService } from '../../../services/telemetryService';
 
@@ -36,6 +35,8 @@ interface MimoDrawerProps {
   onToast: (msg: string) => void;
   isAiExcluded?: boolean;
   cursorLine?: number;
+  getSelectedText?: () => string;
+  onInsertSnippet?: (snippet: string) => void;
 }
 
 export const MimoDrawer: React.FC<MimoDrawerProps> = ({
@@ -47,6 +48,8 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   onToast,
   isAiExcluded = false,
   cursorLine = 1,
+  getSelectedText,
+  onInsertSnippet,
 }) => {
   const isOpen = useMimoStore((s) => s.isOpen);
   const setIsOpen = useMimoStore((s) => s.setIsOpen);
@@ -57,8 +60,6 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   const clearMessages = useMimoStore((s) => s.clearMessages);
   const mascotState = useMimoStore((s) => s.mascotState);
   const setMascotState = useMimoStore((s) => s.setMascotState);
-  const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
-  const setThinkingLevel = useMimoStore((s) => s.setThinkingLevel);
   const activeActivity = useMimoStore((s) => s.activeActivity);
   const setActiveActivity = useMimoStore((s) => s.setActiveActivity);
   const setActiveDiffHunk = useMimoStore((s) => s.setActiveDiffHunk);
@@ -74,10 +75,13 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   const userApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
 
   const [inputPrompt, setInputPrompt] = useState('');
+  const [activeSelection, setActiveSelection] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const isGeneratingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const startTimeRef = useRef<number>(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const previousContentBeforeToolRef = useRef<string | null>(null);
 
   // Sync active document & restore per-document persistent chat history
   useEffect(() => {
@@ -85,6 +89,16 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       syncActiveDocument(docId, title || 'Untitled Document');
     }
   }, [docId, title, syncActiveDocument]);
+
+  // Sync active selection whenever Mimo is opened or focused
+  useEffect(() => {
+    if (isOpen && getSelectedText) {
+      const sel = getSelectedText();
+      if (sel && sel.trim().length > 0) {
+        setActiveSelection(sel.trim());
+      }
+    }
+  }, [isOpen, getSelectedText]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -129,10 +143,124 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     [discardActiveDiff, onToast, updateLastMessage]
   );
 
+
+  const handleInsertSnippet = useCallback(
+
+    (snippet: string) => {
+
+      if (onInsertSnippet) {
+
+        onInsertSnippet(snippet);
+
+      } else {
+
+        const next = content.trim() ? `${content.trim()}\n\n${snippet}\n` : `${snippet}\n`;
+
+        setContent(next);
+
+        executeSave(next, title);
+
+        onToast('✨ Inserted snippet into document!');
+
+      }
+
+    },
+
+    [onInsertSnippet, content, setContent, executeSave, title, onToast]
+
+  );
+
+
+
+  const handleApplyToolCall = useCallback(
+    (toolCall: MimoToolCall) => {
+      const { name, arguments: args } = toolCall;
+      previousContentBeforeToolRef.current = content;
+
+      if (name === 'insert_at_bottom') {
+        const textToInsert = args.content || '';
+        const separator = content.endsWith('\n\n') ? '' : content.endsWith('\n') ? '\n' : '\n\n';
+        const next = content + separator + textToInsert;
+        setContent(next);
+        executeSave(next, title);
+        onToast('✨ Added content to document bottom!');
+      } else if (name === 'insert_at_top') {
+        const textToInsert = args.content || '';
+        const separator = textToInsert.endsWith('\n\n') ? '' : textToInsert.endsWith('\n') ? '\n' : '\n\n';
+        const next = textToInsert + separator + content;
+        setContent(next);
+        executeSave(next, title);
+        onToast('✨ Added content to document top!');
+      } else if (name === 'insert_at_cursor' || name === 'generate_table') {
+        const textToInsert = args.content || '';
+        if (onInsertSnippet) {
+          onInsertSnippet(textToInsert);
+        } else {
+          handleInsertSnippet(textToInsert);
+        }
+        onToast('✨ Inserted into document!');
+      } else if (name === 'insert_katex_formula') {
+        const formula = args.displayMode ? `$$\n${args.latex || ''}\n$$` : `$${args.latex || ''}$`;
+        if (onInsertSnippet) {
+          onInsertSnippet(formula);
+        } else {
+          handleInsertSnippet(formula);
+        }
+        onToast('✨ Inserted KaTeX formula!');
+      } else if (name === 'set_document_title') {
+        if (args.title) {
+          executeSave(content, args.title);
+          onToast(`✨ Renamed document to "${args.title}"`);
+        }
+      }
+
+      updateLastMessage((m) => {
+        if (m.toolCall && m.toolCall.id === toolCall.id) {
+          return { ...m, toolCall: { ...m.toolCall, isApplied: true, isDiscarded: false } };
+        }
+        return m;
+      });
+      setMascotState('happy');
+    },
+    [content, setContent, executeSave, title, onToast, onInsertSnippet, handleInsertSnippet, updateLastMessage, setMascotState]
+  );
+
+  const handleDiscardToolCall = useCallback(
+    (toolCallId: string) => {
+      updateLastMessage((m) => {
+        if (m.toolCall && m.toolCall.id === toolCallId) {
+          return { ...m, toolCall: { ...m.toolCall, isDiscarded: true } };
+        }
+        return m;
+      });
+      onToast('Action discarded.');
+    },
+    [updateLastMessage, onToast]
+  );
+
+  const handleUndoToolCall = useCallback(
+    (toolCall: MimoToolCall) => {
+      if (previousContentBeforeToolRef.current !== null) {
+        setContent(previousContentBeforeToolRef.current);
+        executeSave(previousContentBeforeToolRef.current, title);
+        onToast('↺ Undid applied Mimo action.');
+        updateLastMessage((m) => {
+          if (m.toolCall && m.toolCall.id === toolCall.id) {
+            return { ...m, toolCall: { ...m.toolCall, isApplied: false } };
+          }
+          return m;
+        });
+      }
+    },
+    [setContent, executeSave, title, onToast, updateLastMessage]
+  );
+
+
   const handleStop = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+    isGeneratingRef.current = false;
     const stoppedElapsed = startTimeRef.current
       ? Math.max(100, Date.now() - startTimeRef.current)
       : 500;
@@ -157,23 +285,9 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     setMascotState('happy');
   };
 
-  const handleCycleThinkingMode = () => {
-    const order: ('AUTO' | 'LOW' | 'MEDIUM' | 'HIGH')[] = ['AUTO', 'LOW', 'MEDIUM', 'HIGH'];
-    const currentIdx = order.indexOf(thinkingLevel === 'MINIMAL' ? 'LOW' : thinkingLevel);
-    const next = order[(currentIdx + 1) % order.length];
-    setThinkingLevel(next);
-  };
-
-  const getThinkingModeLabel = () => {
-    if (thinkingLevel === 'LOW' || thinkingLevel === 'MINIMAL') return 'Fast • Flash-Lite';
-    if (thinkingLevel === 'MEDIUM') return 'Balanced • Flash-Lite';
-    if (thinkingLevel === 'HIGH') return 'Deep • 3.8 Flash';
-    return 'Auto Router (Smart)';
-  };
-
   const handleSendPrompt = async (customPrompt?: string) => {
     const raw = customPrompt !== undefined ? customPrompt : inputPrompt;
-    if (!raw.trim() || isGenerating) return;
+    if (!raw.trim() || isGenerating || isGeneratingRef.current) return;
 
     // AI-exclusion document guardrail
     if (isAiExcluded) {
@@ -210,14 +324,18 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       return;
     }
 
+    const liveSelection = getSelectedText ? getSelectedText().trim() : '';
+    const currentSelectionSnapshot = activeSelection || liveSelection;
     const userMessageId = `user-${Date.now()}`;
     addMessage({
       id: userMessageId,
       role: 'user',
       text: raw.trim(),
       timestamp: Date.now(),
+      hasSelectionContext: !!currentSelectionSnapshot,
     });
 
+    isGeneratingRef.current = true;
     setInputPrompt('');
     setIsGenerating(true);
     setMascotState('thinking');
@@ -226,13 +344,14 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     const startTime = Date.now();
     startTimeRef.current = startTime;
 
-    // Context preparation (full document awareness for <=1000 LOC)
+    // Context preparation with selection awareness & active heading path
     const context = prepareMimoContext({
       docId,
       title,
       content,
       userPrompt: raw,
       cursorLine,
+      selectedText: currentSelectionSnapshot || undefined,
     });
 
     // Activity setup
@@ -268,8 +387,8 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       metrics: {
         linesScanned: context.linesAnalyzed,
         tokenVelocity: 88,
-        modelName: thinkingLevel === 'HIGH' ? 'Gemini 3.8 Flash' : 'Gemini 3.5 Flash-Lite',
-        thinkingLevel: thinkingLevel,
+        modelName: 'Gemini 3.5 Flash-Lite',
+        thinkingLevel: 'AUTO',
         elapsedMs: 0,
         diffDelta: { additions: 0, deletions: 0 },
       },
@@ -300,9 +419,17 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
         apiKey: userApiKey,
         prompt: raw,
         context,
-        thinkingLevel,
+        thinkingLevel: 'AUTO',
+        history: messages,
         signal: abortControllerRef.current.signal,
         callbacks: {
+          onStreamReset: () => {
+            updateLastMessage((m) => ({
+              ...m,
+              text: '',
+              thoughtText: '',
+            }));
+          },
           onModelResolved: (modelLabel, level) => {
             setActiveActivity((prev) =>
               prev
@@ -387,7 +514,9 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       }
 
       // Extract unified git hunk if present
-      const { cleanText, hunk } = extractDiffHunkFromResponse(result.fullText, content);
+      const { cleanText: textAfterDiff, hunk } = extractDiffHunkFromResponse(result.fullText, content);
+      // Extract interactive tool call if present
+      const { cleanText, toolCall } = extractToolCallFromResponse(textAfterDiff);
       let diffDelta = { additions: 0, deletions: 0 };
       if (hunk) {
         setActiveDiffHunk(hunk);
@@ -428,6 +557,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
             }
           : completedActivity,
         diffHunk: hunk || undefined,
+        toolCall: toolCall || undefined,
       }));
 
       setActiveActivity(null);
@@ -451,6 +581,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       }));
       setMascotState('happy');
     } finally {
+      isGeneratingRef.current = false;
       setIsGenerating(false);
       abortControllerRef.current = null;
     }
@@ -468,6 +599,23 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   };
 
   const handleQuickAction = (action: MimoQuickAction) => {
+    const liveSelection = getSelectedText ? getSelectedText().trim() : '';
+    const sel = activeSelection || liveSelection;
+    if (sel) {
+      if (action === 'improve') {
+        handleSendPrompt('Improve this selected text, fixing grammar, clarity, and tone with a clean diff.');
+      } else if (action === 'summarize') {
+        handleSendPrompt('Summarize this selected text in crisp bullet points.');
+      } else if (action === 'write') {
+        handleSendPrompt('Continue and expand upon this selected text with next logical points.');
+      } else if (action === 'explain') {
+        handleSendPrompt('Explain this selected text in simple, clear terms.');
+      } else if (action === 'translate') {
+        handleSendPrompt('Translate this selected text into natural Hinglish.');
+      }
+      return;
+    }
+
     if (action === 'improve') {
       handleSendPrompt('Review the current document and propose improvements with a clean diff.');
     } else if (action === 'summarize') {
@@ -482,6 +630,9 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   };
 
   if (!isOpen) return null;
+
+  // Determine if the chat conversation is currently empty (only default greeting or 0 user messages)
+  const isChatEmpty = messages.filter((m) => m.role === 'user').length === 0;
 
   return (
     <>
@@ -547,77 +698,151 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
             </div>
           )}
 
-          {messages.map((msg) => (
-            <MimoChatMessage
-              key={msg.id}
-              message={msg}
-              onApplyDiff={handleApplyDiff}
-              onDiscardDiff={handleDiscardDiff}
-            />
-          ))}
+          {/* If chat is empty: show rich starter suggestion cards. Once active, show full chat! */}
+          {isChatEmpty ? (
+            <div className="py-6 px-2 flex flex-col items-center text-center space-y-5 animate-in fade-in duration-300">
+              <div className="relative">
+                <MimoAvatar size="lg" state={mascotState} />
+                <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-neutral-900"></span>
+                </span>
+              </div>
+
+              <div className="space-y-1.5 max-w-sm">
+                <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+                  Hello! I'm Mimo ✦
+                </h3>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                  Your intelligent markdown companion connected to <span className="font-semibold text-neutral-800 dark:text-neutral-200">"{title || 'Untitled Document'}"</span>.
+                </p>
+              </div>
+
+              {/* Starter Suggestion Tasks - ONLY SHOWN WHEN CHAT IS EMPTY */}
+              <div className="w-full space-y-2 text-left pt-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 px-1">
+                  Suggested Tasks
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleQuickAction('improve')}
+                    disabled={isGenerating || isAiExcluded}
+                    className="p-3 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 hover:bg-violet-50/60 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 transition-all text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <PenTool className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                      <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-violet-700 dark:group-hover:text-violet-300">
+                        Improve Document
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                      Review syntax, flow, and propose non-destructive diffs.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => handleQuickAction('summarize')}
+                    disabled={isGenerating || isAiExcluded}
+                    className="p-3 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 hover:bg-amber-50/60 dark:hover:bg-amber-950/30 hover:border-amber-300 dark:hover:border-amber-800 transition-all text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-amber-700 dark:group-hover:text-amber-300">
+                        Summarize Notes
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                      Extract high-impact takeaways and section outlines.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => handleQuickAction('translate')}
+                    disabled={isGenerating || isAiExcluded}
+                    className="p-3 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 hover:bg-sky-50/60 dark:hover:bg-sky-950/30 hover:border-sky-300 dark:hover:border-sky-800 transition-all text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Languages className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+                      <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-sky-700 dark:group-hover:text-sky-300">
+                        Explain in Hinglish
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                      Crystal-clear technical explanations in natural Hinglish.
+                    </p>
+                  </button>
+
+                  <button
+                    onClick={() => handleQuickAction('write')}
+                    disabled={isGenerating || isAiExcluded}
+                    className="p-3 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/40 hover:bg-cyan-50/60 dark:hover:bg-cyan-950/30 hover:border-cyan-300 dark:hover:border-cyan-800 transition-all text-left group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                      <span className="text-xs font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-cyan-700 dark:group-hover:text-cyan-300">
+                        Draft Next Section
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2">
+                      Expand arguments, headings, tables, or code blocks.
+                    </p>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <MimoChatMessage
+                key={msg.id}
+                message={msg}
+                onApplyDiff={handleApplyDiff}
+                onDiscardDiff={handleDiscardDiff}
+                onInsertSnippet={handleInsertSnippet}
+                onApplyToolCall={handleApplyToolCall}
+                onDiscardToolCall={handleDiscardToolCall}
+                onUndoToolCall={handleUndoToolCall}
+              />
+            ))
+          )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Action Chips */}
-        <div className="px-3 py-2 border-t border-neutral-100 dark:border-neutral-800/60 bg-neutral-50/50 dark:bg-neutral-900/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
-          <button
-            onClick={() => handleQuickAction('improve')}
-            disabled={isGenerating || isAiExcluded}
-            className="shrink-0 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-violet-400 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-          >
-            <PenTool className="w-3 h-3 text-violet-500" />
-            Improve Diff
-          </button>
-          <button
-            onClick={() => handleQuickAction('summarize')}
-            disabled={isGenerating || isAiExcluded}
-            className="shrink-0 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-amber-400 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-          >
-            <BookOpen className="w-3 h-3 text-amber-500" />
-            Summarize
-          </button>
-          <button
-            onClick={() => handleQuickAction('write')}
-            disabled={isGenerating || isAiExcluded}
-            className="shrink-0 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-cyan-400 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-          >
-            <FileText className="w-3 h-3 text-cyan-500" />
-            Next Section
-          </button>
-          <button
-            onClick={() => handleQuickAction('translate')}
-            disabled={isGenerating || isAiExcluded}
-            className="shrink-0 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-sky-400 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-          >
-            <Languages className="w-3 h-3 text-sky-500" />
-            Hinglish
-          </button>
-          <button
-            onClick={() => handleQuickAction('explain')}
-            disabled={isGenerating || isAiExcluded}
-            className="shrink-0 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:border-emerald-400 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-          >
-            <HelpCircle className="w-3 h-3 text-emerald-500" />
-            Explain
-          </button>
-        </div>
-
         {/* Input Dock */}
         <div className="p-3 border-t border-neutral-200/80 dark:border-neutral-800/80 bg-white dark:bg-neutral-900 shrink-0 space-y-2">
+          {/* Active Text Selection Indicator Pill */}
+          {activeSelection && (
+            <div className="flex items-center justify-between px-2.5 py-1 bg-violet-50 dark:bg-violet-950/60 border border-violet-200/80 dark:border-violet-800/80 rounded-lg text-[11px] text-violet-800 dark:text-violet-200">
+              <div className="flex items-center gap-1.5 truncate">
+                <span className="font-semibold">✂️ Focused Selection:</span>
+                <span className="truncate italic text-neutral-600 dark:text-neutral-300">
+                  "{activeSelection.slice(0, 36).replace(/\n/g, ' ')}..."
+                </span>
+                <span className="text-[10px] text-violet-600/80 dark:text-violet-400/80 font-mono">
+                  ({activeSelection.split('\n').length} lines)
+                </span>
+              </div>
+              <button
+                onClick={() => setActiveSelection('')}
+                className="text-violet-400 hover:text-violet-700 dark:hover:text-violet-200 p-0.5 cursor-pointer ml-2"
+                title="Ignore selection"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
           {/* Controls Bar */}
           <div className="flex items-center justify-between text-xs">
-            {/* Interactive Model & Reasoning Selector */}
-            <button
-              type="button"
-              onClick={handleCycleThinkingMode}
-              disabled={isGenerating}
-              className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100/80 dark:bg-neutral-800/80 hover:bg-violet-50 dark:hover:bg-violet-950/40 hover:text-violet-700 dark:hover:text-violet-300 px-2.5 py-1 rounded-lg border border-neutral-200/80 dark:border-neutral-700/80 cursor-pointer transition-colors"
-              title="Click to switch AI Model & Reasoning tier (Auto Router / Fast Flash-Lite / Balanced / Deep 3.8 Flash)"
+            {/* Strictly Auto Router Badge (No Manual Change Allowed) */}
+            <div
+              className="flex items-center gap-1.5 text-[11px] font-medium text-violet-700 dark:text-violet-300 bg-violet-50/80 dark:bg-violet-950/50 px-2.5 py-1 rounded-lg border border-violet-200/80 dark:border-violet-800/70 select-none cursor-default"
+              title="Smart Auto Router: Intelligently allocates reasoning depth based on prompt complexity"
             >
               <Sparkles className="w-3 h-3 text-violet-500" />
-              <span>{getThinkingModeLabel()}</span>
-            </button>
+              <span>Auto Router</span>
+            </div>
 
             {/* Prompt Enhancer Wand */}
             <button
@@ -636,6 +861,14 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
             <textarea
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
+              onFocus={() => {
+                if (getSelectedText && !activeSelection) {
+                  const sel = getSelectedText();
+                  if (sel && sel.trim().length > 0) {
+                    setActiveSelection(sel.trim());
+                  }
+                }
+              }}
               disabled={isAiExcluded}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -646,6 +879,8 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
               placeholder={
                 isAiExcluded
                   ? 'This document is shielded from AI scanning (enable in Sidebar)'
+                  : activeSelection
+                  ? 'Ask about selected text, or request an edit...'
                   : 'Ask Mimo, edit doc, or type in Hinglish... (Enter to send)'
               }
               rows={2}

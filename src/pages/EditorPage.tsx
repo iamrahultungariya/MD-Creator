@@ -19,7 +19,7 @@ import { isCurrentUserAdmin } from '../utils/adminAuth';
 import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
 import { telemetryService } from '../services/telemetryService';
-import { MimoEditorDiffBanner, useMimoStore } from '../features/mimo';
+import { MimoEditorDiffBanner, useMimoStore, MimoFloatingMascot } from '../features/mimo';
 import { FEATURE_FLAGS } from '../config/features';
 
 const MimoDrawer = React.lazy(() =>
@@ -150,6 +150,22 @@ export const EditorPage: React.FC = () => {
       doc.setContent(next);
       doc.executeSave(next, doc.title);
       showToast('🖼️ Embedded image');
+    },
+    [doc, showToast]
+  );
+
+  const handleInsertSnippet = useCallback(
+    (snippet: string) => {
+      if (!snippet) return;
+      if (editorRef.current) {
+        editorRef.current.replaceSelection('\n\n' + snippet + '\n\n');
+        showToast('✨ Inserted snippet into editor');
+      } else {
+        const next = doc.content ? `${doc.content}\n\n${snippet}\n` : snippet;
+        doc.setContent(next);
+        doc.executeSave(next, doc.title);
+        showToast('✨ Inserted snippet into editor');
+      }
     },
     [doc, showToast]
   );
@@ -526,7 +542,10 @@ export const EditorPage: React.FC = () => {
             onToast={showToast}
             isAiExcluded={doc.docMetadata?.isAiExcluded}
             cursorLine={cursorPos.line}
+            getSelectedText={() => editorRef.current?.getSelection() || ''}
+            onInsertSnippet={handleInsertSnippet}
           />
+          <MimoFloatingMascot />
         </React.Suspense>
       )}
     </div>

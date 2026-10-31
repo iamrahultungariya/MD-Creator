@@ -2,9 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
-import { SpotlightCard } from '../common/SpotlightCard';
 
-interface DocumentGridCardProps {
+export interface DocumentGridCardProps {
   doc: DocumentMetadata;
   currentTab: 'active' | 'trash';
   onOpen: (id: string) => void;
@@ -49,13 +48,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
   }, [isMobileMenuOpen]);
 
   return (
-    <SpotlightCard
-      spotlightRadius={300}
-      spotlightBorderColor={
-        doc.isPinned
-          ? 'rgba(245, 158, 11, 0.55)'
-          : undefined
-      }
+    <div
       onClick={() => {
         if (isSelectionMode) {
           onToggleSelect?.(doc.id);
@@ -65,12 +58,14 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
           onOpen(doc.id);
         }
       }}
-      className={`p-6 bg-white/90 dark:bg-[#121217]/90 backdrop-blur-xl border cursor-pointer select-none active:scale-[0.99] transition-all duration-150 hover:-translate-y-1 hover:shadow-xl ${
+      className={`group relative p-6 rounded-xl bg-white dark:bg-[#121217] border cursor-pointer select-none active:scale-[0.99] transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-md flex flex-col justify-between h-full will-change-transform ${
         isSelected
           ? 'border-brand-500 ring-2 ring-brand-500/30 dark:border-brand-500'
+          : doc.isPinned && currentTab === 'active'
+          ? 'border-amber-400/60 dark:border-amber-500/40 ring-1 ring-amber-400/20 shadow-2xs hover:border-amber-400 dark:hover:border-amber-500'
           : currentTab === 'trash'
-          ? 'border-red-200/50 dark:border-red-950/50 shadow-xs'
-          : 'border-neutral-200/80 dark:border-neutral-800/80 shadow-xs hover:border-neutral-300/80 dark:hover:border-neutral-700/80'
+          ? 'border-red-200/50 dark:border-red-950/50 shadow-2xs'
+          : 'border-neutral-200/80 dark:border-neutral-800/80 shadow-2xs hover:border-neutral-300/90 dark:hover:border-neutral-700/90'
       }`}
     >
       <div>
@@ -126,6 +121,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
               {currentTab === 'active' ? (
                 <>
                   <button
+                    type="button"
                     onClick={(e) => onDuplicate(e, doc.id)}
                     className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                     title="Duplicate / Clone document"
@@ -133,6 +129,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                     <Copy className="w-3.5 h-3.5" />
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => onTogglePin(e, doc.id)}
                     className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                       doc.isPinned
@@ -144,6 +141,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                     <Pin className={`w-3.5 h-3.5 ${doc.isPinned ? 'fill-current' : ''}`} />
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => onDelete(e, doc.id, doc.title)}
                     className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     title="Move to Recycle Bin"
@@ -154,6 +152,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
               ) : (
                 <>
                   <button
+                    type="button"
                     onClick={(e) => onRestore(e, doc.id)}
                     className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                     title="Restore document to library"
@@ -162,6 +161,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                     <span>Restore</span>
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => onDelete(e, doc.id, doc.title)}
                     className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     title="Permanently delete forever"
@@ -316,6 +316,8 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
           <span className="font-sans font-medium">{doc.wordCount} words</span>
         </div>
       </div>
-    </SpotlightCard>
+    </div>
   );
 });
+
+DocumentGridCard.displayName = 'DocumentGridCard';

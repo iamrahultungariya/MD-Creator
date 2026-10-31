@@ -12,15 +12,17 @@ import {
   Copy,
   X,
   Cloud,
-  CheckSquare
+  CheckSquare,
+  MoreHorizontal
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { DocumentGridCard } from '../components/documents/DocumentGridCard';
 import { DocumentListItem } from '../components/documents/DocumentListItem';
 import { DocumentsFilterToolbar } from '../components/documents/DocumentsFilterToolbar';
 import { BatchActionsBar } from '../components/documents/BatchActionsBar';
+import { DocumentPagination } from '../components/documents/DocumentPagination';
 import { 
-  useDocuments, 
+  usePaginatedDocuments, 
   useDeleteDocument, 
   useTogglePin, 
   useTrashCount, 
@@ -30,11 +32,10 @@ import {
   useDuplicateDocument, 
   useAllDocumentTags 
 } from '../hooks/useDocuments';
-import { saveDocument, getDocumentContent } from '../db';
+import { db, saveDocument, getDocumentContent, DocumentMetadata } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
 import { useAuthStore } from '../stores/useAuthStore';
-import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { useDocumentFilterStore } from '../stores/useDocumentFilterStore';
 
 const CreateDocumentModal = React.lazy(() =>
@@ -54,6 +55,9 @@ const BulkShareModal = React.lazy(() =>
 );
 const CloudSyncModal = React.lazy(() =>
   import('../components/common/CloudSyncModal').then((m) => ({ default: m.CloudSyncModal }))
+);
+const QuickAuthModal = React.lazy(() =>
+  import('../components/auth/QuickAuthModal').then((m) => ({ default: m.QuickAuthModal }))
 );
 
 export const DocumentsPage: React.FC = () => {
@@ -75,13 +79,58 @@ export const DocumentsPage: React.FC = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isBulkShareOpen, setIsBulkShareOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
+  const moreActionsRef = useRef<HTMLDivElement>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+  const [shareDocuments, setShareDocuments] = useState<DocumentMetadata[]>([]);
 
   const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
 
-  const { data: documents = [], isLoading } = useDocuments(search, activeTag, currentTab === 'trash');
+  // Close more actions popover on outside click
+  useEffect(() => {
+    if (!isMoreActionsOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (moreActionsRef.current && !moreActionsRef.current.contains(e.target as Node)) {
+        setIsMoreActionsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isMoreActionsOpen]);
+
+  // Synchronously reset page to 1 whenever filters change without extra render cycles
+  const prevFiltersRef = useRef({ search, activeTag, currentTab });
+  if (
+    prevFiltersRef.current.search !== search ||
+    prevFiltersRef.current.activeTag !== activeTag ||
+    prevFiltersRef.current.currentTab !== currentTab
+  ) {
+    prevFiltersRef.current = { search, activeTag, currentTab };
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }
+
+  const { data: paginatedData, isLoading } = usePaginatedDocuments({
+    searchQuery: search,
+    activeTag,
+    showTrash: currentTab === 'trash',
+    page: currentPage,
+    pageSize,
+  });
+
+  const documents = paginatedData?.documents ?? [];
+  const totalMatchedCount = paginatedData?.totalCount ?? 0;
+  const totalPages = paginatedData?.totalPages ?? 1;
   const { data: activeCount = 0 } = useActiveDocumentCount();
   const { data: trashCount = 0 } = useTrashCount();
   const deleteDocMutation = useDeleteDocument();
@@ -90,6 +139,10 @@ export const DocumentsPage: React.FC = () => {
   const duplicateDocMutation = useDuplicateDocument();
   const togglePinMutation = useTogglePin();
   const { data: allTags = ['All'] } = useAllDocumentTags();
+
+  // Keep a stable ref to documents to prevent breaking card memoization in callbacks
+  const documentsRef = useRef<DocumentMetadata[]>(documents);
+  documentsRef.current = documents;
 
   // Prefetch EditorPage chunk so document clicks open instantaneously (0ms lag)
   useEffect(() => {
@@ -138,11 +191,12 @@ export const DocumentsPage: React.FC = () => {
     navigate(`/editor/${id}`);
   }, [navigate]);
 
+  const duplicateMutateAsync = duplicateDocMutation.mutateAsync;
   const handleDuplicate = useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
-      const doc = documents.find((d) => d.id === id);
-      const newId = await duplicateDocMutation.mutateAsync(id);
+      const doc = documentsRef.current.find((d) => d.id === id);
+      const newId = await duplicateMutateAsync(id);
       if (newId) {
         const copyTitle = doc ? `${doc.title} (Copy)` : 'Document (Copy)';
         setCloneToast({ title: copyTitle, id: newId });
@@ -150,12 +204,13 @@ export const DocumentsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to duplicate doc', err);
     }
-  }, [documents, duplicateDocMutation]);
+  }, [duplicateMutateAsync]);
 
+  const restoreMutate = restoreDocMutation.mutate;
   const handleRestore = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    restoreDocMutation.mutate(id);
-  }, [restoreDocMutation]);
+    restoreMutate(id);
+  }, [restoreMutate]);
 
   const handleEmptyTrash = async () => {
     if (trashCount === 0) return;
@@ -177,6 +232,7 @@ export const DocumentsPage: React.FC = () => {
     }
   };
 
+  const deleteMutate = deleteDocMutation.mutate;
   const handleDelete = useCallback(async (e: React.MouseEvent, id: string, title: string) => {
     e.stopPropagation();
     if (currentTab === 'active') {
@@ -194,7 +250,7 @@ export const DocumentsPage: React.FC = () => {
         icon: 'trash'
       });
       if (confirmed) {
-        deleteDocMutation.mutate({ id, permanent: false });
+        deleteMutate({ id, permanent: false });
       }
     } else {
       const confirmed = await confirm({
@@ -211,15 +267,16 @@ export const DocumentsPage: React.FC = () => {
         icon: 'trash'
       });
       if (confirmed) {
-        deleteDocMutation.mutate({ id, permanent: true });
+        deleteMutate({ id, permanent: true });
       }
     }
-  }, [currentTab, confirm, deleteDocMutation]);
+  }, [currentTab, confirm, deleteMutate]);
 
+  const togglePinMutate = togglePinMutation.mutate;
   const handleTogglePin = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    togglePinMutation.mutate(id);
-  }, [togglePinMutation]);
+    togglePinMutate(id);
+  }, [togglePinMutate]);
 
   // Batch multi-select state
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
@@ -245,8 +302,8 @@ export const DocumentsPage: React.FC = () => {
   }, []);
 
   const handleSelectAll = useCallback(() => {
-    setSelectedDocIds(new Set(documents.map((d) => d.id)));
-  }, [documents]);
+    setSelectedDocIds(new Set(documentsRef.current.map((d) => d.id)));
+  }, []);
 
   const handleDeselectAll = useCallback(() => {
     setSelectedDocIds(new Set());
@@ -282,7 +339,9 @@ export const DocumentsPage: React.FC = () => {
   }, [selectedDocIds, currentTab, confirm, deleteDocMutation]);
 
   const handleBatchExport = useCallback(async () => {
-    const selected = documents.filter((d) => selectedDocIds.has(d.id));
+    if (selectedDocIds.size === 0) return;
+    const ids = Array.from(selectedDocIds);
+    const selected = await db.documents.where('id').anyOf(ids).toArray();
     if (selected.length === 0) return;
 
     for (const doc of selected) {
@@ -302,7 +361,14 @@ export const DocumentsPage: React.FC = () => {
         console.error('Failed to export doc', doc.id, err);
       }
     }
-  }, [documents, selectedDocIds]);
+  }, [selectedDocIds]);
+
+  const handleOpenBulkShare = useCallback(async () => {
+    if (selectedDocIds.size === 0) return;
+    const items = await db.documents.where('id').anyOf(Array.from(selectedDocIds)).toArray();
+    setShareDocuments(items);
+    setIsBulkShareOpen(true);
+  }, [selectedDocIds]);
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors">
@@ -312,65 +378,80 @@ export const DocumentsPage: React.FC = () => {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
-        {/* Workspace Header with Clean Telemetry */}
+        {/* Workspace Header: Modern Linear/Raycast-grade layout */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
+              <h1 className="text-2xl sm:text-3xl font-bold text-neutral-950 dark:text-white tracking-[-0.03em]">
                 Documents Vault
               </h1>
-              <span className="text-xs text-neutral-400 dark:text-neutral-500 font-sans font-medium">
-                · {currentTab === 'trash' ? `${trashCount} in trash` : `${activeCount} notes`}
-              </span>
-              <StorageLimitRing variant="badge" />
 
-              {/* Cloud Backup Status Pill */}
-              {user?.id ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-sans">
-                  <Cloud className="w-3.5 h-3.5" />
-                  <span>Cloud Synced</span>
+              {/* Status & Telemetry Strip */}
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200/70 dark:border-neutral-700/60 font-sans">
+                  {currentTab === 'trash' ? `${trashCount} in trash` : `${activeCount} notes`}
                 </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsAuthOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/60 cursor-pointer transition-colors shadow-2xs font-sans"
-                  title="Your notes are currently saved only in this browser. Click to back up to cloud."
-                >
-                  <Cloud className="w-3.5 h-3.5" />
-                  <span>Back Up to Cloud</span>
-                </button>
-              )}
+
+                <StorageLimitRing variant="badge" />
+
+                {/* Cloud Backup Status Pill */}
+                {user?.id ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-sans">
+                    <Cloud className="w-3.5 h-3.5" />
+                    <span className="hidden xs:inline">Cloud Synced</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAuthOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/60 cursor-pointer transition-colors shadow-2xs font-sans"
+                    title="Your notes are currently saved only in this browser. Click to back up to cloud."
+                  >
+                    <Cloud className="w-3.5 h-3.5" />
+                    <span>Back Up</span>
+                  </button>
+                )}
+              </div>
             </div>
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              Local browser workspace • Auto-saving active
+
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1 flex items-center gap-2">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Local browser workspace &bull; Instant auto-saving</span>
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto font-sans">
+          {/* Action Toolbar */}
+          <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto justify-between sm:justify-end font-sans">
+            {/* Multi-Select Toggle */}
             <button
-              onClick={() => setIsTemplatesOpen(true)}
-              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              type="button"
+              onClick={() => {
+                if (isBatchMode) {
+                  handleExitBatchMode();
+                } else {
+                  setIsBatchMode(true);
+                }
+              }}
+              className={`justify-center px-3 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                isBatchMode
+                  ? 'bg-brand-500/15 border-brand-500/40 text-brand-600 dark:text-brand-400 font-bold ring-1 ring-brand-500/30'
+                  : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+              }`}
+              title="Toggle multi-select batch actions"
             >
-              <LayoutTemplate className="w-3.5 h-3.5 text-neutral-400" />
-              <span>Blueprints</span>
+              <CheckSquare className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">{isBatchMode ? 'Cancel' : 'Select'}</span>
             </button>
 
+            {/* Quick Import .md */}
             <button
-              onClick={() => setIsSyncModalOpen(true)}
-              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-              title="Interactive multi-device cloud sync"
-            >
-              <Cloud className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-              <span>Sync</span>
-            </button>
-
-            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              className="justify-center px-3 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+              title="Import .md, .markdown, or .txt file"
             >
               <Upload className="w-3.5 h-3.5 text-neutral-400" />
-              <span>Import .md</span>
+              <span className="hidden xs:inline">Import</span>
             </button>
             <input
               type="file"
@@ -380,37 +461,71 @@ export const DocumentsPage: React.FC = () => {
               className="hidden"
             />
 
-            <button
-              onClick={() => setIsLocalFolderOpen(true)}
-              className="justify-center px-3.5 py-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-              title="Open local folder as note vault"
-            >
-              <FolderTree className="w-3.5 h-3.5 text-neutral-400" />
-              <span>Local Folder</span>
-            </button>
+            {/* Tools & Secondary Actions Dropdown */}
+            <div className="relative" ref={moreActionsRef}>
+              <button
+                type="button"
+                onClick={() => setIsMoreActionsOpen((prev) => !prev)}
+                className={`justify-center px-3 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+                  isMoreActionsOpen
+                    ? 'border-neutral-400 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white'
+                    : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
+                }`}
+                title="More vault tools"
+              >
+                <MoreHorizontal className="w-4 h-4 text-neutral-400" />
+                <span className="hidden xs:inline">Tools</span>
+              </button>
 
-            <button
-              onClick={() => {
-                if (isBatchMode) {
-                  handleExitBatchMode();
-                } else {
-                  setIsBatchMode(true);
-                }
-              }}
-              className={`justify-center px-3.5 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
-                isBatchMode
-                  ? 'bg-brand-500/10 border-brand-500/30 text-brand-600 dark:text-brand-400 font-bold'
-                  : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-              }`}
-              title="Toggle multi-select batch actions"
-            >
-              <CheckSquare className="w-3.5 h-3.5" />
-              <span>{isBatchMode ? 'Cancel Select' : 'Select'}</span>
-            </button>
+              {isMoreActionsOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1.5 z-50 w-52 p-1.5 rounded-xl bg-white/95 dark:bg-[#18181c]/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl animate-in fade-in zoom-in-95 duration-150 font-sans"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMoreActionsOpen(false);
+                      setIsTemplatesOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer text-left"
+                  >
+                    <LayoutTemplate className="w-4 h-4 text-neutral-400" />
+                    <span>Starter Blueprints</span>
+                  </button>
 
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMoreActionsOpen(false);
+                      setIsLocalFolderOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer text-left"
+                  >
+                    <FolderTree className="w-4 h-4 text-neutral-400" />
+                    <span>Open Local Folder</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMoreActionsOpen(false);
+                      setIsSyncModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer text-left"
+                  >
+                    <Cloud className="w-4 h-4 text-brand-500" />
+                    <span>Multi-Device Sync</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* High-Contrast Hero Primary CTA Button */}
             <button
+              type="button"
               onClick={handleCreateNew}
-              className="justify-center px-4 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="justify-center px-4 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] active:bg-[#6335e0] text-white text-xs font-bold shadow-xs hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Note</span>
@@ -421,7 +536,11 @@ export const DocumentsPage: React.FC = () => {
         {/* Minimal Segmented Tab Controller (All Documents vs Recycle Bin) */}
         <div className="flex items-center gap-1 mb-6 p-1 bg-neutral-100/70 dark:bg-neutral-900/80 rounded-xl w-fit border border-neutral-200/60 dark:border-neutral-800/80 text-xs font-medium font-sans">
           <button
-            onClick={() => { setCurrentTab('active'); setActiveTag('All'); }}
+            onClick={() => { 
+              setCurrentTab('active'); 
+              setActiveTag('All'); 
+              setCurrentPage(1);
+            }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
               currentTab === 'active'
                 ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
@@ -436,7 +555,11 @@ export const DocumentsPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => { setCurrentTab('trash'); setActiveTag('All'); }}
+            onClick={() => { 
+              setCurrentTab('trash'); 
+              setActiveTag('All'); 
+              setCurrentPage(1);
+            }}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
               currentTab === 'trash'
                 ? 'bg-white dark:bg-neutral-800 text-red-600 dark:text-red-400 shadow-2xs font-semibold'
@@ -519,21 +642,10 @@ export const DocumentsPage: React.FC = () => {
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          /* Grid View with Scoped Layout IDs and Spring Physics */
+          /* Grid View - High Performance Direct Render (Zero FLIP Layout Thrashing) */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {documents.map((doc) => (
-              <motion.div
-                key={doc.id}
-                layout="position"
-                layoutId={`grid-${doc.id}`}
-                transition={{
-                  type: 'spring',
-                  stiffness: 220,
-                  damping: 24,
-                  mass: 0.8
-                }}
-                className="h-full"
-              >
+              <div key={doc.id} className="h-full">
                 <DocumentGridCard
                   doc={doc}
                   currentTab={currentTab}
@@ -546,24 +658,14 @@ export const DocumentsPage: React.FC = () => {
                   isSelected={selectedDocIds.has(doc.id)}
                   onToggleSelect={handleToggleSelect}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
-          /* List View with Scoped Layout IDs and Vertical Spring Motion */
+          /* List View - High Performance Direct Render (Zero FLIP Layout Thrashing) */
           <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800 font-sans">
             {documents.map((doc) => (
-              <motion.div
-                key={doc.id}
-                layout="position"
-                layoutId={`list-${doc.id}`}
-                transition={{
-                  type: 'spring',
-                  stiffness: 260,
-                  damping: 26,
-                  mass: 0.7
-                }}
-              >
+              <div key={doc.id}>
                 <DocumentListItem
                   doc={doc}
                   currentTab={currentTab}
@@ -576,11 +678,30 @@ export const DocumentsPage: React.FC = () => {
                   isSelected={selectedDocIds.has(doc.id)}
                   onToggleSelect={handleToggleSelect}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
         </div>
+
+        {/* P0: Document Pagination Controls */}
+        {totalMatchedCount > 0 && (
+          <DocumentPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalMatchedCount}
+            pageSize={pageSize}
+            onPageChange={(newPage) => {
+              setCurrentPage(newPage);
+              window.scrollTo({ top: 120, behavior: 'smooth' });
+            }}
+            onPageSizeChange={(newSize) => {
+              setPageSize(newSize);
+              setCurrentPage(1);
+            }}
+            pageSizeOptions={[6, 12, 24]}
+          />
+        )}
 
         {/* Floating Batch Actions Bar */}
         <AnimatePresence>
@@ -592,7 +713,7 @@ export const DocumentsPage: React.FC = () => {
               onDeselectAll={handleDeselectAll}
               onBatchDelete={handleBatchDelete}
               onBatchExport={handleBatchExport}
-              onBatchShare={() => setIsBulkShareOpen(true)}
+              onBatchShare={handleOpenBulkShare}
               onExitMode={handleExitBatchMode}
             />
           )}
@@ -666,11 +787,15 @@ export const DocumentsPage: React.FC = () => {
         </React.Suspense>
       )}
 
-      {/* Quick Auth Modal for Cloud Sync */}
-      <QuickAuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-      />
+      {/* P5: Quick Auth Modal for Cloud Sync (Lazy loaded on demand) */}
+      {isAuthOpen && (
+        <React.Suspense fallback={null}>
+          <QuickAuthModal
+            isOpen={isAuthOpen}
+            onClose={() => setIsAuthOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
       {/* Multi-Document Bulk Share Modal */}
       {isBulkShareOpen && (
@@ -679,7 +804,7 @@ export const DocumentsPage: React.FC = () => {
             isOpen={isBulkShareOpen}
             onClose={() => setIsBulkShareOpen(false)}
             selectedDocIds={selectedDocIds}
-            documents={documents}
+            documents={shareDocuments.length > 0 ? shareDocuments : documents}
           />
         </React.Suspense>
       )}

@@ -59,9 +59,14 @@ export const Footer: React.FC<FooterProps> = () => {
               <Link to="/feedback" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 Feedback
               </Link>
-              <span className="px-2 py-0.5 rounded-full font-mono text-[10px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-update-modal'))}
+                className="px-2 py-0.5 rounded-full font-mono text-[10px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20 hover:bg-brand-500/20 transition-colors cursor-pointer"
+                title="View what's new in v3.0.0"
+              >
                 {APP_VERSION_LABEL}
-              </span>
+              </button>
               <button 
                 type="button" 
                 onClick={() => setIsLegalOpen(true)} 
