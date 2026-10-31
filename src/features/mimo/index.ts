@@ -8,6 +8,8 @@ export * from './components/MimoAvatar';
 export * from './components/MimoActivityCard';
 export * from './components/MimoThoughtBlock';
 export * from './components/MimoFloatingMascot';
+export * from './components/Mimo3DCompanion';
+export * from './components/Mimo3DViewer';
 export * from './components/MimoDiffCard';
 export * from './components/MimoToolCallCard';
 export * from './components/MimoQuotaRing';

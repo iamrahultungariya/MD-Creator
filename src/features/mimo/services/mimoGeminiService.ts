@@ -459,7 +459,7 @@ Click **Insert** to paste this table into your editor!`;
 
   // 5. General Knowledge & Logical Symbols (KaTeX)
   if (intent === 'GENERAL_QA' || p.includes('logic') || p.includes('symbol')) {
-    const isLogic = p.includes('logic') || p.includes('symbol') || p.includes('discrete') || p.includes('and') || p.includes('or');
+    const isLogic = /\b(discrete\s+math|truth\s+table|boolean\s+logic|logic\s+gate|propositional\s+logic|katex\s+formula)\b/i.test(p);
     if (isLogic) {
       return `## ✦ Basic Logical Symbols in Discrete Mathematics
 
@@ -539,7 +539,7 @@ Here are the fundamental logic connectives with clean KaTeX notation:
   }
 
   const isHinglishOrTranslate =
-    p.includes('hinglish') || p.includes('translate') || p.includes('samjhao') || p.includes('hindi');
+    p.includes('hinglish') || p.includes('higlish') || p.includes('translate') || p.includes('samjhao') || p.includes('hindi') || p.includes('meaning');
 
   if (isHinglishOrTranslate) {
     const sectionItems = sections

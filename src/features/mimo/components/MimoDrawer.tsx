@@ -14,7 +14,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { useMimoStore, computeTaskCostPercent } from '../stores/useMimoStore';
-import { MimoAvatar } from './MimoAvatar';
+import { Mimo3DViewer } from './Mimo3DViewer';
 import { MimoChatMessage } from './MimoChatMessage';
 import { MimoQuotaRing } from './MimoQuotaRing';
 import { MimoApiKeyModal } from './MimoApiKeyModal';
@@ -640,7 +640,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
         {/* Header */}
         <div className="px-4 py-3 border-b border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <MimoAvatar size="sm" state={mascotState} />
+            <Mimo3DViewer size="sm" state={mascotState} className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-violet-300/40 dark:border-violet-700/50 shadow-2xs" />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-sm text-neutral-950 dark:text-white shrink-0">
@@ -701,9 +701,9 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
           {/* If chat is empty: show rich starter suggestion cards. Once active, show full chat! */}
           {isChatEmpty ? (
             <div className="py-6 px-2 flex flex-col items-center text-center space-y-5 animate-in fade-in duration-300">
-              <div className="relative">
-                <MimoAvatar size="lg" state={mascotState} />
-                <span className="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+              <div className="relative flex items-center justify-center py-1">
+                <Mimo3DViewer size="hero" state={mascotState} />
+                <span className="absolute bottom-3 right-1/2 translate-x-12 flex h-3.5 w-3.5 pointer-events-none">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-neutral-900"></span>
                 </span>

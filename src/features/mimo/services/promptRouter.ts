@@ -3,7 +3,7 @@ import { ThinkingLevel, MimoIntentType } from '../types/mimoTypes';
 export type DetectedLanguage = 'english' | 'hindi' | 'hinglish';
 
 const HINGLISH_KEYWORDS = new Set([
-  'kya', 'karna', 'karo', 'kare', 'kaise', 'batao', 'bata', 'ye', 'yeh', 'wo', 'woh',
+  'higlish', 'kya', 'karna', 'karo', 'kare', 'kaise', 'batao', 'bata', 'ye', 'yeh', 'wo', 'woh',
   'thoda', 'thoda-sa', 'badlo', 'badal', 'samjhao', 'likho', 'likh', 'theek', 'theek-kar',
   'mein', 'me', 'hai', 'hain', 'nahi', 'nahin', 'accha', 'achha', 'sundar', 'par',
   'kuch', 'aur', 'iske', 'uske', 'pehle', 'baad', 'zara', 'sahi', 'check', 'banao',
@@ -36,11 +36,25 @@ export function classifyUserIntent(prompt: string, hasSelection = false): MimoIn
     return 'DOC_TRANSFORM';
   }
 
-  // 3. Document query / inquiry
+  // 3. Document query / inquiry (Robust Regex + Keyword matching)
+  const docQueryRegexes = [
+    /\b(?:in|inside|from|with|present\s+in)\s+(?:this|the|my)?\s*(?:doc|document|file)\b/i,
+    /\b(?:is|iss|is\s+wali|iss\s+wali)\s+(?:doc|document|file)\b/i,
+    /\b(?:doc|document|file)\s*(?:me|mein|ke\s*andar)\b/i,
+    /\b(?:summarize|summary|takeaways?|outline|overview|review\s+document)\b/i,
+    /\bwhat\s+does\s+(?:this|the)\s+(?:doc|document)\s+say\b/i,
+    /\biss?\s+document\s+(?:me|mein)\s+kya\s+hai\b/i,
+    /\bkya\s+yeh\s+useful\s+hai\b/i,
+    /\bexplain\s+.*(?:in|from|of)\s+(?:the\s+)?(?:document|doc|file)\b/i,
+  ];
+  if (docQueryRegexes.some((re) => re.test(p))) {
+    return 'DOC_QUERY';
+  }
+
   const docQueryKeywords = [
     'in this doc', 'in my doc', 'is document me', 'in this file', 'is file me',
     'summarize', 'summary', 'takeaway', 'outline', 'notes', 'what does this doc say',
-    'review document', 'overview'
+    'review document', 'overview', 'iss document', 'is document', 'in document', 'document me'
   ];
   if (docQueryKeywords.some((k) => p.includes(k))) {
     return 'DOC_QUERY';
