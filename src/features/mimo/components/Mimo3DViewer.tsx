@@ -8,11 +8,17 @@ const SPLINE_SCENE_URL = 'https://prod.spline.design/tYbEFt04AB2Cj833/scene.spli
 // All emotion text, titles, labels, and accessories to hide completely
 const LABELS_TO_HIDE = [
   'Scene Title',
+  'Scene Title Material',
   'Exp1 Label',
+  'Exp1 Label Material',
   'Exp2 Label',
+  'Exp2 Label Material',
   'Exp3 Label',
+  'Exp3 Label Material',
   'Exp4 Label',
+  'Exp4 Label Material',
   'Exp5 Label',
+  'Exp5 Label Material',
   'Exp2 Think Question',
   'Exp5 Sleep z1',
   'Exp5 Sleep z2',
@@ -48,23 +54,23 @@ const SIZE_CLASSES = {
   sm: 'w-8 h-8',
   md: 'w-28 h-28',
   lg: 'w-36 h-36',
-  hero: 'w-44 h-44 sm:w-48 sm:h-48',
+  hero: 'w-48 h-48 sm:w-56 sm:h-56',
 };
 
-// Object scale multiplier per display context
+// Object scale multiplier per display context (increased so Mimo is bold, detailed, not a tiny dot)
 const OBJECT_SCALES = {
-  sm: 0.75,
-  md: 0.9,
-  lg: 0.95,
-  hero: 1.05,
+  sm: 1.15,
+  md: 1.45,
+  lg: 1.7,
+  hero: 1.95,
 };
 
 // Vertical center offset per display context
 const Y_OFFSETS = {
-  sm: -8,
-  md: -14,
-  lg: -18,
-  hero: -22,
+  sm: -6,
+  md: -10,
+  lg: -12,
+  hero: -16,
 };
 
 export const Mimo3DViewer: React.FC<Mimo3DViewerProps> = ({
@@ -80,50 +86,65 @@ export const Mimo3DViewer: React.FC<Mimo3DViewerProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  // Switch 3D expressions by toggling visibility, centering, and setting face forward
+  // Switch 3D expressions with 100% frustum eviction of other statues
   const applyExpressionState = useCallback(
     (spline: Application, activeState: MascotState) => {
       try {
-        // 1. Hide all 3D emotion text and labels completely
+        const activeTargetName = MASCOT_OBJECT_NAMES[activeState] || 'Hero Mimo';
+        const targetScale = OBJECT_SCALES[size];
+        const yOffset = Y_OFFSETS[size];
+
+        // 1. Evict ALL labels, titles, and non-active expression groups from scene
         for (const label of LABELS_TO_HIDE) {
           try {
             const obj = spline.findObjectByName(label);
-            if (obj) obj.visible = false;
+            if (obj) {
+              obj.visible = false;
+              if (typeof (obj as any).hide === 'function') (obj as any).hide();
+              if (obj.scale) {
+                obj.scale.x = 0;
+                obj.scale.y = 0;
+                obj.scale.z = 0;
+              }
+              if (obj.position) {
+                obj.position.x = 999999;
+                obj.position.y = 999999;
+                obj.position.z = 999999;
+              }
+            }
           } catch {
             // ignore
           }
         }
 
-        const activeTargetName = MASCOT_OBJECT_NAMES[activeState] || 'Hero Mimo';
-        const targetScale = OBJECT_SCALES[size];
-        const yOffset = Y_OFFSETS[size];
-
-        // 2. Center and orient active mascot directly facing forward (rotation y=0, z=0)
+        // 2. Annihilate all non-active mascot models to guarantee ZERO other robots in a row
         for (const name of ALL_MASCOT_NAMES) {
           try {
             const obj = spline.findObjectByName(name);
             if (obj) {
-              if (name === activeTargetName || (activeState === 'happy' && name === 'Hero Mimo')) {
+              const isMatch = name === activeTargetName || (activeState === 'happy' && name === 'Hero Mimo');
+              if (isMatch) {
                 obj.visible = true;
+                if (typeof (obj as any).show === 'function') (obj as any).show();
 
-                // Scale properly so Mimo is big, bold and clear (not a tiny dot!)
+                // Scale properly so Mimo fills frame nicely
                 if (obj.scale) {
                   obj.scale.x = targetScale;
                   obj.scale.y = targetScale;
                   obj.scale.z = targetScale;
                 }
 
-                // Center position
+                // Center position exactly in camera focus
                 if (obj.position) {
                   obj.position.x = 0;
                   obj.position.y = yOffset;
                   obj.position.z = 0;
                 }
 
-                // Fix face orientation: look directly forward at user (remove left-tilt)
+                // Face directly forward (removes default left tilt)
                 if (obj.rotation) {
                   obj.rotation.x = 0;
-                  obj.rotation.y = 0; // Front facing
+                  obj.rotation.y = 0;
                   obj.rotation.z = 0;
                 }
 
@@ -135,12 +156,51 @@ export const Mimo3DViewer: React.FC<Mimo3DViewerProps> = ({
                   }
                 }
               } else {
+                // Completely evict and scale to zero
                 obj.visible = false;
+                if (typeof (obj as any).hide === 'function') (obj as any).hide();
+                if (obj.scale) {
+                  obj.scale.x = 0;
+                  obj.scale.y = 0;
+                  obj.scale.z = 0;
+                }
+                if (obj.position) {
+                  obj.position.x = 999999;
+                  obj.position.y = 999999;
+                  obj.position.z = 999999;
+                }
               }
             }
           } catch {
             // ignore
           }
+        }
+
+        // 3. Sweep all objects via getAllObjects to catch any lingering children or labels
+        try {
+          const allObjects = spline.getAllObjects ? spline.getAllObjects() : [];
+          for (const item of allObjects) {
+            if (!item || !item.name) continue;
+            const n = item.name;
+            const isLabel = LABELS_TO_HIDE.includes(n) || n.includes('Label') || n.includes('Scene Title');
+            const isOtherExp = ALL_MASCOT_NAMES.includes(n) && n !== activeTargetName && !(activeTargetName === 'Hero Mimo' && n === 'Expression Happy');
+            if (isLabel || isOtherExp) {
+              item.visible = false;
+              if (typeof (item as any).hide === 'function') (item as any).hide();
+              if (item.scale) {
+                item.scale.x = 0;
+                item.scale.y = 0;
+                item.scale.z = 0;
+              }
+              if (item.position) {
+                item.position.x = 999999;
+                item.position.y = 999999;
+                item.position.z = 999999;
+              }
+            }
+          }
+        } catch {
+          // ignore
         }
       } catch (e) {
         console.warn('[Mimo 3D] Error updating expression state:', e);
