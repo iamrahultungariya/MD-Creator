@@ -74,12 +74,23 @@ export function createEditorDomEventHandlers(options: EditorDomHandlersOptions) 
         }
       }
 
-      // 4. Smart Clipboard: Auto-convert Excel / Google Sheets / HTML tables to Markdown Pipe Table
+      // 4. If cursor is already inside a fenced code block, paste directly as raw code text!
+      const view = viewRef.current;
+      if (view) {
+        const head = view.state.selection.main.head;
+        const textBefore = view.state.doc.sliceString(0, head);
+        const codeFencesCount = (textBefore.match(/(?:^|\n)```/g) || []).length;
+        if (codeFencesCount % 2 === 1) {
+          // Inside an active code block — let default paste insert lines cleanly
+          return false;
+        }
+      }
+
+      // 5. Smart Clipboard: Auto-convert Excel / Google Sheets / HTML tables to Markdown Pipe Table
       // or convert rich AI responses/articles preserving all text and all tables
       const clipResult = extractClipboardMarkdown(e.clipboardData);
       if (clipResult) {
         e.preventDefault();
-        const view = viewRef.current;
         if (view) {
           const main = view.state.selection.main;
           const snippet = '\n\n' + clipResult.markdown + '\n\n';

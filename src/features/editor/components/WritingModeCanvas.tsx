@@ -282,9 +282,23 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
               ed.replaceSelection(`\`${selection}\``);
             }
           } else {
-            ed.replaceSelection('``');
-            const start = ed.getSelectionStart();
-            ed.setCursor(start - 1);
+            const cursor = ed.getSelectionStart();
+            const text = ed.getValue();
+            const lastNewline = text.lastIndexOf('\n', cursor - 1);
+            const nextNewline = text.indexOf('\n', cursor);
+            const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+            const lineEnd = nextNewline === -1 ? text.length : nextNewline;
+            const currentLine = text.slice(lineStart, lineEnd).trim();
+
+            if (currentLine.length === 0) {
+              const prefix = lineStart > 0 && !text.slice(0, lineStart).endsWith('\n\n') ? '\n' : '';
+              ed.replaceSelection(`${prefix}\`\`\`\n\n\`\`\`\n`);
+              ed.setCursor(cursor + prefix.length + 4);
+            } else {
+              ed.replaceSelection('``');
+              const start = ed.getSelectionStart();
+              ed.setCursor(start - 1);
+            }
           }
           break;
         }

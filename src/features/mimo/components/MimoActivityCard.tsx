@@ -42,7 +42,7 @@ export const MimoActivityCard: React.FC<MimoActivityCardProps> = ({ activity }) 
   };
 
   const assetSrc = ACTIVITY_ASSETS[activity.type] || ACTIVITY_ASSETS.thinking;
-  const resolvedModelLabel = activity.metrics.modelName || 'Gemini 3.5 Flash-Lite';
+  const resolvedModelLabel = activity.metrics.modelName || 'Gemini 3.8 Flash';
   const resolvedLevelLabel = activity.metrics.thinkingLevel
     ? ` • ${activity.metrics.thinkingLevel}`
     : '';

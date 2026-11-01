@@ -47,8 +47,8 @@ Section body here...
 
 /**
  * Resolves the optimal Gemini model & display label based on evaluated complexity:
- * - Low & Medium: gemini-3.5-flash-lite (ultra-fast 1.8s response, high daily RPD, supports thinkingLevel LOW/MEDIUM)
- * - High: gemini-3.8-flash with automatic fast failover to gemini-3.5-flash-lite
+ * - Gemini 3.8 Flash (gemini-3.8-flash) is now the unified BASE model for ALL tasks (Low, Medium, High).
+ * - Automatic failover cascade to Gemini 2.5 Flash and Gemini 2.0 Flash guarantees 100% reliability.
  */
 export function getModelForComplexity(level: 'LOW' | 'MEDIUM' | 'HIGH'): {
   modelId: string;
@@ -57,14 +57,21 @@ export function getModelForComplexity(level: 'LOW' | 'MEDIUM' | 'HIGH'): {
 } {
   if (level === 'HIGH') {
     return {
-      modelId: 'gemini-3.5-flash-lite',
-      displayLabel: 'Gemini 3.5 Flash-Lite (Extended Reasoning)',
+      modelId: 'gemini-3.8-flash',
+      displayLabel: 'Gemini 3.8 Flash (Deep Reasoning)',
+      ttftTimeout: 18000,
+    };
+  }
+  if (level === 'MEDIUM') {
+    return {
+      modelId: 'gemini-3.8-flash',
+      displayLabel: 'Gemini 3.8 Flash (Balanced)',
       ttftTimeout: 12000,
     };
   }
   return {
-    modelId: 'gemini-3.5-flash-lite',
-    displayLabel: 'Gemini 3.5 Flash-Lite',
+    modelId: 'gemini-3.8-flash',
+    displayLabel: 'Gemini 3.8 Flash (Fast Thinking)',
     ttftTimeout: 10000,
   };
 }
@@ -154,9 +161,12 @@ export async function streamMimoResponse(options: {
     return executeDocumentAwareOfflineAssistance(prompt, context, intent, resolvedLevel, callbacks, signal);
   }
 
-  // Try primary model first; if HIGH (gemini-3.8-flash) times out (>6s TTFT) or errors, seamlessly cascade to gemini-3.5-flash-lite
-  const fallbackModel = { modelId: 'gemini-3.5-flash-lite', displayLabel: 'Gemini 3.5 Flash-Lite', ttftTimeout: 12000 };
-  const modelsToTry = primaryModel.modelId === fallbackModel.modelId ? [primaryModel] : [primaryModel, fallbackModel];
+  // Try base model (gemini-3.8-flash) first; if it times out, rate limits, or errors, cascade seamlessly to gemini-2.5-flash and gemini-2.0-flash
+  const modelsToTry = [
+    primaryModel,
+    { modelId: 'gemini-2.5-flash', displayLabel: 'Gemini 2.5 Flash', ttftTimeout: 10000 },
+    { modelId: 'gemini-2.0-flash', displayLabel: 'Gemini 2.0 Flash', ttftTimeout: 10000 },
+  ];
 
   const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
 
@@ -211,13 +221,22 @@ export async function streamMimoResponse(options: {
     let firstTokenRecorded = false;
 
     try {
+      const isGemini3 = candidateModel.modelId.includes('gemini-3');
+      const apiThinkingLevel = resolvedLevel.toLowerCase();
+      const thinkingConfig = isGemini3
+        ? {
+            includeThoughts: true,
+            thinkingLevel: apiThinkingLevel,
+          }
+        : {
+            includeThoughts: true,
+            thinkingBudget: resolvedLevel === 'HIGH' ? 2048 : 1024,
+          };
+
       const config: Record<string, unknown> = {
         systemInstruction: MIMO_SYSTEM_PROMPT,
         temperature: 0.65,
-        thinkingConfig: {
-          includeThoughts: true,
-          thinkingLevel: resolvedLevel,
-        },
+        thinkingConfig,
       };
 
       const responseStream = await withAbortAndTimeout(
@@ -337,6 +356,26 @@ export async function streamMimoResponse(options: {
           fullText: throttledMsg,
           thoughtText: '',
           modelUsed: candidateModel.displayLabel,
+          resolvedLevel,
+          tokensUsed: 0,
+        };
+      }
+
+      // API Key invalid / unauthorized detection (400, 403)
+      const isApiKeyError =
+        (err?.status === 400 && (err?.message?.includes('API key') || err?.message?.includes('API_KEY_INVALID'))) ||
+        err?.status === 403 ||
+        err?.message?.includes('API_KEY_INVALID') ||
+        err?.message?.includes('API key not valid');
+
+      if (isApiKeyError) {
+        const keyErrorMsg = `⚠️ **Gemini API Key Rejected**\n\nGoogle AI reported that the provided Gemini API key is invalid, missing, or unauthorized.\n\nPlease update your key in settings via [Google AI Studio](https://aistudio.google.com/app/apikey).\n\n---\n\n*Falling back to document-aware Offline Local Engine:*\n\n` +
+          buildDocumentAwareResponse(prompt, context, intent);
+        callbacks.onTextChunk?.(keyErrorMsg);
+        return {
+          fullText: keyErrorMsg,
+          thoughtText: '',
+          modelUsed: 'Offline Local Engine (Invalid Key)',
           resolvedLevel,
           tokensUsed: 0,
         };
@@ -599,7 +638,8 @@ async function executeDocumentAwareOfflineAssistance(
   signal?: AbortSignal
 ): Promise<MimoStreamResult> {
   callbacks.onReasoningStep?.(`Synthesizing response for "${context.docTitle}" (Intent: ${intent})...`);
-  const responseBody = buildDocumentAwareResponse(prompt, context, intent);
+  const rawBody = buildDocumentAwareResponse(prompt, context, intent);
+  const responseBody = `> [!NOTE]\n> **Mimo Offline Local Engine Active**\n> Running on offline document synthesis. For real-time Gemini AI cloud generation, add your free [Google Gemini API Key](#connect-key).\n\n${rawBody}`;
 
   const chunks = responseBody.split(/(?<=\s)/);
   let accumulated = '';

@@ -11,6 +11,7 @@ import {
 } from '@codemirror/view';
 import { EditorState, Compartment, Prec } from '@codemirror/state';
 import { markdown, markdownKeymap } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
@@ -387,7 +388,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
         drawSelection(),
         EditorView.contentAttributes.of({ autocorrect: 'on', spellcheck: 'true' }),
         keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
-        markdown(),
+        markdown({ codeLanguages: languages }),
         highlightViewPlugin,
         wrapCompartment.current.of(wordWrap ? [EditorView.lineWrapping] : []),
         domEventHandlers,

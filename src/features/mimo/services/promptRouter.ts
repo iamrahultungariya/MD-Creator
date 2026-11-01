@@ -110,36 +110,93 @@ export function detectPromptLanguage(text: string): DetectedLanguage {
 }
 
 /**
- * Automatically evaluates prompt complexity to route to the optimal thinking budget.
- * Low: Quick edits, typos, 1-line queries.
- * Medium: Rewrites, tone transformations, table formatting, moderate expansions.
- * High: Full document generation, complex technical reasoning, in-depth critique, multi-hunk diffs.
+ * Advanced High-Task Auto-Detection Engine.
+ * Intelligently classifies tasks into LOW, MEDIUM, or HIGH thinking:
+ * 
+ * High Task Detection (Allocates Maximum Reasoning Depth):
+ * 1. Engineering & Code Synthesis (refactoring, debugging, algorithms, architecture, unit tests, regex, SQL, APIs)
+ * 2. Deep Analytical & Scientific (deep dive, in-depth critique, math proofs, KaTeX formulas, trade-off analysis)
+ * 3. Full Document Generation & Structural Blueprints (entire articles, comprehensive guides, technical specs)
+ * 4. Multi-Step Workflows & Multi-Hunk Revisions (numbered requirements, complex multi-line instructions)
+ * 5. Hindi & Hinglish High Tasks (pura document, detail me samjhao, poora code, step by step, deep analysis)
+ * 
+ * Low Task Detection (Fast & Snappy):
+ * 1. Typos, grammar checks, 1-line definitions, brief summaries.
+ * 
+ * Medium Task Detection (Balanced Default):
+ * Standard tone improvements, paragraph rewrites, bullet points.
  */
 export function evaluateAutoThinkingLevel(prompt: string, docLines: number): 'LOW' | 'MEDIUM' | 'HIGH' {
-  const p = prompt.toLowerCase();
+  const p = prompt.toLowerCase().trim();
   const wordCount = prompt.trim().split(/\s+/).length;
 
-  // High complexity triggers
+  // 1. High Complexity Keywords & Patterns
   const highKeywords = [
-    'generate entire', 'full document', 'complete guide', 'architecture', 'detailed essay',
-    'comprehensive', 'deep dive', 'step by step explanation', 'in-depth analysis',
-    'pura document banao', 'complete post', 'multi-section', 'pro and cons', 'technical spec'
+    // Full Document / Exhaustive Writing
+    'generate entire', 'full document', 'complete guide', 'write entire', 'full article',
+    'whitepaper', 'detailed essay', 'technical spec', 'specification', 'comprehensive guide',
+    'multi-section', 'complete post', 'system design', 'handbook', 'playbook', 'comprehensive',
+
+    // Deep Technical & Analytical Reasoning
+    'deep dive', 'in-depth', 'step by step', 'detailed analysis', 'compare and contrast',
+    'pros and cons', 'trade-offs', 'root cause', 'security audit', 'critique',
+    'benchmark', 'architecture', 'architectural',
+
+    // Code, Engineering & Algorithmic Tasks
+    'write code', 'refactor', 'debug', 'algorithm', 'implement', 'fix bug', 'fix error',
+    'typescript', 'javascript', 'python', 'react component', 'database schema', 'sql query',
+    'api design', 'rest api', 'unit test', 'regex', 'optimization', 'concurrency',
+    'memory leak', 'data structure',
+
+    // Mathematical & Scientific Reasoning
+    'math', 'mathematical', 'katex', 'latex', 'formula', 'equation', 'proof',
+    'theorem', 'derivation', 'derive', 'statistical', 'probability', 'calculus',
+
+    // Hindi / Hinglish High Tasks
+    'pura document', 'poora document', 'pura code', 'poora code', 'detail me samjhao',
+    'detail mein samjhao', 'step by step batao', 'deep analysis', 'poora explain',
+    'pure logic', 'saari galtiyan theek', 'architecture banao', 'poora likho',
+    'pura likho', 'gehra analysis', 'sahi tareeqe se samjhao'
   ];
-  if (highKeywords.some((k) => p.includes(k)) || (wordCount > 60 && docLines > 100)) {
+
+  if (highKeywords.some((k) => p.includes(k))) {
     return 'HIGH';
   }
 
-  // Low complexity triggers
+  // 2. Structural High-Task Heuristics
+  // A. Prompt contains code block (```)
+  if (prompt.includes('```')) {
+    return 'HIGH';
+  }
+
+  // B. Prompt contains multi-part numbered questions / tasks (e.g., "1. ... 2. ... 3. ...")
+  const numberedItemMatches = prompt.match(/(?:^|\n)\s*\d+[\.\)]\s+/g);
+  if (numberedItemMatches && numberedItemMatches.length >= 2) {
+    return 'HIGH';
+  }
+
+  // C. Multi-question or detailed prompt with substantial document context
+  const questionCount = (prompt.match(/\?/g) || []).length;
+  if (questionCount >= 2 && wordCount >= 20) {
+    return 'HIGH';
+  }
+
+  // D. Large word count (> 40 words) with deep document lines (> 80 lines)
+  if (wordCount > 40 && docLines > 80) {
+    return 'HIGH';
+  }
+
+  // 3. Low Complexity Triggers
   const lowKeywords = [
     'typo', 'grammar', 'spellcheck', 'fix spelling', 'summarize in one line',
     'ek line me batao', 'short note', 'headline', 'title idea', 'what does this mean',
-    'explain word', 'meaning of'
+    'explain word', 'meaning of', 'define in short', 'synonym', 'short bullet'
   ];
-  if (lowKeywords.some((k) => p.includes(k)) || (wordCount <= 6 && !p.includes('write') && !p.includes('banao'))) {
+  if (lowKeywords.some((k) => p.includes(k)) || (wordCount <= 6 && !p.includes('write') && !p.includes('banao') && !p.includes('code'))) {
     return 'LOW';
   }
 
-  // Default balanced thinking for markdown authoring
+  // 4. Default Balanced Thinking for Standard Tasks
   return 'MEDIUM';
 }
 

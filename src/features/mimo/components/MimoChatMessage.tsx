@@ -7,8 +7,10 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 import { normalizeMathDelimiters } from '../../../utils/markdownSanitizer';
+import { extractTextFromReactNode } from '../../../components/editor/markdownAlerts';
 import { Copy, Check, ArrowDownToLine } from 'lucide-react';
 import { MimoMessage, MimoToolCall } from '../types/mimoTypes';
+import { useMimoStore } from '../stores/useMimoStore';
 import { MimoAvatar } from './MimoAvatar';
 import { MimoThoughtBlock } from './MimoThoughtBlock';
 import { MimoDiffCard } from './MimoDiffCard';
@@ -183,11 +185,34 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                   {children}
                 </td>
               ),
+              a: ({ href, children }) => {
+                if (href === '#connect-key') {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => useMimoStore.getState().setIsKeyModalOpen(true)}
+                      className="text-violet-600 dark:text-violet-400 font-semibold underline underline-offset-2 hover:text-violet-700 cursor-pointer inline-flex items-center gap-1"
+                    >
+                      {children}
+                    </button>
+                  );
+                }
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-violet-600 dark:text-violet-400 hover:underline"
+                  >
+                    {children}
+                  </a>
+                );
+              },
               code: ({ className, children }) => {
                 const isInline = !className;
                 const match = /language-(\w+)/.exec(className || '');
                 const lang = match ? match[1] : '';
-                const codeString = String(children).replace(/\n$/, '');
+                const codeString = extractTextFromReactNode(children).replace(/\n$/, '');
 
                 if (isInline) {
                   return (

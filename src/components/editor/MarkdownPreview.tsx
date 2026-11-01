@@ -23,9 +23,17 @@ const MermaidBlock = React.lazy(() =>
   import('./MermaidBlock').then((m) => ({ default: m.MermaidBlock }))
 );
 
+// Context to unambiguously distinguish fenced code blocks (<pre><code>) from inline code (<code>)
+const PreCodeBlockContext = React.createContext<boolean>(false);
+
 // Static plugin arrays to avoid re-constructing the unified AST processor pipeline on every render/keystroke
 const STATIC_REMARK_PLUGINS: any[] = [remarkGfm, remarkMath, remarkBreaks];
-const STATIC_REHYPE_PLUGINS: any[] = [rehypeRaw, [rehypeSanitize, markdownSanitizeSchema], [rehypeKatex, { output: 'htmlAndMathml', strict: false, throwOnError: false }], rehypeHighlight];
+const STATIC_REHYPE_PLUGINS: any[] = [
+  rehypeRaw,
+  [rehypeSanitize, markdownSanitizeSchema],
+  [rehypeKatex, { output: 'htmlAndMathml', strict: false, throwOnError: false }],
+  [rehypeHighlight, { detect: true, ignoreMissing: true }]
+];
 
 interface MarkdownPreviewProps {
   content: string;
@@ -371,13 +379,18 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             </td>
           ),
 
-          // Eliminate redundant wrapper <pre> from react-markdown so our custom code block has no outer duplicate box
-          pre: ({ children }: any) => <>{children}</>,
+          // Distinguish fenced code blocks from inline code without outer box duplication
+          pre: ({ children }: any) => (
+            <PreCodeBlockContext.Provider value={true}>
+              {children}
+            </PreCodeBlockContext.Provider>
+          ),
 
           // Code blocks, Inline Code & Mermaid Diagrams
           code: ({ className, children, ...props }) => {
+            const isInsidePre = React.useContext(PreCodeBlockContext);
             const match = /language-(\w+)/.exec(className || '');
-            const isInline = !match && typeof children === 'string' && !children.includes('\n');
+            const isInline = !isInsidePre;
             const rawCode = extractTextFromReactNode(children).replace(/\n$/, '');
             const codeId = `code_${Math.random().toString(36).substr(2, 6)}`;
 

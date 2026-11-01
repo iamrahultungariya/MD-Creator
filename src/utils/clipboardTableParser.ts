@@ -69,11 +69,48 @@ export function parseTableElement(table: HTMLTableElement): ParsedTable | null {
 }
 
 /**
+ * Detects whether an HTML <table> element represents code with line numbers (e.g. from GitHub, GitLab, LeetCode)
+ */
+export function extractCodeFromTable(table: HTMLTableElement): string | null {
+  const isCodeTable =
+    table.classList.contains('highlight') ||
+    table.classList.contains('blob-wrapper') ||
+    table.classList.contains('js-file-line-container') ||
+    table.querySelector('.blob-code, .blob-num, td.code, .hljs, pre, code') !== null;
+
+  const rows = Array.from(table.querySelectorAll('tr'));
+  if (rows.length === 0) return null;
+
+  // Check if first column has sequential numeric line numbers (1, 2, 3...)
+  const firstCells = rows.slice(0, 5).map(r => r.cells[0]?.textContent?.trim() || '');
+  const isLineNumbered = firstCells.length > 0 && firstCells.every((txt, idx) => txt === String(idx + 1));
+
+  if (isCodeTable || isLineNumbered) {
+    const codeLines: string[] = [];
+    for (const row of rows) {
+      const codeCell = row.querySelector('.blob-code, td:last-child');
+      codeLines.push(codeCell ? (codeCell.textContent || '') : (row.textContent || ''));
+    }
+    const combined = codeLines.join('\n').replace(/\r\n/g, '\n');
+    return `\`\`\`\n${combined}\n\`\`\``;
+  }
+  return null;
+}
+
+/**
  * Attempts to parse Tab-Separated Values (TSV) from plain text clipboard data.
  * Standard format generated when copying cells in Excel or Google Sheets.
  */
 export function parseTsvTable(plainText: string): ParsedTable | null {
   if (!plainText || !plainText.includes('\t')) {
+    return null;
+  }
+
+  // If text looks like indented code (lines starting with tab or containing common code syntax),
+  // do NOT parse as TSV spreadsheet! Preserve code formatting!
+  const hasLeadingTabs = /(?:^|\n)\t+[^\t\r\n]/.test(plainText);
+  const hasCodeSyntax = /\b(function|class|import|export|const|let|var|def|return|interface|type)\b|[{}();]|\/\/|\/\*/.test(plainText);
+  if (hasLeadingTabs || hasCodeSyntax) {
     return null;
   }
 
@@ -127,8 +164,12 @@ function convertNodeToMarkdown(node: Node): string {
   const el = node as HTMLElement;
   const tag = el.tagName.toLowerCase();
 
-  // 1. Tables: Parse and serialize to GitHub-Flavored Markdown pipe table
+  // 1. Tables: Parse and serialize to GitHub-Flavored Markdown pipe table (or code block if code listing)
   if (tag === 'table') {
+    const codeBlock = extractCodeFromTable(el as HTMLTableElement);
+    if (codeBlock) {
+      return `\n\n${codeBlock}\n\n`;
+    }
     const parsed = parseTableElement(el as HTMLTableElement);
     if (parsed) {
       return `\n\n${serializeMarkdownTable(parsed)}\n\n`;
@@ -164,11 +205,15 @@ function convertNodeToMarkdown(node: Node): string {
     const codeEl = el.querySelector('code');
     const lang = codeEl?.className.match(/language-(\w+)/)?.[1] || '';
     const codeText = (codeEl || el).textContent || '';
-    return `\n\n\`\`\`${lang}\n${codeText.trim()}\n\`\`\`\n\n`;
+    return `\n\n\`\`\`${lang}\n${codeText.replace(/\r\n/g, '\n').trimEnd()}\n\`\`\`\n\n`;
   }
 
   if (tag === 'code') {
-    return `\`${el.textContent || ''}\``;
+    const text = (el.textContent || '').replace(/\r\n/g, '\n');
+    if (text.includes('\n')) {
+      return `\n\n\`\`\`\n${text.trimEnd()}\n\`\`\`\n\n`;
+    }
+    return `\`${text}\``;
   }
 
   // 5. Blockquotes
@@ -260,8 +305,12 @@ export function extractClipboardMarkdown(clipboardData: DataTransfer | null): Cl
         const nonTableTextLength = totalBodyText.length - allTablesText.length;
 
         // If there is only 1 table and virtually no surrounding content (< 30 non-whitespace chars),
-        // treat as pure isolated table paste
+        // check if it is a code listing table (e.g. from GitHub or blog) first
         if (tables.length === 1 && nonTableTextLength < 30) {
+          const codeBlock = extractCodeFromTable(tables[0]);
+          if (codeBlock) {
+            return { type: 'article', markdown: codeBlock };
+          }
           const parsed = parseTableElement(tables[0]);
           if (parsed && parsed.headers.length >= 2) {
             const tableMd = serializeMarkdownTable(parsed);

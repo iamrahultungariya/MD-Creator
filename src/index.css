@@ -642,20 +642,38 @@ article mark,
 }
 
 /* Code block highlight tokens - Light Mode */
-.hljs-keyword, .hljs-selector-tag { color: #4f46e5; font-weight: 600; }
-.hljs-string, .hljs-title { color: #059669; }
-.hljs-comment { color: #6b7280; font-style: italic; }
-.hljs-number, .hljs-literal { color: #d97706; }
-.hljs-attr, .hljs-variable { color: #0284c7; }
-.hljs-function { color: #7c3aed; }
+.hljs-keyword, .hljs-selector-tag, .hljs-subst, .hljs-doctag { color: #7c3aed; font-weight: 600; }
+.hljs-string, .hljs-title, .hljs-section, .hljs-bullet { color: #059669; }
+.hljs-comment, .hljs-quote { color: #6b7280; font-style: italic; }
+.hljs-number, .hljs-literal, .hljs-symbol { color: #d97706; }
+.hljs-built_in, .hljs-type, .hljs-class { color: #0284c7; font-weight: 500; }
+.hljs-attr, .hljs-property, .hljs-variable, .hljs-template-variable { color: #0369a1; }
+.hljs-params { color: #374151; }
+.hljs-function, .hljs-title.function_ { color: #2563eb; font-weight: 500; }
+.hljs-tag, .hljs-name { color: #e11d48; font-weight: 600; }
+.hljs-operator, .hljs-punctuation { color: #64748b; }
+.hljs-meta, .hljs-meta-keyword { color: #6366f1; }
+.hljs-meta .hljs-string { color: #059669; }
+.hljs-regexp, .hljs-link { color: #dc2626; }
+.hljs-addition { color: #16a34a; background-color: rgba(22, 163, 74, 0.1); border-radius: 2px; }
+.hljs-deletion { color: #dc2626; background-color: rgba(220, 38, 38, 0.1); border-radius: 2px; }
 
 /* Code block highlight tokens - Dark Mode */
-.dark .hljs-keyword, .dark .hljs-selector-tag { color: #818cf8; font-weight: 600; }
-.dark .hljs-string, .dark .hljs-title { color: #34d399; }
-.dark .hljs-comment { color: #9ca3af; font-style: italic; }
-.dark .hljs-number, .dark .hljs-literal { color: #fbbf24; }
-.dark .hljs-attr, .dark .hljs-variable { color: #38bdf8; }
-.dark .hljs-function { color: #a78bfa; }
+.dark .hljs-keyword, .dark .hljs-selector-tag, .dark .hljs-subst, .dark .hljs-doctag { color: #c084fc; font-weight: 600; }
+.dark .hljs-string, .dark .hljs-title, .dark .hljs-section, .dark .hljs-bullet { color: #34d399; }
+.dark .hljs-comment, .dark .hljs-quote { color: #71717a; font-style: italic; }
+.dark .hljs-number, .dark .hljs-literal, .dark .hljs-symbol { color: #fbbf24; }
+.dark .hljs-built_in, .dark .hljs-type, .dark .hljs-class { color: #38bdf8; font-weight: 500; }
+.dark .hljs-attr, .dark .hljs-property, .dark .hljs-variable, .dark .hljs-template-variable { color: #93c5fd; }
+.dark .hljs-params { color: #e4e4e7; }
+.dark .hljs-function, .dark .hljs-title.function_ { color: #60a5fa; font-weight: 500; }
+.dark .hljs-tag, .dark .hljs-name { color: #f43f5e; font-weight: 600; }
+.dark .hljs-operator, .dark .hljs-punctuation { color: #a1a1aa; }
+.dark .hljs-meta, .dark .hljs-meta-keyword { color: #818cf8; }
+.dark .hljs-meta .hljs-string { color: #34d399; }
+.dark .hljs-regexp, .dark .hljs-link { color: #f87171; }
+.dark .hljs-addition { color: #4ade80; background-color: rgba(74, 222, 128, 0.15); border-radius: 2px; }
+.dark .hljs-deletion { color: #f87171; background-color: rgba(248, 113, 113, 0.15); border-radius: 2px; }
 
 /* ==============================================================================
    HIGH-CONTRAST & PAPER-ADAPTIVE MERMAID DIAGRAM ENGINE
@@ -1042,15 +1060,24 @@ article mark,
 
   /* Preserve high-contrast syntax highlighting token colors in print */
   .preview-pane-container .hljs-keyword, 
-  .preview-pane-container .hljs-selector-tag { color: #4338ca !important; font-weight: 600; }
+  .preview-pane-container .hljs-selector-tag,
+  .preview-pane-container .hljs-subst { color: #4338ca !important; font-weight: 600; }
   .preview-pane-container .hljs-string, 
-  .preview-pane-container .hljs-title { color: #059669 !important; }
+  .preview-pane-container .hljs-title,
+  .preview-pane-container .hljs-section { color: #059669 !important; }
   .preview-pane-container .hljs-comment { color: #64748b !important; font-style: italic; }
   .preview-pane-container .hljs-number, 
-  .preview-pane-container .hljs-literal { color: #d97706 !important; }
+  .preview-pane-container .hljs-literal,
+  .preview-pane-container .hljs-symbol { color: #d97706 !important; }
+  .preview-pane-container .hljs-built_in,
+  .preview-pane-container .hljs-type { color: #0284c7 !important; font-weight: 500; }
   .preview-pane-container .hljs-attr, 
-  .preview-pane-container .hljs-variable { color: #0284c7 !important; }
-  .preview-pane-container .hljs-function { color: #7c3aed !important; }
+  .preview-pane-container .hljs-property,
+  .preview-pane-container .hljs-variable { color: #0369a1 !important; }
+  .preview-pane-container .hljs-function,
+  .preview-pane-container .hljs-title.function_ { color: #7c3aed !important; }
+  .preview-pane-container .hljs-tag,
+  .preview-pane-container .hljs-name { color: #e11d48 !important; font-weight: 600; }
 
   /* Clean Blockquotes & Callout Alerts in print */
   .preview-pane-container blockquote {
@@ -1384,15 +1411,24 @@ article mark,
 
 /* Light Theme Syntax Highlighting */
 .pdf-paper-sheet.pdf-theme-light .hljs-keyword, 
-.pdf-paper-sheet.pdf-theme-light .hljs-selector-tag { color: #4338ca !important; font-weight: 600; }
+.pdf-paper-sheet.pdf-theme-light .hljs-selector-tag,
+.pdf-paper-sheet.pdf-theme-light .hljs-subst { color: #4338ca !important; font-weight: 600; }
 .pdf-paper-sheet.pdf-theme-light .hljs-string, 
-.pdf-paper-sheet.pdf-theme-light .hljs-title { color: #059669 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-title,
+.pdf-paper-sheet.pdf-theme-light .hljs-section { color: #059669 !important; }
 .pdf-paper-sheet.pdf-theme-light .hljs-comment { color: #64748b !important; font-style: italic; }
 .pdf-paper-sheet.pdf-theme-light .hljs-number, 
-.pdf-paper-sheet.pdf-theme-light .hljs-literal { color: #d97706 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-literal,
+.pdf-paper-sheet.pdf-theme-light .hljs-symbol { color: #d97706 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-built_in,
+.pdf-paper-sheet.pdf-theme-light .hljs-type { color: #0284c7 !important; font-weight: 500; }
 .pdf-paper-sheet.pdf-theme-light .hljs-attr, 
-.pdf-paper-sheet.pdf-theme-light .hljs-variable { color: #0284c7 !important; }
-.pdf-paper-sheet.pdf-theme-light .hljs-function { color: #7c3aed !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-property,
+.pdf-paper-sheet.pdf-theme-light .hljs-variable { color: #0369a1 !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-function,
+.pdf-paper-sheet.pdf-theme-light .hljs-title.function_ { color: #7c3aed !important; }
+.pdf-paper-sheet.pdf-theme-light .hljs-tag,
+.pdf-paper-sheet.pdf-theme-light .hljs-name { color: #e11d48 !important; font-weight: 600; }
 
 /* Light Theme Tables - Force Wrapping, Prevent Scrollbars */
 .pdf-paper-sheet.pdf-theme-light .table-wrapper-responsive,
@@ -1617,15 +1653,24 @@ article mark,
 
 /* Dark Theme Syntax Highlighting */
 .pdf-paper-sheet.pdf-theme-dark .hljs-keyword, 
-.pdf-paper-sheet.pdf-theme-dark .hljs-selector-tag { color: #818cf8 !important; font-weight: 600; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-selector-tag,
+.pdf-paper-sheet.pdf-theme-dark .hljs-subst { color: #c084fc !important; font-weight: 600; }
 .pdf-paper-sheet.pdf-theme-dark .hljs-string, 
-.pdf-paper-sheet.pdf-theme-dark .hljs-title { color: #34d399 !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-title,
+.pdf-paper-sheet.pdf-theme-dark .hljs-section { color: #34d399 !important; }
 .pdf-paper-sheet.pdf-theme-dark .hljs-comment { color: #9ca3af !important; font-style: italic; }
 .pdf-paper-sheet.pdf-theme-dark .hljs-number, 
-.pdf-paper-sheet.pdf-theme-dark .hljs-literal { color: #fbbf24 !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-literal,
+.pdf-paper-sheet.pdf-theme-dark .hljs-symbol { color: #fbbf24 !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-built_in,
+.pdf-paper-sheet.pdf-theme-dark .hljs-type { color: #38bdf8 !important; font-weight: 500; }
 .pdf-paper-sheet.pdf-theme-dark .hljs-attr, 
-.pdf-paper-sheet.pdf-theme-dark .hljs-variable { color: #38bdf8 !important; }
-.pdf-paper-sheet.pdf-theme-dark .hljs-function { color: #a78bfa !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-property,
+.pdf-paper-sheet.pdf-theme-dark .hljs-variable { color: #93c5fd !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-function,
+.pdf-paper-sheet.pdf-theme-dark .hljs-title.function_ { color: #60a5fa !important; }
+.pdf-paper-sheet.pdf-theme-dark .hljs-tag,
+.pdf-paper-sheet.pdf-theme-dark .hljs-name { color: #f43f5e !important; font-weight: 600; }
 
 /* Dark Theme Tables - Force Wrapping, Prevent Scrollbars */
 .pdf-paper-sheet.pdf-theme-dark .table-wrapper-responsive,

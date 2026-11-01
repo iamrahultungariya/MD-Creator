@@ -51,7 +51,7 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
   if (!activity && !cleanThoughts) return null;
 
   const seconds = (elapsed / 1000).toFixed(1);
-  const modelName = activity?.metrics.modelName || 'Gemini 3.5 Flash-Lite';
+  const modelName = activity?.metrics.modelName || 'Gemini 3.8 Flash';
   const latestReasoningStep =
     activity?.reasoningSteps && activity.reasoningSteps.length > 0
       ? activity.reasoningSteps[activity.reasoningSteps.length - 1]
