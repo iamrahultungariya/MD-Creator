@@ -66,7 +66,7 @@ export const Mimo3DCompanion: React.FC<Mimo3DCompanionProps> = ({ className = ''
                   ease: 'easeInOut',
                 },
               }}
-              className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center filter drop-shadow-2xl hover:scale-105 active:scale-95 transition-transform"
+              className="relative w-44 h-44 sm:w-48 sm:h-48 flex items-center justify-center filter drop-shadow-2xl hover:scale-105 active:scale-95 transition-transform"
               title="Mimo ✦ (Click to chat or press Ctrl+J)"
             >
               <Mimo3DViewer size="hero" state={mascotState} />

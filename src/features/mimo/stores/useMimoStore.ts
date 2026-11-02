@@ -72,7 +72,7 @@ function createWelcomeMessage(docTitle?: string): MimoMessage {
 /**
  * Professional token-proportional quota calculation:
  * - Uses actual input + output token count and model tier weight:
- *   - Gemini 2.5 Flash (LOW / MEDIUM): 0.5% base + (tokens / 3500) * 1.5% -> ~0.8% to 2.5% per task
+ *   - Gemini 3.5 Flash-Lite (LOW / MEDIUM): 0.5% base + (tokens / 3500) * 1.5% -> ~0.8% to 2.5% per task
  *   - Gemini 3.8 Flash (HIGH / DocGen): 2.5% base + (tokens / 3000) * 3.5% -> ~3% to 8% per task
  * - Zero deduction (0%) when running on Offline Engine or when aborted/stopped early.
  */

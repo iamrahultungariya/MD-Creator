@@ -109,7 +109,7 @@ export const UpdateAvailableModal: React.FC = () => {
         '1-click action cards to insert footers, tables, and KaTeX math formulas with instant ↺ Undo',
         '10-turn conversation memory and focused text selection targeting',
         'Publication-grade KaTeX mathematical formulas and truth tables rendered live in chat',
-        'Lightning-fast ~1.2s first token response powered by Gemini 2.0 architecture',
+        'Lightning-fast ~1.2s first token response powered by Gemini 3.8 Flash architecture',
         'Quick toggle anytime with keyboard shortcut Ctrl+J',
       ],
     },

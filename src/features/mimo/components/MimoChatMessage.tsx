@@ -8,6 +8,7 @@ import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
 import { normalizeMathDelimiters } from '../../../utils/markdownSanitizer';
 import { extractTextFromReactNode } from '../../../components/editor/markdownAlerts';
+import { formatAndDetectCodeBlock } from '../../../utils/codeBlockFormatter';
 import { Copy, Check, ArrowDownToLine } from 'lucide-react';
 import { MimoMessage, MimoToolCall } from '../types/mimoTypes';
 import { useMimoStore } from '../stores/useMimoStore';
@@ -211,7 +212,6 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
               code: ({ className, children }) => {
                 const isInline = !className;
                 const match = /language-(\w+)/.exec(className || '');
-                const lang = match ? match[1] : '';
                 const codeString = extractTextFromReactNode(children).replace(/\n$/, '');
 
                 if (isInline) {
@@ -222,16 +222,23 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                   );
                 }
 
+                const { formattedCode, detectedLanguage } = formatAndDetectCodeBlock(
+                  codeString,
+                  match ? match[1] : undefined
+                );
+                const shouldRenderFormatted = formattedCode !== codeString;
+                const codeToCopy = shouldRenderFormatted ? formattedCode : codeString;
                 const codeId = Math.abs(codeString.length * 31);
+                const displayLang = detectedLanguage ? detectedLanguage.toUpperCase() : (match ? match[1] : 'CODE');
 
                 return (
                   <div className="relative my-2 rounded-xl overflow-hidden border border-neutral-800 bg-neutral-950 text-neutral-200 font-mono text-[11px]">
                     <div className="flex items-center justify-between px-3 py-1.5 bg-neutral-900/90 border-b border-neutral-800 text-[10px] text-neutral-400">
-                      <span>{lang || 'code'}</span>
+                      <span>{displayLang}</span>
                       <div className="flex items-center gap-2.5">
                         {onInsertSnippet && (
                           <button
-                            onClick={() => handleInsertCode(codeString, codeId)}
+                            onClick={() => handleInsertCode(codeToCopy, codeId)}
                             className="flex items-center gap-1 text-violet-400 hover:text-violet-200 transition-colors cursor-pointer"
                             title="Insert into editor at cursor"
                           >
@@ -249,7 +256,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                           </button>
                         )}
                         <button
-                          onClick={() => handleCopyCode(codeString, codeId)}
+                          onClick={() => handleCopyCode(codeToCopy, codeId)}
                           className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
                         >
                           {copiedCodeIndex === codeId ? (
@@ -266,8 +273,8 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                         </button>
                       </div>
                     </div>
-                    <pre className="p-3 overflow-x-auto leading-relaxed whitespace-pre font-mono">
-                      <code>{children}</code>
+                    <pre className="p-3 overflow-x-auto whitespace-pre-wrap break-words max-w-full leading-relaxed font-mono">
+                      <code>{shouldRenderFormatted ? formattedCode : children}</code>
                     </pre>
                   </div>
                 );

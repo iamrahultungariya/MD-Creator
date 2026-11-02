@@ -59,18 +59,18 @@ const SIZE_CLASSES = {
 
 // Object scale multiplier per display context (increased so Mimo is bold, detailed, not a tiny dot)
 const OBJECT_SCALES = {
-  sm: 1.15,
-  md: 1.45,
-  lg: 1.7,
-  hero: 1.95,
+  sm: 1.8,
+  md: 2.4,
+  lg: 2.8,
+  hero: 3.4,
 };
 
 // Vertical center offset per display context
 const Y_OFFSETS = {
-  sm: -6,
-  md: -10,
-  lg: -12,
-  hero: -16,
+  sm: -2,
+  md: -4,
+  lg: -6,
+  hero: -8,
 };
 
 export const Mimo3DViewer: React.FC<Mimo3DViewerProps> = ({

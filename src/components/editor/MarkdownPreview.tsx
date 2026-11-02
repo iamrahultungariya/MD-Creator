@@ -17,6 +17,7 @@ import { MarkdownImage } from './MarkdownImage';
 import { findAllTablesInDocument, replaceTableInDocument, ParsedTable } from '../../utils/markdownTable';
 import { InteractiveTableOverlay } from './InteractiveTableOverlay';
 import { LinkHoverCard } from './LinkHoverCard';
+import { formatAndDetectCodeBlock } from '../../utils/codeBlockFormatter';
 
 // Lazy-load heavy 3.44 MB Mermaid engine only on-demand when a diagram exists
 const MermaidBlock = React.lazy(() =>
@@ -405,8 +406,14 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
               );
             }
 
+            // Smart code block formatting & language detection (prevents false RUBY badge on Python)
+            const { formattedCode, detectedLanguage } = formatAndDetectCodeBlock(
+              rawCode,
+              match ? match[1] : undefined
+            );
+
             // Interactive Mermaid Diagram (Lazy-loaded on demand)
-            if (match && match[1] === 'mermaid') {
+            if (detectedLanguage === 'mermaid' || (match && match[1] === 'mermaid')) {
               return (
                 <React.Suspense
                   fallback={
@@ -439,15 +446,19 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
               ? 'text-neutral-200'
               : 'text-neutral-800 dark:text-neutral-200';
 
+            const displayLanguage = detectedLanguage ? detectedLanguage.toUpperCase() : 'CODE';
+            const shouldRenderFormatted = formattedCode !== rawCode;
+            const codeToCopy = shouldRenderFormatted ? formattedCode : rawCode;
+
             return (
               <div className={`relative my-4 rounded-xl overflow-hidden border ${codeContainerClass} shadow-2xs group transition-colors`}>
                 {/* Code Header Bar */}
                 <div className={`flex items-center justify-between px-3.5 py-1.5 ${codeHeaderClass} text-[11px] font-mono select-none transition-colors`}>
                   <span className="uppercase tracking-wider text-[10px] font-semibold">
-                    {match ? match[1] : 'code'}
+                    {displayLanguage}
                   </span>
                   <button
-                    onClick={() => handleCopyCode(rawCode, codeId)}
+                    onClick={() => handleCopyCode(codeToCopy, codeId)}
                     className="no-print flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     {copiedCodeId === codeId ? (
@@ -463,10 +474,10 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
                     )}
                   </button>
                 </div>
-                {/* Code Body */}
-                <pre className={`p-4 overflow-x-auto whitespace-pre max-w-full text-[12px] font-mono-code leading-relaxed ${preTextClass}`}>
+                {/* Code Body - whitespace-pre-wrap ensures code blocks wrap cleanly and NEVER stretch into single horizontal rows */}
+                <pre className={`p-4 overflow-x-auto whitespace-pre-wrap break-words max-w-full text-[12px] font-mono-code leading-relaxed ${preTextClass}`}>
                   <code className={className} {...props}>
-                    {children}
+                    {shouldRenderFormatted ? formattedCode : children}
                   </code>
                 </pre>
               </div>

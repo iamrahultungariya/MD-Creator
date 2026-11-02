@@ -47,8 +47,8 @@ Section body here...
 
 /**
  * Resolves the optimal Gemini model & display label based on evaluated complexity:
- * - Gemini 3.8 Flash (gemini-3.8-flash) is now the unified BASE model for ALL tasks (Low, Medium, High).
- * - Automatic failover cascade to Gemini 2.5 Flash and Gemini 2.0 Flash guarantees 100% reliability.
+ * - Gemini 3.8 Flash (gemini-3.8-flash) is the unified BASE model for ALL tasks (Low, Medium, High).
+ * - High-speed failover cascade to Gemini 3.5 Flash-Lite (gemini-3.5-flash-lite) guarantees 100% reliability.
  */
 export function getModelForComplexity(level: 'LOW' | 'MEDIUM' | 'HIGH'): {
   modelId: string;
@@ -161,11 +161,10 @@ export async function streamMimoResponse(options: {
     return executeDocumentAwareOfflineAssistance(prompt, context, intent, resolvedLevel, callbacks, signal);
   }
 
-  // Try base model (gemini-3.8-flash) first; if it times out, rate limits, or errors, cascade seamlessly to gemini-2.5-flash and gemini-2.0-flash
+  // Base model is Gemini 3.8 Flash; high-speed failover is Gemini 3.5 Flash-Lite
   const modelsToTry = [
     primaryModel,
-    { modelId: 'gemini-2.5-flash', displayLabel: 'Gemini 2.5 Flash', ttftTimeout: 25000 },
-    { modelId: 'gemini-2.0-flash', displayLabel: 'Gemini 2.0 Flash', ttftTimeout: 20000 },
+    { modelId: 'gemini-3.5-flash-lite', displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)', ttftTimeout: 20000 },
   ];
 
   const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
@@ -221,19 +220,13 @@ export async function streamMimoResponse(options: {
     let firstTokenRecorded = false;
 
     try {
-      // thinkingConfig is ONLY valid on Gemini 3 series and Gemini 2.5 series!
-      // gemini-2.0-flash and 1.5 throw HTTP 400 if thinkingConfig is supplied.
+      // thinkingConfig is configured on Gemini 3.8 series for deep reasoning & thinking transparency
       let thinkingConfig: Record<string, unknown> | undefined = undefined;
-      if (candidateModel.modelId.includes('gemini-3')) {
+      if (candidateModel.modelId.includes('gemini-3.8') || candidateModel.modelId.includes('gemini-3')) {
         const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'high' : resolvedLevel === 'MEDIUM' ? 'medium' : 'low';
         thinkingConfig = {
           includeThoughts: true,
           thinkingLevel: apiThinkingLevel,
-        };
-      } else if (candidateModel.modelId.includes('2.5')) {
-        thinkingConfig = {
-          includeThoughts: true,
-          thinkingBudget: resolvedLevel === 'HIGH' ? 2048 : 1024,
         };
       } else {
         thinkingConfig = undefined;
