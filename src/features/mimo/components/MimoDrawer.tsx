@@ -7,6 +7,7 @@ import {
   Sparkles,
   StopCircle,
   Brain,
+  Zap,
   FileText,
   PenTool,
   BookOpen,
@@ -76,6 +77,8 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   const userApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
   const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
   const setThinkingLevel = useMimoStore((s) => s.setThinkingLevel);
+  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.8-flash';
+  const setSelectedModel = useMimoStore((s) => s.setSelectedModel);
 
   const [inputPrompt, setInputPrompt] = useState('');
   const [activeSelection, setActiveSelection] = useState<string>('');
@@ -389,9 +392,12 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       subtitle: `Doc: "${context.docTitle}" (${context.linesAnalyzed} lines • ${context.totalWords} words)`,
       metrics: {
         linesScanned: context.linesAnalyzed,
-        tokenVelocity: 88,
-        modelName: 'Gemini 3.8 Flash',
-        thinkingLevel: thinkingLevel,
+        tokenVelocity: selectedModel === 'gemini-3.5-flash-lite' ? 140 : 88,
+        modelName:
+          selectedModel === 'gemini-3.5-flash-lite'
+            ? 'Gemini 3.5 Flash-Lite'
+            : 'Gemini 3.8 Flash',
+        thinkingLevel: selectedModel === 'gemini-3.5-flash-lite' ? 'MINIMAL' : thinkingLevel,
         elapsedMs: 0,
         diffDelta: { additions: 0, deletions: 0 },
       },
@@ -423,6 +429,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
         prompt: raw,
         context,
         thinkingLevel: thinkingLevel,
+        selectedModel: selectedModel,
         history: messages,
         signal: abortControllerRef.current.signal,
         callbacks: {
@@ -836,70 +843,109 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
             </div>
           )}
 
-          {/* Controls Bar */}
-          <div className="flex items-center justify-between text-xs">
-            {/* Thinking Level Selector: Auto (with High Task Auto-Detection), Low, Medium, High */}
-            <div className="inline-flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/90 border border-neutral-200/80 dark:border-neutral-700/80 text-[11px] font-sans">
-              <button
-                type="button"
-                onClick={() => setThinkingLevel('AUTO')}
-                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                  thinkingLevel === 'AUTO'
-                    ? 'bg-violet-600 text-white font-semibold shadow-2xs'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-                title="Auto Thinking: Automatically detects high-complexity tasks and elevates reasoning depth"
-              >
-                <Sparkles className="w-2.5 h-2.5" />
-                <span>Auto</span>
-              </button>
+          {/* Controls Bar: Model Choice & Thinking Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
+            {/* Model Selector & Thinking Depth Controls */}
+            <div className="flex items-center flex-wrap gap-1.5">
+              {/* Model Choice Segment: 3.8 Flash vs 3.5 Flash-Lite */}
+              <div className="inline-flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/90 border border-neutral-200/80 dark:border-neutral-700/80 text-[11px] font-sans">
+                <button
+                  type="button"
+                  onClick={() => setSelectedModel('gemini-3.8-flash')}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                    selectedModel === 'gemini-3.8-flash'
+                      ? 'bg-violet-600 text-white font-semibold shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                  title="Gemini 3.8 Flash: Advanced agentic model with deep reasoning and transparent thoughts"
+                >
+                  <Brain className="w-2.5 h-2.5" />
+                  <span>3.8 Flash</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setThinkingLevel('LOW')}
-                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
-                  thinkingLevel === 'LOW'
-                    ? 'bg-violet-600 text-white font-semibold shadow-2xs'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-                title="Low Thinking: Fast, concise responses for quick answers & minor tweaks"
-              >
-                Low
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedModel('gemini-3.5-flash-lite')}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                    selectedModel === 'gemini-3.5-flash-lite'
+                      ? 'bg-emerald-600 text-white font-semibold shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                  title="Gemini 3.5 Flash-Lite: High-throughput ultra-fast responses (15 RPM / 500 RPD free tier)"
+                >
+                  <Zap className="w-2.5 h-2.5" />
+                  <span>3.5 Lite</span>
+                </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setThinkingLevel('MEDIUM')}
-                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
-                  thinkingLevel === 'MEDIUM'
-                    ? 'bg-violet-600 text-white font-semibold shadow-2xs'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-                title="Medium Thinking: Balanced reasoning for drafting, restructuring, and formatting"
-              >
-                Medium
-              </button>
+              {/* Thinking Level Pills (active when 3.8 Flash is selected) */}
+              {selectedModel === 'gemini-3.8-flash' ? (
+                <div className="inline-flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800/90 border border-neutral-200/80 dark:border-neutral-700/80 text-[10px] font-sans">
+                  <button
+                    type="button"
+                    onClick={() => setThinkingLevel('AUTO')}
+                    className={`px-1.5 py-0.5 rounded transition-all cursor-pointer flex items-center gap-0.5 ${
+                      thinkingLevel === 'AUTO'
+                        ? 'bg-violet-600 text-white font-medium shadow-2xs'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
+                    title="Auto Thinking: Automatically scales reasoning depth by task complexity"
+                  >
+                    <Sparkles className="w-2 h-2" />
+                    <span>Auto</span>
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => setThinkingLevel('HIGH')}
-                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                  thinkingLevel === 'HIGH'
-                    ? 'bg-violet-600 text-white font-semibold shadow-2xs'
-                    : 'text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-                title="High Thinking: Deep extended reasoning on Gemini 3.8 Flash for complex code, architecture & deep analysis"
-              >
-                <Brain className="w-2.5 h-2.5" />
-                <span>High</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => setThinkingLevel('LOW')}
+                    className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                      thinkingLevel === 'LOW'
+                        ? 'bg-violet-600 text-white font-medium shadow-2xs'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
+                    title="Low Thinking: Fast, concise responses for quick answers"
+                  >
+                    Low
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setThinkingLevel('MEDIUM')}
+                    className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                      thinkingLevel === 'MEDIUM'
+                        ? 'bg-violet-600 text-white font-medium shadow-2xs'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
+                    title="Medium Thinking: Balanced reasoning for drafting & edits"
+                  >
+                    Med
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setThinkingLevel('HIGH')}
+                    className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                      thinkingLevel === 'HIGH'
+                        ? 'bg-violet-600 text-white font-medium shadow-2xs'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                    }`}
+                    title="High Thinking: Extended reasoning for complex logic, diffs & code"
+                  >
+                    High
+                  </button>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-[10px] text-emerald-700 dark:text-emerald-300 font-mono">
+                  <span>⚡ 500 RPD Instant</span>
+                </div>
+              )}
             </div>
 
             {/* Prompt Enhancer Wand */}
             <button
               onClick={handleEnhancePrompt}
               disabled={isGenerating || !inputPrompt.trim() || isAiExcluded}
-              className="px-2.5 py-1 rounded-lg border border-violet-200 dark:border-violet-900 bg-violet-50/60 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-100 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+              className="px-2.5 py-1 rounded-lg border border-violet-200 dark:border-violet-900 bg-violet-50/60 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-100 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors ml-auto shrink-0"
               title="Enhance prompt into structured markdown instructions (adapts to your language)"
             >
               <Wand2 className="w-3 h-3 text-violet-600 dark:text-violet-400" />

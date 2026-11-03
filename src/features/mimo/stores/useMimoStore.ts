@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import {
   MascotState,
   ThinkingLevel,
+  MimoModelChoice,
   MimoMessage,
   MimoDiffHunk,
   MimoQuotaState,
@@ -16,6 +17,7 @@ interface MimoStoreState {
   activeDocTitle: string;
   mascotState: MascotState;
   thinkingLevel: ThinkingLevel;
+  selectedModel: MimoModelChoice;
   messages: MimoMessage[];
   messagesByDoc: Record<string, MimoMessage[]>;
   activeActivity: ActivityTelemetry | null;
@@ -31,6 +33,7 @@ interface MimoStoreState {
   syncActiveDocument: (docId: string, docTitle: string) => void;
   setMascotState: (state: MascotState) => void;
   setThinkingLevel: (level: ThinkingLevel) => void;
+  setSelectedModel: (model: MimoModelChoice) => void;
   setUserApiKey: (key: string) => void;
   setIsKeyModalOpen: (open: boolean) => void;
   setIsPrivacyModalOpen: (open: boolean) => void;
@@ -104,6 +107,7 @@ export const useMimoStore = create<MimoStoreState>()(
       activeDocTitle: 'Untitled Document',
       mascotState: 'happy',
       thinkingLevel: 'AUTO',
+      selectedModel: 'gemini-3.8-flash',
       messages: [createWelcomeMessage()],
       messagesByDoc: {},
       activeActivity: null,
@@ -160,6 +164,8 @@ export const useMimoStore = create<MimoStoreState>()(
       setMascotState: (mascotState) => set({ mascotState }),
 
       setThinkingLevel: (thinkingLevel) => set({ thinkingLevel }),
+
+      setSelectedModel: (selectedModel) => set({ selectedModel }),
 
       setUserApiKey: (key) =>
         set((state) => ({
@@ -357,6 +363,7 @@ export const useMimoStore = create<MimoStoreState>()(
       partialize: (state) => ({
         quota: state.quota,
         thinkingLevel: state.thinkingLevel,
+        selectedModel: state.selectedModel,
         activeDocId: state.activeDocId,
         activeDocTitle: state.activeDocTitle,
         messages: state.messages.map((m) =>

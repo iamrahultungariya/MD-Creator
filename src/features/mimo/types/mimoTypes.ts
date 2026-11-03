@@ -11,6 +11,8 @@ export type MimoActivityType =
 
 export type ThinkingLevel = 'AUTO' | 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
 
+export type MimoModelChoice = 'gemini-3.8-flash' | 'gemini-3.5-flash-lite' | 'auto';
+
 export type MimoIntentType =
   | 'GENERAL_QA'
   | 'DOC_QUERY'

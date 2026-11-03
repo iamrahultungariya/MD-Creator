@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { ThinkingLevel, MimoMessage, MimoIntentType } from '../types/mimoTypes';
+import { ThinkingLevel, MimoModelChoice, MimoMessage, MimoIntentType } from '../types/mimoTypes';
 import { resolveThinkingLevel, classifyUserIntent } from './promptRouter';
 import { PreparedContext } from './contextEngine';
 import { sanitizeTextForAi } from './privacySanitizer';
@@ -125,14 +125,28 @@ export async function streamMimoResponse(options: {
   prompt: string;
   context: PreparedContext;
   thinkingLevel: ThinkingLevel;
+  selectedModel?: MimoModelChoice;
   callbacks: StreamCallbacks;
   signal?: AbortSignal;
   history?: MimoMessage[];
 }): Promise<MimoStreamResult> {
-  const { apiKey, prompt, context, thinkingLevel, callbacks, signal, history } = options;
+  const { apiKey, prompt, context, thinkingLevel, selectedModel = 'gemini-3.8-flash', callbacks, signal, history } = options;
 
   const resolvedLevel = resolveThinkingLevel(thinkingLevel, prompt, context.totalDocLines);
-  const primaryModel = getModelForComplexity(resolvedLevel);
+  const flashModel = getModelForComplexity(resolvedLevel);
+  const liteModel = {
+    modelId: 'gemini-3.5-flash-lite',
+    displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)',
+    ttftTimeout: 18000,
+  };
+
+  // User-selected model priority routing:
+  // - 'gemini-3.5-flash-lite': Explicit high-speed routing (500 RPD free tier, instant response)
+  // - 'gemini-3.8-flash' or 'auto': Unified deep reasoning with thinking transparency
+  const modelsToTry = selectedModel === 'gemini-3.5-flash-lite'
+    ? [liteModel, flashModel]
+    : [flashModel, liteModel];
+
   const intent = classifyUserIntent(prompt, !!context.selectedText);
 
   const effectiveApiKey = (
@@ -160,12 +174,6 @@ export async function streamMimoResponse(options: {
     callbacks.onModelResolved?.('Offline Local Engine', resolvedLevel);
     return executeDocumentAwareOfflineAssistance(prompt, context, intent, resolvedLevel, callbacks, signal);
   }
-
-  // Base model is Gemini 3.8 Flash; high-speed failover is Gemini 3.5 Flash-Lite
-  const modelsToTry = [
-    primaryModel,
-    { modelId: 'gemini-3.5-flash-lite', displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)', ttftTimeout: 20000 },
-  ];
 
   const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
 
