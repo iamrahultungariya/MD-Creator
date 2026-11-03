@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MascotState } from '../types/mimoTypes';
 import { useMimoStore } from '../stores/useMimoStore';
 
-interface MimoAvatarProps {
+export interface MimoAvatarProps {
   state?: MascotState;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'hero';
   className?: string;
@@ -22,9 +22,9 @@ const STATE_ASSETS: Record<MascotState, string> = {
 const SIZE_CLASSES = {
   xs: 'w-6 h-6',
   sm: 'w-8 h-8',
-  md: 'w-11 h-11',
-  lg: 'w-16 h-16',
-  hero: 'w-24 h-24 sm:w-28 sm:h-28',
+  md: 'w-12 h-12',
+  lg: 'w-20 h-20',
+  hero: 'w-32 h-32 sm:w-36 sm:h-36',
 };
 
 export const MimoAvatar: React.FC<MimoAvatarProps> = ({
@@ -73,7 +73,7 @@ export const MimoAvatar: React.FC<MimoAvatarProps> = ({
       className={`relative inline-flex items-center justify-center select-none ${
         onClick ? 'cursor-pointer group' : ''
       } ${className}`}
-      title={`Mimo (State: ${activeState})`}
+      title={`Mimo (${activeState})`}
     >
       <motion.div
         animate={
@@ -82,49 +82,31 @@ export const MimoAvatar: React.FC<MimoAvatarProps> = ({
             : activeState === 'sleeping'
             ? { y: [0, 2, 0], opacity: [0.85, 0.95, 0.85] }
             : activeState === 'excited'
-            ? { scale: [1, 1.08, 1], rotate: [-2, 2, 0] }
+            ? { scale: [1, 1.04, 1], y: [0, -3, 0] }
+            : activeState === 'typing'
+            ? { y: [0, -2, 0] }
             : { y: [0, -2, 0] }
         }
         transition={{
-          duration: activeState === 'thinking' ? 1.8 : 3.2,
+          duration: activeState === 'thinking' ? 2 : activeState === 'sleeping' ? 3.5 : 2.5,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className={`relative ${SIZE_CLASSES[size]} rounded-2xl flex items-center justify-center overflow-visible`}
+        className={`relative ${SIZE_CLASSES[size]} flex items-center justify-center overflow-visible`}
       >
         <AnimatePresence mode="wait">
           <motion.img
             key={activeState}
             src={assetSrc}
             alt={`Mimo ${activeState}`}
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.2 }}
-            className="w-full h-full object-contain filter drop-shadow-md"
-            onError={(e) => {
-              // Fallback to hero or happy if specific asset fails
-              (e.currentTarget as HTMLImageElement).src = '/mimo/happy.png';
-            }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="w-full h-full object-contain filter drop-shadow-sm select-none pointer-events-none"
+            draggable={false}
           />
         </AnimatePresence>
-
-        {/* Sleeping zZz visual indicator */}
-        {activeState === 'sleeping' && (
-          <motion.div
-            initial={{ opacity: 0, y: 0 }}
-            animate={{ opacity: [0, 1, 0], y: [-2, -12], x: [0, 6] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
-            className="absolute -top-3 -right-2 text-violet-500 font-extrabold text-xs pointer-events-none"
-          >
-            zZ
-          </motion.div>
-        )}
-
-        {/* Thinking pulsing ring */}
-        {activeState === 'thinking' && (
-          <span className="absolute -inset-1 rounded-full bg-violet-400/20 dark:bg-violet-500/20 animate-ping pointer-events-none" />
-        )}
       </motion.div>
     </div>
   );

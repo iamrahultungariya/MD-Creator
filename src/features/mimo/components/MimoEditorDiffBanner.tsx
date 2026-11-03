@@ -37,7 +37,7 @@ export const MimoEditorDiffBanner: React.FC<MimoEditorDiffBannerProps> = ({
     if (res.success) {
       setContent(res.nextContent);
       executeSave(res.nextContent, title);
-      onToast('✨ Accepted and applied Mimo changes!');
+      onToast('Applied proposed changes');
     } else {
       onToast('Could not automatically apply diff.');
     }
@@ -45,29 +45,26 @@ export const MimoEditorDiffBanner: React.FC<MimoEditorDiffBannerProps> = ({
 
   const handleDiscard = () => {
     discardActiveDiff();
-    onToast('Discarded Mimo changes.');
+    onToast('Discarded proposed changes.');
   };
 
   return (
-    <div className="w-full bg-violet-950 text-white border-b border-violet-800 px-4 py-2 flex items-center justify-between text-xs font-sans shadow-md animate-in slide-in-from-top-2 duration-150">
+    <div className="w-full bg-neutral-950 text-neutral-100 border-b border-neutral-800 px-4 py-2 flex items-center justify-between text-xs font-sans shadow-md">
       <div className="flex items-center gap-2.5">
-        <div className="p-1 rounded-md bg-violet-800/80 text-violet-200">
+        <div className="p-1 rounded-md bg-neutral-800 text-neutral-300">
           <GitPullRequest className="w-3.5 h-3.5" />
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-violet-100">Mimo Proposed Changes:</span>
-          <span className="font-mono text-emerald-400 font-bold">+{additions}</span>
-          <span className="font-mono text-rose-400 font-bold">-{deletions}</span>
-          <span className="text-violet-300 text-[11px] hidden sm:inline">
-            (Reviewing modified lines)
-          </span>
+          <span className="font-medium text-neutral-200">Proposed modifications:</span>
+          <span className="font-mono text-emerald-400 font-semibold">+{additions}</span>
+          <span className="font-mono text-rose-400 font-semibold">-{deletions}</span>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
         <button
           onClick={() => setIsOpen(true)}
-          className="text-violet-300 hover:text-white px-2 py-1 rounded text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+          className="text-neutral-400 hover:text-white px-2 py-1 rounded text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
         >
           <span>Open Chat</span>
           <ArrowUpRight className="w-3 h-3" />
@@ -75,7 +72,7 @@ export const MimoEditorDiffBanner: React.FC<MimoEditorDiffBannerProps> = ({
 
         <button
           onClick={handleDiscard}
-          className="px-2.5 py-1 rounded-lg border border-violet-700 bg-violet-900/60 hover:bg-violet-800 text-violet-200 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
+          className="px-2.5 py-1 rounded-md border border-neutral-700 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
         >
           <X className="w-3 h-3" />
           Discard
@@ -83,10 +80,10 @@ export const MimoEditorDiffBanner: React.FC<MimoEditorDiffBannerProps> = ({
 
         <button
           onClick={handleAccept}
-          className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors flex items-center gap-1.5"
+          className="px-3 py-1 rounded-md bg-white text-neutral-950 hover:bg-neutral-100 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
         >
           <Check className="w-3.5 h-3.5" />
-          Accept Changes
+          Apply
         </button>
       </div>
     </div>

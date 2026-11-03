@@ -75,11 +75,11 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
     return (
       <div className="flex flex-col items-end my-2 space-y-1">
         {message.hasSelectionContext && (
-          <span className="text-[10px] text-violet-600 dark:text-violet-400 font-medium px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/60 border border-violet-200/60 dark:border-violet-800/60">
-            ✂️ Focused on Selected Text
+          <span className="text-[10px] text-neutral-600 dark:text-neutral-400 font-medium px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800/60">
+            Selected Context
           </span>
         )}
-        <div className="max-w-[88%] px-4 py-3 rounded-2xl rounded-tr-xs bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 text-xs font-sans shadow-xs whitespace-pre-wrap leading-relaxed select-text">
+        <div className="max-w-[88%] px-3.5 py-2.5 rounded-2xl rounded-tr-xs bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-950 text-xs font-sans shadow-2xs whitespace-pre-wrap leading-relaxed select-text">
           {message.text}
         </div>
       </div>
@@ -164,7 +164,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
               ),
               li: ({ children }) => <li className="leading-relaxed">{children}</li>,
               blockquote: ({ children }) => (
-                <blockquote className="border-l-3 border-violet-500 pl-3 my-2 text-neutral-600 dark:text-neutral-400 italic bg-violet-50/30 dark:bg-violet-950/20 py-1 rounded-r-md">
+                <blockquote className="border-l-2 border-neutral-300 dark:border-neutral-700 pl-3 my-2 text-neutral-600 dark:text-neutral-400 italic bg-neutral-100/50 dark:bg-neutral-850/50 py-1 rounded-r-md">
                   {children}
                 </blockquote>
               ),
@@ -192,7 +192,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                     <button
                       type="button"
                       onClick={() => useMimoStore.getState().setIsKeyModalOpen(true)}
-                      className="text-violet-600 dark:text-violet-400 font-semibold underline underline-offset-2 hover:text-violet-700 cursor-pointer inline-flex items-center gap-1"
+                      className="text-neutral-900 dark:text-neutral-100 font-semibold underline underline-offset-2 hover:opacity-80 cursor-pointer inline-flex items-center gap-1"
                     >
                       {children}
                     </button>
@@ -203,7 +203,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-violet-600 dark:text-violet-400 hover:underline"
+                    className="text-neutral-900 dark:text-neutral-100 underline underline-offset-2 hover:opacity-80"
                   >
                     {children}
                   </a>
@@ -216,7 +216,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
 
                 if (isInline) {
                   return (
-                    <code className="px-1.5 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 text-violet-700 dark:text-violet-300 font-mono text-[11px]">
+                    <code className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 border border-neutral-200/50 dark:border-neutral-700/50 font-mono text-[11px]">
                       {children}
                     </code>
                   );
@@ -239,7 +239,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                         {onInsertSnippet && (
                           <button
                             onClick={() => handleInsertCode(codeToCopy, codeId)}
-                            className="flex items-center gap-1 text-violet-400 hover:text-violet-200 transition-colors cursor-pointer"
+                            className="flex items-center gap-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
                             title="Insert into editor at cursor"
                           >
                             {insertedCodeIndex === codeId ? (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ChevronDown, Clock, Cpu, GitBranch } from 'lucide-react';
+import { Brain, ChevronDown, Clock, Cpu, GitBranch } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -60,16 +60,13 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
   // ── 1. ACTIVE IN-FLIGHT THINKING STATE (Minimal, sleek, low-profile) ──
   if (!isDone && !isStopped) {
     return (
-      <div className="w-full my-2 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 shadow-2xs overflow-hidden text-xs font-sans animate-in fade-in duration-150">
+      <div className="w-full my-2 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 overflow-hidden text-xs font-sans">
         <div className="px-3 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
-            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-neutral-400 dark:bg-neutral-500 animate-pulse shrink-0" />
 
             <div className="min-w-0 flex items-center gap-1.5">
-              <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-[11px]">
+              <span className="font-medium text-neutral-900 dark:text-neutral-100 text-[11px]">
                 Reasoning
               </span>
               <span className="text-[10px] text-neutral-400 dark:text-neutral-500 hidden sm:inline">
@@ -90,10 +87,10 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
         {/* Live Streaming Thoughts Display with Markdown Formatting */}
         {cleanThoughts && cleanThoughts.length > 5 && (
           <div className="px-3 pb-2.5 pt-1 border-t border-neutral-200/50 dark:border-neutral-800/60">
-            <div className="text-[9px] uppercase font-bold tracking-wider text-violet-600 dark:text-violet-400 mb-1">
+            <div className="text-[9px] uppercase font-semibold tracking-wider text-neutral-500 mb-1">
               Internal Chain of Thought
             </div>
-            <div className="p-2.5 rounded-lg bg-white/80 dark:bg-neutral-950/70 border border-neutral-200/60 dark:border-neutral-800/60 text-[11px] text-neutral-700 dark:text-neutral-300 leading-relaxed max-h-36 overflow-y-auto select-text">
+            <div className="p-2.5 rounded-md bg-white dark:bg-neutral-950 border border-neutral-200/60 dark:border-neutral-800/60 text-[11px] text-neutral-700 dark:text-neutral-300 leading-relaxed max-h-36 overflow-y-auto select-text">
               <ReactMarkdown
                 remarkPlugins={STATIC_THOUGHT_REMARK_PLUGINS}
                 components={{
@@ -113,22 +110,22 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
                     </ol>
                   ),
                   h1: ({ children }) => (
-                    <div className="font-bold text-[11px] text-violet-700 dark:text-violet-300 mt-1 mb-0.5">
+                    <div className="font-semibold text-[11px] text-neutral-900 dark:text-neutral-100 mt-1 mb-0.5">
                       {children}
                     </div>
                   ),
                   h2: ({ children }) => (
-                    <div className="font-bold text-[11px] text-violet-700 dark:text-violet-300 mt-1 mb-0.5">
+                    <div className="font-semibold text-[11px] text-neutral-900 dark:text-neutral-100 mt-1 mb-0.5">
                       {children}
                     </div>
                   ),
                   h3: ({ children }) => (
-                    <div className="font-semibold text-[11px] text-violet-700 dark:text-violet-300 mt-1 mb-0.5">
+                    <div className="font-medium text-[11px] text-neutral-900 dark:text-neutral-100 mt-1 mb-0.5">
                       {children}
                     </div>
                   ),
                   code: ({ children }) => (
-                    <code className="px-1 py-0.2 rounded bg-neutral-200/60 dark:bg-neutral-800 text-violet-600 dark:text-violet-400 font-mono text-[10px]">
+                    <code className="px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-mono text-[10px]">
                       {children}
                     </code>
                   ),
@@ -141,15 +138,15 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
               >
                 {cleanThoughts}
               </ReactMarkdown>
-              <span className="inline-block w-1.5 h-3 ml-1 bg-violet-400 animate-pulse align-middle" />
+              <span className="inline-block w-1.5 h-3 ml-1 bg-neutral-400 animate-pulse align-middle" />
             </div>
           </div>
         )}
 
-        {/* Minimal Hairline Shimmer Progress Indicator */}
-        <div className="h-[1.5px] w-full bg-neutral-200/50 dark:bg-neutral-800/50 overflow-hidden relative">
+        {/* Minimal Hairline Progress Bar */}
+        <div className="h-[1px] w-full bg-neutral-200 dark:border-neutral-800 overflow-hidden relative">
           <motion.div
-            className="h-full w-1/4 bg-gradient-to-r from-transparent via-violet-500/80 to-transparent rounded-full"
+            className="h-full w-1/4 bg-neutral-400 dark:bg-neutral-600 rounded-full"
             animate={{ x: ['-100%', '450%'] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
           />
@@ -161,7 +158,7 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
   // ── 2. COMPLETED / SETTLED REASONING ACCORDION (Clean & Space-Efficient) ──
   return (
     <div className="w-full my-1.5 select-text font-sans">
-      <div className="rounded-xl border border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300 overflow-hidden transition-all">
+      <div className="rounded-lg border border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300 overflow-hidden transition-all">
         {/* Compact Summary Header */}
         <button
           type="button"
@@ -169,8 +166,8 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
           className="w-full px-3 py-1.5 text-left flex items-center justify-between cursor-pointer hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 transition-colors select-none"
         >
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="w-3 h-3 text-violet-500 shrink-0" />
-            <span className="font-semibold text-xs text-neutral-800 dark:text-neutral-200">
+            <Brain className="w-3 h-3 text-neutral-500 shrink-0" />
+            <span className="font-medium text-xs text-neutral-800 dark:text-neutral-200">
               {isStopped ? 'Reasoning stopped' : `Thought for ${seconds}s`}
             </span>
             <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono hidden sm:inline truncate">
@@ -178,7 +175,7 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
             </span>
             {activity?.metrics.diffDelta &&
               (activity.metrics.diffDelta.additions > 0 || activity.metrics.diffDelta.deletions > 0) && (
-                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded">
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-neutral-600 dark:text-neutral-400 font-medium bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
                   <GitBranch className="w-2.5 h-2.5" />
                   +{activity.metrics.diffDelta.additions} / -{activity.metrics.diffDelta.deletions}
                 </span>
@@ -205,18 +202,18 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className="border-t border-neutral-200/60 dark:border-neutral-800 p-3 space-y-2.5 bg-white/70 dark:bg-neutral-900/60 text-xs"
+              className="border-t border-neutral-200/60 dark:border-neutral-800 p-3 space-y-2.5 bg-white dark:bg-neutral-900/80 text-xs"
             >
               {/* Reasoning Steps Trace */}
               {activity?.reasoningSteps && activity.reasoningSteps.length > 0 && (
                 <div className="space-y-1">
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">
+                  <div className="text-[10px] uppercase font-semibold tracking-wider text-neutral-400 dark:text-neutral-500">
                     Reasoning Steps
                   </div>
                   <ul className="space-y-1 font-mono text-[11px] text-neutral-600 dark:text-neutral-400 pl-1">
                     {activity.reasoningSteps.map((step, idx) => (
                       <li key={idx} className="flex items-start gap-1.5">
-                        <span className="text-violet-500 font-bold select-none">›</span>
+                        <span className="text-neutral-400 font-bold select-none">›</span>
                         <span>{step}</span>
                       </li>
                     ))}
@@ -227,10 +224,10 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
               {/* Genuine Model Thoughts Formatted via Markdown */}
               {cleanThoughts && cleanThoughts.length > 5 && (
                 <div className="space-y-1 pt-1 border-t border-neutral-100 dark:border-neutral-800">
-                  <div className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">
+                  <div className="text-[10px] uppercase font-semibold tracking-wider text-neutral-400 dark:text-neutral-500">
                     Thought Tokens
                   </div>
-                  <div className="p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800 text-[11px] leading-relaxed text-neutral-700 dark:text-neutral-300 max-h-48 overflow-y-auto select-text">
+                  <div className="p-2.5 rounded-md bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/80 dark:border-neutral-800 text-[11px] leading-relaxed text-neutral-700 dark:text-neutral-300 max-h-48 overflow-y-auto select-text">
                     <ReactMarkdown
                       remarkPlugins={STATIC_THOUGHT_REMARK_PLUGINS}
                       components={{
@@ -250,22 +247,22 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
                           </ol>
                         ),
                         h1: ({ children }) => (
-                          <div className="font-bold text-[11px] text-violet-700 dark:text-violet-300 mt-1 mb-0.5">
+                          <div className="font-semibold text-[11px] text-neutral-900 dark:text-neutral-100 mt-1 mb-0.5">
                             {children}
                           </div>
                         ),
                         h2: ({ children }) => (
-                          <div className="font-bold text-[11px] text-violet-700 dark:text-violet-300 mt-1 mb-0.5">
+                          <div className="font-semibold text-[11px] text-neutral-900 dark:text-neutral-100 mt-1 mb-0.5">
                             {children}
                           </div>
                         ),
                         h3: ({ children }) => (
-                          <div className="font-semibold text-[11px] text-violet-700 dark:text-violet-300 mt-1 mb-0.5">
+                          <div className="font-medium text-[11px] text-neutral-900 dark:text-neutral-100 mt-1 mb-0.5">
                             {children}
                           </div>
                         ),
                         code: ({ children }) => (
-                          <code className="px-1 py-0.2 rounded bg-neutral-200/60 dark:bg-neutral-800 text-violet-600 dark:text-violet-400 font-mono text-[10px]">
+                          <code className="px-1 py-0.5 rounded bg-neutral-200/60 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-mono text-[10px]">
                             {children}
                           </code>
                         ),

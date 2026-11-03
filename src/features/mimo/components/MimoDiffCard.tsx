@@ -16,23 +16,23 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
   );
 
   return (
-    <div className="w-full my-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden text-xs font-sans">
+    <div className="w-full my-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs overflow-hidden text-xs font-sans">
       {/* Header */}
       <div className="px-3.5 py-2.5 bg-neutral-50/80 dark:bg-neutral-900/60 border-b border-neutral-200/70 dark:border-neutral-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <GitPullRequest className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-          <span className="font-semibold text-neutral-900 dark:text-neutral-100">
+          <GitPullRequest className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             Proposed Modification
           </span>
           <div className="flex items-center gap-1.5 font-mono text-[10px] ml-1">
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">+{additions}</span>
-            <span className="text-rose-600 dark:text-rose-400 font-bold">-{deletions}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">+{additions}</span>
+            <span className="text-rose-600 dark:text-rose-400 font-semibold">-{deletions}</span>
           </div>
         </div>
 
         {/* State Pill */}
         {hunk.isApplied ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
             <Check className="w-3 h-3" />
             Applied
           </span>
@@ -41,7 +41,7 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
             Discarded
           </span>
         ) : (
-          <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+          <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-700">
             Review Needed
           </span>
         )}
@@ -61,9 +61,9 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
             return (
               <div
                 key={idx}
-                className="py-0.5 px-2 bg-emerald-950/50 text-emerald-300 flex items-start gap-2"
+                className="py-0.5 px-2 bg-emerald-950/40 text-emerald-300 flex items-start gap-2"
               >
-                <span className="text-emerald-500 font-bold select-none">+</span>
+                <span className="text-emerald-500 font-semibold select-none">+</span>
                 <span className="break-all whitespace-pre-wrap">{l.text || ' '}</span>
               </div>
             );
@@ -72,10 +72,10 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
             return (
               <div
                 key={idx}
-                className="py-0.5 px-2 bg-rose-950/50 text-rose-300 flex items-start gap-2"
+                className="py-0.5 px-2 bg-rose-950/40 text-rose-300 flex items-start gap-2"
               >
-                <span className="text-rose-500 font-bold select-none">-</span>
-                <span className="break-all whitespace-pre-wrap line-through opacity-85">
+                <span className="text-rose-500 font-semibold select-none">-</span>
+                <span className="break-all whitespace-pre-wrap line-through opacity-70">
                   {l.text || ' '}
                 </span>
               </div>
@@ -95,17 +95,17 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
         <div className="px-3 py-2 bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200/70 dark:border-neutral-800 flex items-center justify-end gap-2">
           <button
             onClick={onDiscard}
-            className="px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
+            className="px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
           >
             <X className="w-3 h-3" />
             Discard
           </button>
           <button
             onClick={onApply}
-            className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs cursor-pointer transition-colors flex items-center gap-1.5"
+            className="px-3 py-1 rounded-md bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
           >
             <Check className="w-3.5 h-3.5" />
-            Apply to Editor
+            Apply to document
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
