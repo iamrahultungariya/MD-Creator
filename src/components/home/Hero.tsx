@@ -1,14 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, 
-  Sparkles, 
-  BookOpen, 
-  ShieldCheck, 
-  Zap, 
-  RefreshCw, 
-  FileDown, 
-  Binary 
+  BookOpen 
 } from 'lucide-react';
 import { InteractiveStudioShowcase } from './InteractiveStudioShowcase';
 import { WritingHoverTrigger } from './WritingHoverTrigger';
@@ -16,24 +10,20 @@ import { useUpdateModalStore } from '../../stores/useUpdateModalStore';
 import { APP_VERSION_LABEL } from '../../config/version';
 
 interface HeroProps {
-  onOpenTemplates?: () => void;
+  onOpenCreateDoc?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
+export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc }) => {
   const navigate = useNavigate();
   const { openUpdate } = useUpdateModalStore();
 
-  // Allow Ctrl+Enter / Cmd+Enter to quickly jump into editor
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        navigate('/editor');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  const handleCreateDoc = () => {
+    if (onOpenCreateDoc) {
+      onOpenCreateDoc();
+    } else {
+      navigate('/editor');
+    }
+  };
 
   return (
     <section className="relative pt-10 pb-16 sm:pt-16 sm:pb-24 overflow-hidden text-center font-sans">
@@ -65,10 +55,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
           </span>
           <span className="text-neutral-300 dark:text-neutral-700 font-light">•</span>
           <span className="text-neutral-600 dark:text-neutral-300 hidden xs:inline">
-            75% Faster Engine &amp; Multi-Device Sync
+            Smooth Performance &amp; Reliable Sync
           </span>
           <span className="text-neutral-600 dark:text-neutral-300 xs:hidden">
-            Supercharged
+            Fast &amp; Private
           </span>
           <ArrowRight className="w-3.5 h-3.5 text-neutral-400 group-hover:translate-x-0.5 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-all" />
         </div>
@@ -87,64 +77,25 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTemplates }) => {
         {/* ── HIGH-CONVERTING ACTION CTAS ── */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 mb-4">
           <button
-            onClick={() => navigate('/editor')}
-            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-7 py-3 rounded-xl font-semibold text-sm shadow-md shadow-brand-600/20 hover:shadow-lg hover:shadow-brand-600/30 transition-all cursor-pointer flex items-center justify-center gap-2 group hover:scale-[1.01] active:scale-[0.99]"
+            onClick={handleCreateDoc}
+            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white px-7 py-3 rounded-xl font-semibold text-sm shadow-md shadow-brand-600/20 hover:shadow-lg hover:shadow-brand-600/30 transition-all cursor-pointer flex items-center justify-center group hover:scale-[1.01] active:scale-[0.99]"
           >
-            <Sparkles className="w-4 h-4 text-brand-200" />
-            <span>Open Editor</span>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-brand-700/70 border border-brand-500/40 text-[10px] font-mono text-brand-100">
-              Ctrl ↵
-            </kbd>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            Create Document
           </button>
 
-          {onOpenTemplates && (
-            <button
-              onClick={onOpenTemplates}
-              className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/90 text-neutral-700 dark:text-neutral-200 border border-neutral-200/90 dark:border-neutral-800 px-5 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700"
-            >
-              <BookOpen className="w-4 h-4 text-neutral-400" />
-              <span>Browse Blueprints</span>
-            </button>
-          )}
+          <button
+            onClick={() => navigate('/documents')}
+            className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/90 text-neutral-700 dark:text-neutral-200 border border-neutral-200/90 dark:border-neutral-800 px-5 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer flex items-center justify-center gap-2 shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700"
+          >
+            <BookOpen className="w-4 h-4 text-neutral-400" />
+            <span>Open Documents</span>
+          </button>
         </div>
 
         {/* Micro-guarantee label */}
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mb-10">
-          100% Free &amp; Open Source • Zero Sign-Up Required • Completely Private
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mb-12">
+          100% Free &amp; Open Source • Zero Sign-Up Required • Completely Private*
         </p>
-
-        {/* ── PREMIUM CAPABILITIES RIBBON ── */}
-        <div className="inline-flex flex-wrap items-center justify-center gap-y-2 gap-x-5 sm:gap-x-7 px-4 py-2.5 rounded-2xl bg-neutral-100/70 dark:bg-neutral-900/70 border border-neutral-200/70 dark:border-neutral-800/80 backdrop-blur-xs text-xs text-neutral-600 dark:text-neutral-400 mb-12 shadow-2xs max-w-4xl mx-auto">
-          <div className="flex items-center gap-1.5 font-medium text-neutral-800 dark:text-neutral-200">
-            <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-            <span>0ms Typing Latency</span>
-          </div>
-          <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>
-
-          <div className="flex items-center gap-1.5 font-medium text-neutral-800 dark:text-neutral-200">
-            <RefreshCw className="w-3.5 h-3.5 text-brand-500" />
-            <span>Real-Time Multi-Device Sync</span>
-          </div>
-          <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>
-
-          <div className="flex items-center gap-1.5">
-            <Binary className="w-3.5 h-3.5 text-purple-500" />
-            <span>Live KaTeX &amp; Mermaid</span>
-          </div>
-          <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>
-
-          <div className="flex items-center gap-1.5">
-            <FileDown className="w-3.5 h-3.5 text-blue-500" />
-            <span>PDF, Word &amp; Markdown</span>
-          </div>
-          <span className="text-neutral-300 dark:text-neutral-700 hidden sm:inline">•</span>
-
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>100% Offline &amp; Private</span>
-          </div>
-        </div>
 
         {/* ── ELEVATED STUDIO SHOWCASE WITH AMBIENT REFLECTION ── */}
         <div className="relative mx-auto max-w-5xl">

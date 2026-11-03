@@ -116,6 +116,13 @@ export const EditorPage: React.FC = () => {
     }
   }, [viewMode]);
 
+  // Cleanly close Mimo drawer when navigating away from editor
+  useEffect(() => {
+    return () => {
+      useMimoStore.getState().setIsOpen(false);
+    };
+  }, []);
+
   // Insert formula snippet from KaTeX Studio at cursor
   const handleInsertFormulaAtCursor = useCallback(
     (latexSnippet: string) => {

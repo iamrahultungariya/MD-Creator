@@ -49,68 +49,67 @@ export const UpdateAvailableModal: React.FC = () => {
   const sections: UpdateSection[] = [
     {
       id: 'performance',
-      title: 'Groundbreaking Performance',
-      tag: 'Speed & Memory',
+      title: 'Faster & Smoother Experience',
+      tag: 'Speed & Reliability',
       items: [
-        '~75% faster initial document library loading speed',
-        '~85% faster search and file filtering response',
-        '~70% lighter page DOM footprint for fluid, stutter-free scrolling',
-        '~65% reduction in browser memory usage on large document collections',
-        'Silky-smooth 60 FPS transitions across all views and interactions',
+        'Documents and folders load noticeably faster',
+        'Instant search response across all your notes and titles',
+        'Smooth, stutter-free scrolling even in lengthy articles',
+        'Significantly lower memory and battery usage on your device',
+        'Quick, fluid transitions between all views',
       ],
     },
     {
       id: 'workspace',
       title: 'Refined Workspace',
-      tag: 'UI & Ergonomics',
+      tag: 'Clean Design',
       items: [
-        'Cleaner document vault layout with significantly less clutter and more breathing space',
-        'Streamlined action toolbar consolidating secondary tools into a unified menu',
-        'Upgraded pagination with custom page sizes (6, 12, 24)',
-        'Improved tag pills, document counters, and visual hierarchy across all screen sizes',
+        'A spacious, clutter-free document vault with more room to breathe',
+        'Simplified toolbar keeping the tools you need within easy reach',
+        'Flexible document lists with customizable page sizes (6, 12, 24)',
+        'Clearer tags and notebook organization across all screen sizes',
       ],
     },
     {
       id: 'search',
-      title: 'Instant Search & Filtering',
-      tag: 'Fast Retrieval',
+      title: 'Instant Search & Tag Filtering',
+      tag: 'Quick Retrieval',
       items: [
-        'Instantaneous document search matching with zero input latency',
-        'Indexed tag switching delivers immediate notebook filtering across large vaults',
-        'Fast page navigation ensures effortless browsing without lag',
+        'Find any word or heading in your notes without typing delay',
+        'Clicking tags filters matching notebooks instantly',
+        'Effortless page navigation so you spend less time searching',
       ],
     },
     {
       id: 'storage',
-      title: 'Cache & Local Storage Management',
-      tag: 'User Control',
+      title: 'Storage & Memory Management',
+      tag: 'Full Control',
       items: [
-        'Direct control over application cache and storage in the Preferences dialog',
-        'One-click cache cleanup to free up device space immediately',
-        'Transparent breakdown of storage quotas, attachments, and document sizes',
+        'Simple storage overview inside Preferences to see what uses space',
+        'One-click cache cleanup to easily free up storage on your device',
+        'Transparent breakdown of local documents and image attachments',
       ],
     },
     {
       id: 'sync',
-      title: 'Seamless Multi-Device Sync',
+      title: 'Reliable Multi-Device Sync',
       tag: 'Cloud Sync',
       items: [
-        'Multi-device synchronization is significantly more robust and accurate',
-        'Intelligent conflict resolution guarantees your latest edits are always preserved',
-        'Silent background sync transfers changes without interrupting your typing',
+        'Your notes stay in sync across your laptop, desktop, and phone',
+        'Automatic protection ensures recent edits are safely preserved',
+        'Silent background updates that never interrupt your writing',
       ],
     },
     {
       id: 'mimo',
-      title: 'Mimo 2.0.0 Co-Pilot',
-      tag: 'AI Writing Partner',
+      title: 'Mimo Writing Companion',
+      tag: 'AI Partner',
       items: [
-        'Ambient floating mascot widget always within reach at the bottom-right corner',
-        '1-click action cards to insert footers, tables, and KaTeX math formulas with instant ↺ Undo',
-        '10-turn conversation memory and focused text selection targeting',
-        'Publication-grade KaTeX mathematical formulas and truth tables rendered live in chat',
-        'Lightning-fast ~1.2s first token response powered by Gemini 3.8 Flash architecture',
-        'Quick toggle anytime with keyboard shortcut Ctrl+J',
+        'Friendly floating mascot helper located quietly at the corner of your screen',
+        'One-click cards to summarize notes, fix grammar, or format tables with instant undo',
+        'Understands the context of your current open document as you write',
+        'Renders clear math formulas and clean formatting right in the chat',
+        'Quickly open or hide anytime with the keyboard shortcut Ctrl+J',
       ],
     },
     {
@@ -284,7 +283,7 @@ export const UpdateAvailableModal: React.FC = () => {
               onClick={closeUpdate}
               className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] shadow-md shadow-brand-500/25 transition-all cursor-pointer"
             >
-              Explore v3.0.0
+              Explore {APP_VERSION_LABEL}
             </button>
           </div>
         </div>

@@ -1,14 +1,9 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { 
   Star, 
   MessageSquarePlus, 
   CheckCircle2, 
-  Quote, 
-  ShieldCheck, 
-  Zap, 
-  Heart,
-  Pencil,
-  ArrowRight
+  Pencil
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 const ReviewSubmissionModal = React.lazy(() =>
@@ -27,7 +22,7 @@ export {
   saveUserSubmittedReview,
 } from '../../services/reviewsStorage';
 
-// Everyday Community Personas (Students, Teachers, Journalers, Developers, Researchers)
+// Everyday Community Personas (Students, Teachers, Journalers, Junior Devs, Researchers)
 const FALLBACK_TESTIMONIALS: UserReview[] = [
   {
     id: 'test-1',
@@ -46,7 +41,7 @@ const FALLBACK_TESTIMONIALS: UserReview[] = [
     name: 'Elena Rostova',
     role: 'Philosophy Major & Essayist',
     rating: 5,
-    content: 'The Focus Canvas feels like a deep breath of fresh air. No notifications, no bloat, just my thoughts and clean typography with continuous autosave.',
+    content: 'The Focus Canvas feels like a deep breath of fresh air. No notifications, no bloat, just my thoughts and clean typography with local autosave.',
     date: '2026-09-18',
     verified: true,
     status: 'approved',
@@ -112,62 +107,19 @@ const FALLBACK_TESTIMONIALS: UserReview[] = [
     name: 'Nora Sterling',
     role: 'Technical Documentation Lead',
     rating: 5,
-    content: 'The v3.0.0 multi-device sync is instantaneous. I write draft notes on my desktop, and they appear on my laptop within seconds without any conflict.',
+    content: 'The v2.0.0 multi-device sync is instantaneous. I write draft notes on my desktop, and they appear on my laptop within seconds without any conflict.',
     date: '2026-10-12',
     verified: true,
     status: 'approved',
   },
 ];
 
-type CategoryFilter = 'all' | 'students' | 'developers' | 'writers' | 'educators';
-
-const CATEGORIES: { id: CategoryFilter; label: string }[] = [
-  { id: 'all', label: 'All Reviews' },
-  { id: 'students', label: 'Students & Academics' },
-  { id: 'developers', label: 'Developers & Builders' },
-  { id: 'writers', label: 'Writers & Journalers' },
-  { id: 'educators', label: 'Teachers & Educators' },
-];
-
-function getCategoryFromRole(role: string): CategoryFilter {
-  const lower = role.toLowerCase();
-  if (lower.includes('student') || lower.includes('major') || lower.includes('academic') || lower.includes('researcher') || lower.includes('phd')) {
-    return 'students';
-  }
-  if (lower.includes('dev') || lower.includes('creator') || lower.includes('engineer') || lower.includes('coder') || lower.includes('app')) {
-    return 'developers';
-  }
-  if (lower.includes('teacher') || lower.includes('educat') || lower.includes('science') || lower.includes('school') || lower.includes('prof')) {
-    return 'educators';
-  }
-  return 'writers';
-}
-
-const AVATAR_GRADIENTS = [
-  'from-blue-500 to-indigo-600',
-  'from-emerald-500 to-teal-600',
-  'from-purple-500 to-pink-600',
-  'from-amber-500 to-orange-600',
-  'from-rose-500 to-red-600',
-  'from-cyan-500 to-blue-600',
-];
-
-function getAvatarGradient(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const idx = Math.abs(hash) % AVATAR_GRADIENTS.length;
-  return AVATAR_GRADIENTS[idx];
-}
-
 export const ReviewsSection: React.FC = () => {
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [myReview, setMyReview] = useState<UserReview | null>(() => getUserSubmittedReview());
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('all');
 
-  // Form State for ReviewSubmissionModal
+  // Form State
   const [authorName, setAuthorName] = useState(myReview?.name || '');
   const [authorRole, setAuthorRole] = useState(myReview?.role || '');
   const [rating, setRating] = useState(myReview?.rating || 5);
@@ -188,7 +140,7 @@ export const ReviewsSection: React.FC = () => {
           .select('*')
           .eq('status', 'approved')
           .order('date', { ascending: false })
-          .limit(16);
+          .limit(10);
 
         if (!error && data && data.length > 0) {
           setReviews(data as UserReview[]);
@@ -238,211 +190,119 @@ export const ReviewsSection: React.FC = () => {
     }
   };
 
-  const allReviewsList = reviews.length > 0 ? reviews : FALLBACK_TESTIMONIALS;
+  const baseReviews = reviews.length > 0 ? reviews : FALLBACK_TESTIMONIALS;
+  // If user submitted a review, place it at the front
+  const displayedReviews = myReview 
+    ? [myReview, ...baseReviews.filter((r) => r.id !== myReview.id)]
+    : baseReviews;
 
-  // Filter reviews by active category
-  const filteredReviews = useMemo(() => {
-    if (activeCategory === 'all') return allReviewsList;
-    return allReviewsList.filter((item) => getCategoryFromRole(item.role) === activeCategory);
-  }, [allReviewsList, activeCategory]);
+  // Double array for continuous seamless infinite loop
+  const marqueeItems = [...displayedReviews, ...displayedReviews];
 
   return (
-    <section id="reviews" className="py-20 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-950 transition-colors font-sans overflow-hidden">
+    <section id="reviews" className="py-20 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-950 transition-colors overflow-hidden font-sans">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
-        {/* ── SECTION HEADER ── */}
-        <div className="text-center max-w-2xl mx-auto space-y-3.5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shadow-2xs">
-            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span>Community Experiences • 5.0 Star Rating</span>
+        {/* Header — Minimal & Modern */}
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700/80 shadow-2xs">
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+            <span>Community Feedback • 5.0 Rating</span>
           </div>
-
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white">
+          <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em]">
             Loved by students, teachers, and everyday writers.
           </h2>
-
           <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            See how thinkers and builders worldwide use MD Writer for pure focus, lecture notes, and seamless documentation.
+            See why people make MD Writer their daily space for distraction-free notes.
           </p>
         </div>
 
-        {/* ── SOCIAL PROOF & TRUST METRICS STRIP ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-6 max-w-3xl mx-auto">
-          <div className="p-4 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-center space-y-1 shadow-2xs">
-            <div className="flex items-center justify-center gap-1 text-amber-500">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
-            <div className="text-sm font-bold text-neutral-950 dark:text-white">5.0 / 5.0 Rating</div>
-            <div className="text-[11px] text-neutral-500">Verified community feedback</div>
-          </div>
+        {/* ── SMOOTH CONTINUOUS MARQUEE CAROUSEL ── */}
+        <div className="relative w-full overflow-hidden">
+          {/* Edge Blur Gradients */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-28 bg-gradient-to-r from-white dark:from-neutral-950 to-transparent z-10" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-28 bg-gradient-to-l from-white dark:from-neutral-950 to-transparent z-10" />
 
-          <div className="p-4 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-center space-y-1 shadow-2xs">
-            <div className="flex items-center justify-center text-emerald-500">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div className="text-sm font-bold text-neutral-950 dark:text-white">100% Offline &amp; Private</div>
-            <div className="text-[11px] text-neutral-500">Zero cloud trackers or ad telemetry</div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-neutral-50/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 text-center space-y-1 shadow-2xs">
-            <div className="flex items-center justify-center text-brand-500">
-              <Zap className="w-4 h-4" />
-            </div>
-            <div className="text-sm font-bold text-neutral-950 dark:text-white">Sub-10ms Latency</div>
-            <div className="text-[11px] text-neutral-500">Instant IndexedDB local persistence</div>
-          </div>
-        </div>
-
-        {/* ── CATEGORY FILTER PILLS ── */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-          {CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
-                    : 'bg-neutral-100 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-900 dark:hover:text-white border border-neutral-200/60 dark:border-neutral-700/60'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── USER'S OWN SUBMITTED REVIEW SPOTLIGHT ── */}
-        {myReview && (
-          <div className="p-5 sm:p-6 rounded-2xl border-2 border-brand-500/40 bg-brand-50/30 dark:bg-brand-950/20 max-w-4xl mx-auto shadow-xs space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-brand-600 text-white shadow-2xs">
-                  Your Review
-                </span>
-                <div className="flex items-center gap-0.5 text-amber-500">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3.5 h-3.5 ${
-                        i < myReview.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-300 dark:text-neutral-700'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-              >
-                <Pencil className="w-3 h-3" />
-                <span>Edit</span>
-              </button>
-            </div>
-
-            <p className="text-sm text-neutral-800 dark:text-neutral-200 italic leading-relaxed">
-              &ldquo;{myReview.content}&rdquo;
-            </p>
-
-            <div className="flex items-center gap-2.5 pt-1 text-xs text-neutral-500">
-              <span className="font-semibold text-neutral-900 dark:text-white">{myReview.name}</span>
-              <span>•</span>
-              <span>{myReview.role}</span>
-              <span>•</span>
-              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                Verified
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* ── MODERN COMMUNITY REVIEWS BENTO GRID ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {filteredReviews.map((item, idx) => {
-            const gradientClass = getAvatarGradient(item.name);
-            return (
+          {/* Marquee Track with Hover Pause */}
+          <div className="animate-marquee flex gap-5 py-3">
+            {marqueeItems.map((item, idx) => (
               <div
                 key={`${item.id}-${idx}`}
-                className="group relative p-6 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/50 hover:bg-white dark:hover:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-md transition-all duration-200 flex flex-col justify-between space-y-4"
+                className="w-[300px] sm:w-[350px] shrink-0 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/60 hover:bg-white dark:hover:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 flex flex-col justify-between space-y-4 shadow-2xs transition-all text-left select-none font-sans"
               >
-                {/* Top Row: Stars + Verified Badge */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3.5 h-3.5 ${
-                          i < item.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-300 dark:text-neutral-700'
-                        }`}
-                      />
-                    ))}
+                {/* Rating Stars & Relatable Quote */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-0.5 text-amber-500">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${
+                            i < item.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-300 dark:text-neutral-700'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
+                      <CheckCircle2 className="w-2.5 h-2.5" />
+                      Verified
+                    </span>
                   </div>
 
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>Verified</span>
-                  </span>
-                </div>
-
-                {/* Review Quote Body */}
-                <div className="relative space-y-2">
-                  <Quote className="w-5 h-5 text-neutral-300 dark:text-neutral-700 -scale-x-100 opacity-60 mb-1" />
-                  <p className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
+                  <p className="text-xs text-neutral-700 dark:text-neutral-300 leading-relaxed italic">
                     &ldquo;{item.content}&rdquo;
                   </p>
                 </div>
 
-                {/* Bottom Row: User Info with Gradient Avatar */}
-                <div className="flex items-center gap-3 pt-4 border-t border-neutral-200/60 dark:border-neutral-800">
-                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center font-bold text-xs text-white shadow-xs shrink-0`}>
+                {/* Author Info */}
+                <div className="flex items-center gap-3 pt-3 border-t border-neutral-200/60 dark:border-neutral-800">
+                  <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 flex items-center justify-center font-bold text-xs shrink-0">
                     {item.name.charAt(0)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-bold text-xs text-neutral-950 dark:text-white truncate">
+                    <h4 className="font-semibold text-xs text-neutral-950 dark:text-white truncate">
                       {item.name}
                     </h4>
                     <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
                       {item.role}
                     </p>
                   </div>
+
+                  {myReview && item.id === myReview.id && (
+                    <span className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-2 py-0.5 rounded-md">
+                      You
+                    </span>
+                  )}
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
-        {/* ── COMMUNITY ACTION CTA BANNER ── */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-neutral-100/70 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-6 max-w-4xl mx-auto shadow-2xs">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-rose-500 fill-rose-500/20" />
-              <h3 className="text-base font-bold text-neutral-950 dark:text-white">
-                Share your writing experience
-              </h3>
-            </div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 max-w-md">
-              Help prospective students, writers, and engineers discover a calm, clutter-free markdown environment.
-            </p>
-          </div>
-
+        {/* Action Button: Minimalist Review CTA */}
+        <div className="flex justify-center pt-2">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 cursor-pointer shrink-0 group hover:scale-[1.01]"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 transition-colors cursor-pointer flex items-center gap-2 font-sans shadow-2xs"
           >
-            <MessageSquarePlus className="w-4 h-4" />
-            <span>{myReview ? 'Edit Your Review' : 'Write a Review'}</span>
-            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            {myReview ? (
+              <>
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Your Review</span>
+              </>
+            ) : (
+              <>
+                <MessageSquarePlus className="w-3.5 h-3.5" />
+                <span>Write a Review</span>
+              </>
+            )}
           </button>
         </div>
 
       </div>
 
-      {/* ── REVIEW SUBMISSION MODAL (PORTALED TO BODY) ── */}
+      {/* Review Submission Modal (Portaled to body) */}
       {isModalOpen && (
         <Suspense fallback={null}>
           <ReviewSubmissionModal

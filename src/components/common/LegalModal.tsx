@@ -5,8 +5,10 @@ import {
   ShieldCheck, 
   FileText, 
   Printer, 
-  CheckCircle2 
+  CheckCircle2,
+  AlertTriangle 
 } from 'lucide-react';
+import { APP_VERSION_LABEL } from '../../config/version';
 
 interface LegalModalProps {
   isOpen: boolean;
@@ -76,7 +78,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                   {activeTab === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
                 </h2>
                 <span className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-neutral-200/70 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-semibold hidden sm:inline">
-                  v1.0.0
+                  {APP_VERSION_LABEL}
                 </span>
               </div>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -132,7 +134,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
           <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-            <span>Local Storage • No Data Selling • Zero Tracking</span>
+            <span>Local Storage • No Data Selling • Clear AI Transparency</span>
           </div>
         </div>
 
@@ -144,10 +146,10 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">1.0</span>
-                  <span>Local-First Data Storage</span>
+                  <span>Local-First Data Storage &amp; Local Disk Access</span>
                 </h3>
                 <p>
-                  MD Writer runs locally in your web browser. All your markdown files, drafts, settings, and templates are saved directly onto your device using your browser's IndexedDB storage. Your text never leaves your device unless you choose to sign in and turn on cloud sync.
+                  MD Writer runs locally in your browser. All markdown documents, drafts, templates, and UI preferences are stored directly on your personal device using your browser&apos;s IndexedDB database via Dexie.js. Furthermore, when using the Local Disk Folder feature (<kbd className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">Ctrl+O</kbd>), files are accessed directly on your local filesystem through standard browser File System Access APIs. No local files are ever read or transmitted without your explicit user selection.
                 </p>
               </div>
 
@@ -155,10 +157,13 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">2.0</span>
-                  <span>Cloud Synchronization Security & Row-Level Security (RLS)</span>
+                  <span>Cloud Synchronization, Realtime Parity &amp; Deletion Lifecycle</span>
                 </h3>
                 <p>
-                  When you authenticate via Supabase Auth, cloud synchronization is enabled to allow seamless multi-device parity. Synced records are stored in enterprise-grade PostgreSQL clusters protected by cryptographic Row-Level Security (RLS) policies. Only your authenticated session ID (<code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">auth.uid()</code>) possesses the authorization keys required to read, insert, update, or purge your records.
+                  When you voluntarily authenticate with Supabase, multi-device cloud synchronization is activated. Synced documents are housed in enterprise PostgreSQL databases protected by Row-Level Security (RLS) policies, ensuring only your authenticated session ID (<code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">auth.uid()</code>) can access or edit your records.
+                </p>
+                <p>
+                  To support reliable cross-device deletions and offline recovery, deletions operate via soft-deletion flags (<code className="font-mono text-[11px]">is_deleted: true</code>, <code className="font-mono text-[11px]">deleted_at</code>) propagated across connected devices via Supabase Realtime publications. Soft-deleted documents in trash can be restored by you at any time, permanently emptied on demand, or automatically pruned after 30 days.
                 </p>
               </div>
 
@@ -166,48 +171,96 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">3.0</span>
-                  <span>Data Sovereignty & Zero Model Training</span>
+                  <span>Platform Data Sovereignty (MD Writer Core)</span>
                 </h3>
                 <p>
-                  We recognize that writers, researchers, engineers, and creators trust MD Writer with intellectual property, proprietary code, novel drafts, and personal notes. We explicitly commit that <strong>we do not use your documents to train machine-learning models</strong>, and no user text, markdown files, exported artifacts, or revisions are ever ingested, scraped, shared, or monetized by third parties.
+                  MD Writer the application and its core infrastructure <strong>never train machine-learning models on your personal notes, drafts, or code</strong>. We do not sell, rent, broker, or monetize your documents, and no third-party marketing trackers or tracking pixels are included in the application.
                 </p>
               </div>
 
-              {/* Section 4 */}
-              <div className="space-y-2">
-                <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
-                  <span className="font-mono text-xs text-neutral-400">4.0</span>
-                  <span>Regulatory Compliance: GDPR, CCPA & Data Portability</span>
-                </h3>
-                <p>
-                  In accordance with the EU General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA/CPRA):
+              {/* Section 4: Crucial AI & Google Gemini Model Training Disclosure */}
+              <div className="space-y-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-neutral-800 dark:text-neutral-200">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>4.0 AI Assistant (Mimo) &amp; Google Gemini Model Training Notice</span>
+                </div>
+                <p className="text-xs leading-relaxed">
+                  When you voluntarily interact with the built-in AI writing assistant (<strong>Mimo</strong>), your text prompts and selected document excerpts are transmitted over HTTPS to the <strong>Google Gemini API</strong> (<code className="font-mono text-[11px]">generativelanguage.googleapis.com</code>) to generate suggestions, summaries, formulas, and diffs.
                 </p>
-                <ul className="list-disc pl-5 space-y-1 text-xs">
-                  <li><strong>Right to Portability (GDPR Art. 20):</strong> Export your complete document library at any time via Markdown (.md), Word (.docx), or full database JSON/ZIP archives.</li>
-                  <li><strong>Right to Erasure (GDPR Art. 17):</strong> Purge your local IndexedDB cache in one click or permanently delete your cloud profile and associated database rows.</li>
-                  <li><strong>Zero Commercial Data Brokering:</strong> We do not sell, license, trade, or monetize personal information.</li>
-                </ul>
+                <div className="space-y-2 text-xs">
+                  <div className="font-semibold text-neutral-950 dark:text-white">
+                    Important Model Training Notice:
+                  </div>
+                  <p className="leading-relaxed">
+                    Under Google&apos;s standard Generative AI Terms of Service for developer and free API tiers, <strong>content, prompts, and document excerpts submitted to Google Gemini may be logged, reviewed by human reviewers, and utilized by Google to train, refine, and improve Google machine learning models and products.</strong>
+                  </p>
+                  <div className="font-semibold text-neutral-950 dark:text-white pt-1">
+                    How you maintain complete control and privacy:
+                  </div>
+                  <ul className="list-disc pl-5 space-y-1 text-xs">
+                    <li><strong>Completely Optional:</strong> Mimo is 100% opt-in. If you do not open Mimo or send a prompt, zero document text is ever transmitted to AI endpoints.</li>
+                    <li><strong>Document Privacy Shield:</strong> You can toggle <span className="font-medium text-neutral-950 dark:text-white">Exclude from AI Scan</span> in Document Info, or enclose sensitive sections within <code className="font-mono text-[11px] bg-neutral-200 dark:bg-neutral-800 px-1 py-0.5 rounded">/private</code> blocks. Shielded sections are filtered in client memory and guaranteed never to leave your device.</li>
+                    <li><strong>Bring Your Own Key (BYOK):</strong> If you connect your personal Gemini API key associated with a paid Google Cloud account with zero-data-logging policies, requests communicate directly from your browser to Google under your enterprise GCP terms.</li>
+                  </ul>
+                </div>
               </div>
 
               {/* Section 5 */}
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">5.0</span>
-                  <span>Third-Party Subprocessors</span>
+                  <span>Community Reviews &amp; User Feedback Collection</span>
                 </h3>
                 <p>
-                  Our cloud infrastructure utilizes minimal, SOC-2 compliant subprocessors strictly for core application functionality: Supabase (authentication and database hosting) and modern CDN edge providers (static asset delivery). No third-party marketing or tracking pixels are incorporated.
+                  MD Writer provides voluntary in-app feedback mechanisms (including the daily feedback prompt and reviews form). When you submit feedback or community reviews:
                 </p>
+                <ul className="list-disc pl-5 space-y-1 text-xs">
+                  <li><strong>Bug &amp; Feature Feedback:</strong> Stored securely in the Supabase <code className="font-mono text-[11px]">feedbacks</code> table (including rating, category, message, and diagnostic user/client info) strictly to diagnose software issues and guide product roadmap priorities.</li>
+                  <li><strong>Community Testimonials:</strong> Reviews submitted for public display are stored in <code className="font-mono text-[11px]">community_reviews</code>. Approved testimonials (display name, role, star rating, and review text) are displayed on the public landing page.</li>
+                  <li>You may request modification or erasure of your submitted feedback or reviews at any time by contacting support.</li>
+                </ul>
               </div>
 
               {/* Section 6 */}
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">6.0</span>
+                  <span>Regulatory Compliance: GDPR, CCPA &amp; Data Portability</span>
+                </h3>
+                <p>
+                  In accordance with the EU General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA/CPRA):
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-xs">
+                  <li><strong>Right to Portability (GDPR Art. 20):</strong> Export your complete document library at any time via Markdown (.md), Word (.docx), or full database JSON/ZIP archives.</li>
+                  <li><strong>Right to Erasure (GDPR Art. 17):</strong> Purge your local IndexedDB cache in 1 click or permanently delete your cloud profile and associated database rows.</li>
+                  <li><strong>Zero Commercial Data Brokering:</strong> We do not sell, license, trade, or monetize personal information.</li>
+                </ul>
+              </div>
+
+              {/* Section 7 */}
+              <div className="space-y-2">
+                <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
+                  <span className="font-mono text-xs text-neutral-400">7.0</span>
+                  <span>Third-Party Subprocessors</span>
+                </h3>
+                <p>
+                  Our application infrastructure utilizes minimal, industry-standard subprocessors strictly to deliver core features:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-xs">
+                  <li><strong>Supabase Inc.</strong> — Database hosting, authentication, and realtime websocket sync.</li>
+                  <li><strong>Google LLC (Gemini API)</strong> — Optional generative text and diff suggestions when Mimo is invoked.</li>
+                  <li><strong>Cloudflare / Vercel Edge CDN</strong> — Static web asset delivery and DDoS mitigation.</li>
+                </ul>
+              </div>
+
+              {/* Section 8 */}
+              <div className="space-y-2">
+                <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
+                  <span className="font-mono text-xs text-neutral-400">8.0</span>
                   <span>Beta Tester Attribution &amp; Operational Analytics</span>
                 </h3>
                 <p>
-                  To acknowledge and reward early adopters during our public preview, authenticated accounts are designated with a system <code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">beta_tester</code> flag. Historical promotion audit records (<code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">user_id</code>, registration epoch, and promotional extension dates) are retained in secure cloud storage solely for account entitlement management and aggregate product conversion metrics. These operational records are never shared with third parties or used for profiling.
+                  To acknowledge and reward early adopters during our public preview, authenticated accounts are designated with a system <code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">beta_tester</code> flag. Historical promotion audit records (<code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">user_id</code>, registration epoch, and promotional extension dates) are retained in secure cloud storage solely for account entitlement management. These records are never shared with third parties.
                 </p>
               </div>
             </>
@@ -228,14 +281,14 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">2.0</span>
-                  <span>Acceptable Use &amp; Fair Sync Policy</span>
+                  <span>Acceptable Use &amp; Publishing Guidelines</span>
                 </h3>
                 <p>
-                  MD Writer provides cloud sync, presentation rendering, and PDF tooling for personal, academic, and commercial technical writing. Users agree not to:
+                  MD Writer provides cloud sync, presentation rendering, and document publishing for personal, academic, and commercial writing. Users agree not to:
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-xs">
-                  <li>Deploy automated scrapers, denial-of-service payloads, or abusive batch scripts targeting the synchronization endpoints.</li>
-                  <li>Use the public publishing engine (<code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">/p/:slug</code>) to distribute malicious code, malware, or unlawful harassment materials.</li>
+                  <li>Deploy automated scrapers, denial-of-service payloads, or abusive batch scripts targeting synchronization endpoints.</li>
+                  <li>Use the public publishing engine (<code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">/p/:slug</code>) to distribute malicious software, phishing payloads, or unlawful harassment materials.</li>
                   <li>Circumvent account security or impersonate administrative credentials.</li>
                 </ul>
               </div>
@@ -247,7 +300,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                   <span>Service Availability, Backups &amp; Disclaimers</span>
                 </h3>
                 <p>
-                  While MD Writer implements multi-tier offline resilience, background autosave, and atomic IndexedDB transactions, software and network systems are subject to hardware and browser storage evictions. The software is provided &quot;as is&quot; without warranties of any kind. Users are strongly encouraged to maintain recurring local exports (<code className="font-mono text-[11px]">.md</code> or <code className="font-mono text-[11px]">.zip</code>) for mission-critical documentation.
+                  While MD Writer implements multi-tier offline resilience, background autosave, and atomic IndexedDB transactions, client storage is subject to hardware failures and browser storage evictions. The software is provided &quot;as is&quot; without warranties of any kind. Users are strongly encouraged to maintain recurring local exports (<code className="font-mono text-[11px]">.md</code> or <code className="font-mono text-[11px]">.zip</code>) for mission-critical documentation.
                 </p>
               </div>
 
@@ -255,15 +308,31 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               <div className="space-y-2">
                 <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                   <span className="font-mono text-xs text-neutral-400">4.0</span>
-                  <span>Beta Phase Access, Tester Rewards &amp; Pricing Transition</span>
+                  <span>AI Writing Companion (Mimo) &amp; Third-Party Processing Terms</span>
                 </h3>
                 <p>
-                  MD Writer operates under a transparent, 3-tier lifecycle designed to honor early contributors while ensuring sustainable product development:
+                  By utilizing the optional Mimo AI assistant, you acknowledge that prompt queries and document context are transmitted to Google Gemini for real-time processing and that Google may utilize submitted inputs for model training under its applicable Terms of Service. You agree that:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-xs">
+                  <li>You will not submit sensitive prompts or confidential information that violates Google&apos;s Generative AI Prohibited Use Policies unless appropriately shielded.</li>
+                  <li>You retain sole intellectual property ownership over all authored works and accepted AI modifications.</li>
+                  <li>Mimo is a pair-writing assistant that suggests diffs and ideas; you remain solely responsible for reviewing and verifying the accuracy of all text, code, KaTeX math formulas, and diffs prior to accepting them into your files.</li>
+                </ul>
+              </div>
+
+              {/* Section 5 */}
+              <div className="space-y-2">
+                <h3 className="text-sm sm:text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
+                  <span className="font-mono text-xs text-neutral-400">5.0</span>
+                  <span>Version 2.0.0 Public Preview, Early Tester Rewards &amp; Subscriptions</span>
+                </h3>
+                <p>
+                  MD Writer operates under a transparent lifecycle designed to honor early contributors while ensuring sustainable product development:
                 </p>
                 <ul className="list-disc pl-5 space-y-1.5 text-xs">
-                  <li><strong>Tier 1 — Beta Phase Free Access:</strong> During the active beta phase (prior to official v1.0 release), all registered and guest users receive complete, unrestricted access to all Pro Studio features — including multi-device cloud sync, Word (.docx) export, presentation slide decks, and publication-grade PDF tooling — at zero cost.</li>
-                  <li><strong>Tier 2 — Automatic Early Beta-Tester Reward:</strong> Exactly one calendar day prior to the general v1.0 commercial launch, all existing registered users are granted verified <code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">beta_tester</code> status. Upon launch, an automated promotional credit is directly applied to these accounts, extending full Pro access without charge through <strong>December 31, 2026</strong> as a thank-you reward for early feedback. No manual coupon code entry is required.</li>
-                  <li><strong>Tier 3 — Post-Beta Standard Subscriptions:</strong> Accounts created after the pre-launch cutoff will follow standard transparent subscription tiers (Free, Pro, and Team). New users signing up during a launch billing cycle receive a complimentary soft-landing trial through the remainder of that calendar month before standard recurring billing applies.</li>
+                  <li><strong>v2.0.0 Public Preview Free Access:</strong> During the active public preview, all registered and guest users receive complete, unrestricted access to all Pro Studio features — including real-time multi-device cloud sync, Word (.docx) export, presentation slide decks, and publication-grade PDF tooling — at zero cost.</li>
+                  <li><strong>Automatic Early Beta-Tester Reward:</strong> Registered users participating in the preview are granted verified <code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">beta_tester</code> status. Full Pro access is extended without charge through <strong>December 31, 2026</strong> as a thank-you reward for early feedback. No manual coupon code entry is required.</li>
+                  <li><strong>Post-Preview Standard Accounts:</strong> Accounts created after the preview period will have access to standard Free, Pro, and Team tiers. Local-first offline writing and export will always remain 100% free.</li>
                 </ul>
               </div>
             </>
@@ -273,9 +342,9 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         {/* Footer */}
         <div className="p-4 px-6 sm:px-8 border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-xs">
           <div className="flex items-center gap-2 text-neutral-400 text-[11px]">
-            <span>Effective: October 2026</span>
+            <span>Effective: November 2026</span>
             <span>•</span>
-            <span>Audit Ref: v1.0.0-RELEASE</span>
+            <span>Audit Ref: {APP_VERSION_LABEL}-RELEASE</span>
             <span>•</span>
             <span className="hidden sm:inline">Certified Local-First Standard</span>
           </div>

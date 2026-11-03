@@ -63,7 +63,7 @@ export const Footer: React.FC<FooterProps> = () => {
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('open-update-modal'))}
                 className="px-2 py-0.5 rounded-full font-mono text-[10px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20 hover:bg-brand-500/20 transition-colors cursor-pointer"
-                title="View what's new in v3.0.0"
+                title={`View what's new in ${APP_VERSION_LABEL}`}
               >
                 {APP_VERSION_LABEL}
               </button>

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
 import { BentoFeatures } from '../components/home/BentoFeatures';
 import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
 import { RoadmapSection } from '../components/home/RoadmapSection';
 import { FEATURE_FLAGS } from '../config/features';
-import { useMimoStore } from '../features/mimo/stores/useMimoStore';
 
 // Code-split heavy below-the-fold sections and interactive modals on-demand
 const ReviewsSection = React.lazy(() =>
@@ -19,13 +18,14 @@ const Footer = React.lazy(() =>
 const TemplatesModal = React.lazy(() =>
   import('../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
 );
-const MimoFloatingMascot = React.lazy(() =>
-  import('../features/mimo/components/MimoFloatingMascot').then((m) => ({ default: m.MimoFloatingMascot }))
+const CreateDocumentModal = React.lazy(() =>
+  import('../components/document/CreateDocumentModal').then((m) => ({ default: m.CreateDocumentModal }))
 );
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Global listener for Templates modal trigger and URL query param
   useEffect(() => {
@@ -59,7 +59,9 @@ export const HomePage: React.FC = () => {
       {/* Main Content Sections */}
       <main className="flex-1">
         {/* Notion-Style Centered Hero with Interactive Studio Showcase */}
-        <Hero onOpenTemplates={() => setIsTemplatesOpen(true)} />
+        <Hero 
+          onOpenCreateDoc={() => setIsCreateModalOpen(true)}
+        />
 
         {/* 3-Block Notion-Style Features Story */}
         <BentoFeatures 
@@ -90,19 +92,18 @@ export const HomePage: React.FC = () => {
 
             <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
               <button
-                onClick={() => navigate('/editor')}
-                className="w-full sm:w-auto px-7 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01] font-sans"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="w-full sm:w-auto px-7 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer font-sans"
               >
-                <span>Open Editor</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                Create Document
               </button>
 
               <button
-                onClick={() => setIsTemplatesOpen(true)}
+                onClick={() => navigate('/documents')}
                 className="w-full sm:w-auto px-5 py-3 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs font-sans"
               >
                 <BookOpen className="w-4 h-4 text-neutral-400" />
-                <span>Browse Blueprints</span>
+                <span>Open Documents</span>
               </button>
             </div>
 
@@ -128,14 +129,12 @@ export const HomePage: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Flagship Ambient Mimo Companion Floating Widget */}
-      {FEATURE_FLAGS.mimo && (
+      {/* Interactive Create Document Modal */}
+      {isCreateModalOpen && (
         <Suspense fallback={null}>
-          <MimoFloatingMascot
-            onClick={() => {
-              useMimoStore.getState().setIsOpen(true);
-              navigate('/editor');
-            }}
+          <CreateDocumentModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
           />
         </Suspense>
       )}

@@ -197,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
               window.dispatchEvent(new CustomEvent('open-update-modal'));
             }}
             className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 hover:bg-brand-500/20 hover:border-brand-500/40 transition-colors cursor-pointer"
-            title="View what's new in v3.0.0"
+            title={`View what's new in ${APP_VERSION_LABEL}`}
           >
             {APP_VERSION_LABEL}
           </button>

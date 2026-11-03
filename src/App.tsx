@@ -39,6 +39,9 @@ const UpdateAvailableModal = React.lazy(() =>
 const MimoIntroModal = React.lazy(() =>
   import('./components/common/MimoIntroModal').then((m) => ({ default: m.MimoIntroModal }))
 );
+const DailyFeedbackNudge = React.lazy(() =>
+  import('./components/common/DailyFeedbackNudge').then((m) => ({ default: m.DailyFeedbackNudge }))
+);
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -197,7 +200,7 @@ export const App: React.FC = () => {
           </Suspense>
         )}
 
-        {/* Global Update Available Modal (v3.0.0) */}
+        {/* Global Update Available Modal (v2.0.0) */}
         {isUpdateOpen && (
           <Suspense fallback={null}>
             <UpdateAvailableModal />
@@ -210,6 +213,11 @@ export const App: React.FC = () => {
             <MimoIntroModal />
           </Suspense>
         )}
+
+        {/* Daily Feedback Nudge Toast (10s on 1st visit of day, 2 min thereafter, with 'Don't show today') */}
+        <Suspense fallback={null}>
+          <DailyFeedbackNudge />
+        </Suspense>
 
         <AppRoutes />
       </ErrorBoundary>
