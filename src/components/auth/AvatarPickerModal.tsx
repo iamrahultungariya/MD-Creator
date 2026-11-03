@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, Sparkles } from 'lucide-react';
 import { AVATAR_PRESETS, getPresetAvatarUrl } from './avatarPresets';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -73,7 +74,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
     onClose();
   };
 
-  return (
+  return createPortal(
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
       onClick={onClose}
@@ -171,6 +172,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

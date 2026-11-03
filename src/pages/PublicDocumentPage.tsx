@@ -58,6 +58,7 @@ export const PublicDocumentPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isCopied, setIsCopied] = useState(false);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
   const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
@@ -228,12 +229,37 @@ if (!password.trim() || isVerifyingPassword) return;
       });
   };
 
-  const handleCopyMarkdown = () => {
+  const handleCopyMarkdown = async () => {
     const textToCopy = doc?.permissionMode === 'edit' ? editableContent : doc?.content;
     if (!textToCopy) return;
-    navigator.clipboard.writeText(textToCopy);
+
+    let success = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+        success = true;
+      }
+    } catch {}
+
+    if (!success) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = textToCopy;
+        ta.style.position = 'fixed';
+        ta.style.left = '-999999px';
+        ta.style.top = '-999999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {}
+    }
+
     setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    setCopyToast('Markdown copied to clipboard!');
+    setTimeout(() => setIsCopied(false), 2500);
+    setTimeout(() => setCopyToast(null), 3000);
   };
 
   const handleDownload = () => {
@@ -512,11 +538,15 @@ disabled={isVerifyingPassword}
           {/* Copy Markdown */}
           <button
             onClick={handleCopyMarkdown}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-current/15 hover:bg-current/5 text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-colors"
+            className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs ${
+              isCopied
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 ring-1 ring-emerald-500/30'
+                : 'border-current/15 hover:bg-current/5 font-medium'
+            }`}
             title="Copy Markdown"
           >
-            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 opacity-70" />}
-            <span className="hidden md:inline">{isCopied ? 'Copied' : 'Copy'}</span>
+            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[2.5]" /> : <Copy className="w-3.5 h-3.5 opacity-70" />}
+            <span>{isCopied ? 'Copied!' : 'Copy'}</span>
           </button>
 
           {/* Download */}
@@ -798,6 +828,14 @@ disabled={isVerifyingPassword}
             authorName="MD Writer Author"
           />
         </React.Suspense>
+      )}
+
+      {/* Floating Copy Feedback Toast */}
+      {copyToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-neutral-900/95 dark:bg-white/95 text-white dark:text-neutral-900 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 text-xs font-semibold animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <Check className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600 stroke-[2.5]" />
+          <span>{copyToast}</span>
+        </div>
       )}
     </div>
   );

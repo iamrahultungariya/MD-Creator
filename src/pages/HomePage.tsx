@@ -7,6 +7,7 @@ import { BentoFeatures } from '../components/home/BentoFeatures';
 import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
 import { RoadmapSection } from '../components/home/RoadmapSection';
 import { FEATURE_FLAGS } from '../config/features';
+import { useMimoStore } from '../features/mimo/stores/useMimoStore';
 
 // Code-split heavy below-the-fold sections and interactive modals on-demand
 const ReviewsSection = React.lazy(() =>
@@ -17,6 +18,9 @@ const Footer = React.lazy(() =>
 );
 const TemplatesModal = React.lazy(() =>
   import('../components/home/TemplatesModal').then((m) => ({ default: m.TemplatesModal }))
+);
+const MimoFloatingMascot = React.lazy(() =>
+  import('../features/mimo/components/MimoFloatingMascot').then((m) => ({ default: m.MimoFloatingMascot }))
 );
 
 export const HomePage: React.FC = () => {
@@ -120,6 +124,18 @@ export const HomePage: React.FC = () => {
           <TemplatesModal 
             isOpen={isTemplatesOpen} 
             onClose={() => setIsTemplatesOpen(false)} 
+          />
+        </Suspense>
+      )}
+
+      {/* Flagship Ambient Mimo Companion Floating Widget */}
+      {FEATURE_FLAGS.mimo && (
+        <Suspense fallback={null}>
+          <MimoFloatingMascot
+            onClick={() => {
+              useMimoStore.getState().setIsOpen(true);
+              navigate('/editor');
+            }}
           />
         </Suspense>
       )}

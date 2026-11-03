@@ -27,6 +27,7 @@ export interface DocumentMetadata {
   isDeleted?: boolean;
   deletedAt?: number;
   isAiExcluded?: boolean;
+  cloudSynced?: boolean;
 }
 
 export interface CachedContent {
@@ -283,6 +284,7 @@ export async function saveDocument(id: string, title: string, content: string, t
         openCount: 1,
         isPinned: false,
         isFavorite: false,
+        cloudSynced: false,
         wordCount,
         sizeBytes
       });
@@ -318,7 +320,8 @@ export async function deleteDocument(id: string, permanent = false): Promise<voi
   } else {
     await db.documents.update(id, {
       isDeleted: true,
-      deletedAt: Date.now()
+      deletedAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
@@ -331,7 +334,8 @@ export async function deleteDocument(id: string, permanent = false): Promise<voi
 export async function restoreDocument(id: string): Promise<void> {
   await db.documents.update(id, {
     isDeleted: false,
-    deletedAt: undefined
+    deletedAt: undefined,
+    updatedAt: Date.now()
   });
 
   notifyDocumentStoreChanged(id, 'trash');
@@ -340,6 +344,47 @@ export async function restoreDocument(id: string): Promise<void> {
 /**
  * Permanently purges all documents currently in the Trash.
  */
+/**
+ * Renames an existing document without full-content serialization overhead.
+ */
+export async function renameDocument(id: string, newTitle: string): Promise<string> {
+  const cleanTitle = newTitle.trim() || 'Untitled Document';
+  const now = Date.now();
+  await db.documents.update(id, {
+    title: cleanTitle,
+    updatedAt: now
+  });
+  notifyDocumentStoreChanged(id, 'save');
+  return cleanTitle;
+}
+
+const PENDING_DELETIONS_KEY = 'md_writer_pending_deletions';
+
+export function getPendingDeletions(): string[] {
+  try {
+    const raw = localStorage.getItem(PENDING_DELETIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function queuePendingDeletion(id: string): void {
+  try {
+    const current = getPendingDeletions();
+    if (!current.includes(id)) {
+      localStorage.setItem(PENDING_DELETIONS_KEY, JSON.stringify([...current, id]));
+    }
+  } catch {}
+}
+
+export function removePendingDeletion(id: string): void {
+  try {
+    const current = getPendingDeletions().filter((i) => i !== id);
+    localStorage.setItem(PENDING_DELETIONS_KEY, JSON.stringify(current));
+  } catch {}
+}
+
 export async function emptyTrash(): Promise<number> {
   const trashedDocs = await db.documents.filter(d => Boolean(d.isDeleted)).toArray();
   const ids = trashedDocs.map(d => d.id);

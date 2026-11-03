@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { db, DocumentMetadata, notifyDocumentStoreChanged } from '../db';
+import { db, DocumentMetadata, notifyDocumentStoreChanged, getPendingDeletions, queuePendingDeletion, removePendingDeletion } from '../db';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -121,6 +121,7 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
           return false;
         }
 
+        await db.documents.update(doc.id, { cloudSynced: true }).catch(() => {});
         return true;
       } catch (err) {
         console.warn('[Supabase Sync] Failed to sync:', err);
@@ -239,16 +240,67 @@ export async function pullCloudDocuments(force = false): Promise<number> {
           .eq('user_id', session.user.id)
           .order('updated_at', { ascending: false });
 
-        if (docError || !cloudDocs || cloudDocs.length === 0) {
+        if (docError) {
           return 0;
         }
 
-        // Find which documents actually need content fetching
+        const cloudDocsList = cloudDocs || [];
+        const cloudDocIds = new Set(cloudDocsList.map((d: any) => d.id));
+
+        // 1. Reconcile remote permanent deletions:
+        // Any document present locally in Dexie that was previously synced to the cloud (cloudSynced: true)
+        // but is now absent from cloudDocsList was permanently removed on another machine!
+        const localDocs = await db.documents.toArray();
+        let remoteChangesCount = 0;
+        for (const localDoc of localDocs) {
+          if (localDoc.id === 'doc-getting-started' && localDoc.tags?.includes('Guide')) continue;
+          if (localDoc.cloudSynced && !cloudDocIds.has(localDoc.id)) {
+            await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
+              await db.documents.delete(localDoc.id);
+              await db.document_cache.delete(localDoc.id);
+              await db.revisions.where('documentId').equals(localDoc.id).delete();
+            });
+            remoteChangesCount++;
+          }
+        }
+
+        if (cloudDocsList.length === 0) {
+          if (remoteChangesCount > 0) notifyDocumentStoreChanged();
+          return 0;
+        }
+
+        // 2. Identify active documents requiring content pull vs soft-deleted metadata updates
         const pendingDocs: typeof cloudDocs = [];
-        for (const cloudDoc of cloudDocs) {
+        for (const cloudDoc of cloudDocsList) {
           const localDoc = await db.documents.get(cloudDoc.id);
           const cloudUpdated = new Date(cloudDoc.updated_at).getTime();
-          // 1s threshold prevents race condition churn from clock skew
+
+          if (cloudDoc.is_deleted) {
+            // Soft-deleted in cloud: update local status without downloading content
+            if (!localDoc || !localDoc.isDeleted || cloudUpdated > localDoc.updatedAt + 1000) {
+              await db.documents.put({
+                id: cloudDoc.id,
+                title: cloudDoc.title,
+                snippet: cloudDoc.snippet || localDoc?.snippet || '',
+                tags: cloudDoc.tags || localDoc?.tags || [],
+                createdAt: new Date(cloudDoc.created_at).getTime(),
+                updatedAt: cloudUpdated,
+                lastOpenedAt: cloudDoc.last_opened_at ? new Date(cloudDoc.last_opened_at).getTime() : Date.now(),
+                openCount: 1,
+                isPinned: Boolean(cloudDoc.is_pinned),
+                isFavorite: Boolean(cloudDoc.is_favorite),
+                isDeleted: true,
+                deletedAt: cloudDoc.deleted_at ? new Date(cloudDoc.deleted_at).getTime() : Date.now(),
+                wordCount: cloudDoc.word_count || 0,
+                sizeBytes: cloudDoc.size_bytes || 0,
+                cloudSynced: true
+              });
+              remoteChangesCount++;
+            }
+            continue;
+          }
+
+          // Active document: pull if missing locally or newer in cloud
           if (!localDoc || cloudUpdated > localDoc.updatedAt + 1000) {
             pendingDocs.push(cloudDoc);
           }
@@ -286,7 +338,8 @@ export async function pullCloudDocuments(force = false): Promise<number> {
                 isDeleted: Boolean(cloudDoc.is_deleted),
                 deletedAt: cloudDoc.deleted_at ? new Date(cloudDoc.deleted_at).getTime() : undefined,
                 wordCount: cloudDoc.word_count || 0,
-                sizeBytes: cloudDoc.size_bytes || 0
+                sizeBytes: cloudDoc.size_bytes || 0,
+                cloudSynced: true
               });
 
               await db.document_cache.put({
@@ -300,7 +353,7 @@ export async function pullCloudDocuments(force = false): Promise<number> {
           );
         }
 
-        if (pulledCount > 0) {
+        if (pulledCount > 0 || remoteChangesCount > 0) {
           notifyDocumentStoreChanged();
         }
 
@@ -310,7 +363,7 @@ export async function pullCloudDocuments(force = false): Promise<number> {
         return 0;
       }
     })(),
-    4500,
+    6500,
     0
   );
 }
@@ -334,6 +387,12 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return { pulled: 0, pushed: 0, syncedTitles: [] };
 
+    // Flush any pending deletions that failed previously while offline
+    const pendingDeletions = getPendingDeletions();
+    for (const delId of pendingDeletions) {
+      await deleteDocumentFromSupabase(delId).catch(() => {});
+    }
+
     // 1. Pull latest cloud documents first (passes force flag)
     const pulled = await pullCloudDocuments(force);
 
@@ -354,7 +413,15 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
     const localDocs = await db.documents.toArray();
     const docsToSync = localDocs.filter((d) => {
       if (d.id === 'doc-getting-started' && d.tags?.includes('Guide')) return false;
+      if (d.isDeleted && !d.cloudSynced) return false;
+
       const cloudTime = cloudMap.get(d.id);
+      // If doc was already synced before (cloudSynced: true) but missing from cloud,
+      // it was deleted in the cloud on another machine! NEVER resurrect it!
+      if (d.cloudSynced && cloudTime === undefined) {
+        return false;
+      }
+
       return cloudTime === undefined || d.updatedAt > cloudTime + 1000;
     });
 
@@ -461,12 +528,114 @@ export async function deleteDocumentFromSupabase(id: string): Promise<boolean> {
 
     if (metaError) {
       console.warn('[Supabase Delete] Metadata deletion error:', metaError.message);
+      queuePendingDeletion(id);
       return false;
     }
 
+    removePendingDeletion(id);
     return true;
   } catch (err) {
     console.warn('[Supabase Delete] Failed to delete document:', err);
+    queuePendingDeletion(id);
     return false;
   }
+}
+
+let activeRealtimeChannel: any = null;
+
+/**
+ * Subscribes to real-time changes on the documents table for the authenticated user.
+ * Propagates remote deletions, restorations, and edits instantaneously across devices.
+ */
+export function subscribeToUserDocumentChanges(userId: string): () => void {
+  if (!supabase || !userId) return () => {};
+
+  if (activeRealtimeChannel) {
+    try {
+      supabase.removeChannel(activeRealtimeChannel);
+    } catch {}
+    activeRealtimeChannel = null;
+  }
+
+  const channel = supabase
+    .channel(`user-docs-realtime-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'documents',
+        filter: `user_id=eq.${userId}`
+      },
+      async (payload) => {
+        try {
+          if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as any)?.id;
+            if (deletedId) {
+              await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
+                await db.documents.delete(deletedId);
+                await db.document_cache.delete(deletedId);
+                await db.revisions.where('documentId').equals(deletedId).delete();
+              });
+              notifyDocumentStoreChanged(deletedId, 'all');
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedDoc = payload.new as any;
+            if (updatedDoc?.id) {
+              const cloudUpdated = new Date(updatedDoc.updated_at).getTime();
+              const existing = await db.documents.get(updatedDoc.id);
+              if (existing) {
+                await db.documents.update(updatedDoc.id, {
+                  title: updatedDoc.title,
+                  snippet: updatedDoc.snippet || existing.snippet,
+                  tags: updatedDoc.tags || existing.tags,
+                  isPinned: Boolean(updatedDoc.is_pinned),
+                  isFavorite: Boolean(updatedDoc.is_favorite),
+                  isDeleted: Boolean(updatedDoc.is_deleted),
+                  deletedAt: updatedDoc.deleted_at ? new Date(updatedDoc.deleted_at).getTime() : undefined,
+                  wordCount: updatedDoc.word_count || existing.wordCount,
+                  sizeBytes: updatedDoc.size_bytes || existing.sizeBytes,
+                  updatedAt: cloudUpdated,
+                  cloudSynced: true
+                });
+                notifyDocumentStoreChanged(updatedDoc.id, updatedDoc.is_deleted ? 'trash' : 'save');
+              } else if (!updatedDoc.is_deleted) {
+                fetchDocumentFromSupabase(updatedDoc.id).then(async (res) => {
+                  if (res) {
+                    await db.documents.put({ ...res.meta, cloudSynced: true });
+                    await db.document_cache.put({ id: res.meta.id, content: res.content, cachedAt: Date.now() });
+                    notifyDocumentStoreChanged(res.meta.id, 'all');
+                  }
+                });
+              }
+            }
+          } else if (payload.eventType === 'INSERT') {
+            const newDoc = payload.new as any;
+            if (newDoc?.id && !newDoc.is_deleted) {
+              fetchDocumentFromSupabase(newDoc.id).then(async (res) => {
+                if (res) {
+                  await db.documents.put({ ...res.meta, cloudSynced: true });
+                  await db.document_cache.put({ id: res.meta.id, content: res.content, cachedAt: Date.now() });
+                  notifyDocumentStoreChanged(res.meta.id, 'all');
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[Realtime Sync] Error processing change:', err);
+        }
+      }
+    )
+    .subscribe();
+
+  activeRealtimeChannel = channel;
+
+  return () => {
+    if (activeRealtimeChannel) {
+      try {
+        supabase?.removeChannel(activeRealtimeChannel);
+      } catch {}
+      activeRealtimeChannel = null;
+    }
+  };
 }

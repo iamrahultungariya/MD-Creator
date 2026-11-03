@@ -5,7 +5,7 @@ import { useMimoStore } from '../stores/useMimoStore';
 
 export interface MimoAvatarProps {
   state?: MascotState;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'hero';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'floating' | 'hero';
   className?: string;
   showSleepTimer?: boolean;
   onClick?: () => void;
@@ -24,7 +24,8 @@ const SIZE_CLASSES = {
   sm: 'w-8 h-8',
   md: 'w-12 h-12',
   lg: 'w-20 h-20',
-  hero: 'w-32 h-32 sm:w-36 sm:h-36',
+  floating: 'w-12 h-12 sm:w-14 sm:h-14',
+  hero: 'w-24 h-24 sm:w-28 sm:h-28',
 };
 
 export const MimoAvatar: React.FC<MimoAvatarProps> = ({

@@ -6,7 +6,8 @@ import {
   ChevronDown, 
   ShieldCheck,
   FolderOpen,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Database
 } from 'lucide-react';
 import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
 import { isSupabaseConfigured } from '../../lib/supabase';
@@ -15,7 +16,8 @@ import { isCurrentUserAdmin } from '../../utils/adminAuth';
 import { AvatarPickerModal } from './AvatarPickerModal';
 import { usePreferencesStore } from '../../stores/usePreferencesStore';
 import { CreateDocumentModal } from '../document/CreateDocumentModal';
-import { StorageLimitRing } from '../common/StorageLimitRing';
+import { useWorkspaceStorage, SOFT_LIMIT_MB } from '../common/StorageLimitRing';
+import { StorageDetailsModal } from '../common/StorageDetailsModal';
 
 export const ProfileDropdown: React.FC = () => {
   const { user, signOut } = useAuthStore();
@@ -23,6 +25,8 @@ export const ProfileDropdown: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isStorageModalOpen, setIsStorageModalOpen] = useState(false);
+  const storage = useWorkspaceStorage();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const confirm = useConfirm();
@@ -91,7 +95,7 @@ export const ProfileDropdown: React.FC = () => {
 
       {/* Floating Profile Popup Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/50 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/50 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
           
           {/* User Info Header */}
           <div className="p-3 bg-neutral-50/80 dark:bg-neutral-950/50 rounded-lg mb-1.5 border border-neutral-100 dark:border-neutral-800/80">
@@ -197,9 +201,38 @@ export const ProfileDropdown: React.FC = () => {
             )}
           </div>
 
-          {/* Storage Telemetry Summary - 300 MB Soft Quota Ring */}
-          <div className="my-1.5">
-            <StorageLimitRing variant="card" />
+          {/* Storage Telemetry - Sleek Compact Bar */}
+          <div className="my-1.5 p-2.5 rounded-lg bg-neutral-50/80 dark:bg-neutral-950/50 border border-neutral-100 dark:border-neutral-800/80 font-sans">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
+                <Database className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500" />
+                <span>Storage</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  {storage.usedMb} MB / {SOFT_LIMIT_MB} MB
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsStorageModalOpen(true);
+                  }}
+                  className="text-[10px] font-semibold text-[#8257F5] dark:text-[#a07cf8] hover:underline cursor-pointer"
+                >
+                  Manage
+                </button>
+              </div>
+            </div>
+            <div className="w-full bg-neutral-200/80 dark:bg-neutral-800 rounded-full h-1 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.min(100, Math.max(storage.percent, 2))}%`,
+                  backgroundColor: storage.percent > 90 ? '#f43f5e' : storage.percent > 75 ? '#f59e0b' : '#8257F5'
+                }}
+              />
+            </div>
           </div>
 
           {/* Sign Out Button */}
@@ -215,6 +248,12 @@ export const ProfileDropdown: React.FC = () => {
 
         </div>
       )}
+
+      {/* Storage Breakdown Details Modal */}
+      <StorageDetailsModal
+        isOpen={isStorageModalOpen}
+        onClose={() => setIsStorageModalOpen(false)}
+      />
 
       {/* Bespoke Character Avatar Selection Modal */}
       <AvatarPickerModal 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check } from 'lucide-react';
+import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check, Pencil } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
@@ -11,6 +11,7 @@ export interface DocumentListItemProps {
   onTogglePin: (e: React.MouseEvent, id: string) => void;
   onDelete: (e: React.MouseEvent, id: string, title: string) => void;
   onRestore: (e: React.MouseEvent, id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
   isSelectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
@@ -24,12 +25,28 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
   onTogglePin,
   onDelete,
   onRestore,
+  onRename,
   isSelectionMode = false,
   isSelected = false,
   onToggleSelect,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameTitle, setRenameTitle] = useState(doc.title);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setRenameTitle(doc.title);
+  }, [doc.title]);
+
+  const handleConfirmRename = () => {
+    const trimmed = renameTitle.trim();
+    if (trimmed && trimmed !== doc.title) {
+      onRename?.(doc.id, trimmed);
+    }
+    setIsRenaming(false);
+  };
 
   // Close mobile micro-popover on outside click
   useEffect(() => {
@@ -92,9 +109,46 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-sm text-neutral-900 dark:text-white truncate">
-              {doc.title}
-            </span>
+            {isRenaming ? (
+              <div 
+                className="flex items-center gap-1.5 min-w-0 max-w-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={renameTitle}
+                  onChange={(e) => setRenameTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                      handleConfirmRename();
+                    } else if (e.key === 'Escape') {
+                      setIsRenaming(false);
+                      setRenameTitle(doc.title);
+                    }
+                  }}
+                  onBlur={handleConfirmRename}
+                  className="w-full text-xs font-semibold px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-800 border border-brand-500 focus:outline-hidden text-neutral-900 dark:text-white"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleConfirmRename();
+                  }}
+                  className="p-1 rounded bg-brand-600 hover:bg-brand-700 text-white shrink-0 cursor-pointer shadow-2xs"
+                  title="Save name (Enter)"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                </button>
+              </div>
+            ) : (
+              <span className="font-bold text-sm text-neutral-900 dark:text-white truncate" title={doc.title}>
+                {doc.title}
+              </span>
+            )}
             {doc.isPinned && currentTab === 'active' && (
               <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0 font-sans">
                 <Pin className="w-2.5 h-2.5 fill-current" />
@@ -121,6 +175,18 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
         >
           {currentTab === 'active' ? (
             <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRenaming(true);
+                  setRenameTitle(doc.title);
+                }}
+                className="p-1.5 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60 rounded-lg transition-colors cursor-pointer text-neutral-400"
+                title="Rename document"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
               <button
                 type="button"
                 onClick={(e) => onDuplicate(e, doc.id)}
@@ -214,6 +280,20 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
                   >
                     <Pin className={`w-3.5 h-3.5 ${doc.isPinned ? 'fill-current' : ''}`} />
                     <span>{doc.isPinned ? 'Unpin Note' : 'Pin to Top'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMobileMenuOpen(false);
+                      setIsRenaming(true);
+                      setRenameTitle(doc.title);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>Rename Note</span>
                   </button>
 
                   <button

@@ -74,21 +74,23 @@ export const MimoStarterCards: React.FC<MimoStarterCardsProps> = ({
 
       {/* Suggested Actions Grid - Unified Minimal Aesthetic */}
       <div className="w-full space-y-2 text-left pt-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {ACTION_CARDS.map(({ action, title: cardTitle, description, icon: Icon }) => (
             <button
               key={action}
               onClick={() => onQuickAction(action)}
               disabled={disabled}
-              className="p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-850/80 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all text-left group cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-3.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 hover:bg-white dark:hover:bg-neutral-800 hover:border-brand-500/50 dark:hover:border-brand-500/50 hover:shadow-sm transition-all duration-150 text-left group cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-2 mb-1.5">
-                <Icon className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors" />
-                <span className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
+                <div className="p-1 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 group-hover:bg-brand-500/10 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs font-bold text-neutral-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                   {cardTitle}
                 </span>
               </div>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              <p className="text-[11px] text-neutral-600 dark:text-neutral-300 group-hover:text-neutral-800 dark:group-hover:text-neutral-100 leading-relaxed transition-colors">
                 {description}
               </p>
             </button>

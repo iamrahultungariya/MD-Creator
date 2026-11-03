@@ -8,7 +8,9 @@ import {
   Printer, 
   Columns,
   BookOpen,
-  Clock
+  Clock,
+  Copy,
+  Check
 } from 'lucide-react';
 import { ViewMode } from '../types';
 import { useReaderSettingsStore } from '../../../stores/useReaderSettingsStore';
@@ -22,6 +24,7 @@ interface ReaderHeaderProps {
   headingsCount: number;
   onOpenOutline: () => void;
   onOpenPdfStudio?: () => void;
+  onCopyMarkdown?: () => void;
   setViewMode: (mode: ViewMode) => void;
 }
 
@@ -32,14 +35,22 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
   headingsCount,
   onOpenOutline,
   onOpenPdfStudio,
+  onCopyMarkdown,
   setViewMode,
 }) => {
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const readerTheme = useReaderSettingsStore((s) => s.theme);
   const readingProgress = useReaderSettingsStore((s) => s.readingProgress);
   const isFullscreen = useReaderSettingsStore((s) => s.isFullscreen);
   const toggleFullscreen = useReaderSettingsStore((s) => s.toggleFullscreen);
   const isDark = useThemeStore((s) => s.isDark);
+
+  const handleCopy = () => {
+    onCopyMarkdown?.();
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   const themeStyles = useMemo(() => {
     switch (readerTheme) {
@@ -211,6 +222,26 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
           <Type className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Aa</span>
         </button>
+
+        {/* Copy Markdown */}
+        {onCopyMarkdown && (
+          <button
+            onClick={handleCopy}
+            className={`px-2.5 py-1.5 rounded-lg border text-xs font-sans font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+              isCopied
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 ring-1 ring-emerald-500/30'
+                : themeStyles.btnAction
+            }`}
+            title="Copy Document Markdown to Clipboard"
+          >
+            {isCopied ? (
+              <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[2.5]" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 opacity-80" />
+            )}
+            <span className="hidden sm:inline">{isCopied ? 'Copied!' : 'Copy'}</span>
+          </button>
+        )}
 
         {/* Fullscreen Toggle */}
         <button

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Star, CheckCircle, X } from 'lucide-react';
 
 interface ReviewSubmissionModalProps {
@@ -38,7 +39,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans"
       onClick={(e) => {
@@ -169,6 +170,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

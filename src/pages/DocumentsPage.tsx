@@ -30,7 +30,8 @@ import {
   useRestoreDocument, 
   useEmptyTrash, 
   useDuplicateDocument, 
-  useAllDocumentTags 
+  useAllDocumentTags,
+  useRenameDocument
 } from '../hooks/useDocuments';
 import { db, saveDocument, getDocumentContent, DocumentMetadata } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
@@ -138,6 +139,7 @@ export const DocumentsPage: React.FC = () => {
   const emptyTrashMutation = useEmptyTrash();
   const duplicateDocMutation = useDuplicateDocument();
   const togglePinMutation = useTogglePin();
+  const renameDocMutation = useRenameDocument();
   const { data: allTags = ['All'] } = useAllDocumentTags();
 
   // Keep a stable ref to documents to prevent breaking card memoization in callbacks
@@ -211,6 +213,11 @@ export const DocumentsPage: React.FC = () => {
     e.stopPropagation();
     restoreMutate(id);
   }, [restoreMutate]);
+
+  const renameMutate = renameDocMutation.mutate;
+  const handleRename = useCallback((id: string, newTitle: string) => {
+    renameMutate({ id, newTitle });
+  }, [renameMutate]);
 
   const handleEmptyTrash = async () => {
     if (trashCount === 0) return;
@@ -654,6 +661,7 @@ export const DocumentsPage: React.FC = () => {
                   onTogglePin={handleTogglePin}
                   onDelete={handleDelete}
                   onRestore={handleRestore}
+                  onRename={handleRename}
                   isSelectionMode={isBatchMode}
                   isSelected={selectedDocIds.has(doc.id)}
                   onToggleSelect={handleToggleSelect}
@@ -674,6 +682,7 @@ export const DocumentsPage: React.FC = () => {
                   onTogglePin={handleTogglePin}
                   onDelete={handleDelete}
                   onRestore={handleRestore}
+                  onRename={handleRename}
                   isSelectionMode={isBatchMode}
                   isSelected={selectedDocIds.has(doc.id)}
                   onToggleSelect={handleToggleSelect}

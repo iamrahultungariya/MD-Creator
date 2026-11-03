@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check } from 'lucide-react';
+import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check, Pencil } from 'lucide-react';
 import { DocumentMetadata } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
@@ -11,6 +11,7 @@ export interface DocumentGridCardProps {
   onTogglePin: (e: React.MouseEvent, id: string) => void;
   onDelete: (e: React.MouseEvent, id: string, title: string) => void;
   onRestore: (e: React.MouseEvent, id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
   isSelectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
@@ -24,12 +25,28 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
   onTogglePin,
   onDelete,
   onRestore,
+  onRename,
   isSelectionMode = false,
   isSelected = false,
   onToggleSelect,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameTitle, setRenameTitle] = useState(doc.title);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setRenameTitle(doc.title);
+  }, [doc.title]);
+
+  const handleConfirmRename = () => {
+    const trimmed = renameTitle.trim();
+    if (trimmed && trimmed !== doc.title) {
+      onRename?.(doc.id, trimmed);
+    }
+    setIsRenaming(false);
+  };
 
   // Close mobile micro-popover on outside click
   useEffect(() => {
@@ -98,9 +115,46 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <h3 className="font-bold text-sm text-neutral-950 dark:text-white truncate">
-                {doc.title}
-              </h3>
+              {isRenaming ? (
+                <div 
+                  className="flex items-center gap-1.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={renameTitle}
+                    onChange={(e) => setRenameTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === 'Enter') {
+                        handleConfirmRename();
+                      } else if (e.key === 'Escape') {
+                        setIsRenaming(false);
+                        setRenameTitle(doc.title);
+                      }
+                    }}
+                    onBlur={handleConfirmRename}
+                    className="w-full text-xs font-semibold px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-800 border border-brand-500 focus:outline-hidden text-neutral-900 dark:text-white"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConfirmRename();
+                    }}
+                    className="p-1 rounded bg-brand-600 hover:bg-brand-700 text-white shrink-0 cursor-pointer shadow-2xs"
+                    title="Save name (Enter)"
+                  >
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                </div>
+              ) : (
+                <h3 className="font-bold text-sm text-neutral-950 dark:text-white truncate" title={doc.title}>
+                  {doc.title}
+                </h3>
+              )}
             </div>
           </div>
 
@@ -120,6 +174,18 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
             >
               {currentTab === 'active' ? (
                 <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsRenaming(true);
+                      setRenameTitle(doc.title);
+                    }}
+                    className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                    title="Rename document"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => onDuplicate(e, doc.id)}
@@ -213,6 +279,20 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                       >
                         <Pin className={`w-3.5 h-3.5 ${doc.isPinned ? 'fill-current' : ''}`} />
                         <span>{doc.isPinned ? 'Unpin Note' : 'Pin to Top'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          setIsRenaming(true);
+                          setRenameTitle(doc.title);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Rename Note</span>
                       </button>
 
                       <button

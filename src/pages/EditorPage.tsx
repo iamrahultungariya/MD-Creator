@@ -328,6 +328,7 @@ export const EditorPage: React.FC = () => {
           headingsCount={workerStats.headings.length}
           onOpenOutline={() => modals.setIsOutlineOpen(true)}
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
+          onCopyMarkdown={doc.handleCopyMarkdown}
           setViewMode={setViewMode}
         />
       ) : (

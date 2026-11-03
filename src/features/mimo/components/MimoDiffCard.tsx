@@ -95,14 +95,14 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
         <div className="px-3 py-2 bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200/70 dark:border-neutral-800 flex items-center justify-end gap-2">
           <button
             onClick={onDiscard}
-            className="px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
+            className="px-2.5 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-800 text-neutral-600 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1"
           >
             <X className="w-3 h-3" />
             Discard
           </button>
           <button
             onClick={onApply}
-            className="px-3 py-1 rounded-md bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shadow-2xs"
+            className="px-3 py-1 rounded-md bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs hover:shadow-xs"
           >
             <Check className="w-3.5 h-3.5" />
             Apply to document

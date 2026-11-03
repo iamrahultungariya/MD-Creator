@@ -12,9 +12,10 @@ export const MimoQuotaRing: React.FC = () => {
     return (
       <button
         onClick={() => setIsKeyModalOpen(true)}
-        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700/80 text-[10px] font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/80 transition-colors cursor-pointer"
-        title="Personal Gemini Key Active"
+        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-violet-50 dark:bg-violet-950/70 border border-violet-200/80 dark:border-violet-800/80 text-[10px] font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/80 hover:text-violet-900 dark:hover:text-white transition-all cursor-pointer shadow-2xs"
+        title="Personal Gemini Key Active (BYOK)"
       >
+        <Key className="w-2.5 h-2.5 text-violet-600 dark:text-violet-400" />
         <span>BYOK Active</span>
       </button>
     );
@@ -38,7 +39,7 @@ export const MimoQuotaRing: React.FC = () => {
   return (
     <button
       onClick={() => setIsKeyModalOpen(true)}
-      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700/80 transition-colors text-[10px] font-sans text-neutral-600 dark:text-neutral-300 cursor-pointer"
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white transition-all text-[10px] font-sans cursor-pointer"
       title={`Daily AI Capacity: ${percent}% used.`}
     >
       <div className="relative w-4 h-4 flex items-center justify-center">
@@ -58,7 +59,7 @@ export const MimoQuotaRing: React.FC = () => {
             className={`${
               isCritical
                 ? 'stroke-amber-500 dark:stroke-amber-400'
-                : 'stroke-neutral-800 dark:stroke-neutral-300'
+                : 'stroke-neutral-800 dark:stroke-neutral-200'
             } transition-all duration-300`}
             strokeWidth="2.5"
             strokeDasharray={circumference}
@@ -68,15 +69,7 @@ export const MimoQuotaRing: React.FC = () => {
           />
         </svg>
       </div>
-
-      <span className="font-mono font-medium">{percent}%</span>
-
-      {isCritical && (
-        <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-          <Key className="w-2.5 h-2.5" />
-          Add Key
-        </span>
-      )}
+      <span className="font-mono text-[10px]">{percent}%</span>
     </button>
   );
 };

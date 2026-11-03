@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { ShieldCheck, Key, Lock, ExternalLink } from 'lucide-react';
 
 interface MimoPrivacyModalProps {
@@ -16,7 +17,7 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans animate-in fade-in duration-150">
       <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl p-6 overflow-hidden space-y-4">
         {/* Header Icon & Title */}
@@ -26,7 +27,7 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
           </div>
           <div>
             <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
-              Privacy & Local Vault Notice
+              Privacy &amp; Local Vault Notice
             </h3>
             <p className="text-xs text-neutral-500">
               Before activating Mimo AI Assistant
@@ -36,9 +37,9 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
 
         {/* Core Principles */}
         <div className="space-y-2 text-xs text-neutral-600 dark:text-neutral-300">
-          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-800 space-y-1">
+          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-800 space-y-1">
             <div className="font-medium text-neutral-900 dark:text-white flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-neutral-500" />
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span>Offline-First Core Editor</span>
             </div>
             <p className="text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
@@ -46,10 +47,10 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
             </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-800 space-y-1">
+          <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-800 space-y-1">
             <div className="font-medium text-neutral-900 dark:text-white flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-neutral-500" />
-              <span>Processing & BYOK</span>
+              <Key className="w-4 h-4 text-violet-500" />
+              <span>Processing &amp; BYOK</span>
             </div>
             <p className="text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
               Requests are processed securely via Google Gemini. Connect your personal free Gemini API key (BYOK) for direct client-to-Google communication and unlimited capacity.
@@ -75,26 +76,27 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
         <div className="pt-2 flex flex-col gap-2">
           <button
             onClick={onAccept}
-            className="w-full py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white text-xs font-medium transition-colors cursor-pointer text-center shadow-2xs"
+            className="w-full py-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-white text-xs font-semibold transition-colors cursor-pointer text-center shadow-2xs"
           >
             Enable Mimo
           </button>
           <div className="flex items-center gap-2">
             <button
               onClick={onOpenByok}
-              className="flex-1 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-medium transition-colors cursor-pointer text-center"
+              className="flex-1 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white text-xs font-medium transition-colors cursor-pointer text-center"
             >
               Add My Free Key (BYOK)
             </button>
             <button
               onClick={onDecline}
-              className="px-3 py-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 text-xs transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-medium transition-colors cursor-pointer"
             >
               Cancel
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

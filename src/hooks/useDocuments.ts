@@ -11,7 +11,8 @@ import {
   emptyTrash,
   duplicateDocument,
   togglePinDocument, 
-  getStorageStats 
+  getStorageStats,
+  renameDocument
 } from '../db';
 import { 
   pullCloudDocuments, 
@@ -19,8 +20,11 @@ import {
   syncDocumentToSupabase, 
   syncDocumentPinToSupabase, 
   syncDocumentTrashToSupabase, 
-  isSupabaseConfigured 
+  isSupabaseConfigured,
+  subscribeToUserDocumentChanges,
+  supabase
 } from '../lib/supabase';
+import { useAuthStore } from '../stores/useAuthStore';
 import { searchDocumentsFullText } from '../utils/searchEngine';
 
 export interface PaginatedDocumentsResult {
@@ -94,11 +98,35 @@ export function usePaginatedDocuments({
   page = 1,
   pageSize = 24,
 }: UsePaginatedDocumentsOptions = {}) {
-  // Background cloud pull throttled to once per session when Supabase is configured
+  const user = useAuthStore((s) => s.user);
+
+  // Background cloud pull + Real-time sync + Window focus synchronization
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     pullCloudDocuments().catch(console.warn);
-  }, []);
+
+    // 1. Instant Realtime WebSocket subscription for cross-device changes (sub-second)
+    let unsubscribeRealtime = () => {};
+    if (user?.id) {
+      unsubscribeRealtime = subscribeToUserDocumentChanges(user.id);
+    }
+
+    // 2. Tab focus & visibility change listener: pull immediately when switching back to tab
+    const handleFocusSync = () => {
+      if (document.visibilityState === 'visible') {
+        pullCloudDocuments(true).catch(console.warn);
+      }
+    };
+
+    window.addEventListener('focus', handleFocusSync);
+    document.addEventListener('visibilitychange', handleFocusSync);
+
+    return () => {
+      unsubscribeRealtime();
+      window.removeEventListener('focus', handleFocusSync);
+      document.removeEventListener('visibilitychange', handleFocusSync);
+    };
+  }, [user?.id]);
 
   return useQuery({
     queryKey: ['documents', 'paginated', searchQuery, activeTag, showTrash, page, pageSize],
@@ -284,6 +312,32 @@ export function useTogglePin() {
         syncDocumentPinToSupabase(id, newPinned).catch(console.warn);
       }
       return newPinned;
+    }
+  });
+}
+
+export function useRenameDocument() {
+  return useMutation({
+    mutationFn: async ({ id, newTitle }: { id: string; newTitle: string }) => {
+      const updatedTitle = await renameDocument(id, newTitle);
+      if (isSupabaseConfigured() && supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            await supabase
+              .from('documents')
+              .update({
+                title: updatedTitle,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', id)
+              .eq('user_id', session.user.id);
+          }
+        } catch (err) {
+          console.warn('[Rename Sync] Failed to sync title change to cloud:', err);
+        }
+      }
+      return updatedTitle;
     }
   });
 }

@@ -58,7 +58,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
           </div>
           <button
             onClick={() => setActiveSelection('')}
-            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 p-0.5 cursor-pointer ml-2"
+            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded p-0.5 cursor-pointer ml-2 transition-colors"
             title="Clear selection context"
           >
             <X className="w-3 h-3" />
@@ -129,7 +129,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
         <button
           onClick={onEnhance}
           disabled={isGenerating || !inputPrompt.trim() || isAiExcluded}
-          className="px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-850 disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors ml-auto shrink-0"
+          className="px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white disabled:opacity-40 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors ml-auto shrink-0"
           title="Enhance prompt structure"
         >
           <Wand2 className="w-3 h-3 text-neutral-500" />
