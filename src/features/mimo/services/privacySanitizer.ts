@@ -14,7 +14,8 @@ export interface SanitizationResult {
 const EMAIL_REGEX = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/gi;
 const PHONE_REGEX = /\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g;
 const CREDIT_CARD_REGEX = /\b(?:\d{4}[-\s]?){3}\d{4}\b/g;
-const API_KEY_REGEX = /\b(?:sk-[a-zA-Z0-9_-]{20,}|AIza[0-9A-Za-z-_]{35}|ghp_[a-zA-Z0-9]{36})\b/g;
+// Catches OpenAI (sk-...), Gemini Authorization auth keys (AQ...), Gemini legacy standard keys (AIza...), GitHub PATs
+const API_KEY_REGEX = /\b(?:sk-[a-zA-Z0-9_-]{20,}|AQ[0-9A-Za-z-_]{20,}|AIza[0-9A-Za-z-_]{35}|ghp_[a-zA-Z0-9]{36})\b/g;
 
 // Key-value sensitive patterns like "password: mypass123", "pin = 4321", "secret_key: xxx"
 const KEY_VALUE_SECRET_REGEX = /\b(password|passwd|pin|secret|api_key|token|access_key|private_key)\s*[:=]\s*([^\s,;]+)/gi;

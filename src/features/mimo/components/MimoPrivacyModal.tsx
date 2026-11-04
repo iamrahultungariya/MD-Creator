@@ -62,7 +62,7 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
         <div className="text-[11px] text-neutral-500 flex items-center justify-between">
           <span>Google AI Studio Key is free in 30s</span>
           <a
-            href="https://aistudio.google.com/app/apikey"
+            href="https://aistudio.google.com/apikey"
             target="_blank"
             rel="noopener noreferrer"
             className="text-neutral-900 dark:text-neutral-100 font-medium underline underline-offset-2 hover:opacity-80 inline-flex items-center gap-0.5"

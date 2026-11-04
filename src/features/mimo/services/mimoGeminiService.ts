@@ -143,11 +143,12 @@ function withAbortAndTimeout<T>(
 
 /**
  * Real-time pre-flight verification probe for personal Gemini API keys.
- * Immediately checks against Google AI Studio using Gemini 3.x family.
+ * Checks against Google AI Studio using Gemini 3.x family.
+ * Identifies legacy AIza... standard keys vs new AQ... Authorization keys.
  */
 export async function validateGeminiApiKey(
   apiKey: string
-): Promise<{ valid: boolean; error?: string }> {
+): Promise<{ valid: boolean; error?: string; isLegacy?: boolean; warning?: string }> {
   const trimmed = apiKey.trim();
   if (!trimmed) {
     return { valid: false, error: 'API key cannot be empty' };
@@ -156,6 +157,12 @@ export async function validateGeminiApiKey(
   if (trimmed.length < 15) {
     return { valid: false, error: 'Key length is too short to be a valid Gemini API key' };
   }
+
+  const isLegacy = trimmed.startsWith('AIza');
+  const legacyRejectionMsg =
+    'This API key format (AIza...) is deprecated by Google. Google now rejects unrestricted standard keys. Please generate a new Authorization key (starts with AQ...) at Google AI Studio (https://aistudio.google.com/apikey) and paste it here.';
+  const standardRejectionMsg =
+    'Invalid Gemini API key. Please generate a valid Authorization key (starts with AQ...) from Google AI Studio (https://aistudio.google.com/apikey).';
 
   try {
     const ai = new GoogleGenAI({ apiKey: trimmed });
@@ -173,6 +180,14 @@ export async function validateGeminiApiKey(
     );
 
     if (probe) {
+      if (isLegacy) {
+        return {
+          valid: true,
+          isLegacy: true,
+          warning:
+            'This key is working, but it uses the deprecated AIza format. Google recommends creating a new Authorization key (starts with AQ...) at https://aistudio.google.com/apikey.',
+        };
+      }
       return { valid: true };
     }
     return { valid: true };
@@ -189,7 +204,8 @@ export async function validateGeminiApiKey(
     ) {
       return {
         valid: false,
-        error: 'Invalid Gemini API key. Please check your key from Google AI Studio.',
+        isLegacy,
+        error: isLegacy ? legacyRejectionMsg : standardRejectionMsg,
       };
     }
 
@@ -197,6 +213,7 @@ export async function validateGeminiApiKey(
       // The key is authenticated, but currently rate-limited by Google AI
       return {
         valid: true,
+        isLegacy,
         error: 'Key is verified, but currently throttled by Google AI (429). Please wait 30 seconds before testing again.',
       };
     }
@@ -217,6 +234,14 @@ export async function validateGeminiApiKey(
         12000
       );
       if (probe2) {
+        if (isLegacy) {
+          return {
+            valid: true,
+            isLegacy: true,
+            warning:
+              'This key is working, but it uses the deprecated AIza format. Google recommends creating a new Authorization key (starts with AQ...) at https://aistudio.google.com/apikey.',
+          };
+        }
         return { valid: true };
       }
     } catch (fallbackErr: any) {
@@ -229,12 +254,14 @@ export async function validateGeminiApiKey(
       ) {
         return {
           valid: false,
-          error: 'Invalid Gemini API key. Please check your key from Google AI Studio.',
+          isLegacy,
+          error: isLegacy ? legacyRejectionMsg : standardRejectionMsg,
         };
       }
       if (fallbackErr?.status === 429 || fallbackRaw.includes('429') || fallbackRaw.includes('RESOURCE_EXHAUSTED')) {
         return {
           valid: true,
+          isLegacy,
           error: 'Key is verified, but currently throttled by Google AI (429). Please wait 30 seconds before testing again.',
         };
       }
@@ -242,7 +269,8 @@ export async function validateGeminiApiKey(
 
     return {
       valid: false,
-      error: raw.slice(0, 90) || 'Verification failed. Please check your connection or key.',
+      isLegacy,
+      error: raw.slice(0, 120) || 'Verification failed. Please check your connection or key.',
     };
   }
 }
@@ -520,7 +548,12 @@ export async function streamMimoResponse(options: {
         (rawErrMsg.includes('INVALID_ARGUMENT') && rawErrMsg.includes('key'));
 
       if (isApiKeyError) {
-        const keyErrorMsg = `⚠️ **Gemini API Key Rejected**\n\nGoogle AI reported that your provided Gemini API key is invalid, missing, or unauthorized.\n\n*Details*: \`${rawErrMsg.slice(0, 160)}\`\n\nPlease check your key in settings via [Google AI Studio](https://aistudio.google.com/app/apikey).`;
+        const isLegacyKey = effectiveApiKey.startsWith('AIza');
+        const legacyNote = isLegacyKey
+          ? `\n\n⚠️ **Deprecated Key Format Detected (\`AIza...\`)**:\nGoogle has transitioned the Gemini API to Authorization keys and now completely rejects unrestricted standard keys.\n\n👉 **Action Required**: Please generate a fresh Authorization key (starts with **\`AQ...\`**) from [Google AI Studio](https://aistudio.google.com/apikey) and paste it into Mimo Settings.`
+          : `\n\nPlease check your key in settings via [Google AI Studio](https://aistudio.google.com/apikey). Ensure you are using a new Authorization key (starts with **\`AQ...\`**).`;
+
+        const keyErrorMsg = `⚠️ **Gemini API Key Rejected**\n\nGoogle AI reported that your provided Gemini API key is invalid, rejected, or unauthorized.\n\n*Details*: \`${rawErrMsg.slice(0, 160)}\`${legacyNote}`;
         callbacks.onTextChunk?.(keyErrorMsg);
         return {
           fullText: keyErrorMsg,
@@ -571,7 +604,7 @@ export async function streamMimoResponse(options: {
 
         const throttledMsg = isUserKey
           ? `⚠️ **Google AI Rate Limit Reached (429)**\n\nYour Gemini API key has temporarily reached its per-minute throughput limit on Google AI Studio.\n\n**Suggestions**:\n- ⏳ **Wait 30–60 seconds** for Google's quota window to reset, then retry.\n- ⚡ Switch to **Gemini 3.5 Flash-Lite** from the model selector in the dock below for up to 1,500 requests/day with instant response.\n- 📊 Check your key quota status at [Google AI Studio](https://aistudio.google.com/).`
-          : `⚠️ **Free Demo Rate Limit Reached**\n\nThe shared MD Writer demo quota is temporarily exhausted for this minute/day.\n\n**How to continue**:\n- Connect your personal free Gemini API key in **Settings (BYOK)** to unlock 1,500 requests/day.\n- Get your free key in 30 seconds at [Google AI Studio](https://aistudio.google.com/app/apikey).`;
+          : `⚠️ **Free Demo Rate Limit Reached**\n\nThe shared MD Writer demo quota is temporarily exhausted for this minute/day.\n\n**How to continue**:\n- Connect your personal free Gemini API key in **Settings (BYOK)** to unlock 1,500 requests/day.\n- Get your free key in 30 seconds at [Google AI Studio](https://aistudio.google.com/apikey).`;
 
         callbacks.onTextChunk?.(throttledMsg);
         return {

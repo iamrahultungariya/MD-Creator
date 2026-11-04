@@ -16,6 +16,7 @@ import {
   X,
   Loader2,
   AlertCircle,
+  AlertTriangle,
   ChevronDown,
   BarChart3
 } from 'lucide-react';
@@ -469,6 +470,28 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 </button>
               </div>
 
+              {/* Legacy Key Warning for Connected Key */}
+              {userApiKey.startsWith('AIza') && (
+                <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+                  <div className="flex items-center gap-1 font-semibold text-amber-900 dark:text-amber-200">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>Deprecated Key Format (AIza...)</span>
+                  </div>
+                  <p className="text-[10.5px] leading-relaxed text-amber-800 dark:text-amber-300">
+                    Google has deprecated standard keys as of May 2026. If unrestricted, this key may be rejected. We recommend upgrading to an Authorization key (<code className="font-mono font-bold">AQ...</code>).
+                  </p>
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold underline text-amber-900 dark:text-amber-200 hover:opacity-80 pt-0.5"
+                  >
+                    <span>Generate new AQ key on Google AI Studio</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </div>
+              )}
+
               <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 Your personal Gemini API key is stored locally and securely in your browser.
               </p>
@@ -507,7 +530,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="relative">
                   <input
                     type={showKeyText ? 'text' : 'password'}
@@ -522,7 +545,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                         handleSaveApiKey();
                       }
                     }}
-                    placeholder="AIzaSy..."
+                    placeholder="AQ... or AIza..."
                     className={`w-full px-3 py-2 pr-8 rounded-xl border bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-neutral-100 font-mono placeholder:text-neutral-400 focus:outline-none transition-colors ${
                       keyValidationError
                         ? 'border-rose-500 ring-2 ring-rose-500/20'
@@ -540,17 +563,54 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   </button>
                 </div>
 
+                {/* Deprecated Key Format Warning Banner */}
+                {keyInput.trim().startsWith('AIza') && (
+                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span>Deprecated Key Format (AIza...)</span>
+                    </div>
+                    <p className="text-[10.5px] leading-relaxed text-amber-800 dark:text-amber-300">
+                      Google has deprecated standard keys as of May 2026. Unrestricted keys are blocked. Please generate a new Authorization key (<span className="font-mono font-bold">AQ...</span>) at Google AI Studio and paste it here.
+                    </p>
+                    <a
+                      href="https://aistudio.google.com/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold underline text-amber-900 dark:text-amber-200 hover:opacity-80 pt-0.5"
+                    >
+                      <span>Generate new AQ key on Google AI Studio</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                )}
+
                 {keyValidationError && (
-                  <p className="text-[10.5px] text-rose-600 dark:text-rose-400 flex items-center gap-1 pt-0.5">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{keyValidationError}</span>
-                  </p>
+                  <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[10.5px] text-rose-700 dark:text-rose-300 space-y-1">
+                    <div className="flex items-start gap-1">
+                      <AlertCircle className="w-3 h-3 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                      <span className="leading-relaxed">{keyValidationError}</span>
+                    </div>
+                    {keyValidationError.includes('aistudio.google.com') && (
+                      <div className="pl-4 pt-0.5">
+                        <a
+                          href="https://aistudio.google.com/apikey"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-semibold underline text-rose-800 dark:text-rose-200 hover:opacity-80"
+                        >
+                          <span>Get a new key at Google AI Studio</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
               <div className="flex items-center justify-between">
                 <a
-                  href="https://aistudio.google.com/app/apikey"
+                  href="https://aistudio.google.com/apikey"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[10.5px] font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:underline"

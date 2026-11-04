@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Key, ExternalLink, Check, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { X, Key, ExternalLink, Check, Trash2, Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useMimoStore } from '../stores/useMimoStore';
 import { validateGeminiApiKey } from '../services/mimoGeminiService';
 
@@ -85,21 +85,21 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
             Free via Google AI Studio
           </div>
           <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
-            Google provides a free tier with high rate limits for Gemini 3.8 Flash. Your key stays stored locally in your browser storage.
+            Google provides free Authorization keys (starting with <code className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">AQ...</code>) with high rate limits for Gemini 3.8 Flash. Your key stays stored locally in your browser storage.
           </p>
           <a
-            href="https://aistudio.google.com/app/apikey"
+            href="https://aistudio.google.com/apikey"
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-600 dark:text-brand-400 font-semibold underline underline-offset-2 hover:opacity-80 inline-flex items-center gap-1 mt-1"
           >
-            <span>Get your free Gemini key at aistudio.google.com</span>
+            <span>Get your free Gemini key at aistudio.google.com/apikey</span>
             <ExternalLink className="w-3 h-3" />
           </a>
         </div>
 
         {/* Input Field with live feedback */}
-        <div className="space-y-1.5 mb-5">
+        <div className="space-y-2 mb-5">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300">
               Gemini API Key
@@ -124,7 +124,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
                 handleSave();
               }
             }}
-            placeholder="AIzaSy..."
+            placeholder="AQ... or AIza..."
             className={`w-full px-3 py-2 rounded-lg border bg-neutral-50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white font-mono focus:outline-none transition-colors ${
               validationError
                 ? 'border-rose-500 ring-2 ring-rose-500/20'
@@ -133,11 +133,51 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
                 : 'border-neutral-200 dark:border-neutral-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
             }`}
           />
+
+          {/* Deprecated Key Format Warning Banner */}
+          {inputKey.trim().startsWith('AIza') && (
+            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300/80 dark:border-amber-800 text-xs space-y-1.5 animate-in fade-in duration-150">
+              <div className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <span>Deprecated Key Format (AIza...)</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                Google has deprecated unrestricted legacy standard keys as of May 2026. Please generate a fresh Authorization key (starts with <span className="font-mono font-bold">AQ...</span>) from Google AI Studio and paste it here.
+              </p>
+              <div className="pt-0.5">
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900 dark:text-amber-200 underline underline-offset-2 hover:opacity-80"
+                >
+                  <span>Generate new AQ key at aistudio.google.com/apikey</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          )}
+
           {validationError && (
-            <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{validationError}</span>
-            </p>
+            <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-700 dark:text-rose-300 space-y-1">
+              <div className="flex items-start gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                <span className="leading-relaxed">{validationError}</span>
+              </div>
+              {validationError.includes('aistudio.google.com') && (
+                <div className="pl-5 pt-0.5">
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-rose-800 dark:text-rose-200 underline hover:opacity-80"
+                  >
+                    <span>Open Google AI Studio to get a new key</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
