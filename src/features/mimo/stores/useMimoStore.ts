@@ -95,9 +95,10 @@ function createWelcomeMessage(docTitle?: string): MimoMessage {
 /**
  * Professional token-proportional quota calculation:
  * - Uses actual input + output token count and model tier weight:
- *   - Gemini 3.5 Flash-Lite (LOW / MEDIUM): 0.5% base + (tokens / 3500) * 1.5% -> ~0.8% to 2.5% per task
- *   - Gemini 3.8 Flash (HIGH / DocGen): 2.5% base + (tokens / 3000) * 3.5% -> ~3% to 8% per task
+ *   - Gemini 3.5 Flash-Lite (LOW / MEDIUM): 0.3% base + (tokens / 6000) * 1.0% -> ~0.5% to 1.5% per task
+ *   - Gemini 3.8 Flash (HIGH / DocGen): 1.0% base + (tokens / 5000) * 2.0% -> ~1.2% to 4.5% per task
  * - Zero deduction (0%) when running on Offline Engine or when aborted/stopped early.
+ * - Calibrated so free-tier users get ~40–60 normal messages/day before hitting the limit.
  */
 export function computeTaskCostPercent(
   tokensUsed: number,
@@ -111,12 +112,12 @@ export function computeTaskCostPercent(
 
   const isHeavyModel = modelUsed.includes('3.8') || level === 'HIGH' || isDocGen;
   if (isHeavyModel) {
-    const rawCost = 2.5 + (tokensUsed / 3000) * 3.5 + (isDocGen ? 2.0 : 0);
-    return Number(Math.min(9.0, Math.max(2.0, rawCost)).toFixed(1));
+    const rawCost = 1.0 + (tokensUsed / 5000) * 2.0 + (isDocGen ? 1.5 : 0);
+    return Number(Math.min(6.0, Math.max(1.0, rawCost)).toFixed(1));
   }
 
-  const liteCost = 0.5 + (tokensUsed / 3500) * 1.5;
-  return Number(Math.min(2.5, Math.max(0.5, liteCost)).toFixed(1));
+  const liteCost = 0.3 + (tokensUsed / 6000) * 1.0;
+  return Number(Math.min(1.5, Math.max(0.3, liteCost)).toFixed(1));
 }
 
 export const useMimoStore = create<MimoStoreState>()(
@@ -313,7 +314,9 @@ export const useMimoStore = create<MimoStoreState>()(
         }
 
         // If user has personal BYOK Gemini Key, no quota restrictions apply!
-        if (state.quota.userApiKey?.trim()) {
+        // Re-read directly from the latest store state to avoid stale closure captures.
+        const freshApiKey = get().quota.userApiKey?.trim();
+        if (freshApiKey) {
           return { allowed: true };
         }
 
@@ -326,8 +329,17 @@ export const useMimoStore = create<MimoStoreState>()(
           };
         }
 
-        // Check daily capacity limit (100%)
-        if (dailyPercent >= 100 || (costPercent > 0 && dailyPercent + costPercent > 100)) {
+        // Check daily capacity limit (100%).
+        // Pre-flight calls use costPercent = 0, so only block on actual deductions
+        // when dailyPercent is at capacity, not on 0-cost pre-flight checks.
+        if (costPercent > 0 && dailyPercent + costPercent > 100) {
+          return {
+            allowed: false,
+            reason:
+              'Daily AI capacity reached. Resets at midnight, or connect your personal Gemini API key in settings.',
+          };
+        }
+        if (costPercent <= 0 && dailyPercent >= 100) {
           return {
             allowed: false,
             reason:

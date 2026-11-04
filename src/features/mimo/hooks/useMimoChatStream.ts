@@ -129,12 +129,15 @@ export function useMimoChatStream({
       pLower.includes('translate') || pLower.includes('hinglish') || pLower.includes('hindi');
     const isSummarize = pLower.includes('summarize') || pLower.includes('summary');
 
-    // Pre-flight quota check (0% deduction upfront; actual tokens deducted after completion)
-    const preflightCheck = consumeCredit(0, isDocGen);
-    if (!preflightCheck.allowed) {
-      onToast(preflightCheck.reason || 'Daily AI capacity reached');
-      setIsKeyModalOpen(true);
-      return;
+    // Pre-flight quota check (0% deduction upfront; actual tokens deducted after completion).
+    // If the user has a live BYOK key (even if the persisted daily% is stale), skip quota.
+    if (!userApiKey) {
+      const preflightCheck = consumeCredit(0, isDocGen);
+      if (!preflightCheck.allowed) {
+        onToast(preflightCheck.reason || 'Daily AI capacity reached');
+        setIsKeyModalOpen(true);
+        return;
+      }
     }
 
     const liveSelection = getSelectedText ? getSelectedText().trim() : '';
