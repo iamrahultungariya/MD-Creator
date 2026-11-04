@@ -1,7 +1,9 @@
 import { Article } from '../data/blogArticles';
 import { UserReview } from '../services/reviewsStorage';
 
-export type AdminTab = 'overview' | 'analytics' | 'blogs' | 'reviews' | 'feedback';
+export type AdminTab = 'overview' | 'analytics' | 'blogs' | 'reviews' | 'feedback' | 'ai-settings';
+
+export * from './adminAi';
 
 export type FeedbackCategory = 'bug' | 'feature' | 'praise' | 'question';
 export type FeedbackSentiment = 'terrible' | 'bad' | 'okay' | 'good' | 'amazing';

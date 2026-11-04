@@ -208,7 +208,52 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                     <button
                       type="button"
                       onClick={() => useMimoStore.getState().setIsKeyModalOpen(true)}
-                      className="text-neutral-900 dark:text-neutral-100 font-semibold underline underline-offset-2 hover:opacity-80 cursor-pointer inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-700 text-white dark:bg-emerald-600 text-[11px] font-semibold hover:opacity-90 cursor-pointer shadow-2xs my-1"
+                    >
+                      {children}
+                    </button>
+                  );
+                }
+                if (href === '#switch-model-35') {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        useMimoStore.getState().setSelectedModel('gemini-3.5-flash');
+                        useMimoStore.getState().touchMimoActivity();
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 text-[11px] font-semibold hover:opacity-90 cursor-pointer shadow-2xs my-1"
+                    >
+                      {children}
+                    </button>
+                  );
+                }
+                if (href === '#switch-lite') {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        useMimoStore.getState().setSelectedModel('gemini-3.5-flash-lite');
+                        useMimoStore.getState().touchMimoActivity();
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 text-[11px] font-semibold hover:opacity-90 cursor-pointer shadow-2xs my-1"
+                    >
+                      {children}
+                    </button>
+                  );
+                }
+                if (href === '#retry-prompt') {
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const msgs = useMimoStore.getState().messages;
+                        const lastUser = [...msgs].reverse().find((m) => m.role === 'user');
+                        if (lastUser && onSubmitClarification) {
+                          onSubmitClarification(lastUser.text, message.id, {});
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-600 text-white text-[11px] font-semibold hover:opacity-90 cursor-pointer shadow-2xs my-1"
                     >
                       {children}
                     </button>

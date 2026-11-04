@@ -7,7 +7,8 @@ import {
   BarChart3, 
   Activity,
   RefreshCw, 
-  ExternalLink
+  ExternalLink,
+  Cpu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AdminTab, AdminStats } from '../../types/admin';
@@ -45,6 +46,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       id: 'analytics',
       label: 'User Analytics',
       icon: Activity,
+    },
+    {
+      id: 'ai-settings',
+      label: 'AI & OpenRouter',
+      icon: Cpu,
     },
     {
       id: 'blogs',

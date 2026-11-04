@@ -129,9 +129,16 @@ export function useMimoChatStream({
       pLower.includes('translate') || pLower.includes('hinglish') || pLower.includes('hindi');
     const isSummarize = pLower.includes('summarize') || pLower.includes('summary');
 
+    // Determine if user has a valid personal or workspace API key
+    const envKey = ((import.meta.env.VITE_GEMINI_API_KEY as string) || '').trim();
+    const hasActiveKey = Boolean(
+      userApiKey?.trim() ||
+      (envKey && envKey !== 'your_gemini_api_key_here' && envKey !== 'your-gemini-key')
+    );
+
     // Pre-flight quota check (0% deduction upfront; actual tokens deducted after completion).
-    // If the user has a live BYOK key (even if the persisted daily% is stale), skip quota.
-    if (!userApiKey) {
+    // If the user has a live BYOK key or workspace key, skip mock quota.
+    if (!hasActiveKey) {
       const preflightCheck = consumeCredit(0, isDocGen);
       if (!preflightCheck.allowed) {
         onToast(preflightCheck.reason || 'Daily AI capacity reached');
@@ -216,10 +223,12 @@ export function useMimoChatStream({
       subtitle: `Doc: "${context.docTitle}" (${context.linesAnalyzed} lines • ${context.totalWords} words)`,
       metrics: {
         linesScanned: context.linesAnalyzed,
-        tokenVelocity: selectedModel === 'gemini-3.5-flash-lite' ? 140 : 88,
+        tokenVelocity: selectedModel === 'gemini-3.5-flash-lite' ? 140 : selectedModel === 'gemini-3.5-flash' ? 115 : 88,
         modelName:
           selectedModel === 'gemini-3.5-flash-lite'
             ? 'Gemini 3.5 Flash-Lite'
+            : selectedModel === 'gemini-3.5-flash'
+            ? 'Gemini 3.5 Flash'
             : 'Gemini 3.8 Flash',
         thinkingLevel: selectedModel === 'gemini-3.5-flash-lite' ? 'MINIMAL' : thinkingLevel,
         elapsedMs: 0,

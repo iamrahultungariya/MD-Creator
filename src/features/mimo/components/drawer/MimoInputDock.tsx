@@ -25,7 +25,7 @@ export interface MimoInputDockProps {
   isGenerating: boolean;
   isAiExcluded?: boolean;
   selectedModel: string;
-  setSelectedModel: (model: 'gemini-3.8-flash' | 'gemini-3.5-flash-lite') => void;
+  setSelectedModel: (model: 'gemini-3.8-flash' | 'gemini-3.5-flash' | 'gemini-3.5-flash-lite') => void;
   thinkingLevel: ThinkingLevel;
   setThinkingLevel: (level: 'AUTO' | 'LOW' | 'MEDIUM' | 'HIGH') => void;
   onSend: (customPrompt?: string) => void;
@@ -147,13 +147,27 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
 
             <button
               type="button"
+              onClick={() => setSelectedModel('gemini-3.5-flash')}
+              className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
+                selectedModel === 'gemini-3.5-flash'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
+              }`}
+              title="Gemini 3.5 Flash (Balanced & High Stability)"
+            >
+              <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>3.5 Flash</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setSelectedModel('gemini-3.5-flash-lite')}
               className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
                 selectedModel === 'gemini-3.5-flash-lite'
                   ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
               }`}
-              title="Gemini 3.5 Flash-Lite (High Throughput)"
+              title="Gemini 3.5 Flash-Lite (High Throughput Speed)"
             >
               <Zap className="w-3 h-3" />
               <span>3.5 Lite</span>
@@ -161,7 +175,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
           </div>
 
           {/* Thinking Level Up-Arrow Popover Selector */}
-          {selectedModel === 'gemini-3.8-flash' ? (
+          {selectedModel === 'gemini-3.8-flash' || selectedModel === 'gemini-3.5-flash' ? (
             <div className="relative" ref={thinkingMenuRef}>
               <button
                 type="button"

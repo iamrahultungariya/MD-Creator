@@ -6,6 +6,9 @@ import { sanitizeTextForAi } from './privacySanitizer';
 import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDnaStore';
 import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
 import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
+import { useAdminAiStore } from '../../../stores/useAdminAiStore';
+import { streamOpenRouterResponse } from '../../../services/openRouterService';
+import { evaluateContextPrivacyPolicy } from '../../../services/adminAiContextFilter';
 
 export interface StreamCallbacks {
   onStreamReset?: () => void;
@@ -142,13 +145,135 @@ function withAbortAndTimeout<T>(
 }
 
 /**
+ * Structured diagnostic error object for Google Gemini API responses.
+ */
+export interface GeminiParsedError {
+  status: number;
+  code: string | number;
+  message: string;
+  isApiKeyInvalid: boolean;
+  isPermissionDenied: boolean;
+  isRateLimited: boolean;
+  isHighDemand: boolean;
+  isNotFound: boolean;
+  isInvalidArgument: boolean;
+  isTimeout: boolean;
+  isAborted: boolean;
+}
+
+/**
+ * Universal error classifier for Google Gemini API errors.
+ * Accurately extracts status codes (401, 403, 429, 503, 400), nested JSON payloads,
+ * and eliminates false deprecation rejections of standard AIza... keys.
+ */
+export function parseGeminiError(err: any): GeminiParsedError {
+  const isAborted =
+    err?.name === 'AbortError' ||
+    String(err?.message || '').includes('Aborted by user') ||
+    String(err?.message || '').includes('DOMException');
+
+  const rawMsg = String(err?.message || err || '');
+  let parsedStatus = typeof err?.status === 'number' ? err.status : 0;
+  let parsedCode: string | number = err?.code || '';
+  let cleanMessage = rawMsg;
+
+  // Extract nested JSON error if present: e.g. {"error":{"code":503,"message":"..."}}
+  try {
+    const jsonMatch = rawMsg.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      const errorObj = parsed.error || parsed;
+      if (errorObj) {
+        if (typeof errorObj.code === 'number') parsedStatus = parsedStatus || errorObj.code;
+        if (errorObj.status) parsedCode = errorObj.status;
+        if (typeof errorObj.message === 'string') {
+          // Handle double-nested JSON strings from Google RPC
+          try {
+            const inner = JSON.parse(errorObj.message);
+            if (inner.error?.message) {
+              cleanMessage = inner.error.message;
+              if (inner.error.code) parsedStatus = parsedStatus || inner.error.code;
+              if (inner.error.status) parsedCode = inner.error.status;
+            } else {
+              cleanMessage = errorObj.message;
+            }
+          } catch {
+            cleanMessage = errorObj.message;
+          }
+        }
+      }
+    }
+  } catch {
+    // Continue with raw message fallback
+  }
+
+  const lower = (cleanMessage + ' ' + rawMsg).toLowerCase();
+
+  const isApiKeyInvalid =
+    parsedStatus === 401 ||
+    lower.includes('api_key_invalid') ||
+    lower.includes('api key not valid') ||
+    lower.includes('unauthenticated') ||
+    lower.includes('invalid api key');
+
+  const isPermissionDenied =
+    parsedStatus === 403 ||
+    lower.includes('permission_denied') ||
+    lower.includes('permission denied');
+
+  const isRateLimited =
+    parsedStatus === 429 ||
+    lower.includes('429') ||
+    lower.includes('resource_exhausted') ||
+    lower.includes('quota exceeded') ||
+    lower.includes('rate limit');
+
+  const isHighDemand =
+    parsedStatus === 503 ||
+    lower.includes('503') ||
+    lower.includes('unavailable') ||
+    lower.includes('high demand') ||
+    lower.includes('overloaded');
+
+  const isNotFound =
+    parsedStatus === 404 ||
+    lower.includes('404') ||
+    lower.includes('not_found') ||
+    lower.includes('no longer available');
+
+  const isInvalidArgument =
+    parsedStatus === 400 ||
+    lower.includes('invalid_argument');
+
+  const isTimeout =
+    lower.includes('model_timeout') ||
+    lower.includes('etimedout') ||
+    lower.includes('timed out');
+
+  return {
+    status: parsedStatus,
+    code: parsedCode,
+    message: cleanMessage,
+    isApiKeyInvalid,
+    isPermissionDenied,
+    isRateLimited,
+    isHighDemand,
+    isNotFound,
+    isInvalidArgument,
+    isTimeout,
+    isAborted,
+  };
+}
+
+/**
  * Real-time pre-flight verification probe for personal Gemini API keys.
- * Checks against Google AI Studio using Gemini 3.x family.
- * Identifies legacy AIza... standard keys vs new AQ... Authorization keys.
+ * Uses a zero-token models.list probe (~200ms) that does not consume tokens
+ * and never fails due to model-specific inference demand spikes.
+ * Supports both standard AIza... keys and new AQ... Authorization keys transparently.
  */
 export async function validateGeminiApiKey(
   apiKey: string
-): Promise<{ valid: boolean; error?: string; isLegacy?: boolean; warning?: string }> {
+): Promise<{ valid: boolean; error?: string; warning?: string }> {
   const trimmed = apiKey.trim();
   if (!trimmed) {
     return { valid: false, error: 'API key cannot be empty' };
@@ -158,72 +283,61 @@ export async function validateGeminiApiKey(
     return { valid: false, error: 'Key length is too short to be a valid Gemini API key' };
   }
 
-  const isLegacy = trimmed.startsWith('AIza');
-  const legacyRejectionMsg =
-    'This API key format (AIza...) is deprecated by Google. Google now rejects unrestricted standard keys. Please generate a new Authorization key (starts with AQ...) at Google AI Studio (https://aistudio.google.com/apikey) and paste it here.';
-  const standardRejectionMsg =
-    'Invalid Gemini API key. Please generate a valid Authorization key (starts with AQ...) from Google AI Studio (https://aistudio.google.com/apikey).';
-
   try {
     const ai = new GoogleGenAI({ apiKey: trimmed });
-    const probe = await withAbortAndTimeout(
-      ai.models.generateContent({
-        model: 'gemini-3.5-flash-lite',
-        contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
-        config: {
-          maxOutputTokens: 2,
-          temperature: 0.1,
-        },
-      }),
+
+    // Primary probe: 0-token, ultra-fast metadata list request (~200ms)
+    // Does not trigger model generation load or 503 model-specific high demand!
+    const listProbe = await withAbortAndTimeout(
+      ai.models.list({ config: { pageSize: 1 } }),
       undefined,
-      12000
+      8000
     );
 
-    if (probe) {
-      if (isLegacy) {
-        return {
-          valid: true,
-          isLegacy: true,
-          warning:
-            'This key is working, but it uses the deprecated AIza format. Google recommends creating a new Authorization key (starts with AQ...) at https://aistudio.google.com/apikey.',
-        };
-      }
+    if (listProbe) {
       return { valid: true };
     }
     return { valid: true };
   } catch (err: any) {
-    const raw = String(err?.message || err || '');
-    console.warn('[validateGeminiApiKey] probe check failed:', raw);
+    const parsed = parseGeminiError(err);
+    console.warn('[validateGeminiApiKey] models.list probe failed:', parsed);
 
-    if (
-      err?.status === 400 ||
-      err?.status === 403 ||
-      raw.includes('API_KEY_INVALID') ||
-      raw.includes('not valid') ||
-      raw.includes('INVALID_ARGUMENT')
-    ) {
+    if (parsed.isApiKeyInvalid) {
       return {
         valid: false,
-        isLegacy,
-        error: isLegacy ? legacyRejectionMsg : standardRejectionMsg,
+        error: 'Invalid Gemini API key (HTTP 401). Please check and re-copy your key from Google AI Studio (https://aistudio.google.com/apikey).',
       };
     }
 
-    if (err?.status === 429 || raw.includes('429') || raw.includes('RESOURCE_EXHAUSTED')) {
-      // The key is authenticated, but currently rate-limited by Google AI
+    if (parsed.isPermissionDenied) {
+      return {
+        valid: false,
+        error: 'Permission Denied (HTTP 403). Your API key or Google Cloud project does not have permission to access the Generative Language API.',
+      };
+    }
+
+    if (parsed.isRateLimited) {
+      // Key is authentic, but currently rate-limited
       return {
         valid: true,
-        isLegacy,
-        error: 'Key is verified, but currently throttled by Google AI (429). Please wait 30 seconds before testing again.',
+        warning: 'Key is verified, but currently throttled by Google AI (429). Please wait a moment before sending requests.',
       };
     }
 
-    // Fallback probe with gemini-3.5-flash if 3.5-flash-lite was temporarily unavailable
+    if (parsed.isHighDemand) {
+      return {
+        valid: true,
+        warning: 'Key is verified, but Google AI servers are currently experiencing high demand (503).',
+      };
+    }
+
+    // Secondary fallback probe with lightweight generateContent on gemini-3.5-flash-lite
+    // in case the key has strict endpoint restrictions that block models.list
     try {
       const ai2 = new GoogleGenAI({ apiKey: trimmed });
       const probe2 = await withAbortAndTimeout(
         ai2.models.generateContent({
-          model: 'gemini-3.5-flash',
+          model: 'gemini-3.5-flash-lite',
           contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
           config: {
             maxOutputTokens: 2,
@@ -231,46 +345,43 @@ export async function validateGeminiApiKey(
           },
         }),
         undefined,
-        12000
+        8000
       );
+
       if (probe2) {
-        if (isLegacy) {
-          return {
-            valid: true,
-            isLegacy: true,
-            warning:
-              'This key is working, but it uses the deprecated AIza format. Google recommends creating a new Authorization key (starts with AQ...) at https://aistudio.google.com/apikey.',
-          };
-        }
         return { valid: true };
       }
     } catch (fallbackErr: any) {
-      const fallbackRaw = String(fallbackErr?.message || fallbackErr || '');
-      if (
-        fallbackErr?.status === 400 ||
-        fallbackErr?.status === 403 ||
-        fallbackRaw.includes('API_KEY_INVALID') ||
-        fallbackRaw.includes('not valid')
-      ) {
+      const fbParsed = parseGeminiError(fallbackErr);
+      if (fbParsed.isApiKeyInvalid) {
         return {
           valid: false,
-          isLegacy,
-          error: isLegacy ? legacyRejectionMsg : standardRejectionMsg,
+          error: 'Invalid Gemini API key (HTTP 401). Please verify your key at https://aistudio.google.com/apikey.',
         };
       }
-      if (fallbackErr?.status === 429 || fallbackRaw.includes('429') || fallbackRaw.includes('RESOURCE_EXHAUSTED')) {
+      if (fbParsed.isPermissionDenied) {
+        return {
+          valid: false,
+          error: 'API key rejected (HTTP 403 Permission Denied). Ensure Generative Language API is enabled.',
+        };
+      }
+      if (fbParsed.isRateLimited) {
         return {
           valid: true,
-          isLegacy,
-          error: 'Key is verified, but currently throttled by Google AI (429). Please wait 30 seconds before testing again.',
+          warning: 'Key is verified, but currently throttled by Google AI (429).',
+        };
+      }
+      if (fbParsed.isHighDemand) {
+        return {
+          valid: true,
+          warning: 'Key is verified, but Google AI is experiencing high demand (503).',
         };
       }
     }
 
     return {
       valid: false,
-      isLegacy,
-      error: raw.slice(0, 120) || 'Verification failed. Please check your connection or key.',
+      error: parsed.message || 'Verification failed. Please check your connection or key.',
     };
   }
 }
@@ -322,11 +433,17 @@ export async function streamMimoResponse(options: {
   };
 
   // Modern Gemini 3.x cascade (All legacy Gemini 2.x models retired by Google):
-  // - High-speed preference: Gemini 3.5 Flash-Lite -> Gemini 3.5 Flash -> Gemini 3.8 Flash
-  // - Deep reasoning preference: Gemini 3.8 Flash -> Gemini 3.5 Flash -> Gemini 3.5 Flash-Lite
-  const modelsToTry = selectedModel === 'gemini-3.5-flash-lite'
-    ? [liteModel, flash35Model, flash38Model]
-    : [flash38Model, flash35Model, liteModel];
+  // - Gemini 3.5 Flash: balanced, ultra-stable, high-speed workhorse
+  // - Gemini 3.5 Flash-Lite: lowest latency, high throughput
+  // - Gemini 3.8 Flash: deep reasoning & complex synthesis
+  let modelsToTry: Array<{ modelId: string; displayLabel: string; ttftTimeout: number }>;
+  if (selectedModel === 'gemini-3.5-flash') {
+    modelsToTry = [flash35Model, liteModel, flash38Model];
+  } else if (selectedModel === 'gemini-3.5-flash-lite') {
+    modelsToTry = [liteModel, flash35Model, flash38Model];
+  } else {
+    modelsToTry = [flash38Model, flash35Model, liteModel];
+  }
 
   const intent = classifyUserIntent(prompt, !!context.selectedText);
 
@@ -349,6 +466,51 @@ export async function streamMimoResponse(options: {
   callbacks.onReasoningStep?.(
     `Loaded "${context.docTitle}" (${context.linesAnalyzed} lines, ${context.totalWords} words) • Intent: ${intent}`
   );
+
+  // 1.5. Admin AI Dispatcher: Route to OpenRouter (stealth/crouton-alpha) if selected by Admin
+  const adminAi = useAdminAiStore.getState();
+  if (adminAi.defaultProvider === 'openrouter' && adminAi.isOpenRouterReady()) {
+    const privacyResult = evaluateContextPrivacyPolicy(prompt, context, adminAi.privacy);
+
+    callbacks.onReasoningStep?.(
+      privacyResult.isContextAttached
+        ? `📎 Context Attached: ${privacyResult.reason}`
+        : `🛡️ Zero Pre-Feed Active: ${privacyResult.reason}`
+    );
+
+    const openRouterMessages = (history || []).slice(-8).map((m) => ({
+      role: m.role as 'user' | 'assistant',
+      content: m.text,
+    }));
+    openRouterMessages.push({
+      role: 'user' as const,
+      content: privacyResult.finalPrompt,
+    });
+
+    try {
+      return await streamOpenRouterResponse({
+        apiKey: adminAi.openRouterApiKey,
+        model: adminAi.selectedModel,
+        systemPrompt: MIMO_SYSTEM_PROMPT,
+        messages: openRouterMessages,
+        enableThinking: adminAi.enableThinking,
+        reasoningEffort: adminAi.reasoningEffort,
+        temperature: adminAi.temperature,
+        maxTokens: adminAi.maxTokens,
+        topP: adminAi.topP,
+        callbacks,
+        signal,
+      });
+    } catch (openRouterErr: any) {
+      if (adminAi.fallbackToGeminiOnFailure) {
+        callbacks.onReasoningStep?.(
+          `⚠️ OpenRouter Error (${openRouterErr?.message || 'Unavailable'}). Gracefully failing over to Gemini 3.8 Flash...`
+        );
+      } else {
+        throw openRouterErr;
+      }
+    }
+  }
 
   // If no API key configured or browser is offline, run document-aware local synthesis
   if (!effectiveApiKey || (typeof navigator !== 'undefined' && !navigator.onLine)) {
@@ -536,24 +698,14 @@ export async function streamMimoResponse(options: {
         };
       }
 
-      const rawErrMsg = String(err?.message || err || '');
-      console.warn(`[Mimo] ${candidateModel.modelId} error:`, rawErrMsg);
+      const parsedErr = parseGeminiError(err);
+      console.warn(`[Mimo] ${candidateModel.modelId} error:`, parsedErr);
 
       // Check API key rejection FIRST — do NOT retry other models with the same broken key
-      const isApiKeyError =
-        (err?.status === 400 && (rawErrMsg.includes('API key') || rawErrMsg.includes('API_KEY_INVALID'))) ||
-        err?.status === 403 ||
-        rawErrMsg.includes('API_KEY_INVALID') ||
-        rawErrMsg.includes('API key not valid') ||
-        (rawErrMsg.includes('INVALID_ARGUMENT') && rawErrMsg.includes('key'));
+      if (parsedErr.isApiKeyInvalid || parsedErr.isPermissionDenied) {
+        const statusLabel = parsedErr.status ? ` (HTTP ${parsedErr.status})` : '';
+        const keyErrorMsg = `> [!CAUTION]\n> **Gemini API Key Authentication Failed${statusLabel}**\n> Google AI rejected the provided API key.\n> \n> *Error Details*: \`${parsedErr.message.slice(0, 200)}\`\n> \n> 👉 **Action Required**:\n> - Verify your key at [Google AI Studio](https://aistudio.google.com/apikey). Standard (\`AIza...\`) and Authorization (\`AQ...\`) keys are both supported.\n> - Connect or update your key in [Mimo Settings](#connect-key).`;
 
-      if (isApiKeyError) {
-        const isLegacyKey = effectiveApiKey.startsWith('AIza');
-        const legacyNote = isLegacyKey
-          ? `\n\n⚠️ **Deprecated Key Format Detected (\`AIza...\`)**:\nGoogle has transitioned the Gemini API to Authorization keys and now completely rejects unrestricted standard keys.\n\n👉 **Action Required**: Please generate a fresh Authorization key (starts with **\`AQ...\`**) from [Google AI Studio](https://aistudio.google.com/apikey) and paste it into Mimo Settings.`
-          : `\n\nPlease check your key in settings via [Google AI Studio](https://aistudio.google.com/apikey). Ensure you are using a new Authorization key (starts with **\`AQ...\`**).`;
-
-        const keyErrorMsg = `⚠️ **Gemini API Key Rejected**\n\nGoogle AI reported that your provided Gemini API key is invalid, rejected, or unauthorized.\n\n*Details*: \`${rawErrMsg.slice(0, 160)}\`${legacyNote}`;
         callbacks.onTextChunk?.(keyErrorMsg);
         return {
           fullText: keyErrorMsg,
@@ -564,29 +716,19 @@ export async function streamMimoResponse(options: {
         };
       }
 
-      // Handle high-demand 503 or transient unavailability
-      const is503Unavailable =
-        err?.status === 503 ||
-        rawErrMsg.includes('503') ||
-        rawErrMsg.includes('UNAVAILABLE') ||
-        rawErrMsg.includes('high demand');
-
-      // Rate limit 429 detection
-      const isRateLimit =
-        err?.status === 429 ||
-        rawErrMsg.includes('429') ||
-        rawErrMsg.includes('RESOURCE_EXHAUSTED') ||
-        rawErrMsg.includes('Quota exceeded');
-
       // If there is another model to cascade to, try it immediately
       if (attempt < modelsToTry.length - 1) {
-        if (is503Unavailable) {
+        if (parsedErr.isHighDemand) {
           callbacks.onReasoningStep?.(
             `⚡ ${candidateModel.displayLabel} high demand (503). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
           );
-        } else if (isRateLimit) {
+        } else if (parsedErr.isRateLimited) {
           callbacks.onReasoningStep?.(
             `⚡ ${candidateModel.displayLabel} quota reached (429). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
+          );
+        } else if (parsedErr.isNotFound) {
+          callbacks.onReasoningStep?.(
+            `⚡ ${candidateModel.displayLabel} not available (404). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
           );
         } else {
           callbacks.onReasoningStep?.(
@@ -596,15 +738,30 @@ export async function streamMimoResponse(options: {
         continue;
       }
 
-      if (isRateLimit) {
+      // If all cascading models returned 503 High Demand:
+      if (parsedErr.isHighDemand) {
+        const highDemandMsg = `> [!WARNING]\n> **Google AI High Demand Spike (HTTP 503)**\n> Google's Gemini servers are temporarily experiencing high demand on **${candidateModel.displayLabel}**.\n> \n> *Details*: \`${parsedErr.message.slice(0, 200) || 'Model is currently experiencing high demand. Spikes are temporary.'}\`\n> \n> **How to continue**:\n> - ⏳ **Wait 15–30 seconds** for server load to clear and [Retry Prompt](#retry-prompt)\n> - ⚡ Switch to [Gemini 3.5 Flash (Balanced)](#switch-model-35) or [Gemini 3.5 Flash-Lite](#switch-lite) from the model dock.`;
+
+        callbacks.onTextChunk?.(highDemandMsg);
+        return {
+          fullText: highDemandMsg,
+          thoughtText: '',
+          modelUsed: candidateModel.displayLabel,
+          resolvedLevel,
+          tokensUsed: 0,
+        };
+      }
+
+      // If all models hit Rate Limit (429):
+      if (parsedErr.isRateLimited) {
         const envKey = ((import.meta.env.VITE_GEMINI_API_KEY as string) || '').trim();
         const isUserKey =
           Boolean(apiKey?.trim()) ||
           Boolean(envKey && envKey !== 'your_gemini_api_key_here' && envKey !== 'your-gemini-key');
 
         const throttledMsg = isUserKey
-          ? `⚠️ **Google AI Rate Limit Reached (429)**\n\nYour Gemini API key has temporarily reached its per-minute throughput limit on Google AI Studio.\n\n**Suggestions**:\n- ⏳ **Wait 30–60 seconds** for Google's quota window to reset, then retry.\n- ⚡ Switch to **Gemini 3.5 Flash-Lite** from the model selector in the dock below for up to 1,500 requests/day with instant response.\n- 📊 Check your key quota status at [Google AI Studio](https://aistudio.google.com/).`
-          : `⚠️ **Free Demo Rate Limit Reached**\n\nThe shared MD Writer demo quota is temporarily exhausted for this minute/day.\n\n**How to continue**:\n- Connect your personal free Gemini API key in **Settings (BYOK)** to unlock 1,500 requests/day.\n- Get your free key in 30 seconds at [Google AI Studio](https://aistudio.google.com/apikey).`;
+          ? `> [!WARNING]\n> **Google AI Rate Limit Reached (HTTP 429)**\n> Your Gemini API key has reached its current throughput limit on Google AI Studio.\n> \n> **Suggestions**:\n> - ⏳ **Wait 30–60 seconds** for Google's quota window to reset, then [Retry Prompt](#retry-prompt).\n> - ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) for high throughput (up to 1,500 req/day).\n> - 📊 Check your quota status at [Google AI Studio](https://aistudio.google.com/).`
+          : `> [!WARNING]\n> **Free Demo Rate Limit Reached (HTTP 429)**\n> The shared demo quota is temporarily exhausted.\n> \n> **How to continue**:\n> - [Connect your free personal Gemini API Key](#connect-key) for high daily limits.\n> - Get your free key at [Google AI Studio](https://aistudio.google.com/apikey).`;
 
         callbacks.onTextChunk?.(throttledMsg);
         return {
@@ -615,12 +772,27 @@ export async function streamMimoResponse(options: {
           tokensUsed: 0,
         };
       }
+
+      // If request timed out:
+      if (parsedErr.isTimeout) {
+        const timeoutMsg = `> [!WARNING]\n> **Request Timed Out (${candidateModel.ttftTimeout / 1000}s)**\n> Google Gemini took longer than expected to respond due to network latency or server load.\n> \n> 👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 3.5 Flash-Lite](#switch-lite).`;
+        callbacks.onTextChunk?.(timeoutMsg);
+        return {
+          fullText: timeoutMsg,
+          thoughtText: '',
+          modelUsed: candidateModel.displayLabel,
+          resolvedLevel,
+          tokensUsed: 0,
+        };
+      }
     }
   }
 
   // Graceful fallback with clear diagnostic banner
-  const diagNotice = `> [!NOTE]\n> **Mimo Offline Local Synthesis Active**\n> Google Gemini AI connection could not be established. Generating deep local response from **"${context.docTitle}"**.\n\n` +
-    buildDocumentAwareResponse(prompt, context, intent);
+  const keyNotice = effectiveApiKey
+    ? `> [!NOTE]\n> **Mimo Offline Local Synthesis Active**\n> Google Gemini AI cloud connection could not be completed. Generating deep local response from **"${context.docTitle}"**.\n> \n> 👉 [Check Gemini API Key & Settings](#connect-key)\n\n`
+    : `> [!NOTE]\n> **Mimo Offline Local Synthesis Active**\n> Running on offline document synthesis. For real-time Gemini AI cloud generation, add your free [Google Gemini API Key](#connect-key).\n\n`;
+  const diagNotice = keyNotice + buildDocumentAwareResponse(prompt, context, intent);
   callbacks.onTextChunk?.(diagNotice);
   return {
     fullText: diagNotice,
