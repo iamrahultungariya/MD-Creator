@@ -12,11 +12,11 @@ export const MimoQuotaRing: React.FC = () => {
     return (
       <button
         onClick={() => setIsKeyModalOpen(true)}
-        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-violet-50 dark:bg-violet-950/70 border border-violet-200/80 dark:border-violet-800/80 text-[10px] font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/80 hover:text-violet-900 dark:hover:text-white transition-all cursor-pointer shadow-2xs"
-        title="Personal Gemini Key Active (BYOK)"
+        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800/80 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 transition-all cursor-pointer shadow-2xs"
+        title="Personal Gemini API Key Connected"
       >
-        <Key className="w-2.5 h-2.5 text-violet-600 dark:text-violet-400" />
-        <span>BYOK Active</span>
+        <Key className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+        <span>API Key Connected</span>
       </button>
     );
   }

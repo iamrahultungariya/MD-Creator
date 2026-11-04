@@ -2,9 +2,16 @@ import { useState, useRef } from 'react';
 import { useMimoStore, computeTaskCostPercent } from '../stores/useMimoStore';
 import { MimoActivityType, ActivityTelemetry } from '../types/mimoTypes';
 import { prepareMimoContext } from '../services/contextEngine';
-import { extractDiffHunkFromResponse, extractToolCallFromResponse, computeLineDiff } from '../services/diffService';
+import {
+  extractDiffHunkFromResponse,
+  extractToolCallFromResponse,
+  extractClarificationFromResponse,
+  computeLineDiff,
+} from '../services/diffService';
 import { streamMimoResponse } from '../services/mimoGeminiService';
 import { telemetryService } from '../../../services/telemetryService';
+import { fetchPinnedDocReferences, formatPinnedDocsPromptLayer } from '../services/docPinningService';
+import { extractEpisodicBulletsLocally, shouldCompressEpisodicTurns } from '../services/episodicMemoryEngine';
 
 export interface UseMimoChatStreamProps {
   docId: string;
@@ -18,6 +25,8 @@ export interface UseMimoChatStreamProps {
   inputPrompt: string;
   setInputPrompt: (val: string) => void;
 }
+
+const EMPTY_STRINGS: string[] = [];
 
 export function useMimoChatStream({
   docId,
@@ -44,6 +53,16 @@ export function useMimoChatStream({
   const userApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
   const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
   const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.8-flash';
+  const showThinking = useMimoStore((s) => s.showThinking);
+  const webSearchEnabled = useMimoStore((s) => s.webSearchEnabled);
+  const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);
+  const pinnedDocIds = useMimoStore((s) =>
+    docId && s.pinnedDocIdsByDoc ? s.pinnedDocIdsByDoc[docId] || EMPTY_STRINGS : EMPTY_STRINGS
+  );
+  const episodicSummaries = useMimoStore((s) =>
+    docId && s.episodicSummariesByDoc ? s.episodicSummariesByDoc[docId] || EMPTY_STRINGS : EMPTY_STRINGS
+  );
+  const appendEpisodicSummary = useMimoStore((s) => s.appendEpisodicSummary);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const isGeneratingRef = useRef(false);
@@ -174,6 +193,20 @@ export function useMimoChatStream({
         ? 'Scanning Document (LOC Guardrail)'
         : `Analyzing "${context.docTitle}"`;
 
+    // Resolve pinned reference documents from workspace
+    const pinnedDocs = await fetchPinnedDocReferences(pinnedDocIds);
+    const pinnedDocsLayer = formatPinnedDocsPromptLayer(pinnedDocs);
+
+    // Check rolling episodic memory compression
+    let effectiveEpisodic = [...episodicSummaries];
+    if (shouldCompressEpisodicTurns(messages)) {
+      const freshBullets = extractEpisodicBulletsLocally(messages);
+      if (freshBullets.length > 0) {
+        appendEpisodicSummary(docId, freshBullets);
+        effectiveEpisodic = freshBullets;
+      }
+    }
+
     const initialActivity: ActivityTelemetry = {
       type: activityType,
       title: activityTitle,
@@ -191,6 +224,13 @@ export function useMimoChatStream({
       },
       reasoningSteps: [
         `Connected to "${context.docTitle}" (${context.linesAnalyzed} LOC, ${context.totalWords} words)`,
+        ...(pinnedDocs.length > 0
+          ? [
+              `Vault grounding: ${pinnedDocs.length} pinned note(s) (${pinnedDocs
+                .map((d) => `"${d.title}"`)
+                .join(', ')})`,
+            ]
+          : []),
       ],
       isDone: false,
     };
@@ -205,12 +245,14 @@ export function useMimoChatStream({
       thoughtText: '',
       activity: initialActivity,
       timestamp: Date.now(),
+      mascotState: 'thinking',
     });
 
     abortControllerRef.current = new AbortController();
 
     try {
-      setMascotState('typing');
+      // Mascot remains in 'thinking' until first text token is received
+      setMascotState('thinking');
 
       const result = await streamMimoResponse({
         apiKey: userApiKey,
@@ -218,6 +260,10 @@ export function useMimoChatStream({
         context,
         thinkingLevel: thinkingLevel,
         selectedModel: selectedModel,
+        showThinking: showThinking,
+        webSearchEnabled: webSearchEnabled,
+        pinnedDocsLayer,
+        episodicBullets: effectiveEpisodic,
         history: messages,
         signal: abortControllerRef.current.signal,
         callbacks: {
@@ -252,15 +298,20 @@ export function useMimoChatStream({
             }));
           },
           onThoughtChunk: (thoughtChunk) => {
+            setMascotState('thinking');
             updateLastMessage((m) => ({
               ...m,
               thoughtText: (m.thoughtText || '') + thoughtChunk,
+              mascotState: 'thinking',
             }));
           },
           onTextChunk: (textChunk) => {
+            setMascotState('typing');
+            touchMimoActivity();
             updateLastMessage((m) => ({
               ...m,
               text: (m.text || '') + textChunk,
+              mascotState: 'typing',
             }));
           },
           onTokenVelocity: (tokPerSec) => {
@@ -313,8 +364,10 @@ export function useMimoChatStream({
 
       // Extract unified git hunk if present
       const { cleanText: textAfterDiff, hunk } = extractDiffHunkFromResponse(result.fullText, content);
+      // Extract interactive clarification questions if present
+      const { cleanText: textAfterClarification, clarification } = extractClarificationFromResponse(textAfterDiff);
       // Extract interactive tool call if present
-      const { cleanText, toolCall } = extractToolCallFromResponse(textAfterDiff);
+      const { cleanText, toolCall } = extractToolCallFromResponse(textAfterClarification);
       let diffDelta = { additions: 0, deletions: 0 };
       if (hunk) {
         setActiveDiffHunk(hunk);
@@ -356,10 +409,30 @@ export function useMimoChatStream({
           : completedActivity,
         diffHunk: hunk || undefined,
         toolCall: toolCall || undefined,
+        clarification: clarification || undefined,
+        mascotState: clarification ? 'thinking' : hunk ? 'excited' : 'happy',
       }));
 
       setActiveActivity(null);
-      setMascotState(hunk ? 'excited' : 'happy');
+      touchMimoActivity();
+      setMascotState(clarification ? 'thinking' : hunk ? 'excited' : 'happy');
+
+      // Refresh rolling episodic memory after successful turn
+      const turnConversation = [
+        ...messages,
+        {
+          id: assistantMessageId,
+          role: 'assistant' as const,
+          text: cleanText || '',
+          timestamp: Date.now(),
+        },
+      ];
+      if (shouldCompressEpisodicTurns(turnConversation)) {
+        const freshEpisodic = extractEpisodicBulletsLocally(turnConversation);
+        if (freshEpisodic.length > 0) {
+          appendEpisodicSummary(docId, freshEpisodic);
+        }
+      }
     } catch (err: any) {
       console.error('Mimo execution failed', err);
       const errElapsed = Math.max(200, Date.now() - startTime);
@@ -377,6 +450,7 @@ export function useMimoChatStream({
             }
           : undefined,
       }));
+      touchMimoActivity();
       setMascotState('happy');
     } finally {
       isGeneratingRef.current = false;

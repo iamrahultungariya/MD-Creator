@@ -3,6 +3,9 @@ import { ThinkingLevel, MimoModelChoice, MimoMessage, MimoIntentType } from '../
 import { resolveThinkingLevel, classifyUserIntent } from './promptRouter';
 import { PreparedContext } from './contextEngine';
 import { sanitizeTextForAi } from './privacySanitizer';
+import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDnaStore';
+import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
+import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
 
 export interface StreamCallbacks {
   onStreamReset?: () => void;
@@ -43,12 +46,34 @@ Section body here...
 2. Markdown First: Deliver structured, publication-grade GitHub Flavored Markdown (headings, tables, callouts, lists, and syntax-highlighted code blocks).
 3. Language Adaptation: If addressed in Hinglish, respond in natural, tech-savvy Hinglish (Roman script Hindi + English technical terms). If in Hindi, respond in fluent Hindi. If in English, respond in polished English.
 4. Selection Priority: When the user has selected text in their editor, prioritize addressing that specific selected snippet.
-5. Zero Fluff: Direct, insightful, and helpful without unnecessary conversational filler.`;
+5. Zero Fluff: Direct, insightful, and helpful without unnecessary conversational filler.
+6. Interactive Clarification Capability:
+   - When a user prompt is underspecified, broad, or has multiple valid approaches (e.g. "Write an introduction", "Create a blog post", "Help me draft a plan", "Improve this section" without clear tone/audience/goal), DO NOT guess blindly with a generic answer.
+   - Provide a brief polite sentence acknowledging the request, and append an interactive clarification card:
+\`\`\`json:mimo-clarification
+{
+  "title": "A few quick questions to customize your content",
+  "questions": [
+    {
+      "id": "q1",
+      "question": "What tone or target audience would you prefer?",
+      "type": "single",
+      "options": ["Professional & technical", "Engaging & casual", "Concise & executive"],
+      "allowCustom": true
+    }
+  ]
+}
+\`\`\`
+7. AST Section Surgeon (Targeted Scoped Editing):
+   - When the user asks to modify, rewrite, or expand a section, pinpoint the exact Markdown heading (H1, H2, or H3) or cursor section.
+   - Surgically propose diffs or replacements for ONLY that section without rewriting, repeating, or disrupting the rest of the document.
+   - Preserve all surrounding markdown structure, KaTeX math formulas, and frontmatter.`;
 
 /**
  * Resolves the optimal Gemini model & display label based on evaluated complexity:
- * - Gemini 3.8 Flash (gemini-3.8-flash) is the unified BASE model for ALL tasks (Low, Medium, High).
- * - High-speed failover cascade to Gemini 3.5 Flash-Lite (gemini-3.5-flash-lite) guarantees 100% reliability.
+ * - Gemini 3.8 Flash (gemini-3.8-flash) is the unified BASE model for deep reasoning tasks.
+ * - Gemini 3.5 Flash (gemini-3.5-flash) and Gemini 3.5 Flash-Lite (gemini-3.5-flash-lite)
+ *   provide ultra-high throughput failover (all legacy Gemini 2.x models have been retired).
  */
 export function getModelForComplexity(level: 'LOW' | 'MEDIUM' | 'HIGH'): {
   modelId: string;
@@ -117,6 +142,112 @@ function withAbortAndTimeout<T>(
 }
 
 /**
+ * Real-time pre-flight verification probe for personal Gemini API keys.
+ * Immediately checks against Google AI Studio using Gemini 3.x family.
+ */
+export async function validateGeminiApiKey(
+  apiKey: string
+): Promise<{ valid: boolean; error?: string }> {
+  const trimmed = apiKey.trim();
+  if (!trimmed) {
+    return { valid: false, error: 'API key cannot be empty' };
+  }
+
+  if (trimmed.length < 15) {
+    return { valid: false, error: 'Key length is too short to be a valid Gemini API key' };
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: trimmed });
+    const probe = await withAbortAndTimeout(
+      ai.models.generateContent({
+        model: 'gemini-3.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+        config: {
+          maxOutputTokens: 2,
+          temperature: 0.1,
+        },
+      }),
+      undefined,
+      12000
+    );
+
+    if (probe) {
+      return { valid: true };
+    }
+    return { valid: true };
+  } catch (err: any) {
+    const raw = String(err?.message || err || '');
+    console.warn('[validateGeminiApiKey] probe check failed:', raw);
+
+    if (
+      err?.status === 400 ||
+      err?.status === 403 ||
+      raw.includes('API_KEY_INVALID') ||
+      raw.includes('not valid') ||
+      raw.includes('INVALID_ARGUMENT')
+    ) {
+      return {
+        valid: false,
+        error: 'Invalid Gemini API key. Please check your key from Google AI Studio.',
+      };
+    }
+
+    if (err?.status === 429 || raw.includes('429') || raw.includes('RESOURCE_EXHAUSTED')) {
+      // The key is authenticated, but currently rate-limited by Google AI
+      return {
+        valid: true,
+        error: 'Key is verified, but currently throttled by Google AI (429). Please wait 30 seconds before testing again.',
+      };
+    }
+
+    // Fallback probe with gemini-3.5-flash if 3.5-flash-lite was temporarily unavailable
+    try {
+      const ai2 = new GoogleGenAI({ apiKey: trimmed });
+      const probe2 = await withAbortAndTimeout(
+        ai2.models.generateContent({
+          model: 'gemini-3.5-flash',
+          contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+          config: {
+            maxOutputTokens: 2,
+            temperature: 0.1,
+          },
+        }),
+        undefined,
+        12000
+      );
+      if (probe2) {
+        return { valid: true };
+      }
+    } catch (fallbackErr: any) {
+      const fallbackRaw = String(fallbackErr?.message || fallbackErr || '');
+      if (
+        fallbackErr?.status === 400 ||
+        fallbackErr?.status === 403 ||
+        fallbackRaw.includes('API_KEY_INVALID') ||
+        fallbackRaw.includes('not valid')
+      ) {
+        return {
+          valid: false,
+          error: 'Invalid Gemini API key. Please check your key from Google AI Studio.',
+        };
+      }
+      if (fallbackErr?.status === 429 || fallbackRaw.includes('429') || fallbackRaw.includes('RESOURCE_EXHAUSTED')) {
+        return {
+          valid: true,
+          error: 'Key is verified, but currently throttled by Google AI (429). Please wait 30 seconds before testing again.',
+        };
+      }
+    }
+
+    return {
+      valid: false,
+      error: raw.slice(0, 90) || 'Verification failed. Please check your connection or key.',
+    };
+  }
+}
+
+/**
  * Streams response from Gemini with instant abort support, smart model failover,
  * privacy sanitization, and real token accounting.
  */
@@ -126,26 +257,48 @@ export async function streamMimoResponse(options: {
   context: PreparedContext;
   thinkingLevel: ThinkingLevel;
   selectedModel?: MimoModelChoice;
+  showThinking?: boolean;
+  webSearchEnabled?: boolean;
+  pinnedDocsLayer?: string;
+  episodicBullets?: string[];
   callbacks: StreamCallbacks;
   signal?: AbortSignal;
   history?: MimoMessage[];
 }): Promise<MimoStreamResult> {
-  const { apiKey, prompt, context, thinkingLevel, selectedModel = 'gemini-3.8-flash', callbacks, signal, history } = options;
+  const {
+    apiKey,
+    prompt,
+    context,
+    thinkingLevel,
+    selectedModel = 'gemini-3.8-flash',
+    showThinking = false,
+    webSearchEnabled = false,
+    pinnedDocsLayer,
+    episodicBullets,
+    callbacks,
+    signal,
+    history,
+  } = options;
 
   const resolvedLevel = resolveThinkingLevel(thinkingLevel, prompt, context.totalDocLines);
-  const flashModel = getModelForComplexity(resolvedLevel);
+  const flash38Model = getModelForComplexity(resolvedLevel);
+  const flash35Model = {
+    modelId: 'gemini-3.5-flash',
+    displayLabel: 'Gemini 3.5 Flash',
+    ttftTimeout: 20000,
+  };
   const liteModel = {
     modelId: 'gemini-3.5-flash-lite',
     displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)',
     ttftTimeout: 18000,
   };
 
-  // User-selected model priority routing:
-  // - 'gemini-3.5-flash-lite': Explicit high-speed routing (500 RPD free tier, instant response)
-  // - 'gemini-3.8-flash' or 'auto': Unified deep reasoning with thinking transparency
+  // Modern Gemini 3.x cascade (All legacy Gemini 2.x models retired by Google):
+  // - High-speed preference: Gemini 3.5 Flash-Lite -> Gemini 3.5 Flash -> Gemini 3.8 Flash
+  // - Deep reasoning preference: Gemini 3.8 Flash -> Gemini 3.5 Flash -> Gemini 3.5 Flash-Lite
   const modelsToTry = selectedModel === 'gemini-3.5-flash-lite'
-    ? [liteModel, flashModel]
-    : [flashModel, liteModel];
+    ? [liteModel, flash35Model, flash38Model]
+    : [flash38Model, flash35Model, liteModel];
 
   const intent = classifyUserIntent(prompt, !!context.selectedText);
 
@@ -177,23 +330,22 @@ export async function streamMimoResponse(options: {
 
   const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
 
-  // 2. Build multi-turn conversational history contents for true memory
-  const historyContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
-  if (history && history.length > 0) {
-    const relevantHistory = history
-      .filter((m) => m.text && m.text.trim().length > 0 && !m.id.startsWith('welcome-'))
-      .slice(-8);
+  // 2. Build token-optimized history with rolling episodic memory
+  const { historyContents, episodicPromptLayer } = buildTokenOptimizedHistory(
+    history || [],
+    episodicBullets || []
+  );
 
-    for (const msg of relevantHistory) {
-      const trimmed = msg.text.length > 700 ? `${msg.text.slice(0, 700)}\n... [truncated for context]` : msg.text;
-      historyContents.push({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: trimmed }],
-      });
-    }
+  if (pinnedDocsLayer) {
+    callbacks.onReasoningStep?.('Grounding with pinned vault reference notes');
+  }
+  if (episodicPromptLayer) {
+    callbacks.onReasoningStep?.('Integrated episodic conversation memory');
   }
 
-  const currentTurnPayload = `[Active Context]\n${sanitizedContext.sanitizedText}\n\n[Detected Intent: ${intent}]\n[User Instruction]\n${sanitizedPrompt.sanitizedText}`;
+  const pinnedBlock = pinnedDocsLayer ? `\n\n${pinnedDocsLayer}` : '';
+  const episodicBlock = episodicPromptLayer ? `\n\n${episodicPromptLayer}` : '';
+  const currentTurnPayload = `[Active Context]\n${sanitizedContext.sanitizedText}${pinnedBlock}${episodicBlock}\n\n[Detected Intent: ${intent}]\n[User Instruction]\n${sanitizedPrompt.sanitizedText}`;
   const fullContents = [
     ...historyContents,
     { role: 'user' as const, parts: [{ text: currentTurnPayload }] },
@@ -228,10 +380,10 @@ export async function streamMimoResponse(options: {
     let firstTokenRecorded = false;
 
     try {
-      // thinkingConfig is configured on Gemini 3.8 series for deep reasoning & thinking transparency
+      // thinkingConfig is configured on Gemini 3.x series only when showThinking is enabled
       let thinkingConfig: Record<string, unknown> | undefined = undefined;
-      if (candidateModel.modelId.includes('gemini-3.8') || candidateModel.modelId.includes('gemini-3')) {
-        const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'high' : resolvedLevel === 'MEDIUM' ? 'medium' : 'low';
+      if (showThinking && (candidateModel.modelId.includes('gemini-3.8') || candidateModel.modelId.includes('gemini-3'))) {
+        const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'HIGH' : resolvedLevel === 'MEDIUM' ? 'MEDIUM' : 'LOW';
         thinkingConfig = {
           includeThoughts: true,
           thinkingLevel: apiThinkingLevel,
@@ -240,10 +392,28 @@ export async function streamMimoResponse(options: {
         thinkingConfig = undefined;
       }
 
+      // Optional Google Search Grounding tool
+      const tools: any[] = [];
+      if (webSearchEnabled) {
+        tools.push({ googleSearch: {} });
+      }
+
+      // Inject persistent StyleDNA (Tone, formatting, banned clichés)
+      const styleDnaState = useStyleDnaStore.getState();
+      const styleDnaLayer = buildStyleDnaPromptLayer(styleDnaState);
+      const isChaosToClarity =
+        prompt.toLowerCase().includes('chaos-to-clarity') ||
+        prompt.toLowerCase().includes('brain-dump') ||
+        prompt.toLowerCase().includes('chaos to clarity');
+      const compositeSystemInstruction = `${MIMO_SYSTEM_PROMPT}${
+        isChaosToClarity ? `\n\n${CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE}` : ''
+      }\n\n${styleDnaLayer}`;
+
       const config: Record<string, unknown> = {
-        systemInstruction: MIMO_SYSTEM_PROMPT,
+        systemInstruction: compositeSystemInstruction,
         temperature: 0.65,
         ...(thinkingConfig ? { thinkingConfig } : {}),
+        ...(tools.length > 0 ? { tools } : {}),
       };
 
       const responseStream = await withAbortAndTimeout(
@@ -350,8 +520,7 @@ export async function streamMimoResponse(options: {
         (rawErrMsg.includes('INVALID_ARGUMENT') && rawErrMsg.includes('key'));
 
       if (isApiKeyError) {
-        const keyErrorMsg = `⚠️ **Gemini API Key Rejected**\n\nGoogle AI reported that your provided Gemini API key is invalid, missing, or unauthorized.\n\n*Details*: \`${rawErrMsg.slice(0, 160)}\`\n\nPlease check your key in settings via [Google AI Studio](https://aistudio.google.com/app/apikey).\n\n---\n\n*Falling back to document-aware synthesis for "${context.docTitle}":*\n\n` +
-          buildDocumentAwareResponse(prompt, context, intent);
+        const keyErrorMsg = `⚠️ **Gemini API Key Rejected**\n\nGoogle AI reported that your provided Gemini API key is invalid, missing, or unauthorized.\n\n*Details*: \`${rawErrMsg.slice(0, 160)}\`\n\nPlease check your key in settings via [Google AI Studio](https://aistudio.google.com/app/apikey).`;
         callbacks.onTextChunk?.(keyErrorMsg);
         return {
           fullText: keyErrorMsg,
@@ -362,13 +531,12 @@ export async function streamMimoResponse(options: {
         };
       }
 
-      // If there is another model to cascade to, try it
-      if (attempt < modelsToTry.length - 1) {
-        callbacks.onReasoningStep?.(
-          `⚡ Switching to ${modelsToTry[attempt + 1].displayLabel} for faster response...`
-        );
-        continue;
-      }
+      // Handle high-demand 503 or transient unavailability
+      const is503Unavailable =
+        err?.status === 503 ||
+        rawErrMsg.includes('503') ||
+        rawErrMsg.includes('UNAVAILABLE') ||
+        rawErrMsg.includes('high demand');
 
       // Rate limit 429 detection
       const isRateLimit =
@@ -377,9 +545,34 @@ export async function streamMimoResponse(options: {
         rawErrMsg.includes('RESOURCE_EXHAUSTED') ||
         rawErrMsg.includes('Quota exceeded');
 
+      // If there is another model to cascade to, try it immediately
+      if (attempt < modelsToTry.length - 1) {
+        if (is503Unavailable) {
+          callbacks.onReasoningStep?.(
+            `⚡ ${candidateModel.displayLabel} high demand (503). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
+          );
+        } else if (isRateLimit) {
+          callbacks.onReasoningStep?.(
+            `⚡ ${candidateModel.displayLabel} quota reached (429). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
+          );
+        } else {
+          callbacks.onReasoningStep?.(
+            `⚡ Switching to ${modelsToTry[attempt + 1].displayLabel} for faster response...`
+          );
+        }
+        continue;
+      }
+
       if (isRateLimit) {
-        const throttledMsg = `⚠️ **Free Tier Rate Limit Reached**\n\nGoogle AI free tier quota exhausted for this minute/day. Please wait a moment or connect your personal free Gemini API key (BYOK) for higher throughput.\n\n---\n\n` +
-          buildDocumentAwareResponse(prompt, context, intent);
+        const envKey = ((import.meta.env.VITE_GEMINI_API_KEY as string) || '').trim();
+        const isUserKey =
+          Boolean(apiKey?.trim()) ||
+          Boolean(envKey && envKey !== 'your_gemini_api_key_here' && envKey !== 'your-gemini-key');
+
+        const throttledMsg = isUserKey
+          ? `⚠️ **Google AI Rate Limit Reached (429)**\n\nYour Gemini API key has temporarily reached its per-minute throughput limit on Google AI Studio.\n\n**Suggestions**:\n- ⏳ **Wait 30–60 seconds** for Google's quota window to reset, then retry.\n- ⚡ Switch to **Gemini 3.5 Flash-Lite** from the model selector in the dock below for up to 1,500 requests/day with instant response.\n- 📊 Check your key quota status at [Google AI Studio](https://aistudio.google.com/).`
+          : `⚠️ **Free Demo Rate Limit Reached**\n\nThe shared MD Writer demo quota is temporarily exhausted for this minute/day.\n\n**How to continue**:\n- Connect your personal free Gemini API key in **Settings (BYOK)** to unlock 1,500 requests/day.\n- Get your free key in 30 seconds at [Google AI Studio](https://aistudio.google.com/app/apikey).`;
+
         callbacks.onTextChunk?.(throttledMsg);
         return {
           fullText: throttledMsg,
@@ -698,6 +891,12 @@ ${meaningfulLines.map((l) => `> ${l}`).join('\n>\n')}
       .join('\n\n');
 
     return `## ✦ "${docTitle}" — Main Takeaways in Hinglish\n\nIs document (**${docTitle}**, \`${context.totalDocLines} lines\` / \`${context.totalWords} words\`) ke main points aur technical explanations Hinglish mein niche diye gaye hain:\n\n${sectionItems}\n\n---\n💡 **Quick Summary**: Yeh document total **${sections.length} key sections** mein divided hai. Agar aapko kisi specific section ko expand ya edit karna hai, toh bas uska naam batayein!`;
+  }
+
+  // 6.5. Chaos-to-Clarity Brain-Dump fallback
+  if (p.includes('chaos') || p.includes('brain-dump') || p.includes('clarity')) {
+    const rawToTransform = context.selectedText || context.rawContent || prompt;
+    return transformChaosLocally(rawToTransform);
   }
 
   // 7. General Document Diff / Edit fallback

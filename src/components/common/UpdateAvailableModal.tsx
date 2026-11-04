@@ -48,78 +48,56 @@ export const UpdateAvailableModal: React.FC = () => {
 
   const sections: UpdateSection[] = [
     {
-      id: 'performance',
-      title: 'Faster & Smoother Experience',
-      tag: 'Speed & Reliability',
+      id: 'mimo_states',
+      title: 'Mimo Mascot & 30s Auto-Sleep',
+      tag: 'Ambient AI',
       items: [
-        'Documents and folders load noticeably faster',
-        'Instant search response across all your notes and titles',
-        'Smooth, stutter-free scrolling even in lengthy articles',
-        'Significantly lower memory and battery usage on your device',
-        'Quick, fluid transitions between all views',
+        'Intelligent 30-second idle inactivity auto-sleep mode with gentle floating animations',
+        'Instant wake-up whenever you hover, click, or begin typing in Mimo',
+        'Real-time state transitions: Thinking → Typing → Excited (on diffs) → Happy',
+        'Dynamic chat message avatars reflecting live assistant state rather than static icons',
       ],
     },
     {
-      id: 'workspace',
-      title: 'Refined Workspace',
-      tag: 'Clean Design',
+      id: 'clarification',
+      title: 'Interactive Clarification Cards',
+      tag: 'Zero Guesswork',
       items: [
-        'A spacious, clutter-free document vault with more room to breathe',
-        'Simplified toolbar keeping the tools you need within easy reach',
-        'Flexible document lists with customizable page sizes (6, 12, 24)',
-        'Clearer tags and notebook organization across all screen sizes',
+        'Never guess blindly: Mimo asks targeted multi-choice questions on ambiguous requests',
+        '3 tailored options with radio or checkbox selection for tone, audience, and depth',
+        '4th free-write field to enter your own custom notes and specific constraints',
+        'One-click "Continue & Generate" passes answers directly to produce accurate output',
       ],
     },
     {
-      id: 'search',
-      title: 'Instant Search & Tag Filtering',
-      tag: 'Quick Retrieval',
+      id: 'settings_popover',
+      title: 'Anchored Controls & Token Optimization',
+      tag: 'Cost & Speed',
       items: [
-        'Find any word or heading in your notes without typing delay',
-        'Clicking tags filters matching notebooks instantly',
-        'Effortless page navigation so you spend less time searching',
+        'Replaced legacy Enhance button with a sleek Settings icon button right on the input dock',
+        'Pop-up menu opens directly anchored above the button without background blur or modal overlays',
+        'Show Thinking toggle (off by default) to slash token consumption and speed up responses',
+        'Google Web Search Grounding toggle for real-time facts and live reference citations',
       ],
     },
     {
-      id: 'storage',
-      title: 'Storage & Memory Management',
-      tag: 'Full Control',
+      id: 'section_surgeon',
+      title: 'AST Section Surgeon',
+      tag: 'Scoped Editing',
       items: [
-        'Simple storage overview inside Preferences to see what uses space',
-        'One-click cache cleanup to easily free up storage on your device',
-        'Transparent breakdown of local documents and image attachments',
+        'Targeted section edits: modifies only the active heading without touching the rest of your note',
+        'Respects document hierarchy, KaTeX math formulas, frontmatter, and footnotes',
+        'Maintains global outline context while eliminating 80% of unnecessary rewrite tokens',
       ],
     },
     {
-      id: 'sync',
-      title: 'Reliable Multi-Device Sync',
-      tag: 'Cloud Sync',
+      id: 'diff_preview',
+      title: 'Modern Minimal Diff Preview',
+      tag: 'GitHub & Linear Style',
       items: [
-        'Your notes stay in sync across your laptop, desktop, and phone',
-        'Automatic protection ensures recent edits are safely preserved',
-        'Silent background updates that never interrupt your writing',
-      ],
-    },
-    {
-      id: 'mimo',
-      title: 'Mimo Writing Companion',
-      tag: 'AI Partner',
-      items: [
-        'Friendly floating mascot helper located quietly at the corner of your screen',
-        'One-click cards to summarize notes, fix grammar, or format tables with instant undo',
-        'Understands the context of your current open document as you write',
-        'Renders clear math formulas and clean formatting right in the chat',
-        'Quickly open or hide anytime with the keyboard shortcut Ctrl+J',
-      ],
-    },
-    {
-      id: 'polish',
-      title: 'Quality of Life & Accessibility',
-      tag: 'Refinements',
-      items: [
-        'Polished modal dialogs with smooth keyboard navigation, tab cycling, and focus trapping',
-        'Enhanced accessibility and screen-reader semantics across all buttons and menus',
-        'Crisp visual contrast refinements across both dark and light themes',
+        'Redesigned dual-column line-numbered diff gutter inspired by GitHub and Linear',
+        'Soft emerald and rose inline tints for effortless visual comparison',
+        'One-click "Copy proposed text" and "Apply Changes" with instant editor synchronization',
       ],
     },
     {
@@ -128,7 +106,7 @@ export const UpdateAvailableModal: React.FC = () => {
       tag: 'Community',
       items: [
         'Found a bug or have an idea? Share your thoughts on our Feedback page to shape future updates!',
-        'Exciting new writing workflows and tools are actively in development',
+        'Continuous weekly updates shaping MD Writer into the fastest markdown workspace',
       ],
       actionLink: {
         label: 'Open Feedback Page →',
@@ -156,13 +134,13 @@ export const UpdateAvailableModal: React.FC = () => {
         <div className="p-5 sm:p-6 pb-4 border-b border-neutral-100 dark:border-neutral-800 shrink-0 space-y-3">
           {/* Heartfelt Thank You Banner */}
           <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-brand-500/10 via-brand-500/5 to-transparent border border-brand-500/20 flex items-start gap-2.5">
-            <span className="text-base select-none mt-0.5">❤️</span>
+            <span className="text-base select-none mt-0.5">🚀</span>
             <div className="text-xs leading-relaxed">
               <span className="font-bold text-neutral-900 dark:text-neutral-100">
-                Thank you for creating with MD Writer!
+                Welcome to MD Writer {APP_VERSION_LABEL}!
               </span>
               <p className="text-neutral-600 dark:text-neutral-400 mt-0.5">
-                Your support and feedback shaped this milestone release. We've supercharged performance, decluttered your workspace, and rebuilt Mimo into a true agentic writing partner.
+                We've upgraded Mimo into an intelligent ambient copilot with 30s auto-sleep, interactive clarification Q&amp;A cards, anchored generation settings, and token-saving optimizations.
               </p>
             </div>
           </div>
@@ -181,7 +159,7 @@ export const UpdateAvailableModal: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-                A new version is ready to install with unmatched speed and focused writing enhancements.
+                A new version is ready with intelligent Mimo state transitions, interactive clarification, and minimal diffing.
               </p>
             </div>
 
@@ -208,7 +186,7 @@ export const UpdateAvailableModal: React.FC = () => {
                 key={section.id}
                 className="p-4 rounded-2xl bg-neutral-50/70 dark:bg-neutral-800/40 border border-neutral-200/70 dark:border-neutral-800 flex flex-col sm:flex-row-reverse sm:items-start justify-between gap-3 sm:gap-6"
               >
-                {/* Right Side: Improve or change things name */}
+                {/* Right Side: Section Name & Badge */}
                 <div className="sm:w-48 sm:text-right shrink-0 space-y-1">
                   <h3 className="font-bold text-neutral-900 dark:text-white text-xs sm:text-sm tracking-tight">
                     {section.title}
@@ -220,7 +198,7 @@ export const UpdateAvailableModal: React.FC = () => {
                   )}
                 </div>
 
-                {/* Left Side: Show only 1-3 things related to it + Read more */}
+                {/* Left Side: Items & Expand */}
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <ul className="space-y-1 text-neutral-600 dark:text-neutral-400 text-xs sm:text-[13px] pl-4 list-disc marker:text-brand-500">
                     {visibleItems.map((item, idx) => (
@@ -269,7 +247,7 @@ export const UpdateAvailableModal: React.FC = () => {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-brand-700 dark:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/25 transition-colors cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
-            Meet Mimo 2.0.0 ✦
+            Meet Mimo 2.1.0 ✦
           </button>
 
           <div className="w-full sm:w-auto flex items-center justify-end gap-2.5">

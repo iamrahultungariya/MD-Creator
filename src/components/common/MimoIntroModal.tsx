@@ -92,7 +92,7 @@ export const MimoIntroModal: React.FC = () => {
                     id="mimo-intro-title"
                     className="text-lg sm:text-xl font-bold tracking-tight text-neutral-950 dark:text-white"
                   >
-                    What&apos;s New in Mimo 2.0.0
+                    What&apos;s New in Mimo 2.1.0
                   </h2>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
                     Simplified &amp; Faster
@@ -149,7 +149,7 @@ export const MimoIntroModal: React.FC = () => {
                   <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 text-neutral-700 dark:text-neutral-300 space-y-1">
                     <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
                       <Check className="w-3.5 h-3.5 shrink-0" />
-                      <span>Now in v2.0.0</span>
+                      <span>Now in v2.1.0</span>
                     </div>
                     <p className="text-[11.5px] leading-relaxed text-neutral-800 dark:text-neutral-200">
                       {item.newWay}

@@ -10,7 +10,8 @@ import { MimoInputDock } from './drawer/MimoInputDock';
 import { useMimoChatStream } from '../hooks/useMimoChatStream';
 import { useMimoDocumentActions } from '../hooks/useMimoDocumentActions';
 import { MimoQuickAction } from '../types/mimoTypes';
-import { enhanceUserPrompt } from '../services/promptRouter';
+import { useMimoInactivityTimer } from '../hooks/useMimoInactivityTimer';
+import { buildChaosToClarityPrompt } from '../services/chaosToClarityTransformer';
 
 export interface MimoDrawerProps {
   docId: string;
@@ -43,7 +44,6 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   const messages = useMimoStore((s) => s.messages);
   const clearMessages = useMimoStore((s) => s.clearMessages);
   const mascotState = useMimoStore((s) => s.mascotState);
-  const setMascotState = useMimoStore((s) => s.setMascotState);
   const activeActivity = useMimoStore((s) => s.activeActivity);
   const isKeyModalOpen = useMimoStore((s) => s.isKeyModalOpen);
   const setIsKeyModalOpen = useMimoStore((s) => s.setIsKeyModalOpen);
@@ -54,6 +54,10 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   const setThinkingLevel = useMimoStore((s) => s.setThinkingLevel);
   const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.8-flash';
   const setSelectedModel = useMimoStore((s) => s.setSelectedModel);
+  const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);
+
+  // Manage 30-second idle inactivity timer when drawer is open
+  useMimoInactivityTimer();
 
   const [inputPrompt, setInputPrompt] = useState('');
   const [activeSelection, setActiveSelection] = useState<string>('');
@@ -66,12 +70,13 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     }
   }, [docId, title, syncActiveDocument]);
 
-  // Sync active selection whenever Mimo is opened or focused
+  // Sync active selection whenever Mimo is opened or focused (guarded against re-render loop)
   useEffect(() => {
     if (isOpen && getSelectedText) {
       const sel = getSelectedText();
-      if (sel && sel.trim().length > 0) {
-        setActiveSelection(sel.trim());
+      const trimmed = sel ? sel.trim() : '';
+      if (trimmed.length > 0) {
+        setActiveSelection((prev) => (prev !== trimmed ? trimmed : prev));
       }
     }
   }, [isOpen, getSelectedText]);
@@ -112,22 +117,13 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     setInputPrompt,
   });
 
-  const handleEnhancePrompt = () => {
-    if (!inputPrompt.trim()) {
-      onToast('Enter a prompt first to enhance it!');
-      return;
-    }
-    const { enhanced, language } = enhanceUserPrompt(inputPrompt);
-    setInputPrompt(enhanced);
-    onToast(`✨ Enhanced prompt (${language.toUpperCase()} mode)!`);
-    setMascotState('excited');
-  };
-
   const handleQuickAction = (action: MimoQuickAction) => {
     const liveSelection = getSelectedText ? getSelectedText().trim() : '';
     const sel = activeSelection || liveSelection;
     if (sel) {
-      if (action === 'improve') {
+      if (action === 'chaos-to-clarity') {
+        handleSendPrompt(buildChaosToClarityPrompt(sel, true));
+      } else if (action === 'improve') {
         handleSendPrompt('Improve this selected text, fixing grammar, clarity, and tone with a clean diff.');
       } else if (action === 'summarize') {
         handleSendPrompt('Summarize this selected text in crisp bullet points.');
@@ -141,7 +137,49 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
       return;
     }
 
-    if (action === 'improve') {
+    if (action === 'chaos-to-clarity') {
+      handleSendPrompt(buildChaosToClarityPrompt(content, false));
+    } else if (action === 'vault-insights') {
+      import('../services/crossNoteLinkerService').then(async (m) => {
+        const addMsg = useMimoStore.getState().addMessage;
+        const setMascot = useMimoStore.getState().setMascotState;
+        addMsg({
+          id: `user-${Date.now()}`,
+          role: 'user',
+          text: '🔍 Scan my vault for cross-note internal links and parameter contradictions.',
+          timestamp: Date.now(),
+        });
+        setMascot('thinking');
+        const report = await m.generateCrossNoteReport(docId, content);
+        setMascot('happy');
+
+        if (report.findings.length === 0) {
+          addMsg({
+            id: `asst-${Date.now()}`,
+            role: 'assistant',
+            text: `### ✦ Vault Scan Complete\nScanned **${report.totalDocsScanned} local document(s)** in your workspace.\n\n✅ **Zero contradictions found** across parameters (rate limits, timeouts, ports, versions).\n✅ **No unlinked document mentions detected**. Your vault connections are clean!`,
+            timestamp: Date.now(),
+          });
+        } else {
+          const findingBullets = report.findings
+            .map((f, i) => {
+              if (f.type === 'fact_check') {
+                return `#### ${i + 1}. ⚠️ Parameter Divergence with "${f.targetDocTitle}"\n${f.explanation}\n\`\`\`text\n${f.lineContext || f.matchedText}\n\`\`\``;
+              }
+              return `#### ${i + 1}. 🔗 Unlinked Reference: "${f.targetDocTitle}"\nFound mention of **"${f.matchedText}"** without internal link. Suggest linking as \`${f.suggestedLink}\`.\n> "${f.lineContext || f.matchedText}"`;
+            })
+            .join('\n\n');
+
+          addMsg({
+            id: `asst-${Date.now()}`,
+            role: 'assistant',
+            text: `### ✦ Vault Graph & Fact-Check Report\nScanned **${report.totalDocsScanned} local documents** and found **${report.findings.length} insight(s)**:\n\n${findingBullets}\n\n---\n*You can add internal links using \`[[Document Title]]\` syntax to connect your notes.*`,
+            timestamp: Date.now(),
+          });
+        }
+      });
+      return;
+    } else if (action === 'improve') {
       handleSendPrompt('Review the current document and propose improvements with a clean diff.');
     } else if (action === 'summarize') {
       handleSendPrompt('Summarize key takeaways of this document in high-impact bullet points.');
@@ -154,13 +192,28 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     }
   };
 
+  const handleClarificationSubmit = (formattedPrompt: string, messageId: string, answers: any) => {
+    // Mark the message clarification as submitted with the chosen answers
+    useMimoStore.getState().updateLastMessage((m) =>
+      m.id === messageId && m.clarification
+        ? { ...m, clarification: { ...m.clarification, isSubmitted: true, answers } }
+        : m
+    );
+    // Submit the formatted clarification answers to trigger the final output
+    handleSendPrompt(formattedPrompt);
+  };
+
   if (!isOpen) return null;
 
   const isChatEmpty = messages.filter((m) => m.role === 'user').length === 0;
 
   return (
     <>
-      <div className="fixed inset-y-0 right-0 z-40 w-full sm:w-[460px] md:w-[490px] bg-white dark:bg-neutral-950 border-l border-neutral-200/80 dark:border-neutral-800/80 shadow-2xl flex flex-col font-sans select-text">
+      <div
+        onMouseMove={touchMimoActivity}
+        onClick={touchMimoActivity}
+        className="fixed inset-y-0 right-0 z-40 w-full sm:w-[460px] md:w-[490px] bg-white dark:bg-neutral-950 border-l border-neutral-200/80 dark:border-neutral-800/80 shadow-2xl flex flex-col font-sans select-text"
+      >
         {/* Header */}
         <MimoDrawerHeader
           title={title}
@@ -202,6 +255,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
                 onApplyToolCall={handleApplyToolCall}
                 onDiscardToolCall={handleDiscardToolCall}
                 onUndoToolCall={handleUndoToolCall}
+                onSubmitClarification={handleClarificationSubmit}
               />
             ))
           )}
@@ -211,6 +265,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
 
         {/* Input Dock */}
         <MimoInputDock
+          docId={docId}
           inputPrompt={inputPrompt}
           setInputPrompt={setInputPrompt}
           activeSelection={activeSelection}
@@ -223,7 +278,6 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
           setThinkingLevel={setThinkingLevel}
           onSend={handleSendPrompt}
           onStop={handleStop}
-          onEnhance={handleEnhancePrompt}
           onFocusTextarea={() => {
             if (getSelectedText && !activeSelection) {
               const sel = getSelectedText();

@@ -6,7 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import 'katex/dist/katex.min.css';
-import { normalizeMathDelimiters } from '../../../utils/markdownSanitizer';
+import { autoBalanceDelimitersAndSanitize } from '../../../utils/markdownSanitizer';
 import { extractTextFromReactNode } from '../../../components/editor/markdownAlerts';
 import { formatAndDetectCodeBlock } from '../../../utils/codeBlockFormatter';
 import { Copy, Check, ArrowDownToLine } from 'lucide-react';
@@ -16,6 +16,7 @@ import { MimoAvatar } from './MimoAvatar';
 import { MimoThoughtBlock } from './MimoThoughtBlock';
 import { MimoDiffCard } from './MimoDiffCard';
 import { MimoToolCallCard } from './MimoToolCallCard';
+import { MimoClarificationCard } from './MimoClarificationCard';
 
 interface MimoChatMessageProps {
   message: MimoMessage;
@@ -25,6 +26,7 @@ interface MimoChatMessageProps {
   onApplyToolCall?: (toolCall: MimoToolCall) => void;
   onDiscardToolCall?: (toolCallId: string) => void;
   onUndoToolCall?: (toolCall: MimoToolCall) => void;
+  onSubmitClarification?: (formattedPrompt: string, messageId: string, answers: any) => void;
 }
 
 
@@ -43,13 +45,25 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
   onApplyToolCall,
   onDiscardToolCall,
   onUndoToolCall,
+  onSubmitClarification,
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
   const [insertedCodeIndex, setInsertedCodeIndex] = useState<number | null>(null);
+  const showThinking = useMimoStore((s) => s.showThinking);
+  const currentStoreMascot = useMimoStore((s) => s.mascotState);
+
+  const isStreamingThis = !message.text || (message.activity && !message.activity.isDone);
+  const avatarState =
+    message.mascotState ||
+    (isStreamingThis
+      ? currentStoreMascot
+      : message.diffHunk && !message.diffHunk.isDiscarded
+      ? 'excited'
+      : 'happy');
 
   const normalizedText = React.useMemo(() => {
-    return normalizeMathDelimiters(message.text || '');
+    return autoBalanceDelimitersAndSanitize(message.text || '');
   }, [message.text]);
 
   const handleCopyFullText = () => {
@@ -91,7 +105,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
       {/* Assistant Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <MimoAvatar size="xs" state="happy" />
+          <MimoAvatar size="xs" state={avatarState} />
           <span className="font-bold text-xs text-neutral-800 dark:text-neutral-200">
             Mimo
           </span>
@@ -118,12 +132,14 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
         )}
       </div>
 
-      {/* Unified Thought & Reasoning Block */}
-      <MimoThoughtBlock
-        activity={message.activity}
-        thoughtText={message.thoughtText}
-        isStreaming={!message.text && (!message.activity || !message.activity.isDone)}
-      />
+      {/* Unified Thought & Reasoning Block (Shown only when showThinking is enabled in settings) */}
+      {showThinking && (
+        <MimoThoughtBlock
+          activity={message.activity}
+          thoughtText={message.thoughtText}
+          isStreaming={!message.text && (!message.activity || !message.activity.isDone)}
+        />
+      )}
 
       {/* Rich Formatted Markdown Response Body */}
       {message.text && (
@@ -286,6 +302,16 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
         </div>
       )}
 
+
+      {/* Interactive Clarification Question Card if present */}
+      {message.clarification && (
+        <MimoClarificationCard
+          clarification={message.clarification}
+          onSubmit={(formattedPrompt, answers) =>
+            onSubmitClarification?.(formattedPrompt, message.id, answers)
+          }
+        />
+      )}
 
       {/* Interactive Tool Call Action Card if present */}
       {message.toolCall && (

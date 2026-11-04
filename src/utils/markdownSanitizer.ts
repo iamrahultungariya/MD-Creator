@@ -220,6 +220,35 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
 }
 
 /**
+ * Auto-balances unclosed code fences, KaTeX display & inline math delimiters,
+ * normalizes LaTeX \( \) \[ \] forms, and sanitizes against HTML/XSS injection.
+ * Prevents streaming LLM responses or half-finished generations from breaking the preview pane.
+ */
+export function autoBalanceDelimitersAndSanitize(rawText: string): string {
+  if (!rawText) return '';
+
+  let balanced = rawText;
+
+  // 1. Balance unclosed code blocks: count triple backticks
+  const codeBlockMatches = balanced.match(/```/g);
+  if (codeBlockMatches && codeBlockMatches.length % 2 !== 0) {
+    balanced += '\n```\n';
+  }
+
+  // 2. Normalize ChatGPT / LaTeX math delimiters (\( \) and \[ \])
+  balanced = normalizeMathDelimiters(balanced);
+
+  // 3. Balance unclosed display math $$
+  const displayMathMatches = balanced.match(/\$\$/g);
+  if (displayMathMatches && displayMathMatches.length % 2 !== 0) {
+    balanced += '\n$$\n';
+  }
+
+  // 4. Sanitize with DOMPurify & HTML protection
+  return sanitizeMarkdownForPreview(balanced);
+}
+
+/**
  * Smart Clean & Normalizer for pasted clipboard fragments.
  * When copying from web benchmarks, CI logs, or rich-text cards, inline badges often get split
  * onto separate individual lines (e.g. "(\n>\n21.7\nms\n>21.7ms)").

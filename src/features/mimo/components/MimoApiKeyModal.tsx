@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Key, ExternalLink, Check, Trash2 } from 'lucide-react';
+import { X, Key, ExternalLink, Check, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useMimoStore } from '../stores/useMimoStore';
+import { validateGeminiApiKey } from '../services/mimoGeminiService';
 
 interface MimoApiKeyModalProps {
   isOpen: boolean;
@@ -13,22 +14,42 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
   const setUserApiKey = useMimoStore((s) => s.setUserApiKey);
 
   const [inputKey, setInputKey] = useState(userApiKey || '');
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    setUserApiKey(inputKey.trim());
-    setSavedSuccess(true);
-    setTimeout(() => {
-      setSavedSuccess(false);
-      onClose();
-    }, 800);
+  const handleSave = async () => {
+    const trimmed = inputKey.trim();
+    if (!trimmed) {
+      setValidationError('Please enter a Gemini API key');
+      return;
+    }
+
+    setIsValidating(true);
+    setValidationError(null);
+
+    const check = await validateGeminiApiKey(trimmed);
+    setIsValidating(false);
+
+    if (check.valid) {
+      setUserApiKey(trimmed);
+      setSavedSuccess(true);
+      setValidationError(null);
+      setTimeout(() => {
+        setSavedSuccess(false);
+        onClose();
+      }, 900);
+    } else {
+      setValidationError(check.error || 'Invalid API key. Please verify from Google AI Studio.');
+    }
   };
 
   const handleRemove = () => {
     setInputKey('');
     setUserApiKey('');
+    setValidationError(null);
   };
 
   return createPortal(
@@ -45,7 +66,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800 flex items-center justify-center text-violet-600 dark:text-violet-400">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Key className="w-4 h-4" />
           </div>
           <div>
@@ -53,7 +74,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
               Connect Gemini API Key
             </h3>
             <p className="text-xs text-neutral-500">
-              Bring Your Own Key (BYOK) for unlimited Mimo requests
+              Bring Your Own Key (BYOK) for Mimo pair writing
             </p>
           </div>
         </div>
@@ -77,18 +98,47 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
           </a>
         </div>
 
-        {/* Input Field */}
+        {/* Input Field with live feedback */}
         <div className="space-y-1.5 mb-5">
-          <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300">
-            Gemini API Key
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300">
+              Gemini API Key
+            </label>
+            {userApiKey && !validationError && (
+              <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                API Key Connected
+              </span>
+            )}
+          </div>
           <input
             type="password"
             value={inputKey}
-            onChange={(e) => setInputKey(e.target.value)}
+            onChange={(e) => {
+              setInputKey(e.target.value);
+              if (validationError) setValidationError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSave();
+              }
+            }}
             placeholder="AIzaSy..."
-            className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white font-mono focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+            className={`w-full px-3 py-2 rounded-lg border bg-neutral-50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white font-mono focus:outline-none transition-colors ${
+              validationError
+                ? 'border-rose-500 ring-2 ring-rose-500/20'
+                : savedSuccess || (userApiKey && inputKey === userApiKey)
+                ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                : 'border-neutral-200 dark:border-neutral-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'
+            }`}
           />
+          {validationError && (
+            <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>{validationError}</span>
+            </p>
+          )}
         </div>
 
         {/* Actions */}
@@ -108,21 +158,28 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
+              disabled={isValidating}
               className="px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              disabled={isValidating}
+              className="px-3.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-100 dark:hover:bg-neutral-200 text-white dark:text-neutral-950 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
             >
-              {savedSuccess ? (
+              {isValidating ? (
                 <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Saved</span>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Checking...</span>
+                </>
+              ) : savedSuccess ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Connected</span>
                 </>
               ) : (
-                <span>Save Key</span>
+                <span>Connect Key</span>
               )}
             </button>
           </div>

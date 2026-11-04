@@ -1,3 +1,5 @@
+import { extractASTSlidingContext } from './astContextEngine';
+
 export interface CachedDocSummary {
   docId: string;
   title: string;
@@ -223,7 +225,38 @@ ${outlineHeader}`,
     };
   }
 
-  // Case 3: Under 1000 LOC safe limit -> Provide complete document so Mimo has 100% accuracy
+  // Case 3: AST-Based Sliding Context for multi-section documents (>80 LOC)
+  const pLower = userPrompt.toLowerCase();
+  const isFullDocRequested =
+    pLower.includes('entire document') ||
+    pLower.includes('full document') ||
+    pLower.includes('pura document') ||
+    pLower.includes('whole document') ||
+    pLower.includes('generate document');
+
+  if (!isFullDocRequested && totalDocLines > 80) {
+    const sliding = extractASTSlidingContext(content, cursorLine, summary.title);
+    if (sliding.isSlidingApplied) {
+      return {
+        docId,
+        docTitle: summary.title,
+        rawContent: content,
+        contextMode: 'chunked_loc_guarded',
+        contextText: `Active Document: "${summary.title}" (${totalDocLines} LOC total, cursor at line ${cursorLine}).
+[AST-Based Sliding Window Active • ${sliding.tokenReductionPercent}% Tokens Saved]
+
+${sliding.slidingContextText}`,
+        linesAnalyzed: sliding.currentSectionContent.split('\n').length,
+        totalDocLines,
+        totalWords: summary.wordCount,
+        headings: summary.headingsSummary,
+        guardrailTriggered: false,
+        activeHeadingPath: sliding.activeHeadingPath,
+      };
+    }
+  }
+
+  // Case 4: Under 1000 LOC safe limit -> Provide complete document so Mimo has 100% accuracy
   if (totalDocLines <= 1000) {
     const outlineHeader =
       summary.headingsSummary.length > 0

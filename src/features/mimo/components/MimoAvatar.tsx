@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MascotState } from '../types/mimoTypes';
 import { useMimoStore } from '../stores/useMimoStore';
@@ -7,7 +7,6 @@ export interface MimoAvatarProps {
   state?: MascotState;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'floating' | 'hero';
   className?: string;
-  showSleepTimer?: boolean;
   onClick?: () => void;
 }
 
@@ -32,39 +31,10 @@ export const MimoAvatar: React.FC<MimoAvatarProps> = ({
   state: propState,
   size = 'md',
   className = '',
-  showSleepTimer = false,
   onClick,
 }) => {
   const storeState = useMimoStore((s) => s.mascotState);
-  const setMascotState = useMimoStore((s) => s.setMascotState);
   const activeState = propState || storeState;
-
-  // Auto-sleep timer (45 seconds of idle inactivity triggers sleep mode)
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!showSleepTimer) return;
-
-    const resetIdleTimer = () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      if (activeState === 'sleeping') {
-        setMascotState('happy');
-      }
-      idleTimerRef.current = setTimeout(() => {
-        setMascotState('sleeping');
-      }, 45000);
-    };
-
-    window.addEventListener('mousemove', resetIdleTimer, { passive: true });
-    window.addEventListener('keydown', resetIdleTimer, { passive: true });
-    resetIdleTimer();
-
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      window.removeEventListener('mousemove', resetIdleTimer);
-      window.removeEventListener('keydown', resetIdleTimer);
-    };
-  }, [showSleepTimer, activeState, setMascotState]);
 
   const assetSrc = STATE_ASSETS[activeState] || STATE_ASSETS.happy;
 
@@ -79,17 +49,17 @@ export const MimoAvatar: React.FC<MimoAvatarProps> = ({
       <motion.div
         animate={
           activeState === 'thinking'
-            ? { y: [0, -3, 0], scale: [1, 1.02, 1] }
+            ? { y: [0, -4, 0], scale: [1, 1.04, 1] }
             : activeState === 'sleeping'
-            ? { y: [0, 2, 0], opacity: [0.85, 0.95, 0.85] }
+            ? { y: [0, 2, 0], opacity: [0.85, 0.98, 0.85] }
             : activeState === 'excited'
-            ? { scale: [1, 1.04, 1], y: [0, -3, 0] }
+            ? { scale: [1, 1.06, 1], y: [0, -3, 0] }
             : activeState === 'typing'
-            ? { y: [0, -2, 0] }
+            ? { y: [0, -2, 0], scale: [1, 1.02, 1] }
             : { y: [0, -2, 0] }
         }
         transition={{
-          duration: activeState === 'thinking' ? 2 : activeState === 'sleeping' ? 3.5 : 2.5,
+          duration: activeState === 'thinking' ? 1.8 : activeState === 'sleeping' ? 3.5 : 2.5,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
@@ -100,10 +70,10 @@ export const MimoAvatar: React.FC<MimoAvatarProps> = ({
             key={activeState}
             src={assetSrc}
             alt={`Mimo ${activeState}`}
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.18 }}
             className="w-full h-full object-contain filter drop-shadow-sm select-none pointer-events-none"
             draggable={false}
           />

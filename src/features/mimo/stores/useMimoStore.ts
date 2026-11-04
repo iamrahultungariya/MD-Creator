@@ -25,6 +25,17 @@ interface MimoStoreState {
   isKeyModalOpen: boolean;
   isPrivacyModalOpen: boolean;
 
+  // Settings & Toggles
+  showThinking: boolean;
+  webSearchEnabled: boolean;
+  lastMimoInteractionTime: number;
+
+  // Vault & Document Pinning (@doc context)
+  pinnedDocIdsByDoc: Record<string, string[]>;
+
+  // Rolling Episodic Chat Summary Memory
+  episodicSummariesByDoc: Record<string, string[]>;
+
   // Quota & BYOK
   quota: MimoQuotaState;
 
@@ -34,6 +45,15 @@ interface MimoStoreState {
   setMascotState: (state: MascotState) => void;
   setThinkingLevel: (level: ThinkingLevel) => void;
   setSelectedModel: (model: MimoModelChoice) => void;
+  setShowThinking: (show: boolean) => void;
+  setWebSearchEnabled: (enabled: boolean) => void;
+  touchMimoActivity: () => void;
+  pinDocument: (targetDocId: string) => void;
+  unpinDocument: (targetDocId: string) => void;
+  clearPinnedDocs: () => void;
+  getPinnedDocIds: () => string[];
+  appendEpisodicSummary: (docId: string, bullets: string[]) => void;
+  clearEpisodicMemory: (docId?: string) => void;
   setUserApiKey: (key: string) => void;
   setIsKeyModalOpen: (open: boolean) => void;
   setIsPrivacyModalOpen: (open: boolean) => void;
@@ -110,10 +130,15 @@ export const useMimoStore = create<MimoStoreState>()(
       selectedModel: 'gemini-3.8-flash',
       messages: [createWelcomeMessage()],
       messagesByDoc: {},
+      pinnedDocIdsByDoc: {},
+      episodicSummariesByDoc: {},
       activeActivity: null,
       activeDiffHunk: null,
       isKeyModalOpen: false,
       isPrivacyModalOpen: false,
+      showThinking: false, // Default false to prevent unwanted token consumption!
+      webSearchEnabled: false,
+      lastMimoInteractionTime: Date.now(),
       quota: INITIAL_QUOTA,
 
       setIsOpen: (isOpen) => {
@@ -123,6 +148,7 @@ export const useMimoStore = create<MimoStoreState>()(
         }
         set((state) => ({
           isOpen,
+          lastMimoInteractionTime: Date.now(),
           mascotState: isOpen ? 'excited' : state.mascotState === 'typing' ? 'typing' : 'happy',
         }));
       },
@@ -167,12 +193,91 @@ export const useMimoStore = create<MimoStoreState>()(
 
       setSelectedModel: (selectedModel) => set({ selectedModel }),
 
+      setShowThinking: (showThinking) => set({ showThinking }),
+
+      setWebSearchEnabled: (webSearchEnabled) => set({ webSearchEnabled }),
+
+      touchMimoActivity: () => {
+        const { mascotState } = get();
+        set({
+          lastMimoInteractionTime: Date.now(),
+          ...(mascotState === 'sleeping' ? { mascotState: 'happy' } : {}),
+        });
+      },
+
+      pinDocument: (targetDocId: string) => {
+        const { activeDocId, pinnedDocIdsByDoc = {} } = get();
+        if (!targetDocId || targetDocId === activeDocId) return;
+        const current = pinnedDocIdsByDoc[activeDocId] || [];
+        if (current.includes(targetDocId)) return;
+        // Limit to max 3 pinned docs to preserve token efficiency
+        const next = [...current.slice(-2), targetDocId];
+        set({
+          pinnedDocIdsByDoc: {
+            ...pinnedDocIdsByDoc,
+            [activeDocId]: next,
+          },
+          lastMimoInteractionTime: Date.now(),
+        });
+      },
+
+      unpinDocument: (targetDocId: string) => {
+        const { activeDocId, pinnedDocIdsByDoc = {} } = get();
+        const current = pinnedDocIdsByDoc[activeDocId] || [];
+        set({
+          pinnedDocIdsByDoc: {
+            ...pinnedDocIdsByDoc,
+            [activeDocId]: current.filter((id) => id !== targetDocId),
+          },
+          lastMimoInteractionTime: Date.now(),
+        });
+      },
+
+      clearPinnedDocs: () => {
+        const { activeDocId, pinnedDocIdsByDoc = {} } = get();
+        set({
+          pinnedDocIdsByDoc: {
+            ...pinnedDocIdsByDoc,
+            [activeDocId]: [],
+          },
+          lastMimoInteractionTime: Date.now(),
+        });
+      },
+
+      getPinnedDocIds: () => {
+        const { activeDocId, pinnedDocIdsByDoc = {} } = get();
+        return pinnedDocIdsByDoc[activeDocId] || [];
+      },
+
+      appendEpisodicSummary: (docId: string, bullets: string[]) => {
+        if (!docId || bullets.length === 0) return;
+        const { episodicSummariesByDoc = {} } = get();
+        const existing = episodicSummariesByDoc[docId] || [];
+        // Keep up to 12 latest high-density episodic memory bullets per doc
+        const updated = [...existing, ...bullets].slice(-12);
+        set({
+          episodicSummariesByDoc: {
+            ...episodicSummariesByDoc,
+            [docId]: updated,
+          },
+        });
+      },
+
+      clearEpisodicMemory: (docId?: string) => {
+        const { activeDocId, episodicSummariesByDoc = {} } = get();
+        const targetId = docId || activeDocId;
+        const next = { ...episodicSummariesByDoc };
+        delete next[targetId];
+        set({ episodicSummariesByDoc: next });
+      },
+
       setUserApiKey: (key) =>
         set((state) => ({
           quota: {
             ...state.quota,
             userApiKey: key.trim(),
             hasAcceptedPrivacyNotice: true,
+            dailyUsagePercent: 0,
           },
         })),
 
@@ -217,7 +322,7 @@ export const useMimoStore = create<MimoStoreState>()(
           return {
             allowed: false,
             reason:
-              'Monthly AI Document Generation limit (3 docs/month) reached. Add your free Gemini API key to continue unlimited generation!',
+              'Monthly AI Document Generation limit (3 docs/month) reached. Connect your Gemini API key in settings to continue.',
           };
         }
 
@@ -226,7 +331,7 @@ export const useMimoStore = create<MimoStoreState>()(
           return {
             allowed: false,
             reason:
-              'Daily AI capacity reached. Resets at midnight, or connect your personal Gemini API key for unlimited deep thinking.',
+              'Daily AI capacity reached. Resets at midnight, or connect your personal Gemini API key in settings.',
           };
         }
 
@@ -248,12 +353,14 @@ export const useMimoStore = create<MimoStoreState>()(
 
         // Deduct proportional capacity
         const nextPercent = Number(Math.min(100, dailyPercent + costPercent).toFixed(1));
+        const nextMonthlyDocGen = isDocGen ? monthlyDocGen + 1 : monthlyDocGen;
+
         set({
           quota: {
             ...state.quota,
             dailyUsagePercent: nextPercent,
+            monthlyDocGenCount: nextMonthlyDocGen,
             lastResetDate: today,
-            monthlyDocGenCount: isDocGen ? monthlyDocGen + 1 : monthlyDocGen,
             lastMonthReset: thisMonth,
           },
         });
@@ -261,47 +368,50 @@ export const useMimoStore = create<MimoStoreState>()(
         return { allowed: true };
       },
 
-      addMessage: (msg) =>
-        set((state) => {
-          const updated = [...state.messages, msg].slice(-40);
-          return {
-            messages: updated,
-            messagesByDoc: {
-              ...state.messagesByDoc,
-              [state.activeDocId]: updated,
-            },
-          };
-        }),
+      addMessage: (msg) => {
+        const { activeDocId, messages, messagesByDoc } = get();
+        const nextMessages = [...messages, msg];
+        set({
+          messages: nextMessages,
+          lastMimoInteractionTime: Date.now(),
+          messagesByDoc: {
+            ...messagesByDoc,
+            [activeDocId]: nextMessages,
+          },
+        });
+      },
 
-      updateLastMessage: (updater) =>
-        set((state) => {
-          if (state.messages.length === 0) return state;
-          const updated = [...state.messages];
-          const lastIdx = updated.length - 1;
-          updated[lastIdx] = updater(updated[lastIdx]);
-          return {
-            messages: updated,
-            messagesByDoc: {
-              ...state.messagesByDoc,
-              [state.activeDocId]: updated,
-            },
-          };
-        }),
+      updateLastMessage: (updater) => {
+        const { activeDocId, messages, messagesByDoc } = get();
+        if (messages.length === 0) return;
+        const lastIndex = messages.length - 1;
+        const updated = updater(messages[lastIndex]);
+        const nextMessages = [...messages];
+        nextMessages[lastIndex] = updated;
 
-      clearMessages: () =>
-        set((state) => {
-          const fresh = [createWelcomeMessage(state.activeDocTitle)];
-          return {
-            messages: fresh,
-            messagesByDoc: {
-              ...state.messagesByDoc,
-              [state.activeDocId]: fresh,
-            },
-            activeActivity: null,
-            activeDiffHunk: null,
-            mascotState: 'happy',
-          };
-        }),
+        set({
+          messages: nextMessages,
+          messagesByDoc: {
+            ...messagesByDoc,
+            [activeDocId]: nextMessages,
+          },
+        });
+      },
+
+      clearMessages: () => {
+        const { activeDocId, activeDocTitle, messagesByDoc } = get();
+        const welcome = [createWelcomeMessage(activeDocTitle)];
+        set({
+          messages: welcome,
+          activeActivity: null,
+          activeDiffHunk: null,
+          lastMimoInteractionTime: Date.now(),
+          messagesByDoc: {
+            ...messagesByDoc,
+            [activeDocId]: welcome,
+          },
+        });
+      },
 
       setActiveActivity: (act) =>
         set((state) => ({
@@ -312,19 +422,24 @@ export const useMimoStore = create<MimoStoreState>()(
 
       applyActiveDiff: (currentContent: string) => {
         const { activeDiffHunk, activeDocId } = get();
-        if (!activeDiffHunk) return { nextContent: currentContent, success: false };
+        if (!activeDiffHunk) {
+          return { nextContent: currentContent, success: false };
+        }
 
-        const { nextContent, success } = applyDiffHunkToDocument(currentContent, activeDiffHunk);
-        if (success) {
+        const res = applyDiffHunkToDocument(currentContent, activeDiffHunk);
+        if (res.success) {
           set((state) => {
+            const updatedHunk = { ...activeDiffHunk, isApplied: true };
             const updatedMessages = state.messages.map((m) =>
               m.diffHunk && m.diffHunk.id === activeDiffHunk.id
-                ? { ...m, diffHunk: { ...m.diffHunk, isApplied: true } }
+                ? { ...m, diffHunk: updatedHunk }
                 : m
             );
+
             return {
-              activeDiffHunk: { ...activeDiffHunk, isApplied: true },
-              mascotState: 'excited',
+              activeDiffHunk: null,
+              mascotState: 'happy',
+              lastMimoInteractionTime: Date.now(),
               messages: updatedMessages,
               messagesByDoc: {
                 ...state.messagesByDoc,
@@ -333,21 +448,24 @@ export const useMimoStore = create<MimoStoreState>()(
             };
           });
         }
-        return { nextContent, success };
+        return res;
       },
 
       discardActiveDiff: () => {
         const { activeDiffHunk, activeDocId } = get();
         if (activeDiffHunk) {
           set((state) => {
+            const updatedHunk = { ...activeDiffHunk, isDiscarded: true };
             const updatedMessages = state.messages.map((m) =>
               m.diffHunk && m.diffHunk.id === activeDiffHunk.id
-                ? { ...m, diffHunk: { ...m.diffHunk, isDiscarded: true } }
+                ? { ...m, diffHunk: updatedHunk }
                 : m
             );
+
             return {
-              activeDiffHunk: { ...activeDiffHunk, isDiscarded: true },
+              activeDiffHunk: null,
               mascotState: 'happy',
+              lastMimoInteractionTime: Date.now(),
               messages: updatedMessages,
               messagesByDoc: {
                 ...state.messagesByDoc,
@@ -366,6 +484,10 @@ export const useMimoStore = create<MimoStoreState>()(
         selectedModel: state.selectedModel,
         activeDocId: state.activeDocId,
         activeDocTitle: state.activeDocTitle,
+        showThinking: state.showThinking,
+        webSearchEnabled: state.webSearchEnabled,
+        pinnedDocIdsByDoc: state.pinnedDocIdsByDoc || {},
+        episodicSummariesByDoc: state.episodicSummariesByDoc || {},
         messages: state.messages.map((m) =>
           m.activity && !m.activity.isDone
             ? { ...m, activity: { ...m.activity, isDone: true } }

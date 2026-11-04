@@ -1,14 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
-  Zap, 
-  LayoutTemplate, 
   Search, 
   HardDrive, 
   RefreshCw, 
   Bot, 
-  ShieldCheck, 
-  MessageSquarePlus, 
+  SlidersHorizontal,
+  GitPullRequest,
+  HelpCircle,
   ArrowRight,
   Sparkles,
   Layers,
@@ -18,65 +16,64 @@ import { APP_VERSION_LABEL } from '../../config/version';
 import { useUpdateModalStore } from '../../stores/useUpdateModalStore';
 
 export const RoadmapSection: React.FC = () => {
-  const navigate = useNavigate();
   const { openUpdate } = useUpdateModalStore();
 
   const releaseFeatures = [
     {
-      icon: Zap,
-      category: 'Speed',
-      title: 'Faster & Smoother',
-      badge: 'Snappy',
-      desc: 'Documents open quickly, searching feels instantaneous, and typing stays completely smooth even with large notebooks.',
+      icon: Bot,
+      category: 'AI Mascot',
+      title: '30s Inactivity Auto-Sleep',
+      badge: 'Ambient 2.1',
+      desc: 'Intelligent sleep mode when idle, instant wake-up on hover/click, and real-time thinking, typing, and excited states.',
     },
     {
-      icon: LayoutTemplate,
-      category: 'Workspace',
-      title: 'Cleaner Document Vault',
-      badge: 'Uncluttered',
-      desc: 'A spacious, organized document list with clean tag filters, adjustable view sizes (6, 12, or 24 files), and simple menus.',
+      icon: HelpCircle,
+      category: 'Context Precision',
+      title: 'Interactive Clarification Cards',
+      badge: 'Zero Guesswork',
+      desc: 'Mimo asks multi-choice questions with 3 options and a custom text field whenever requests need clearer direction.',
     },
     {
-      icon: Search,
-      category: 'Search',
-      title: 'Instant Search',
-      badge: 'Real-Time',
-      desc: 'Quickly find any note or phrase as you type, matching titles and note contents without waiting.',
+      icon: SlidersHorizontal,
+      category: 'Controls',
+      title: 'Anchored Settings & Token Saver',
+      badge: 'Cost & Speed',
+      desc: 'Clean popover menu anchored right above the input dock. Toggle Web Search grounding and disable thinking to save tokens.',
     },
     {
-      icon: HardDrive,
-      category: 'Storage',
-      title: 'Storage & Cache Control',
-      badge: '1-Click Cleanup',
-      desc: 'See exactly how much space your documents use on your device, with a one-click button to free up memory anytime.',
+      icon: Layers,
+      category: 'Scoped Edits',
+      title: 'AST Section Surgeon',
+      badge: '80% Token Drop',
+      desc: 'Surgically edits only the active H2/H3 heading section without rewriting or repeating the rest of large documents.',
+    },
+    {
+      icon: GitPullRequest,
+      category: 'Diff Engine',
+      title: 'Minimal Line-Numbered Diff',
+      badge: 'Linear Style',
+      desc: 'GitHub & Linear inspired diff card with line numbers, soft green/red syntax tints, and one-click copy and apply.',
     },
     {
       icon: RefreshCw,
       category: 'Sync',
       title: 'Seamless Device Sync',
       badge: 'Automatic',
-      desc: 'Keep your notes updated across all your computers and mobile devices. Edits and deletions stay reliable everywhere.',
+      desc: 'Keep your notes updated across all your computers and mobile devices with automatic conflict-free background sync.',
     },
     {
-      icon: Bot,
-      category: 'AI Assistant',
-      title: 'Mimo Writing Companion',
-      badge: 'Helpful AI',
-      desc: 'Your friendly mascot helper can summarize notes, check grammar, create tables, or brainstorm ideas whenever you need.',
+      icon: Search,
+      category: 'Search',
+      title: 'Instant Search & Tag Vault',
+      badge: 'Sub-10ms',
+      desc: 'Quickly find any note, tag, or phrase as you type, matching titles and note contents without typing lag.',
     },
     {
-      icon: ShieldCheck,
-      category: 'Comfort',
-      title: 'Clean Dark & Light Modes',
-      badge: 'Easy on Eyes',
-      desc: 'High-contrast typography and polished dark and light themes make reading comfortable during long study and writing sessions.',
-    },
-    {
-      icon: MessageSquarePlus,
-      category: 'Community',
-      title: 'Community Feedback',
-      badge: 'User Driven',
-      desc: 'Suggest features or report issues directly from within the app. We read every message and ship improvements regularly.',
+      icon: HardDrive,
+      category: 'Storage',
+      title: 'Storage & Cache Control',
+      badge: 'Local-First',
+      desc: 'See exactly how much local IndexedDB space your documents use, with a 1-click button to free up memory anytime.',
     },
   ];
 
@@ -96,7 +93,7 @@ export const RoadmapSection: React.FC = () => {
           </h2>
 
           <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Re-architected from the ground up for lightning speed, multi-device synchronization, and an ambient AI companion.
+            Re-engineered for ambient AI companion intelligence, zero-guesswork interactive clarification, and surgical section editing.
           </p>
         </div>
 
@@ -132,38 +129,35 @@ export const RoadmapSection: React.FC = () => {
             </button>
           </div>
 
-          {/* Unified Clean Feature Grid (No Rainbow Colors) */}
+          {/* Unified Clean Feature Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {releaseFeatures.map((feat, idx) => {
               const Icon = feat.icon;
               return (
-                <div 
-                  key={idx} 
-                  className="group relative p-4 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 hover:bg-white dark:hover:bg-neutral-800/60 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-150 flex flex-col justify-between space-y-3"
+                <div
+                  key={idx}
+                  className="p-4 rounded-2xl bg-neutral-50/70 dark:bg-neutral-800/40 border border-neutral-200/70 dark:border-neutral-800 flex flex-col justify-between space-y-3 group hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
                 >
-                  <div className="space-y-2.5">
-                    {/* Header Row: Icon + Badge */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700 group-hover:text-neutral-950 dark:group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                        <Icon className="w-4 h-4" />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="w-7 h-7 rounded-lg bg-white dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-700/80 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shadow-2xs">
+                        <Icon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200/60 dark:border-neutral-700/60">
+                      <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full border border-neutral-200/60 dark:border-neutral-700/60 font-mono">
                         {feat.badge}
                       </span>
                     </div>
 
-                    {/* Category & Title */}
                     <div>
-                      <span className="text-[10px] uppercase font-mono tracking-wider font-semibold text-neutral-400 dark:text-neutral-500">
+                      <span className="text-[10px] font-semibold tracking-wider uppercase text-neutral-400 dark:text-neutral-500 block">
                         {feat.category}
                       </span>
-                      <h4 className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
+                      <h4 className="text-xs font-bold text-neutral-900 dark:text-white mt-0.5">
                         {feat.title}
                       </h4>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                    <p className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
                       {feat.desc}
                     </p>
                   </div>
@@ -172,32 +166,6 @@ export const RoadmapSection: React.FC = () => {
             })}
           </div>
         </div>
-
-        {/* Bug Reporting & Feedback Banner — Minimal */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-neutral-100/70 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 flex items-center justify-center shrink-0">
-              <MessageSquarePlus className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="text-xs sm:text-sm font-bold text-neutral-950 dark:text-white">
-                Noticed a bug or have an idea?
-              </h4>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                We review community reports directly and ship fixes quickly.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => navigate('/feedback')}
-            className="px-3.5 py-2 rounded-lg bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-          >
-            <span>Feedback &amp; Ideas</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
       </div>
     </section>
   );

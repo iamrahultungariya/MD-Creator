@@ -9,12 +9,13 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
+  componentStack?: string;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, componentStack: undefined };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -31,6 +32,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an unhandled error:', error, errorInfo);
+
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('__last_react_error__', JSON.stringify({
+          message: error?.message,
+          stack: error?.stack,
+          componentStack: errorInfo?.componentStack,
+        }));
+      }
+    } catch {}
+
+    this.setState({ componentStack: errorInfo?.componentStack ?? undefined });
 
     // Completely ignore third-party browser extensions errors (never trigger auto-reloads)
     const isExtensionError = 
@@ -96,8 +109,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             {this.state.error?.message && (
-              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-950/70 border border-neutral-200 dark:border-neutral-800/80 text-[11px] font-mono text-neutral-600 dark:text-neutral-400 truncate max-w-full text-left">
-                {this.state.error.message}
+              <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-950/70 border border-neutral-200 dark:border-neutral-800/80 text-[11px] font-mono text-neutral-600 dark:text-neutral-400 max-w-full text-left max-h-48 overflow-y-auto whitespace-pre-wrap break-words">
+                <div className="font-semibold text-rose-500 mb-1">{this.state.error.message}</div>
+                {this.state.componentStack && (
+                  <div className="text-[10px] opacity-75 mt-1 border-t border-neutral-200 dark:border-neutral-800 pt-1">
+                    {this.state.componentStack}
+                  </div>
+                )}
               </div>
             )}
 

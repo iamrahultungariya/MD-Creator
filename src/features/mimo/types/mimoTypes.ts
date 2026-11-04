@@ -73,6 +73,23 @@ export interface MimoToolCall {
   isDiscarded?: boolean;
 }
 
+export interface MimoClarificationQuestion {
+  id: string;
+  question: string;
+  type?: 'single' | 'multi'; // radio or checkbox
+  options: string[]; // 3 options
+  allowCustom?: boolean; // 4th free-write field
+}
+
+export interface MimoClarificationData {
+  id: string;
+  title?: string;
+  description?: string;
+  questions: MimoClarificationQuestion[];
+  isSubmitted?: boolean;
+  answers?: Record<string, { selected: string[]; customText?: string }>;
+}
+
 export interface MimoMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -81,10 +98,12 @@ export interface MimoMessage {
   activity?: ActivityTelemetry;
   diffHunk?: MimoDiffHunk;
   toolCall?: MimoToolCall;
+  clarification?: MimoClarificationData;
   timestamp: number;
   enhancedPromptOriginal?: string;
   intent?: MimoIntentType;
   hasSelectionContext?: boolean;
+  mascotState?: MascotState;
 }
 
 export interface MimoQuotaState {
@@ -96,5 +115,29 @@ export interface MimoQuotaState {
   hasAcceptedPrivacyNotice?: boolean;
 }
 
-export type MimoQuickAction = 'write' | 'improve' | 'summarize' | 'explain' | 'translate';
+export interface PinnedDocReference {
+  id: string;
+  title: string;
+  snippet: string;
+  tags: string[];
+  outline: string[];
+  wordCount: number;
+  updatedAt: number;
+}
 
+export interface EpisodicMemoryBlock {
+  id: string;
+  docId: string;
+  turnRange: [number, number];
+  summaryBullets: string[];
+  createdAt: number;
+}
+
+export type MimoQuickAction =
+  | 'write'
+  | 'improve'
+  | 'summarize'
+  | 'explain'
+  | 'translate'
+  | 'chaos-to-clarity'
+  | 'vault-insights';

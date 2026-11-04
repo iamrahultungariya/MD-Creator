@@ -19,7 +19,12 @@ import { isCurrentUserAdmin } from '../utils/adminAuth';
 import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
 import { telemetryService } from '../services/telemetryService';
-import { MimoEditorDiffBanner, useMimoStore, MimoFloatingMascot } from '../features/mimo';
+import {
+  MimoEditorDiffBanner,
+  useMimoStore,
+  MimoFloatingMascot,
+  MimoInlineCommandBar,
+} from '../features/mimo';
 import { FEATURE_FLAGS } from '../config/features';
 
 const MimoDrawer = React.lazy(() =>
@@ -40,6 +45,15 @@ export const EditorPage: React.FC = () => {
   const [findMode, setFindMode] = useState<'find' | 'replace'>('find');
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  // Mimo Inline Command Bar (Cmd/Ctrl + J)
+  const [isInlineMimoOpen, setIsInlineMimoOpen] = useState(false);
+  const [inlineCaretCoords, setInlineCaretCoords] = useState<{
+    left: number;
+    top: number;
+    bottom: number;
+  } | null>(null);
+  const [inlineSelection, setInlineSelection] = useState('');
 
   useEffect(() => {
     isCurrentUserAdmin().then(setIsAdmin);
@@ -177,6 +191,9 @@ export const EditorPage: React.FC = () => {
     [doc, showToast]
   );
 
+  // Memoized selection getter for Mimo Companion (prevents render loops)
+  const handleGetSelectedText = useCallback(() => editorRef.current?.getSelection() || '', []);
+
   // Active local disk file handle (Local Folder / Vault mode)
   const activeLocalFileHandleRef = useRef<FileSystemFileHandle | null>(null);
   const lastSavedLocalContentRef = useRef<string>('');
@@ -277,7 +294,18 @@ export const EditorPage: React.FC = () => {
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
         e.preventDefault();
-        useMimoStore.getState().setIsOpen(!useMimoStore.getState().isOpen);
+        if (e.shiftKey) {
+          // Ctrl+Shift+J toggles full Mimo Drawer
+          useMimoStore.getState().setIsOpen(!useMimoStore.getState().isOpen);
+          setIsInlineMimoOpen(false);
+        } else {
+          // Ctrl+J toggles Cursor/Notion-style Inline Command Bar right at caret!
+          const coords = editorRef.current?.getCaretCoords() || null;
+          const sel = editorRef.current?.getSelection() || '';
+          setInlineCaretCoords(coords);
+          setInlineSelection(sel);
+          setIsInlineMimoOpen((prev) => !prev);
+        }
       }
       if (
         ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') ||
@@ -550,10 +578,34 @@ export const EditorPage: React.FC = () => {
             onToast={showToast}
             isAiExcluded={doc.docMetadata?.isAiExcluded}
             cursorLine={cursorPos.line}
-            getSelectedText={() => editorRef.current?.getSelection() || ''}
+            getSelectedText={handleGetSelectedText}
             onInsertSnippet={handleInsertSnippet}
           />
           <MimoFloatingMascot />
+
+          {/* Mimo Inline Floating Command Bar (Cmd/Ctrl + J) */}
+          <MimoInlineCommandBar
+            isOpen={isInlineMimoOpen}
+            onClose={() => setIsInlineMimoOpen(false)}
+            caretCoords={inlineCaretCoords}
+            initialSelection={inlineSelection}
+            docId={doc.docId}
+            docTitle={doc.title}
+            fullContent={doc.content}
+            cursorLine={cursorPos.line}
+            onAccept={(insertedMarkdown) => {
+              if (editorRef.current) {
+                editorRef.current.replaceSelection(insertedMarkdown);
+                editorRef.current.focus();
+                doc.executeSave(editorRef.current.getValue(), doc.title);
+                showToast('✨ Mimo inserted content at cursor');
+              }
+            }}
+            onOpenDrawer={() => {
+              setIsInlineMimoOpen(false);
+              useMimoStore.getState().setIsOpen(true);
+            }}
+          />
         </React.Suspense>
       )}
     </div>

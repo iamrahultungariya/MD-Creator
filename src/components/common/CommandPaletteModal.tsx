@@ -260,12 +260,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     list.push({
       id: 'action-whats-new',
-      title: "What's New in v2.0.0",
+      title: "What's New in v2.1.0",
       category: 'Actions & Navigation',
       description: 'Explore the latest features, performance numbers, and Mimo AI upgrades',
       icon: Sparkles,
       iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
-      shortcut: 'v2.0.0',
+      shortcut: 'v2.1.0',
       perform: () => {
         window.dispatchEvent(new CustomEvent('open-update-modal'));
         onClose();

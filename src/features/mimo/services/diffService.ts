@@ -1,4 +1,37 @@
-import { MimoDiffHunk, MimoToolCall } from '../types/mimoTypes';
+import { MimoDiffHunk, MimoToolCall, MimoClarificationData } from '../types/mimoTypes';
+
+export function extractClarificationFromResponse(aiResponse: string): {
+  cleanText: string;
+  clarification: MimoClarificationData | null;
+} {
+  const clarificationRegex = /```(?:json:)?mimo-clarification\s*([\s\S]*?)```/i;
+  const match = aiResponse.match(clarificationRegex);
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[1]);
+      if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+        const clarification: MimoClarificationData = {
+          id: `clarification-${Date.now()}`,
+          title: parsed.title || 'Help Mimo customize your response',
+          description: parsed.description,
+          questions: parsed.questions.map((q: any, idx: number) => ({
+            id: q.id || `q-${idx}`,
+            question: q.question || 'Please clarify your requirement:',
+            type: q.type === 'multi' ? 'multi' : 'single',
+            options: Array.isArray(q.options) ? q.options.slice(0, 3) : ['Option A', 'Option B', 'Option C'],
+            allowCustom: q.allowCustom ?? true,
+          })),
+          isSubmitted: false,
+        };
+        const cleanText = aiResponse.replace(clarificationRegex, '').trim();
+        return { cleanText, clarification };
+      }
+    } catch {
+      // JSON parse error, pass through safely
+    }
+  }
+  return { cleanText: aiResponse, clarification: null };
+}
 
 export interface DiffLine {
   type: 'added' | 'removed' | 'unchanged';

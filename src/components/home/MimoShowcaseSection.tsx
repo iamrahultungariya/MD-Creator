@@ -63,7 +63,7 @@ export const MimoShowcaseSection: React.FC = () => {
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300 border border-violet-200/80 dark:border-violet-800/80 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-            <span>MEET MIMO • VERSION 2.0.0</span>
+            <span>MEET MIMO • VERSION 2.1.0</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em] leading-tight">
             An AI companion built for writers, not chatbots.
