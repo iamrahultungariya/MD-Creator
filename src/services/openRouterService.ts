@@ -18,14 +18,44 @@ const APP_TITLE = 'MD Creator Admin';
 export async function validateOpenRouterApiKey(
   apiKey: string,
   model: string = DEFAULT_OPENROUTER_MODEL
-): Promise<{ valid: boolean; error?: string; latencyMs?: number }> {
-  const cleanKey = (apiKey || '').trim();
+): Promise<{
+  valid: boolean;
+  error?: string;
+  warning?: string;
+  latencyMs?: number;
+  label?: string;
+  freeLimitRemaining?: number;
+}> {
+  const cleanKey = (apiKey || (import.meta.env.VITE_OPENROUTER_API_KEY as string) || '').trim();
   if (!cleanKey) {
     return { valid: false, error: 'OpenRouter API key is empty.' };
   }
 
   const startTime = performance.now();
   try {
+    // 1. Verify key authenticity with OpenRouter key authentication endpoint
+    const authRes = await fetch('https://openrouter.ai/api/v1/auth/key', {
+      headers: {
+        'Authorization': `Bearer ${cleanKey}`,
+      },
+    });
+
+    const latencyMs = Math.round(performance.now() - startTime);
+
+    if (authRes.status === 401) {
+      return { valid: false, error: 'Invalid OpenRouter API Key (401 Unauthorized).' };
+    }
+
+    if (!authRes.ok) {
+      return { valid: false, error: `Key validation failed with status ${authRes.status}.` };
+    }
+
+    const authData = await authRes.json().catch(() => ({}));
+    const keyData = authData?.data;
+    const label = keyData?.label;
+    const freeLimitRemaining = keyData?.free_model_daily_requests?.remaining ?? 50;
+
+    // 2. Probe model endpoints with test ping
     const res = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
@@ -41,18 +71,24 @@ export async function validateOpenRouterApiKey(
       }),
     });
 
-    const latencyMs = Math.round(performance.now() - startTime);
-
     if (res.ok) {
-      return { valid: true, latencyMs };
+      return { valid: true, latencyMs, label, freeLimitRemaining };
     }
 
     const data = await res.json().catch(() => ({}));
     const message = data?.error?.message || res.statusText || 'Verification failed';
 
-    if (res.status === 401) {
-      return { valid: false, error: 'Invalid OpenRouter API Key (401 Unauthorized).' };
+    if (res.status === 404 && message.includes('restricted to BYOK capacity')) {
+      return {
+        valid: true,
+        latencyMs,
+        label,
+        freeLimitRemaining,
+        warning:
+          'Key verified! However, your OpenRouter workspace has BYOK-only enforcement. Visit https://openrouter.ai/workspaces/default/byok to enable public models or add credits.',
+      };
     }
+
     if (res.status === 402) {
       return { valid: false, error: 'OpenRouter Account Credit verification required (402).' };
     }
@@ -83,7 +119,7 @@ export async function runThinkingCapabilityProbe(options: {
     signal,
   } = options;
 
-  const cleanKey = (apiKey || '').trim();
+  const cleanKey = (apiKey || (import.meta.env.VITE_OPENROUTER_API_KEY as string) || '').trim();
   if (!cleanKey) {
     return {
       lastTested: Date.now(),
@@ -134,7 +170,12 @@ export async function runThinkingCapabilityProbe(options: {
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      const errMsg = errData?.error?.message || `HTTP ${res.status}`;
+      const rawErrMsg = errData?.error?.message || `HTTP ${res.status}`;
+      const isByokRestricted = rawErrMsg.includes('restricted to BYOK capacity');
+      const errMsg = isByokRestricted
+        ? "OpenRouter key is authentic, but this workspace is restricted to BYOK. Visit https://openrouter.ai/workspaces/default/byok to toggle off BYOK restriction or add credits."
+        : `OpenRouter probe failed: ${rawErrMsg}`;
+
       return {
         lastTested: Date.now(),
         status: 'error',
@@ -144,7 +185,7 @@ export async function runThinkingCapabilityProbe(options: {
         tokensUsed: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
         cost: 0,
         httpStatus: res.status,
-        errorMessage: `OpenRouter probe failed: ${errMsg}`,
+        errorMessage: errMsg,
       };
     }
 
@@ -234,7 +275,7 @@ export async function streamOpenRouterResponse(options: {
     signal,
   } = options;
 
-  const cleanKey = (apiKey || '').trim();
+  const cleanKey = (apiKey || (import.meta.env.VITE_OPENROUTER_API_KEY as string) || '').trim();
   if (!cleanKey) {
     throw new Error('MISSING_OPENROUTER_API_KEY');
   }

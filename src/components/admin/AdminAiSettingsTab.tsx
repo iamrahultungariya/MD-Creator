@@ -81,8 +81,15 @@ export const AdminAiSettingsTab: React.FC<AdminAiSettingsTabProps> = ({ showToas
     if (res.valid) {
       setOpenRouterApiKey(trimmed);
       setIsKeyVerified(true);
-      showToast(`Key verified successfully (${res.latencyMs || 0}ms latency)`);
-      setKeyValidationMessage(`Verified (${res.latencyMs || 0}ms latency). Ready for OpenRouter calls.`);
+      if (res.warning) {
+        showToast('Key authenticated! Check workspace BYOK setting.');
+        setKeyValidationMessage(res.warning);
+      } else {
+        showToast(`Key verified successfully (${res.latencyMs || 0}ms latency)`);
+        setKeyValidationMessage(
+          `Verified (${res.latencyMs || 0}ms latency). ${res.freeLimitRemaining !== undefined ? `${res.freeLimitRemaining} free requests left today.` : ''}`
+        );
+      }
     } else {
       setIsKeyVerified(false);
       setKeyValidationMessage(res.error || 'Failed to authenticate key with OpenRouter.');

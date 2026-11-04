@@ -40,12 +40,14 @@ const DEFAULT_PRIVACY_CONFIG: AdminAiPrivacyConfig = {
   showPayloadDebugInDrawer: false,
 };
 
+const envOpenRouterKey = ((import.meta.env.VITE_OPENROUTER_API_KEY as string) || '').trim();
+
 const DEFAULT_STATE: AdminAiConfigState = {
   defaultProvider: 'gemini', // Standard fallback until admin chooses OpenRouter
   selectedModel: OPENROUTER_CROUTON_MODEL,
-  openRouterApiKey: '',
-  isKeyVerified: false,
-  lastVerificationDate: null,
+  openRouterApiKey: envOpenRouterKey,
+  isKeyVerified: Boolean(envOpenRouterKey),
+  lastVerificationDate: envOpenRouterKey ? new Date().toISOString() : null,
   enableThinking: true,
   reasoningEffort: 'medium',
   temperature: 0.7,
@@ -119,7 +121,8 @@ export const useAdminAiStore = create<AdminAiStoreState>()(
 
       isOpenRouterReady: () => {
         const state = get();
-        return Boolean(state.openRouterApiKey && state.openRouterApiKey.trim().length > 10);
+        const effectiveKey = (state.openRouterApiKey || envOpenRouterKey).trim();
+        return Boolean(effectiveKey && effectiveKey.length > 10);
       },
     }),
     {
