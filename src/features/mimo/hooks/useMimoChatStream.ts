@@ -52,7 +52,7 @@ export function useMimoChatStream({
   const consumeCredit = useMimoStore((s) => s.consumeCredit);
   const userApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
   const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
-  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.8-flash';
+  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.5-flash-lite';
   const showThinking = useMimoStore((s) => s.showThinking);
   const webSearchEnabled = useMimoStore((s) => s.webSearchEnabled);
   const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);

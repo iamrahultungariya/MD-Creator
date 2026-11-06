@@ -149,7 +149,7 @@ export const useMimoStore = create<MimoStoreState>()(
       activeDocTitle: 'Untitled Document',
       mascotState: 'happy',
       thinkingLevel: 'AUTO',
-      selectedModel: 'gemini-3.8-flash',
+      selectedModel: 'gemini-3.5-flash-lite',
       messages: [createWelcomeMessage()],
       messagesByDoc: {},
       pinnedDocIdsByDoc: {},
@@ -578,7 +578,7 @@ export const useMimoStore = create<MimoStoreState>()(
     {
       name: 'md-writer-mimo-store',
       onRehydrateStorage: () => (state) => {
-        if (state && (state.selectedModel as string)?.startsWith('gemini-2.')) {
+        if (state && ((state.selectedModel as string)?.startsWith('gemini-2.') || state.selectedModel === 'gemini-3.8-flash')) {
           state.selectedModel = 'gemini-3.5-flash-lite';
         }
       },

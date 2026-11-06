@@ -1,4 +1,5 @@
 import { extractASTSlidingContext } from './astContextEngine';
+import { classifyUserIntent } from './promptRouter';
 
 export interface CachedDocSummary {
   docId: string;
@@ -225,7 +226,6 @@ ${outlineHeader}`,
     };
   }
 
-  // Case 3: AST-Based Sliding Context for multi-section documents (>80 LOC)
   const pLower = userPrompt.toLowerCase();
   const isFullDocRequested =
     pLower.includes('entire document') ||
@@ -234,7 +234,32 @@ ${outlineHeader}`,
     pLower.includes('whole document') ||
     pLower.includes('generate document');
 
-  if (!isFullDocRequested && totalDocLines > 80) {
+  // Case 2.5: General Conceptual Questions (e.g. "What is Python?", "Explain async/await")
+  // For queries not asking about or modifying the document, provide lightweight outline to save tokens!
+  const detectedIntent = classifyUserIntent(userPrompt, !!selectedText);
+  if (!forceFullScan && !selectedText && !isFullDocRequested && detectedIntent === 'GENERAL_QA' && totalDocLines > 50) {
+    const outlineStr =
+      summary.headingsSummary.length > 0 ? `\nDocument Outline:\n${summary.headingsSummary.join('\n')}` : '';
+    const keywordsStr =
+      summary.topKeywords.length > 0 ? `\nKey Topics: ${summary.topKeywords.join(', ')}` : '';
+
+    return {
+      docId,
+      docTitle: summary.title,
+      rawContent: content,
+      contextMode: 'summary',
+      contextText: `Active Document: "${summary.title}" (${summary.lineCount} lines, ${summary.wordCount} words)${keywordsStr}${outlineStr}\n\n[General Conceptual Query Mode — Raw content trimmed for token efficiency]`,
+      linesAnalyzed: summary.lineCount,
+      totalDocLines,
+      totalWords: summary.wordCount,
+      headings: summary.headingsSummary,
+      guardrailTriggered: false,
+      activeHeadingPath,
+    };
+  }
+
+  // Case 3: AST-Based Sliding Context for multi-section documents (>50 LOC)
+  if (!isFullDocRequested && totalDocLines > 50) {
     const sliding = extractASTSlidingContext(content, cursorLine, summary.title);
     if (sliding.isSlidingApplied) {
       return {

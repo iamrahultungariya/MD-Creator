@@ -26,7 +26,7 @@ import { useMimoStore } from '../../stores/useMimoStore';
 import { useStyleDnaStore } from '../../stores/useStyleDnaStore';
 import { StyleTone, StyleFormatting } from '../../types/styleDnaTypes';
 import { MimoAvatar } from '../MimoAvatar';
-import { validateGeminiApiKey, fetchLiveGeminiHealthAndQuota } from '../../services/mimoGeminiService';
+import { validateGeminiApiKey, fetchLiveGeminiHealthAndQuota, API_HEALTH_CHECK_TTL_MS } from '../../services/mimoGeminiService';
 
 interface MimoSettingsPopoverProps {
   isOpen: boolean;
@@ -74,12 +74,12 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [fetchSuccessMessage, setFetchSuccessMessage] = useState<string | null>(null);
 
-  const handleFetchLiveUsage = async () => {
+  const handleFetchLiveUsage = async (force = false) => {
     setIsFetchingLiveUsage(true);
     setLiveFetchError(null);
     setFetchSuccessMessage(null);
     try {
-      const res = await fetchLiveGeminiHealthAndQuota(userApiKey);
+      const res = await fetchLiveGeminiHealthAndQuota(userApiKey, force);
       if (res.valid) {
         setFetchSuccessMessage(`Live Ping: ${res.latencyMs}ms • Google AI Verified`);
         setTimeout(() => setFetchSuccessMessage(null), 3500);
@@ -94,10 +94,14 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
   };
 
   useEffect(() => {
-    if (activeTab === 'usage' && userApiKey && (!lastCheckedTimestamp || Date.now() - lastCheckedTimestamp > 120000)) {
-      handleFetchLiveUsage();
+    if (
+      activeTab === 'usage' &&
+      userApiKey &&
+      (!lastCheckedTimestamp || Date.now() - lastCheckedTimestamp > API_HEALTH_CHECK_TTL_MS)
+    ) {
+      handleFetchLiveUsage(false);
     }
-  }, [activeTab, userApiKey]);
+  }, [activeTab, userApiKey, lastCheckedTimestamp]);
 
   // BYOK local state
   const [keyInput, setKeyInput] = useState('');
@@ -943,7 +947,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 )}
                 <button
                   type="button"
-                  onClick={handleFetchLiveUsage}
+                  onClick={() => handleFetchLiveUsage(true)}
                   disabled={isFetchingLiveUsage || !userApiKey}
                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-[10px] font-medium transition-colors disabled:opacity-40 cursor-pointer"
                   title="Fetch live health & ping from Google AI"

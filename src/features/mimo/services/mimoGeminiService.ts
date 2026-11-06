@@ -90,19 +90,19 @@ export function getModelForComplexity(level: 'LOW' | 'MEDIUM' | 'HIGH'): {
     return {
       modelId: 'gemini-3.8-flash',
       displayLabel: 'Gemini 3.8 Flash (Deep Reasoning)',
-      ttftTimeout: 30000, // 30s realistic TTFT for deep reasoning
+      ttftTimeout: 30000,
     };
   }
   if (level === 'MEDIUM') {
     return {
-      modelId: 'gemini-3.8-flash',
-      displayLabel: 'Gemini 3.8 Flash (Balanced)',
+      modelId: 'gemini-3.5-flash',
+      displayLabel: 'Gemini 3.5 Flash (Balanced)',
       ttftTimeout: 22000,
     };
   }
   return {
-    modelId: 'gemini-3.8-flash',
-    displayLabel: 'Gemini 3.8 Flash (Fast Thinking)',
+    modelId: 'gemini-3.5-flash-lite',
+    displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)',
     ttftTimeout: 18000,
   };
 }
@@ -417,14 +417,65 @@ export interface LiveGeminiHealthResult {
   checkedAt: number;
 }
 
+export const API_HEALTH_CHECK_TTL_MS = 5 * 60 * 60 * 1000; // 5 hours
+
+interface RpmTrackerEntry {
+  modelId: string;
+  timestamp: number;
+}
+const RPM_REQUEST_LOG: RpmTrackerEntry[] = [];
+
+/**
+ * Client-side RPM rate limiter to prevent triggering Google AI 429 burst limits.
+ * Safe limits: 8 req/min for Flash-Lite (cap 10), 4 req/min for 3.5 Flash and 3.8 Flash (cap 5).
+ */
+export function checkClientRpmAllowance(modelId: string): { allowed: boolean; waitSeconds?: number } {
+  const now = Date.now();
+  const windowStart = now - 60000;
+
+  // Prune entries older than 60 seconds
+  while (RPM_REQUEST_LOG.length > 0 && RPM_REQUEST_LOG[0].timestamp < windowStart) {
+    RPM_REQUEST_LOG.shift();
+  }
+
+  const isLite = modelId.includes('flash-lite');
+  const safeLimit = isLite ? 8 : 4;
+  const currentCount = RPM_REQUEST_LOG.filter((r) => r.modelId === modelId).length;
+
+  if (currentCount >= safeLimit) {
+    const oldestForModel = RPM_REQUEST_LOG.find((r) => r.modelId === modelId);
+    const waitSeconds = oldestForModel ? Math.ceil((oldestForModel.timestamp + 60000 - now) / 1000) : 15;
+    return { allowed: false, waitSeconds: Math.max(1, waitSeconds) };
+  }
+
+  RPM_REQUEST_LOG.push({ modelId, timestamp: now });
+  return { allowed: true };
+}
+
+/**
+ * Global Thinking Provider System Directive for Gemini 3.5 models.
+ * Ultra-lean cognitive guide (~60 tokens) without heavy wrappers or extra token overhead.
+ * Guides internal self-verification across any Markdown document before streaming output.
+ */
+export const GLOBAL_THINKING_PROVIDER_GUIDANCE = `
+[Global Thinking Provider Protocol]
+Execute strict internal cognitive evaluation before outputting Markdown:
+1. Intent Pinpoint: Directly address the user's specific query without conversational preamble, unsolicited summaries, or document outlines.
+2. Syntax & KaTeX Rigor: Validate GitHub Flavored Markdown (GFM table pipe alignments, code fence tags, KaTeX $...$ inline and $$...$$ display math).
+3. Surgical Modifications: When proposing edits or improvements, output only minimal, non-destructive diff blocks (- old line, + new line). Never repeat unchanged document sections.
+4. Publication Grade: Produce direct, high-density, publication-ready output immediately.`;
+
 /**
  * Actively fetches live API health, round-trip ping latency, and Gemini 3.x
  * model availability directly from Google AI Studio.
+ * Enforces a strict 5-hour persistent barrier across hard reloads and tab closures.
  */
 export async function fetchLiveGeminiHealthAndQuota(
-  customApiKey?: string
+  customApiKey?: string,
+  forceCheck = false
 ): Promise<LiveGeminiHealthResult> {
-  const storeKey = useMimoStore.getState().quota.userApiKey?.trim() || '';
+  const storeState = useMimoStore.getState();
+  const storeKey = storeState.quota.userApiKey?.trim() || '';
   const envKey = (
     (import.meta.env.VITE_GEMINI_API_KEY as string) ||
     (import.meta.env.GEMINI_API_KEY as string) ||
@@ -438,7 +489,7 @@ export async function fetchLiveGeminiHealthAndQuota(
   ).trim();
 
   if (!effectiveKey) {
-    useMimoStore.getState().updateLiveQuotaHealth({
+    storeState.updateLiveQuotaHealth({
       status: 'UNCONFIGURED',
       latencyMs: 0,
       models: [],
@@ -453,7 +504,24 @@ export async function fetchLiveGeminiHealthAndQuota(
     };
   }
 
-  useMimoStore.getState().updateLiveQuotaHealth({
+  // Strict 5-Hour Persistent Barrier: Survives hard page reloads and tab closures!
+  const lastCheck = storeState.quota.lastCheckedTimestamp || 0;
+  const isCacheValid = Date.now() - lastCheck < API_HEALTH_CHECK_TTL_MS;
+
+  if (!forceCheck && isCacheValid && storeState.quota.liveApiStatus && storeState.quota.liveApiStatus !== 'CHECKING') {
+    return {
+      valid: storeState.quota.liveApiStatus === 'HEALTHY' || storeState.quota.liveApiStatus === 'THROTTLED',
+      status: storeState.quota.liveApiStatus,
+      latencyMs: storeState.quota.liveLatencyMs || 0,
+      availableModels:
+        storeState.quota.liveAvailableModels && storeState.quota.liveAvailableModels.length > 0
+          ? storeState.quota.liveAvailableModels
+          : ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'],
+      checkedAt: lastCheck,
+    };
+  }
+
+  storeState.updateLiveQuotaHealth({
     status: 'CHECKING',
   });
 
@@ -576,18 +644,26 @@ export async function streamMimoResponse(options: {
     ttftTimeout: 18000,
   };
 
-  // Pure Gemini 3.x resilient cascade:
-  // - Flash-Lite: try Flash-Lite first, then fall back to 3.5 Flash. NEVER escalate upwards to heavy 3.8 Flash!
-  // - 3.5 Flash: try 3.5 Flash first, then fall back to 3.5 Flash-Lite.
-  // - 3.8 Flash: deep reasoning with 3.5 Flash and 3.5 Flash-Lite fallbacks.
-  let modelsToTry: Array<{ modelId: string; displayLabel: string; ttftTimeout: number }>;
+  // Strict Model Isolation:
+  // User-selected model gets 100% isolated single-target execution.
+  // Eliminates silent multi-model cascades that burn separate rate limits on the same API key!
+  let targetModel: { modelId: string; displayLabel: string; ttftTimeout: number };
   if (selectedModel === 'gemini-3.5-flash-lite') {
-    modelsToTry = [liteModel, flash35Model];
+    targetModel = liteModel;
   } else if (selectedModel === 'gemini-3.5-flash') {
-    modelsToTry = [flash35Model, liteModel];
+    targetModel = flash35Model;
+  } else if (selectedModel === 'gemini-3.8-flash') {
+    targetModel = {
+      modelId: 'gemini-3.8-flash',
+      displayLabel: 'Gemini 3.8 Flash (Deep Reasoning)',
+      ttftTimeout: 30000,
+    };
   } else {
-    modelsToTry = [flash38Model, flash35Model, liteModel];
+    // AUTO mode: Map strictly by assessed complexity
+    targetModel = flash38Model;
   }
+
+  const modelsToTry = [targetModel];
 
   const intent = classifyUserIntent(prompt, !!context.selectedText);
 
@@ -718,6 +794,20 @@ export async function streamMimoResponse(options: {
       `Routing to ${candidateModel.displayLabel} (${resolvedLevel} reasoning)`
     );
 
+    // Pre-flight Client RPM Burst Guard to protect API key from 429s
+    const rpmCheck = checkClientRpmAllowance(candidateModel.modelId);
+    if (!rpmCheck.allowed) {
+      const waitNotice = `> [!WARNING]\n> **Pacing Protection Active (RPM Burst Guard)**\n> Google AI Studio enforces a per-minute rate limit. To protect your API key from being throttled (HTTP 429), please pause for **${rpmCheck.waitSeconds || 15}s** before sending the next instruction.\n> \n> 👉 [Retry in ${rpmCheck.waitSeconds || 15}s](#retry-prompt)`;
+      callbacks.onTextChunk?.(waitNotice);
+      return {
+        fullText: waitNotice,
+        thoughtText: '',
+        modelUsed: candidateModel.displayLabel,
+        resolvedLevel,
+        tokensUsed: 0,
+      };
+    }
+
     const startTime = Date.now();
     let fullText = '';
     let thoughtText = '';
@@ -725,15 +815,26 @@ export async function streamMimoResponse(options: {
     let firstTokenRecorded = false;
 
     try {
-      // thinkingConfig is configured on Gemini 3.x series only when showThinking is enabled
+      // thinkingConfig is configured for native deep reasoning on Gemini 3.8 Flash
       let thinkingConfig: Record<string, unknown> | undefined = undefined;
-      if (showThinking && (candidateModel.modelId.includes('gemini-3.8') || candidateModel.modelId.includes('gemini-3'))) {
-        const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'HIGH' : resolvedLevel === 'MEDIUM' ? 'MEDIUM' : 'LOW';
-        thinkingConfig = {
-          includeThoughts: true,
-          thinkingLevel: apiThinkingLevel,
-        };
+      let thinkingPromptGuidance = '';
+
+      if (candidateModel.modelId === 'gemini-3.8-flash') {
+        if (showThinking) {
+          const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'HIGH' : resolvedLevel === 'MEDIUM' ? 'MEDIUM' : 'LOW';
+          thinkingConfig = {
+            includeThoughts: true,
+            thinkingLevel: apiThinkingLevel,
+          };
+        }
       } else {
+        // For Gemini 3.5 Flash and 3.5 Flash-Lite:
+        // Do NOT transfer or escalate to 3.8 Flash!
+        // Instead, inject the Global Thinking Provider guidance directive directly in systemInstruction:
+        // Ultra-lean (~60 tokens), no wrappers, top-level verification.
+        if (showThinking || thinkingLevel !== 'MINIMAL') {
+          thinkingPromptGuidance = `\n\n${GLOBAL_THINKING_PROVIDER_GUIDANCE}`;
+        }
         thinkingConfig = undefined;
       }
 
@@ -752,7 +853,7 @@ export async function streamMimoResponse(options: {
         prompt.toLowerCase().includes('chaos to clarity');
       const compositeSystemInstruction = `${MIMO_SYSTEM_PROMPT}${
         isChaosToClarity ? `\n\n${CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE}` : ''
-      }\n\n${styleDnaLayer}`;
+      }\n\n${styleDnaLayer}${thinkingPromptGuidance}`;
 
       const config: Record<string, unknown> = {
         systemInstruction: compositeSystemInstruction,
