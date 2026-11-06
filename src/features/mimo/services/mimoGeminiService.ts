@@ -427,7 +427,7 @@ const RPM_REQUEST_LOG: RpmTrackerEntry[] = [];
 
 /**
  * Client-side RPM rate limiter to prevent triggering Google AI 429 burst limits.
- * Safe limits: 8 req/min for Flash-Lite (cap 10), 4 req/min for 3.5 Flash and 3.8 Flash (cap 5).
+ * Safe limits: 15 req/min for Flash-Lite (cap 15), 10 req/min for 3.5 Flash and 3.8 Flash (cap 10).
  */
 export function checkClientRpmAllowance(modelId: string): { allowed: boolean; waitSeconds?: number } {
   const now = Date.now();
@@ -439,12 +439,12 @@ export function checkClientRpmAllowance(modelId: string): { allowed: boolean; wa
   }
 
   const isLite = modelId.includes('flash-lite');
-  const safeLimit = isLite ? 8 : 4;
+  const safeLimit = isLite ? 15 : 10;
   const currentCount = RPM_REQUEST_LOG.filter((r) => r.modelId === modelId).length;
 
   if (currentCount >= safeLimit) {
     const oldestForModel = RPM_REQUEST_LOG.find((r) => r.modelId === modelId);
-    const waitSeconds = oldestForModel ? Math.ceil((oldestForModel.timestamp + 60000 - now) / 1000) : 15;
+    const waitSeconds = oldestForModel ? Math.ceil((oldestForModel.timestamp + 60000 - now) / 1000) : 10;
     return { allowed: false, waitSeconds: Math.max(1, waitSeconds) };
   }
 
@@ -621,9 +621,8 @@ export async function streamMimoResponse(options: {
     prompt,
     context,
     thinkingLevel,
-    selectedModel = 'gemini-3.8-flash',
+    selectedModel = 'gemini-3.5-flash-lite',
     showThinking = false,
-    webSearchEnabled = false,
     pinnedDocsLayer,
     episodicBullets,
     callbacks,
@@ -632,7 +631,11 @@ export async function streamMimoResponse(options: {
   } = options;
 
   const resolvedLevel = resolveThinkingLevel(thinkingLevel, prompt, context.totalDocLines);
-  const flash38Model = getModelForComplexity(resolvedLevel);
+  const flash38Model = {
+    modelId: 'gemini-3.8-flash',
+    displayLabel: 'Gemini 3.8 Flash (Deep Reasoning)',
+    ttftTimeout: 30000,
+  };
   const flash35Model = {
     modelId: 'gemini-3.5-flash',
     displayLabel: 'Gemini 3.5 Flash (Balanced)',
@@ -644,26 +647,21 @@ export async function streamMimoResponse(options: {
     ttftTimeout: 18000,
   };
 
-  // Strict Model Isolation:
-  // User-selected model gets 100% isolated single-target execution.
-  // Eliminates silent multi-model cascades that burn separate rate limits on the same API key!
-  let targetModel: { modelId: string; displayLabel: string; ttftTimeout: number };
+  // Resilient Downward Fallback Cascade:
+  // - Gemini 3.5 Flash-Lite stays 100% isolated (never escalates upward, preserving quotas).
+  // - Gemini 3.5 Flash & 3.8 Flash gracefully step down to 3.5 Flash-Lite if rate-limited (429) or high demand (503).
+  let modelsToTry: Array<{ modelId: string; displayLabel: string; ttftTimeout: number }>;
   if (selectedModel === 'gemini-3.5-flash-lite') {
-    targetModel = liteModel;
+    modelsToTry = [liteModel];
   } else if (selectedModel === 'gemini-3.5-flash') {
-    targetModel = flash35Model;
+    modelsToTry = [flash35Model, liteModel];
   } else if (selectedModel === 'gemini-3.8-flash') {
-    targetModel = {
-      modelId: 'gemini-3.8-flash',
-      displayLabel: 'Gemini 3.8 Flash (Deep Reasoning)',
-      ttftTimeout: 30000,
-    };
+    modelsToTry = [flash38Model, liteModel];
   } else {
-    // AUTO mode: Map strictly by assessed complexity
-    targetModel = flash38Model;
+    // AUTO mode: Map by assessed complexity; if heavy, allow failover to liteModel
+    const autoModel = getModelForComplexity(resolvedLevel);
+    modelsToTry = autoModel.modelId === 'gemini-3.5-flash-lite' ? [liteModel] : [autoModel, liteModel];
   }
-
-  const modelsToTry = [targetModel];
 
   const intent = classifyUserIntent(prompt, !!context.selectedText);
 
@@ -821,10 +819,16 @@ export async function streamMimoResponse(options: {
 
       if (candidateModel.modelId === 'gemini-3.8-flash') {
         if (showThinking) {
-          const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'HIGH' : resolvedLevel === 'MEDIUM' ? 'MEDIUM' : 'LOW';
+          const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'high' : resolvedLevel === 'MEDIUM' ? 'medium' : 'low';
           thinkingConfig = {
             includeThoughts: true,
             thinkingLevel: apiThinkingLevel,
+          };
+        } else {
+          // Explicit low level to save internal tokens when thinking block is hidden
+          thinkingConfig = {
+            includeThoughts: false,
+            thinkingLevel: 'low',
           };
         }
       } else {
@@ -836,12 +840,6 @@ export async function streamMimoResponse(options: {
           thinkingPromptGuidance = `\n\n${GLOBAL_THINKING_PROVIDER_GUIDANCE}`;
         }
         thinkingConfig = undefined;
-      }
-
-      // Optional Google Search Grounding tool
-      const tools: any[] = [];
-      if (webSearchEnabled) {
-        tools.push({ googleSearch: {} });
       }
 
       // Inject persistent StyleDNA (Tone, formatting, banned clichés)
@@ -859,7 +857,6 @@ export async function streamMimoResponse(options: {
         systemInstruction: compositeSystemInstruction,
         temperature: 0.65,
         ...(thinkingConfig ? { thinkingConfig } : {}),
-        ...(tools.length > 0 ? { tools } : {}),
       };
 
       const responseStream = await withAbortAndTimeout(

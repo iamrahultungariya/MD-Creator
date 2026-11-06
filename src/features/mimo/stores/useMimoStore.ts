@@ -581,6 +581,9 @@ export const useMimoStore = create<MimoStoreState>()(
         if (state && ((state.selectedModel as string)?.startsWith('gemini-2.') || state.selectedModel === 'gemini-3.8-flash')) {
           state.selectedModel = 'gemini-3.5-flash-lite';
         }
+        if (state) {
+          state.webSearchEnabled = false;
+        }
       },
       partialize: (state) => ({
         quota: state.quota,

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Globe, 
   Brain, 
   KeyRound, 
   Palette, 
@@ -40,8 +39,6 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
   const [activeTab, setActiveTab] = useState<SettingsTab>('controls');
 
   // Mimo Store state
-  const webSearchEnabled = useMimoStore((s) => s.webSearchEnabled);
-  const setWebSearchEnabled = useMimoStore((s) => s.setWebSearchEnabled);
   const showThinking = useMimoStore((s) => s.showThinking);
   const setShowThinking = useMimoStore((s) => s.setShowThinking);
   const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
@@ -395,42 +392,6 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 </div>
               </button>
             </div>
-          </div>
-
-          {/* Toggle: Web Search Grounding */}
-          <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 flex items-start justify-between gap-2.5">
-            <div className="flex items-start gap-2.5 min-w-0">
-              <div className="p-1 rounded-md bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 shrink-0 mt-0.5">
-                <Globe className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                  Web Search Grounding
-                </div>
-                <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed mt-0.5">
-                  Ground responses with live Google Search results for fresh real-time facts.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              role="switch"
-              aria-checked={webSearchEnabled}
-              onClick={() => {
-                touchMimoActivity();
-                setWebSearchEnabled(!webSearchEnabled);
-              }}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none mt-0.5 ${
-                webSearchEnabled ? 'bg-neutral-900 dark:bg-neutral-100' : 'bg-neutral-200 dark:bg-neutral-800'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white dark:bg-neutral-950 shadow-xs ring-0 transition duration-200 ease-in-out ${
-                  webSearchEnabled ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
           </div>
 
           {/* Toggle: Show Thinking */}

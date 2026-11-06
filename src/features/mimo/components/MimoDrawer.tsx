@@ -52,7 +52,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
   const acceptPrivacyNotice = useMimoStore((s) => s.acceptPrivacyNotice);
   const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
   const setThinkingLevel = useMimoStore((s) => s.setThinkingLevel);
-  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.8-flash';
+  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.5-flash-lite';
   const setSelectedModel = useMimoStore((s) => s.setSelectedModel);
   const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);
 

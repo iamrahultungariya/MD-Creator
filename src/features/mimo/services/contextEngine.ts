@@ -258,30 +258,52 @@ ${outlineHeader}`,
     };
   }
 
-  // Case 3: AST-Based Sliding Context for multi-section documents (>50 LOC)
-  if (!isFullDocRequested && totalDocLines > 50) {
-    const sliding = extractASTSlidingContext(content, cursorLine, summary.title);
-    if (sliding.isSlidingApplied) {
-      return {
-        docId,
-        docTitle: summary.title,
-        rawContent: content,
-        contextMode: 'chunked_loc_guarded',
-        contextText: `Active Document: "${summary.title}" (${totalDocLines} LOC total, cursor at line ${cursorLine}).
+  // Case 3: Complete Document Context for documents <= 300 LOC or when full doc is explicitly requested
+  // Under 300 LOC (~1,200 tokens), complete document context is fast, 100% accurate, and safe from TPM limits.
+  if (isFullDocRequested || totalDocLines <= 300) {
+    const outlineHeader =
+      summary.headingsSummary.length > 0
+        ? `Document Outline:\n${summary.headingsSummary.join('\n')}\n\n`
+        : '';
+    const pathStr = activeHeadingPath ? `Current Section: "${activeHeadingPath}"\n` : '';
+
+    return {
+      docId,
+      docTitle: summary.title,
+      rawContent: content,
+      contextMode: 'full_safe',
+      contextText: `Active Document Title: "${summary.title}" (ID: ${docId}, Total Lines: ${totalDocLines}, Words: ${summary.wordCount}, Cursor at Line: ${cursorLine})\n${pathStr}${outlineHeader}Full Document Markdown Content:\n\`\`\`markdown\n${content}\n\`\`\``,
+      linesAnalyzed: totalDocLines,
+      totalDocLines,
+      totalWords: summary.wordCount,
+      headings: summary.headingsSummary,
+      guardrailTriggered: false,
+      activeHeadingPath,
+    };
+  }
+
+  // Case 4: AST-Based Sliding Context for multi-section documents (>300 LOC)
+  const sliding = extractASTSlidingContext(content, cursorLine, summary.title);
+  if (sliding.isSlidingApplied) {
+    return {
+      docId,
+      docTitle: summary.title,
+      rawContent: content,
+      contextMode: 'chunked_loc_guarded',
+      contextText: `Active Document: "${summary.title}" (${totalDocLines} LOC total, cursor at line ${cursorLine}).
 [AST-Based Sliding Window Active • ${sliding.tokenReductionPercent}% Tokens Saved]
 
 ${sliding.slidingContextText}`,
-        linesAnalyzed: sliding.currentSectionContent.split('\n').length,
-        totalDocLines,
-        totalWords: summary.wordCount,
-        headings: summary.headingsSummary,
-        guardrailTriggered: false,
-        activeHeadingPath: sliding.activeHeadingPath,
-      };
-    }
+      linesAnalyzed: sliding.currentSectionContent.split('\n').length,
+      totalDocLines,
+      totalWords: summary.wordCount,
+      headings: summary.headingsSummary,
+      guardrailTriggered: false,
+      activeHeadingPath: sliding.activeHeadingPath,
+    };
   }
 
-  // Case 4: Under 1000 LOC safe limit -> Provide complete document so Mimo has 100% accuracy
+  // Case 5: Under 1000 LOC safe limit (when AST sliding was not applicable, e.g. single monolithic section)
   if (totalDocLines <= 1000) {
     const outlineHeader =
       summary.headingsSummary.length > 0

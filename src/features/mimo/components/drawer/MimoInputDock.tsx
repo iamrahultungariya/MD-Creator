@@ -69,7 +69,6 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [isThinkingMenuOpen]);
 
-  const webSearchEnabled = useMimoStore((s) => s.webSearchEnabled);
   const showThinking = useMimoStore((s) => s.showThinking);
   const userApiKey = useMimoStore((s) => s.quota.userApiKey);
   const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);
@@ -133,16 +132,16 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
           <div className="inline-flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-[11px]">
             <button
               type="button"
-              onClick={() => setSelectedModel('gemini-3.8-flash')}
+              onClick={() => setSelectedModel('gemini-3.5-flash-lite')}
               className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedModel === 'gemini-3.8-flash'
+                selectedModel === 'gemini-3.5-flash-lite'
                   ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
               }`}
-              title="Gemini 3.8 Flash (Reasoning & Deep Analysis)"
+              title="Gemini 3.5 Flash-Lite (Default • High Speed & 1,500 RPD)"
             >
-              <Brain className="w-3 h-3" />
-              <span>3.8 Flash</span>
+              <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>3.5 Lite</span>
             </button>
 
             <button
@@ -155,22 +154,22 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
               }`}
               title="Gemini 3.5 Flash (Balanced & High Stability)"
             >
-              <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <Zap className="w-3 h-3" />
               <span>3.5 Flash</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setSelectedModel('gemini-3.5-flash-lite')}
+              onClick={() => setSelectedModel('gemini-3.8-flash')}
               className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedModel === 'gemini-3.5-flash-lite'
+                selectedModel === 'gemini-3.8-flash'
                   ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
               }`}
-              title="Gemini 3.5 Flash-Lite (High Throughput Speed)"
+              title="Gemini 3.8 Flash (Deep Reasoning & Heavy Tasks)"
             >
-              <Zap className="w-3 h-3" />
-              <span>3.5 Lite</span>
+              <Brain className="w-3 h-3 text-indigo-500" />
+              <span>3.8 Flash</span>
             </button>
           </div>
 
@@ -275,16 +274,16 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
                 setIsSettingsOpen(!isSettingsOpen);
               }}
               className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
-                isSettingsOpen || webSearchEnabled || showThinking
+                isSettingsOpen || showThinking
                   ? 'border-neutral-400 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs'
                   : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'
               }`}
-              title="Mimo Generation Settings (Web search & Thinking)"
+              title="Mimo Generation Settings (Thinking & Model Preferences)"
               aria-label="Generation settings"
             >
               <SlidersHorizontal className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
               <span>Settings</span>
-              {(webSearchEnabled || showThinking || userApiKey) && (
+              {(showThinking || userApiKey) && (
                 <span className={`w-1.5 h-1.5 rounded-full ${userApiKey ? 'bg-emerald-500' : 'bg-blue-500 dark:bg-blue-400'}`} />
               )}
             </button>

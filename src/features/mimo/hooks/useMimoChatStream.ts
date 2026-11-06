@@ -54,7 +54,6 @@ export function useMimoChatStream({
   const thinkingLevel = useMimoStore((s) => s.thinkingLevel);
   const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.5-flash-lite';
   const showThinking = useMimoStore((s) => s.showThinking);
-  const webSearchEnabled = useMimoStore((s) => s.webSearchEnabled);
   const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);
   const pinnedDocIds = useMimoStore((s) =>
     docId && s.pinnedDocIdsByDoc ? s.pinnedDocIdsByDoc[docId] || EMPTY_STRINGS : EMPTY_STRINGS
@@ -141,8 +140,11 @@ export function useMimoChatStream({
     );
 
     // Pre-flight quota check (0% deduction upfront; actual tokens deducted after completion).
-    // If the user has a live BYOK key or workspace key, skip mock quota.
-    if (!hasActiveKey) {
+    // If the user has a live BYOK key or workspace key, skip demo quota restrictions.
+    const userPersonalKey = useMimoStore.getState().quota.userApiKey?.trim();
+    const isUsingByok = Boolean(userPersonalKey || hasActiveKey);
+
+    if (!isUsingByok) {
       const preflightCheck = consumeCredit(0, isDocGen);
       if (!preflightCheck.allowed) {
         onToast(preflightCheck.reason || 'Daily AI capacity reached');
@@ -277,7 +279,6 @@ export function useMimoChatStream({
         thinkingLevel: thinkingLevel,
         selectedModel: selectedModel,
         showThinking: showThinking,
-        webSearchEnabled: webSearchEnabled,
         pinnedDocsLayer,
         episodicBullets: effectiveEpisodic,
         history: messages,
@@ -367,15 +368,17 @@ export function useMimoChatStream({
         return;
       }
 
-      // Deduct proportional token-based credit only on successful completion
-      const actualCostPercent = computeTaskCostPercent(
-        result.tokensUsed,
-        result.resolvedLevel,
-        isDocGen,
-        result.modelUsed
-      );
-      if (actualCostPercent > 0) {
-        consumeCredit(actualCostPercent, isDocGen);
+      // Deduct proportional token-based credit only for shared demo users without personal keys
+      if (!isUsingByok) {
+        const actualCostPercent = computeTaskCostPercent(
+          result.tokensUsed,
+          result.resolvedLevel,
+          isDocGen,
+          result.modelUsed
+        );
+        if (actualCostPercent > 0) {
+          consumeCredit(actualCostPercent, isDocGen);
+        }
       }
 
       // Record real token and latency telemetry

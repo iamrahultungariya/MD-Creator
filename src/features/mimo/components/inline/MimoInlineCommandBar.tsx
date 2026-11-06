@@ -72,9 +72,8 @@ export const MimoInlineCommandBar: React.FC<MimoInlineCommandBarProps> = ({
   const previewEndRef = useRef<HTMLDivElement>(null);
 
   const userApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
-  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.8-flash';
+  const selectedModel = useMimoStore((s) => s.selectedModel) || 'gemini-3.5-flash-lite';
   const showThinking = useMimoStore((s) => s.showThinking);
-  const webSearchEnabled = useMimoStore((s) => s.webSearchEnabled);
   const pinnedDocIds = useMimoStore((s) =>
     docId && s.pinnedDocIdsByDoc ? s.pinnedDocIdsByDoc[docId] || EMPTY_INLINE_LIST : EMPTY_INLINE_LIST
   );
@@ -164,7 +163,6 @@ export const MimoInlineCommandBar: React.FC<MimoInlineCommandBarProps> = ({
         thinkingLevel: 'LOW',
         selectedModel,
         showThinking,
-        webSearchEnabled,
         pinnedDocsLayer,
         episodicBullets: effectiveEpisodic,
         signal: abortControllerRef.current.signal,
