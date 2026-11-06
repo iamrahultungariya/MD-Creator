@@ -7,7 +7,7 @@ import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDn
 import { useMimoStore } from '../stores/useMimoStore';
 import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
 import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
-import { useAdminAiStore } from '../../../stores/useAdminAiStore';
+import { useUserAiStore } from '../../../stores/useUserAiStore';
 import { streamOpenRouterResponse } from '../../../services/openRouterService';
 import { evaluateContextPrivacyPolicy } from '../../../services/adminAiContextFilter';
 
@@ -688,10 +688,10 @@ export async function streamMimoResponse(options: {
     `Loaded "${context.docTitle}" (${context.linesAnalyzed} lines, ${context.totalWords} words) • Intent: ${intent}`
   );
 
-  // 1.5. Admin AI Dispatcher: Route to OpenRouter (stealth/crouton-alpha) if selected by Admin
-  const adminAi = useAdminAiStore.getState();
-  if (adminAi.defaultProvider === 'openrouter' && adminAi.isOpenRouterReady()) {
-    const privacyResult = evaluateContextPrivacyPolicy(prompt, context, adminAi.privacy);
+  // 1.5. User AI Dispatcher: Route to OpenRouter (openai/gpt-4o) if selected by User in Settings
+  const userAi = useUserAiStore.getState();
+  if (userAi.provider === 'openrouter' && userAi.isOpenRouterReady()) {
+    const privacyResult = evaluateContextPrivacyPolicy(prompt, context, userAi.privacy);
 
     callbacks.onReasoningStep?.(
       privacyResult.isContextAttached
@@ -710,20 +710,20 @@ export async function streamMimoResponse(options: {
 
     try {
       return await streamOpenRouterResponse({
-        apiKey: adminAi.openRouterApiKey,
-        model: adminAi.selectedModel,
+        apiKey: userAi.openRouterApiKey,
+        model: userAi.openRouterModel || 'openai/gpt-4o',
         systemPrompt: MIMO_SYSTEM_PROMPT,
         messages: openRouterMessages,
-        enableThinking: adminAi.enableThinking,
-        reasoningEffort: adminAi.reasoningEffort,
-        temperature: adminAi.temperature,
-        maxTokens: adminAi.maxTokens,
-        topP: adminAi.topP,
+        enableThinking: userAi.enableThinking,
+        reasoningEffort: userAi.reasoningEffort,
+        temperature: userAi.temperature,
+        maxTokens: userAi.maxTokens,
+        topP: userAi.topP,
         callbacks,
         signal,
       });
     } catch (openRouterErr: any) {
-      if (adminAi.fallbackToGeminiOnFailure) {
+      if (userAi.openRouterFallbackToGemini) {
         callbacks.onReasoningStep?.(
           `⚠️ OpenRouter Error (${openRouterErr?.message || 'Unavailable'}). Gracefully failing over to Gemini 3.8 Flash...`
         );

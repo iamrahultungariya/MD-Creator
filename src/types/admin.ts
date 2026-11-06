@@ -1,7 +1,7 @@
 import { Article } from '../data/blogArticles';
 import { UserReview } from '../services/reviewsStorage';
 
-export type AdminTab = 'overview' | 'analytics' | 'blogs' | 'reviews' | 'feedback' | 'ai-settings';
+export type AdminTab = 'overview' | 'analytics' | 'blogs' | 'reviews' | 'feedback';
 
 export * from './adminAi';
 

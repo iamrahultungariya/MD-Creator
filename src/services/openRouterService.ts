@@ -7,10 +7,11 @@ import {
 import { StreamCallbacks, MimoStreamResult } from '../features/mimo/services/mimoGeminiService';
 
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-export const DEFAULT_OPENROUTER_MODEL = 'stealth/crouton-alpha';
+export const DEFAULT_OPENROUTER_MODEL = 'openai/gpt-4o';
 
-const APP_REFERER = 'https://mdcreator.app';
-const APP_TITLE = 'MD Creator Admin';
+export const APP_REFERER = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://mdcreator.app';
+export const getAppReferer = () => APP_REFERER;
+export const APP_TITLE = 'MD Writer';
 
 /**
  * Validates an OpenRouter API key by performing a lightweight 1-token probe request.
@@ -66,7 +67,7 @@ export async function validateOpenRouterApiKey(
       },
       body: JSON.stringify({
         model,
-        messages: [{ role: 'user', content: 'ping' }],
+        messages: [{ role: 'user', content: 'What is the meaning of life?' }],
         max_tokens: 1,
       }),
     });
@@ -90,7 +91,7 @@ export async function validateOpenRouterApiKey(
     }
 
     if (res.status === 402) {
-      return { valid: false, error: 'OpenRouter Account Credit verification required (402).' };
+      return { valid: true, latencyMs, label, freeLimitRemaining, warning: 'Key verified! However, this OpenRouter account has 0 credits. Add credits at https://openrouter.ai/credits to use ' + model + '.' };
     }
     if (res.status === 429) {
       return { valid: true, error: 'Key is valid, but OpenRouter is currently rate-limited (429).' };
@@ -298,7 +299,8 @@ export async function streamOpenRouterResponse(options: {
     top_p: topP,
   };
 
-  if (enableThinking) {
+  const isReasoningModel = model.includes('r1') || model.includes('o1') || model.includes('o3');
+  if (enableThinking && isReasoningModel) {
     requestPayload.reasoning = { effort: reasoningEffort };
     requestPayload.reasoning_effort = reasoningEffort;
   }

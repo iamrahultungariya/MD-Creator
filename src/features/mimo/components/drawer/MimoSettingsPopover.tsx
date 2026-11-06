@@ -26,6 +26,10 @@ import { useStyleDnaStore } from '../../stores/useStyleDnaStore';
 import { StyleTone, StyleFormatting } from '../../types/styleDnaTypes';
 import { MimoAvatar } from '../MimoAvatar';
 import { validateGeminiApiKey, fetchLiveGeminiHealthAndQuota, API_HEALTH_CHECK_TTL_MS } from '../../services/mimoGeminiService';
+import { useUserAiStore } from '../../../../stores/useUserAiStore';
+import { usePreferencesStore } from '../../../../stores/usePreferencesStore';
+import { validateOpenRouterApiKey } from '../../../../services/openRouterService';
+import { OPENROUTER_DEFAULT_MODEL } from '../../../../types/userAi';
 
 interface MimoSettingsPopoverProps {
   isOpen: boolean;
@@ -108,6 +112,50 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
   const [isValidatingKey, setIsValidatingKey] = useState(false);
   const [keyValidationError, setKeyValidationError] = useState<string | null>(null);
   const [isKeyValid, setIsKeyValid] = useState<boolean>(Boolean(userApiKey));
+
+  // User AI Store bindings for OpenRouter & Provider Selection
+  const aiProvider = useUserAiStore((s) => s.provider);
+  const setAiProvider = useUserAiStore((s) => s.setProvider);
+  const openRouterApiKey = useUserAiStore((s) => s.openRouterApiKey);
+  const setOpenRouterApiKey = useUserAiStore((s) => s.setOpenRouterApiKey);
+  const openRouterModel = useUserAiStore((s) => s.openRouterModel || OPENROUTER_DEFAULT_MODEL);
+  const isOpenRouterKeyVerified = useUserAiStore((s) => s.isOpenRouterKeyVerified);
+  const setIsOpenRouterKeyVerified = useUserAiStore((s) => s.setIsOpenRouterKeyVerified);
+
+  const [openRouterKeyInput, setOpenRouterKeyInput] = useState('');
+  const [showOpenRouterKeyText, setShowOpenRouterKeyText] = useState(false);
+  const [isEditingOpenRouterKey, setIsEditingOpenRouterKey] = useState(!openRouterApiKey);
+  const [isValidatingOpenRouterKey, setIsValidatingOpenRouterKey] = useState(false);
+  const [openRouterValidationError, setOpenRouterValidationError] = useState<string | null>(null);
+  const [openRouterKeySavedToast, setOpenRouterKeySavedToast] = useState(false);
+
+  const handleSaveOpenRouterKey = async () => {
+    const clean = openRouterKeyInput.trim();
+    if (!clean) {
+      setOpenRouterValidationError('Please enter an OpenRouter API key');
+      return;
+    }
+    setIsValidatingOpenRouterKey(true);
+    setOpenRouterValidationError(null);
+    const res = await validateOpenRouterApiKey(clean, openRouterModel);
+    setIsValidatingOpenRouterKey(false);
+    if (res.valid) {
+      setOpenRouterApiKey(clean);
+      setIsOpenRouterKeyVerified(true);
+      setIsEditingOpenRouterKey(false);
+      setOpenRouterKeySavedToast(true);
+      setTimeout(() => setOpenRouterKeySavedToast(false), 2500);
+    } else {
+      setOpenRouterValidationError(res.error || 'Invalid OpenRouter key');
+    }
+  };
+
+  const handleClearOpenRouterKey = () => {
+    setOpenRouterKeyInput('');
+    setOpenRouterApiKey('');
+    setIsOpenRouterKeyVerified(false);
+    setIsEditingOpenRouterKey(true);
+  };
 
   // StyleDNA Store state
   const tone = useStyleDnaStore((s) => s.tone);
@@ -275,8 +323,8 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
           }`}
         >
           <KeyRound className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
-          <span>BYOK Key</span>
-          {userApiKey && (
+          <span>AI / BYOK</span>
+          {(userApiKey || openRouterApiKey) && (
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           )}
         </button>
@@ -473,184 +521,396 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
         </div>
       )}
 
-      {/* Tab 2: BYOK Gemini API Key */}
+      {/* Tab 2: AI Provider & BYOK Key */}
       {activeTab === 'byok' && (
-        <div className="p-3.5 space-y-2.5">
-          {userApiKey && !isEditingKey ? (
-            <div className="p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 font-semibold text-xs">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>API Key Connected</span>
+        <div className="p-3.5 space-y-3">
+          {/* Provider Selection */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                touchMimoActivity();
+                setAiProvider('gemini');
+              }}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                aiProvider === 'gemini'
+                  ? 'bg-white dark:bg-neutral-900 text-emerald-600 dark:text-emerald-400 shadow-2xs'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              Google Gemini
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                touchMimoActivity();
+                setAiProvider('openrouter');
+              }}
+              className={`py-1.5 rounded-lg transition-all cursor-pointer ${
+                aiProvider === 'openrouter'
+                  ? 'bg-white dark:bg-neutral-900 text-[#8257F5] dark:text-violet-400 shadow-2xs'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              OpenRouter (gpt-4o)
+            </button>
+          </div>
+
+          {aiProvider === 'openrouter' ? (
+            /* OpenRouter BYOK */
+            openRouterApiKey && !isEditingOpenRouterKey ? (
+              <div className="p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 font-semibold text-xs">
+                    <ShieldCheck className="w-4 h-4 text-[#8257F5]" />
+                    <span>OpenRouter Key Connected</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/70 px-2 py-0.5 rounded-full border border-violet-200/90 dark:border-violet-800/80 flex items-center gap-1">
+                    <Check className="w-3 h-3 text-[#8257F5]" />
+                    <span>Active: {openRouterModel}</span>
+                  </span>
                 </div>
-                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-200/90 dark:border-emerald-800/80 flex items-center gap-1">
-                  <Check className="w-3 h-3 text-emerald-500" />
-                  <span>Connected</span>
-                </span>
-              </div>
 
-              <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 font-mono text-xs">
-                <span className="text-neutral-800 dark:text-neutral-200 truncate">
-                  {showKeyText ? userApiKey : maskKey(userApiKey)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowKeyText(!showKeyText)}
-                  className="p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 ml-1 cursor-pointer"
-                  title={showKeyText ? 'Hide key' : 'Show key'}
-                >
-                  {showKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 font-mono text-xs">
+                  <span className="text-neutral-800 dark:text-neutral-200 truncate">
+                    {showOpenRouterKeyText ? openRouterApiKey : maskKey(openRouterApiKey)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowOpenRouterKeyText(!showOpenRouterKeyText)}
+                    className="p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 ml-1 cursor-pointer"
+                    title={showOpenRouterKeyText ? 'Hide key' : 'Show key'}
+                  >
+                    {showOpenRouterKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
 
-              <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                Your personal Gemini API key is stored locally and securely in your browser.
-              </p>
+                <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                  Routing to OpenRouter with 1st model <code className="font-mono text-[#8257F5]">{openRouterModel}</code>.
+                </p>
 
-              <div className="flex items-center justify-end gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
-                <button
-                  type="button"
-                  onClick={handleClearApiKey}
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center gap-1 cursor-pointer"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  <span>Remove</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingKey(true)}
-                  className="px-3 py-1 rounded-lg text-[11px] font-medium text-neutral-900 dark:text-white bg-neutral-200/80 hover:bg-neutral-300/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
-                >
-                  Change Key
-                </button>
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={handleClearOpenRouterKey}
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Remove</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingOpenRouterKey(true)}
+                    className="px-3 py-1 rounded-lg text-[11px] font-medium text-neutral-900 dark:text-white bg-neutral-200/80 hover:bg-neutral-300/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                  >
+                    Change Key
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/50 text-[#8257F5]">
+                    <KeyRound className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
+                      Connect OpenRouter API Key
+                    </div>
+                    <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                      Primary Model: {openRouterModel}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <input
+                      type={showOpenRouterKeyText ? 'text' : 'password'}
+                      value={openRouterKeyInput}
+                      onChange={(e) => {
+                        setOpenRouterKeyInput(e.target.value);
+                        if (openRouterValidationError) setOpenRouterValidationError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSaveOpenRouterKey();
+                        }
+                      }}
+                      placeholder="sk-or-v1-..."
+                      className={`w-full px-3 py-2 pr-8 rounded-xl border bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-neutral-100 font-mono placeholder:text-neutral-400 focus:outline-none transition-colors ${
+                        openRouterValidationError
+                          ? 'border-rose-500 ring-2 ring-rose-500/20'
+                          : isOpenRouterKeyVerified && openRouterKeyInput.trim()
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                          : 'border-neutral-200 dark:border-neutral-700 focus:border-[#8257F5]'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOpenRouterKeyText(!showOpenRouterKeyText)}
+                      className="absolute right-2 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
+                    >
+                      {showOpenRouterKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {openRouterValidationError && (
+                    <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[10.5px] text-rose-700 dark:text-rose-300 space-y-1">
+                      <div className="flex items-start gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                        <span className="leading-relaxed">{openRouterValidationError}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <a
+                    href="https://openrouter.ai/keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-neutral-600 dark:text-neutral-400 hover:text-[#8257F5] hover:underline"
+                  >
+                    <span>Get key at openrouter.ai</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+
+                  <div className="flex items-center gap-1.5">
+                    {openRouterApiKey && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingOpenRouterKey(false);
+                          setOpenRouterValidationError(null);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSaveOpenRouterKey}
+                      disabled={!openRouterKeyInput.trim() || isValidatingOpenRouterKey}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#8257F5] hover:bg-[#7245e5] text-white font-semibold text-xs shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {isValidatingOpenRouterKey ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Testing...</span>
+                        </>
+                      ) : openRouterKeySavedToast ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
+                          <span>Connected</span>
+                        </>
+                      ) : (
+                        <span>Connect Key</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {openRouterKeySavedToast && (
+                  <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/90 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold text-center animate-in fade-in">
+                    ✓ OpenRouter API Key Connected
+                  </div>
+                )}
+              </div>
+            )
           ) : (
-            <div className="p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
-                  <KeyRound className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                    Connect Gemini API Key
+            /* Gemini BYOK */
+            userApiKey && !isEditingKey ? (
+              <div className="p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-neutral-900 dark:text-neutral-100 font-semibold text-xs">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>Gemini API Key Connected</span>
                   </div>
-                  <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                    Connect your personal Google Gemini API key
-                  </div>
+                  <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-200/90 dark:border-emerald-800/80 flex items-center gap-1">
+                    <Check className="w-3 h-3 text-emerald-500" />
+                    <span>Connected</span>
+                  </span>
                 </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <input
-                    type={showKeyText ? 'text' : 'password'}
-                    value={keyInput}
-                    onChange={(e) => {
-                      setKeyInput(e.target.value);
-                      if (keyValidationError) setKeyValidationError(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSaveApiKey();
-                      }
-                    }}
-                    placeholder="AIza... or AQ..."
-                    className={`w-full px-3 py-2 pr-8 rounded-xl border bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-neutral-100 font-mono placeholder:text-neutral-400 focus:outline-none transition-colors ${
-                      keyValidationError
-                        ? 'border-rose-500 ring-2 ring-rose-500/20'
-                        : isKeyValid && keyInput.trim()
-                        ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                        : 'border-neutral-200 dark:border-neutral-700 focus:border-neutral-900 dark:focus:border-neutral-100'
-                    }`}
-                  />
+                <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 font-mono text-xs">
+                  <span className="text-neutral-800 dark:text-neutral-200 truncate">
+                    {showKeyText ? userApiKey : maskKey(userApiKey)}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setShowKeyText(!showKeyText)}
-                    className="absolute right-2 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
+                    className="p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 ml-1 cursor-pointer"
+                    title={showKeyText ? 'Hide key' : 'Show key'}
                   >
                     {showKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
 
-                {keyValidationError && (
-                  <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[10.5px] text-rose-700 dark:text-rose-300 space-y-1">
-                    <div className="flex items-start gap-1">
-                      <AlertCircle className="w-3 h-3 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-                      <span className="leading-relaxed">{keyValidationError}</span>
-                    </div>
-                    {keyValidationError.includes('aistudio.google.com') && (
-                      <div className="pl-4 pt-0.5">
-                        <a
-                          href="https://aistudio.google.com/apikey"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 font-semibold underline text-rose-800 dark:text-rose-200 hover:opacity-80"
-                        >
-                          <span>Get a new key at Google AI Studio</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                  Your personal Gemini API key is stored locally and securely in your browser.
+                </p>
 
-              <div className="flex items-center justify-between">
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[10.5px] font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:underline"
-                >
-                  <span>Get free key at Google AI Studio</span>
-                  <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-
-                <div className="flex items-center gap-1.5">
-                  {userApiKey && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsEditingKey(false);
-                        setKeyValidationError(null);
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                  )}
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
                   <button
                     type="button"
-                    onClick={handleSaveApiKey}
-                    disabled={!keyInput.trim() || isValidatingKey}
-                    className="px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white font-semibold text-xs shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    onClick={handleClearApiKey}
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    {isValidatingKey ? (
-                      <>
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Checking...</span>
-                      </>
-                    ) : keySavedToast ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[2.5]" />
-                        <span>Connected</span>
-                      </>
-                    ) : (
-                      <span>Connect Key</span>
-                    )}
+                    <Trash2 className="w-3 h-3" />
+                    <span>Remove</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingKey(true)}
+                    className="px-3 py-1 rounded-lg text-[11px] font-medium text-neutral-900 dark:text-white bg-neutral-200/80 hover:bg-neutral-300/80 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                  >
+                    Change Key
                   </button>
                 </div>
               </div>
-
-              {keySavedToast && (
-                <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/90 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold text-center animate-in fade-in">
-                  ✓ Personal API Key Connected
+            ) : (
+              <div className="p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200">
+                    <KeyRound className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
+                      Connect Gemini API Key
+                    </div>
+                    <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                      Connect your personal Google Gemini API key
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <input
+                      type={showKeyText ? 'text' : 'password'}
+                      value={keyInput}
+                      onChange={(e) => {
+                        setKeyInput(e.target.value);
+                        if (keyValidationError) setKeyValidationError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSaveApiKey();
+                        }
+                      }}
+                      placeholder="AIza... or AQ..."
+                      className={`w-full px-3 py-2 pr-8 rounded-xl border bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-neutral-100 font-mono placeholder:text-neutral-400 focus:outline-none transition-colors ${
+                        keyValidationError
+                          ? 'border-rose-500 ring-2 ring-rose-500/20'
+                          : isKeyValid && keyInput.trim()
+                          ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                          : 'border-neutral-200 dark:border-neutral-700 focus:border-neutral-900 dark:focus:border-neutral-100'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowKeyText(!showKeyText)}
+                      className="absolute right-2 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
+                    >
+                      {showKeyText ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {keyValidationError && (
+                    <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[10.5px] text-rose-700 dark:text-rose-300 space-y-1">
+                      <div className="flex items-start gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                        <span className="leading-relaxed">{keyValidationError}</span>
+                      </div>
+                      {keyValidationError.includes('aistudio.google.com') && (
+                        <div className="pl-4 pt-0.5">
+                          <a
+                            href="https://aistudio.google.com/apikey"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold underline text-rose-800 dark:text-rose-200 hover:opacity-80"
+                          >
+                            <span>Get a new key at Google AI Studio</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[10.5px] font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:underline"
+                  >
+                    <span>Get free key at Google AI Studio</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+
+                  <div className="flex items-center gap-1.5">
+                    {(userApiKey || openRouterApiKey) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingKey(false);
+                          setKeyValidationError(null);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSaveApiKey}
+                      disabled={!keyInput.trim() || isValidatingKey}
+                      className="px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white font-semibold text-xs shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {isValidatingKey ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Checking...</span>
+                        </>
+                      ) : keySavedToast ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[2.5]" />
+                          <span>Connected</span>
+                        </>
+                      ) : (
+                        <span>Connect Key</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {keySavedToast && (
+                  <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/90 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold text-center animate-in fade-in">
+                    ✓ Personal API Key Connected
+                  </div>
+                )}
+              </div>
+            )
           )}
+
+          {/* Quick link to Preferences AI settings */}
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              usePreferencesStore.getState().openPreferences('ai');
+            }}
+            className="w-full py-2 px-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 text-[11px] font-medium text-[#8257F5] dark:text-violet-400 bg-violet-50/30 dark:bg-violet-950/20 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Open All AI &amp; Model Preferences (Ctrl+,)</span>
+          </button>
         </div>
       )}
 

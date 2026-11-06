@@ -23,9 +23,6 @@ const AdminReviewsTab = React.lazy(() =>
 const AdminFeedbackTab = React.lazy(() =>
   import('../components/admin/AdminFeedbackTab').then((m) => ({ default: m.AdminFeedbackTab }))
 );
-const AdminAiSettingsTab = React.lazy(() =>
-  import('../components/admin/AdminAiSettingsTab').then((m) => ({ default: m.AdminAiSettingsTab }))
-);
 const BlogReaderModal = React.lazy(() =>
   import('../components/blog/BlogReaderModal').then((m) => ({ default: m.BlogReaderModal }))
 );
@@ -55,7 +52,7 @@ export const AdminPage: React.FC = () => {
   // Admin Dashboard State
   const [searchParams, setSearchParams] = useSearchParams();
   const urlTab = (searchParams.get('tab') as AdminTab) || 'overview';
-  const validTabs: AdminTab[] = ['overview', 'analytics', 'ai-settings', 'blogs', 'reviews', 'feedback'];
+  const validTabs: AdminTab[] = ['overview', 'analytics', 'blogs', 'reviews', 'feedback'];
   const [activeTab, setActiveTabState] = useState<AdminTab>(
     validTabs.includes(urlTab) ? urlTab : 'overview'
   );
@@ -261,11 +258,7 @@ export const AdminPage: React.FC = () => {
             <ActiveUserDashboard onRefresh={loadAdminData} />
           )}
 
-          {/* Tab 1.8: AI Engine & OpenRouter Administration */}
-          {activeTab === 'ai-settings' && (
-            <AdminAiSettingsTab showToast={showToast} />
-          )}
-
+          
           {/* Tab 2: Blogs Management */}
           {activeTab === 'blogs' && (
             <div className="space-y-4">

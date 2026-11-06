@@ -1,7 +1,7 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { X, Type, Sliders, HardDrive, Loader2 } from 'lucide-react';
-import { usePreferencesStore } from '../../stores/usePreferencesStore';
+import { X, Type, Sliders, HardDrive, Sparkles, Loader2 } from 'lucide-react';
+import { usePreferencesStore, PreferencesTab } from '../../stores/usePreferencesStore';
 import { db } from '../../db';
 
 const PreferencesEditorTab = React.lazy(() =>
@@ -13,12 +13,16 @@ const PreferencesToolbarTab = React.lazy(() =>
 const PreferencesStorageTab = React.lazy(() =>
   import('./preferences/PreferencesStorageTab').then((m) => ({ default: m.PreferencesStorageTab }))
 );
+const PreferencesAiTab = React.lazy(() =>
+  import('./preferences/PreferencesAiTab').then((m) => ({ default: m.PreferencesAiTab }))
+);
 
 export const PreferencesModal: React.FC = () => {
   const isOpen = usePreferencesStore((s) => s.isOpen);
   const closePreferences = usePreferencesStore((s) => s.closePreferences);
-  const [activeTab, setActiveTab] = useState<'editor' | 'toolbar' | 'storage'>('editor');
-  const [docCount, setDocCount] = useState<number>(0);
+  const activeTab = usePreferencesStore((s) => s.activeTab || 'editor');
+  const setActiveTab = usePreferencesStore((s) => s.setActiveTab);
+  const [docCount, setDocCount] = React.useState<number>(0);
 
   // Load document count from IndexedDB
   useEffect(() => {
@@ -40,6 +44,13 @@ export const PreferencesModal: React.FC = () => {
   }, [isOpen, closePreferences]);
 
   if (!isOpen) return null;
+
+  const tabList: { id: PreferencesTab; label: string; icon: React.ElementType }[] = [
+    { id: 'editor', label: 'Editor & Type', icon: Type },
+    { id: 'toolbar', label: 'Toolbar Dock', icon: Sliders },
+    { id: 'storage', label: 'Storage & Backup', icon: HardDrive },
+    { id: 'ai', label: 'AI Models', icon: Sparkles },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
@@ -80,59 +91,43 @@ export const PreferencesModal: React.FC = () => {
 
         {/* Clean Segmented Navigation Tab Bar */}
         <div className="px-5 pt-3.5 pb-2 border-b border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/30 dark:bg-[#131118] shrink-0">
-          <div className="grid grid-cols-3 p-1 rounded-lg bg-neutral-100/90 dark:bg-neutral-800/80 border border-neutral-200/60 dark:border-neutral-700/60 text-xs">
-            <button
-              type="button"
-              onClick={() => setActiveTab('editor')}
-              className={`py-1.5 rounded-md flex items-center justify-center gap-1.5 font-medium transition-all cursor-pointer ${
-                activeTab === 'editor'
-                  ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              <Type className="w-3.5 h-3.5 text-[#8257F5]" />
-              <span>Editor &amp; Type</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('toolbar')}
-              className={`py-1.5 rounded-md flex items-center justify-center gap-1.5 font-medium transition-all cursor-pointer ${
-                activeTab === 'toolbar'
-                  ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5 text-[#8257F5]" />
-              <span>Toolbar Dock</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('storage')}
-              className={`py-1.5 rounded-md flex items-center justify-center gap-1.5 font-medium transition-all cursor-pointer ${
-                activeTab === 'storage'
-                  ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              <HardDrive className="w-3.5 h-3.5 text-[#8257F5]" />
-              <span>Storage &amp; Backup</span>
-            </button>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-lg bg-neutral-100/90 dark:bg-neutral-800/80 border border-neutral-200/60 dark:border-neutral-700/60 text-xs">
+            {tabList.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 font-medium transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#8257F5]' : 'text-neutral-500'}`} />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          <Suspense fallback={
-            <div className="py-12 flex items-center justify-center text-xs text-neutral-400 gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#8257F5]" />
-              <span>Loading preferences...</span>
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="py-12 flex items-center justify-center text-xs text-neutral-400 gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-[#8257F5]" />
+                <span>Loading preferences...</span>
+              </div>
+            }
+          >
             {activeTab === 'editor' && <PreferencesEditorTab />}
             {activeTab === 'toolbar' && <PreferencesToolbarTab />}
             {activeTab === 'storage' && <PreferencesStorageTab docCount={docCount} />}
+            {activeTab === 'ai' && <PreferencesAiTab />}
           </Suspense>
         </div>
 

@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 export type EditorFontFamily = 'Geist Mono' | 'JetBrains Mono' | 'Consolas' | 'monospace';
 export type EditorLineHeight = 'compact' | 'normal' | 'relaxed';
 export type EditorKeymapMode = 'default' | 'vim';
+export type PreferencesTab = 'editor' | 'toolbar' | 'storage' | 'ai';
 
 interface PreferencesState {
   // Typography
@@ -24,6 +25,7 @@ interface PreferencesState {
 
   // Modal State
   isOpen: boolean;
+  activeTab: PreferencesTab;
 
   // Actions
   setFontFamily: (font: EditorFontFamily) => void;
@@ -36,7 +38,8 @@ interface PreferencesState {
   setTypewriterMode: (enabled: boolean) => void;
   setFocusMode: (enabled: boolean) => void;
   setKeymapMode: (mode: EditorKeymapMode) => void;
-  openPreferences: () => void;
+  setActiveTab: (tab: PreferencesTab) => void;
+  openPreferences: (tab?: PreferencesTab) => void;
   closePreferences: () => void;
   togglePreferences: () => void;
   resetPreferences: () => void;
@@ -53,6 +56,7 @@ const DEFAULT_PREFERENCES = {
   typewriterMode: false,
   focusMode: false,
   keymapMode: 'default' as EditorKeymapMode,
+  activeTab: 'editor' as PreferencesTab,
 };
 
 export const usePreferencesStore = create<PreferencesState>()(
@@ -71,8 +75,13 @@ export const usePreferencesStore = create<PreferencesState>()(
       setTypewriterMode: (typewriterMode) => set({ typewriterMode }),
       setFocusMode: (focusMode) => set({ focusMode }),
       setKeymapMode: (keymapMode) => set({ keymapMode }),
+      setActiveTab: (activeTab) => set({ activeTab }),
 
-      openPreferences: () => set({ isOpen: true }),
+      openPreferences: (tab) =>
+        set((state) => ({
+          isOpen: true,
+          activeTab: tab || state.activeTab || 'editor',
+        })),
       closePreferences: () => set({ isOpen: false }),
       togglePreferences: () => set((state) => ({ isOpen: !state.isOpen })),
 
