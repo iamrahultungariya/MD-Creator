@@ -58,3 +58,28 @@ Error responses dynamically inspect `selectedModel`:
 In `src/features/mimo/stores/useMimoStore.ts`:
 - **`setSelectedModel`**: Enforces strict typing (`MimoModelChoice`), defaulting any unknown or invalid model to `'gemini-3.5-flash-lite'`.
 - **`onRehydrateStorage`**: When the client app boots and rehydrates localStorage, any persisted model matching `gemini-2.*` is automatically migrated to `'gemini-3.5-flash-lite'`.
+
+---
+
+## 6. Live Visual Quota & Telemetry Engine
+
+Instead of displaying static placeholder text, MD Creator incorporates live, visual telemetry directly fetched from Google AI Studio and tracked locally in real time:
+
+1. **Active Live Health & Ping Probing (`fetchLiveGeminiHealthAndQuota`)**:
+   - Directly executes a live metadata probe against the Google Gemini API using the active personal key.
+   - Measures actual round-trip network latency in milliseconds (e.g. `142ms`).
+   - Verifies available Gemini 3.x models on the key.
+   - Detects real-time rate limit (HTTP 429) or high-demand (HTTP 503) status.
+
+2. **Real Token & Request Tracking (`recordRealUsage`)**:
+   - Captures `chunk.usageMetadata` (`promptTokenCount`, `candidatesTokenCount`, `totalTokenCount`) directly from Google AI stream responses.
+   - Aggregates daily requests, total tokens consumed, prompt tokens vs generation tokens, and per-model usage.
+   - Automatically handles midnight resets.
+
+3. **Visual UI Dashboard (`MimoSettingsPopover` Usage Tab & `MimoQuotaRing`)**:
+   - **Status Badge**: Pulsing live health indicator (🟢 Online, 🟠 Cooldown, 🔴 Error).
+   - **"Fetch Live" Action**: Allows immediate re-testing and latency measurement on demand.
+   - **Visual KPI Progress Gauges**: Requests Today progress bar (vs 1,500 RPD) and segmented Token Consumed progress bar.
+   - **Model Fleet Breakdown**: Visual cards for `gemini-3.5-flash-lite`, `gemini-3.5-flash`, and `gemini-3.8-flash` showing per-model requests, tokens, and active selection toggles.
+   - **Interactive Header Ring**: Live pill badge displaying current status, requests, and latency.
+

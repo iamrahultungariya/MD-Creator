@@ -17,14 +17,28 @@ export const MimoQuotaRing: React.FC = () => {
   );
 
   if (isByokActive) {
+    const requests = quota.requestsToday || 0;
+    const latency = quota.liveLatencyMs || quota.lastRequestLatencyMs || 0;
+    const isThrottled = quota.liveApiStatus === 'THROTTLED';
+
     return (
       <button
         onClick={() => setIsKeyModalOpen(true)}
-        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800/80 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 transition-all cursor-pointer shadow-2xs"
-        title="Personal Gemini API Key Connected"
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-semibold transition-all cursor-pointer shadow-2xs ${
+          isThrottled
+            ? 'bg-amber-50 dark:bg-amber-950/70 border-amber-200/80 dark:border-amber-800/80 text-amber-700 dark:text-amber-300 hover:bg-amber-100'
+            : 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200/80 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/80'
+        }`}
+        title={`Google Gemini API Key Active • ${requests} requests today • ${latency > 0 ? `${latency}ms latency` : 'Connected'} • Click for key details`}
       >
-        <Key className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
-        <span>API Key Connected</span>
+        <span className="relative flex h-1.5 w-1.5">
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isThrottled ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+          <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${isThrottled ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+        </span>
+        <span className="flex items-center gap-1">
+          <Key className="w-2.5 h-2.5" />
+          <span>{requests > 0 ? `${requests} reqs` : latency > 0 ? `${latency}ms` : 'Key Active'}</span>
+        </span>
       </button>
     );
   }

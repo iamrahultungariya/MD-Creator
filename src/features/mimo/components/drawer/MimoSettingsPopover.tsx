@@ -17,13 +17,16 @@ import {
   Loader2,
   AlertCircle,
   ChevronDown,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 import { useMimoStore } from '../../stores/useMimoStore';
 import { useStyleDnaStore } from '../../stores/useStyleDnaStore';
 import { StyleTone, StyleFormatting } from '../../types/styleDnaTypes';
 import { MimoAvatar } from '../MimoAvatar';
-import { validateGeminiApiKey } from '../../services/mimoGeminiService';
+import { validateGeminiApiKey, fetchLiveGeminiHealthAndQuota } from '../../services/mimoGeminiService';
 
 interface MimoSettingsPopoverProps {
   isOpen: boolean;
@@ -56,6 +59,45 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
   const setUserApiKey = useMimoStore((s) => s.setUserApiKey);
   const dailyUsagePercent = useMimoStore((s) => s.quota.dailyUsagePercent) || 0;
   const monthlyDocGenCount = useMimoStore((s) => s.quota.monthlyDocGenCount) || 0;
+  const quota = useMimoStore((s) => s.quota);
+  const totalTokensToday = quota.totalTokensToday || 0;
+  const promptTokensToday = quota.promptTokensToday || 0;
+  const candidatesTokensToday = quota.candidatesTokensToday || 0;
+  const requestsToday = quota.requestsToday || 0;
+  const lastRequestLatencyMs = quota.lastRequestLatencyMs || 0;
+  const liveApiStatus = quota.liveApiStatus || (userApiKey ? 'HEALTHY' : 'UNCONFIGURED');
+  const liveLatencyMs = quota.liveLatencyMs || lastRequestLatencyMs || 0;
+  const modelUsageToday = quota.modelUsageToday || {};
+  const lastCheckedTimestamp = quota.lastCheckedTimestamp;
+
+  const [isFetchingLiveUsage, setIsFetchingLiveUsage] = useState(false);
+  const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
+  const [fetchSuccessMessage, setFetchSuccessMessage] = useState<string | null>(null);
+
+  const handleFetchLiveUsage = async () => {
+    setIsFetchingLiveUsage(true);
+    setLiveFetchError(null);
+    setFetchSuccessMessage(null);
+    try {
+      const res = await fetchLiveGeminiHealthAndQuota(userApiKey);
+      if (res.valid) {
+        setFetchSuccessMessage(`Live Ping: ${res.latencyMs}ms • Google AI Verified`);
+        setTimeout(() => setFetchSuccessMessage(null), 3500);
+      } else if (res.error) {
+        setLiveFetchError(res.error);
+      }
+    } catch (e: any) {
+      setLiveFetchError(e?.message || 'Failed to ping Google AI');
+    } finally {
+      setIsFetchingLiveUsage(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'usage' && userApiKey && (!lastCheckedTimestamp || Date.now() - lastCheckedTimestamp > 120000)) {
+      handleFetchLiveUsage();
+    }
+  }, [activeTab, userApiKey]);
 
   // BYOK local state
   const [keyInput, setKeyInput] = useState('');
@@ -856,81 +898,341 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
         </div>
       )}
 
-      {/* Tab 4: Usage & Quota Metrics */}
+      {/* Tab 4: Live Visual Usage & Quota Metrics */}
       {activeTab === 'usage' && (
-        <div className="p-3.5 space-y-2.5">
-          {/* Gemini 3.8 Flash Metrics */}
-          <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-1.5">
+        <div className="p-3 space-y-2.5 max-h-[440px] overflow-y-auto">
+          {/* 1. Live Google AI Health & Status Banner */}
+          <div className="p-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40 space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Brain className="w-3.5 h-3.5 text-neutral-800 dark:text-neutral-200" />
-                <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                  Gemini 3.8 Flash
+              <div className="flex items-center gap-2">
+                {userApiKey ? (
+                  liveApiStatus === 'THROTTLED' ? (
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+                    </span>
+                  ) : liveApiStatus === 'OFFLINE' ? (
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+                    </span>
+                  ) : (
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </span>
+                  )
+                ) : (
+                  <span className="w-2.5 h-2.5 rounded-full bg-neutral-400" />
+                )}
+                <span className="font-semibold text-xs text-neutral-900 dark:text-neutral-100">
+                  {userApiKey
+                    ? liveApiStatus === 'THROTTLED'
+                      ? 'Rate Limit (Cooling Down)'
+                      : liveApiStatus === 'OFFLINE'
+                      ? 'Connection Error'
+                      : 'Google Gemini Online'
+                    : 'Free Shared Demo Tier'}
                 </span>
               </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                userApiKey
-                  ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200/90 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'
-              }`}>
-                {userApiKey ? 'Connected' : `${Math.max(0, Math.round(100 - dailyUsagePercent))}% Left`}
-              </span>
+
+              <div className="flex items-center gap-1.5">
+                {liveLatencyMs > 0 && (
+                  <span className="font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-200/90 dark:border-emerald-800/80 flex items-center gap-0.5">
+                    <Zap className="w-2.5 h-2.5" />
+                    {liveLatencyMs}ms
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleFetchLiveUsage}
+                  disabled={isFetchingLiveUsage || !userApiKey}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-[10px] font-medium transition-colors disabled:opacity-40 cursor-pointer"
+                  title="Fetch live health & ping from Google AI"
+                >
+                  <RefreshCw className={`w-2.5 h-2.5 ${isFetchingLiveUsage ? 'animate-spin' : ''}`} />
+                  <span>{isFetchingLiveUsage ? 'Fetching...' : 'Fetch Live'}</span>
+                </button>
+              </div>
             </div>
-            <div className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              {userApiKey ? (
-                <p>Personal API key active with full reasoning depth and section editing.</p>
-              ) : (
-                <p>
-                  Free demo quota: ~{Math.max(0, Math.floor((100 - dailyUsagePercent) / 3.5))} reasoning turns remaining today. Resets daily at midnight.
-                </p>
-              )}
+
+            {fetchSuccessMessage && (
+              <div className="px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800 text-[10.5px] text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{fetchSuccessMessage}</span>
+              </div>
+            )}
+
+            {liveFetchError && (
+              <div className="px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-950/60 border border-rose-200/70 dark:border-rose-800 text-[10.5px] text-rose-800 dark:text-rose-300 flex items-center gap-1.5 animate-in fade-in">
+                <AlertCircle className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" />
+                <span className="truncate">{liveFetchError}</span>
+              </div>
+            )}
+
+            <div className="text-[10px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
+              <span>{userApiKey ? 'BYOK Personal Key Active' : 'Shared project demo quota'}</span>
+              <span>
+                {lastCheckedTimestamp
+                  ? `Checked ${Math.max(0, Math.round((Date.now() - lastCheckedTimestamp) / 60000))}m ago`
+                  : 'Ready to fetch'}
+              </span>
             </div>
           </div>
 
-          {/* Gemini 3.5 Flash-Lite Metrics */}
-          <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-neutral-800 dark:text-neutral-200" />
-                <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                  Gemini 3.5 Flash-Lite
+          {/* 2. Visual Metric Gauges (2x2 Grid) */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* KPI 1: Requests Today */}
+            <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs space-y-1">
+              <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 text-[10px] font-medium">
+                <span>Requests Today</span>
+                <BarChart3 className="w-3 h-3 text-neutral-400" />
+              </div>
+              <div className="text-base font-bold text-neutral-900 dark:text-white">
+                {requestsToday}{' '}
+                <span className="text-[10px] font-normal text-neutral-500">
+                  / {userApiKey ? '1,500' : '45'}
                 </span>
               </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                userApiKey
-                  ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200/90 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'
-              }`}>
-                {userApiKey ? 'Connected' : '500 RPD Free'}
+              {/* Visual Progress Bar */}
+              <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-300 rounded-full"
+                  style={{
+                    width: `${userApiKey ? Math.min(100, Math.max(3, (requestsToday / 1500) * 100)) : Math.min(100, Math.max(3, dailyUsagePercent))}%`,
+                  }}
+                />
+              </div>
+              <span className="text-[9.5px] text-neutral-400 block truncate">
+                {userApiKey
+                  ? '1,500 daily requests (RPD)'
+                  : `${Math.max(0, Math.round(100 - dailyUsagePercent))}% demo quota remaining`}
               </span>
             </div>
-            <div className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              {userApiKey ? (
-                <p>High-throughput stream active (1,500 RPM capacity via personal key).</p>
-              ) : (
-                <p>High-speed tier: 500 requests per day (15 requests per minute) on Google AI free tier.</p>
-              )}
+
+            {/* KPI 2: Tokens Consumed */}
+            <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs space-y-1">
+              <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 text-[10px] font-medium">
+                <span>Tokens Consumed</span>
+                <Sparkles className="w-3 h-3 text-amber-500" />
+              </div>
+              <div className="text-base font-bold text-neutral-900 dark:text-white">
+                {totalTokensToday > 1000 ? `${(totalTokensToday / 1000).toFixed(1)}k` : totalTokensToday}{' '}
+                <span className="text-[10px] font-normal text-neutral-500">tok</span>
+              </div>
+              {/* Segmented Token Bar */}
+              <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden flex">
+                <div
+                  className="h-full bg-blue-500"
+                  style={{
+                    width: `${totalTokensToday > 0 ? (promptTokensToday / totalTokensToday) * 100 : 50}%`,
+                  }}
+                  title="Prompt tokens"
+                />
+                <div
+                  className="h-full bg-emerald-500"
+                  style={{
+                    width: `${totalTokensToday > 0 ? (candidatesTokensToday / totalTokensToday) * 100 : 50}%`,
+                  }}
+                  title="Generation tokens"
+                />
+              </div>
+              <span className="text-[9.5px] text-neutral-400 block truncate">
+                In: {promptTokensToday > 1000 ? `${(promptTokensToday / 1000).toFixed(1)}k` : promptTokensToday} • Out: {candidatesTokensToday > 1000 ? `${(candidatesTokensToday / 1000).toFixed(1)}k` : candidatesTokensToday}
+              </span>
             </div>
           </div>
 
-          {/* Monthly Document Generator */}
-          <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 space-y-1.5">
+          {/* 3. Visual Model Fleet Cards (Gemini 3.x Family) */}
+          <div className="space-y-1.5 pt-1">
+            <span className="text-[10.5px] font-semibold text-neutral-700 dark:text-neutral-300 px-0.5">
+              Gemini 3.x Model Fleet & Usage
+            </span>
+
+            {/* Card: 3.5 Flash-Lite */}
+            <div className={`p-2.5 rounded-xl border transition-all ${
+              selectedModel === 'gemini-3.5-flash-lite'
+                ? 'border-neutral-900 dark:border-neutral-200 bg-white dark:bg-neutral-900 shadow-2xs'
+                : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
+                    Gemini 3.5 Flash-Lite
+                  </span>
+                  {selectedModel === 'gemini-3.5-flash-lite' && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedModel('gemini-3.5-flash-lite');
+                    touchMimoActivity();
+                  }}
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                    selectedModel === 'gemini-3.5-flash-lite'
+                      ? 'text-neutral-400 cursor-default'
+                      : 'bg-neutral-200/70 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
+                  }`}
+                >
+                  {selectedModel === 'gemini-3.5-flash-lite' ? 'Selected' : 'Use'}
+                </button>
+              </div>
+              <div className="mt-1.5 space-y-1">
+                <div className="flex justify-between text-[10px] text-neutral-500">
+                  <span>Usage: {modelUsageToday['gemini-3.5-flash-lite']?.requests || 0} reqs</span>
+                  <span>{modelUsageToday['gemini-3.5-flash-lite']?.tokens || 0} tokens</span>
+                </div>
+                <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-amber-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, Math.max(2, ((modelUsageToday['gemini-3.5-flash-lite']?.requests || 0) / 100) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-[9px] text-neutral-400">
+                  <span>Fast pair writing</span>
+                  <span>1,500 RPD • 15 RPM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: 3.5 Flash */}
+            <div className={`p-2.5 rounded-xl border transition-all ${
+              selectedModel === 'gemini-3.5-flash'
+                ? 'border-neutral-900 dark:border-neutral-200 bg-white dark:bg-neutral-900 shadow-2xs'
+                : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
+                    Gemini 3.5 Flash
+                  </span>
+                  {selectedModel === 'gemini-3.5-flash' && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedModel('gemini-3.5-flash');
+                    touchMimoActivity();
+                  }}
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                    selectedModel === 'gemini-3.5-flash'
+                      ? 'text-neutral-400 cursor-default'
+                      : 'bg-neutral-200/70 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
+                  }`}
+                >
+                  {selectedModel === 'gemini-3.5-flash' ? 'Selected' : 'Use'}
+                </button>
+              </div>
+              <div className="mt-1.5 space-y-1">
+                <div className="flex justify-between text-[10px] text-neutral-500">
+                  <span>Usage: {modelUsageToday['gemini-3.5-flash']?.requests || 0} reqs</span>
+                  <span>{modelUsageToday['gemini-3.5-flash']?.tokens || 0} tokens</span>
+                </div>
+                <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, Math.max(2, ((modelUsageToday['gemini-3.5-flash']?.requests || 0) / 100) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-[9px] text-neutral-400">
+                  <span>Balanced workhorse</span>
+                  <span>1,500 RPD • 15 RPM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card: 3.8 Flash */}
+            <div className={`p-2.5 rounded-xl border transition-all ${
+              selectedModel === 'gemini-3.8-flash'
+                ? 'border-neutral-900 dark:border-neutral-200 bg-white dark:bg-neutral-900 shadow-2xs'
+                : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Brain className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
+                    Gemini 3.8 Flash
+                  </span>
+                  {selectedModel === 'gemini-3.8-flash' && (
+                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedModel('gemini-3.8-flash');
+                    touchMimoActivity();
+                  }}
+                  className={`text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                    selectedModel === 'gemini-3.8-flash'
+                      ? 'text-neutral-400 cursor-default'
+                      : 'bg-neutral-200/70 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
+                  }`}
+                >
+                  {selectedModel === 'gemini-3.8-flash' ? 'Selected' : 'Use'}
+                </button>
+              </div>
+              <div className="mt-1.5 space-y-1">
+                <div className="flex justify-between text-[10px] text-neutral-500">
+                  <span>Usage: {modelUsageToday['gemini-3.8-flash']?.requests || 0} reqs</span>
+                  <span>{modelUsageToday['gemini-3.8-flash']?.tokens || 0} tokens</span>
+                </div>
+                <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-500 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, Math.max(2, ((modelUsageToday['gemini-3.8-flash']?.requests || 0) / 100) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-[9px] text-neutral-400">
+                  <span>Deep reasoning</span>
+                  <span>10 RPM • 250k TPM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Monthly Document Generator Card */}
+          <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
                 Monthly AI Doc Generator
               </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                userApiKey
-                  ? 'bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200/90 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300'
-              }`}>
-                {userApiKey ? 'Connected' : `${monthlyDocGenCount}/3 Used`}
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300">
+                {userApiKey ? 'Unlimited with Key' : `${monthlyDocGenCount}/3 Used`}
               </span>
             </div>
-            <p className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            {!userApiKey && (
+              <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                {[0, 1, 2].map((slotIdx) => (
+                  <div
+                    key={slotIdx}
+                    className={`h-1.5 rounded-full ${
+                      slotIdx < monthlyDocGenCount ? 'bg-neutral-400' : 'bg-emerald-500'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400">
               {userApiKey
-                ? 'Full document generation is active via your connected Gemini API key.'
-                : `${Math.max(0, 3 - monthlyDocGenCount)} full AI document generation(s) remaining this month.`}
+                ? 'Full multi-chapter generation is unconstrained via your connected personal API key.'
+                : `${Math.max(0, 3 - monthlyDocGenCount)} generation(s) remaining this month on free demo.`}
             </p>
           </div>
         </div>

@@ -378,6 +378,16 @@ export function useMimoChatStream({
         consumeCredit(actualCostPercent, isDocGen);
       }
 
+      // Record real token and latency telemetry
+      const latencyMs = Date.now() - startTime;
+      useMimoStore.getState().recordRealUsage({
+        tokensUsed: result.tokensUsed,
+        promptTokens: result.promptTokens,
+        candidateTokens: result.candidatesTokens,
+        modelId: selectedModel,
+        latencyMs,
+      });
+
       // Extract unified git hunk if present
       const { cleanText: textAfterDiff, hunk } = extractDiffHunkFromResponse(result.fullText, content);
       // Extract interactive clarification questions if present

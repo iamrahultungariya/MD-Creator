@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Key, ExternalLink, Check, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { X, Key, ExternalLink, Check, Trash2, Loader2, AlertCircle, Zap } from 'lucide-react';
 import { useMimoStore } from '../stores/useMimoStore';
 import { validateGeminiApiKey } from '../services/mimoGeminiService';
 
@@ -12,6 +12,12 @@ interface MimoApiKeyModalProps {
 export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClose }) => {
   const userApiKey = useMimoStore((s) => s.quota.userApiKey);
   const setUserApiKey = useMimoStore((s) => s.setUserApiKey);
+  const quota = useMimoStore((s) => s.quota);
+  const requestsToday = quota.requestsToday || 0;
+  const totalTokensToday = quota.totalTokensToday || 0;
+  const promptTokensToday = quota.promptTokensToday || 0;
+  const candidatesTokensToday = quota.candidatesTokensToday || 0;
+  const liveLatencyMs = quota.liveLatencyMs || quota.lastRequestLatencyMs || 0;
 
   const [inputKey, setInputKey] = useState(userApiKey || '');
   const [isValidating, setIsValidating] = useState(false);
@@ -156,6 +162,61 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
             </div>
           )}
         </div>
+
+        {/* Live Visual Quota & Usage Card if Key is Connected */}
+        {userApiKey && (
+          <div className="mb-5 p-3 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-850/40 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                Live Quota & Real Usage
+              </span>
+              {liveLatencyMs > 0 && (
+                <span className="font-mono text-[10px] text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 flex items-center gap-0.5">
+                  <Zap className="w-2.5 h-2.5" />
+                  {liveLatencyMs}ms
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-700/80 space-y-1">
+                <div className="flex justify-between text-[10px] text-neutral-500">
+                  <span>Requests Today</span>
+                  <span className="font-semibold text-neutral-800 dark:text-neutral-200">{requestsToday} / 1,500</span>
+                </div>
+                <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, Math.max(3, (requestsToday / 1500) * 100))}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="p-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-700/80 space-y-1">
+                <div className="flex justify-between text-[10px] text-neutral-500">
+                  <span>Tokens Consumed</span>
+                  <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                    {totalTokensToday > 1000 ? `${(totalTokensToday / 1000).toFixed(1)}k` : totalTokensToday}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden flex">
+                  <div
+                    className="h-full bg-blue-500"
+                    style={{ width: `${totalTokensToday > 0 ? (promptTokensToday / totalTokensToday) * 100 : 50}%` }}
+                  />
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{ width: `${totalTokensToday > 0 ? (candidatesTokensToday / totalTokensToday) * 100 : 50}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between">

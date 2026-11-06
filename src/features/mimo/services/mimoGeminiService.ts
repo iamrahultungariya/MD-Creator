@@ -26,6 +26,8 @@ export interface MimoStreamResult {
   modelUsed: string;
   resolvedLevel: 'LOW' | 'MEDIUM' | 'HIGH';
   tokensUsed: number;
+  promptTokens?: number;
+  candidatesTokens?: number;
   aborted?: boolean;
 }
 
@@ -405,6 +407,129 @@ export async function validateGeminiApiKey(
   }
 }
 
+export interface LiveGeminiHealthResult {
+  valid: boolean;
+  status: 'HEALTHY' | 'THROTTLED' | 'HIGH_DEMAND' | 'OFFLINE' | 'UNCONFIGURED';
+  latencyMs: number;
+  availableModels: string[];
+  error?: string;
+  warning?: string;
+  checkedAt: number;
+}
+
+/**
+ * Actively fetches live API health, round-trip ping latency, and Gemini 3.x
+ * model availability directly from Google AI Studio.
+ */
+export async function fetchLiveGeminiHealthAndQuota(
+  customApiKey?: string
+): Promise<LiveGeminiHealthResult> {
+  const storeKey = useMimoStore.getState().quota.userApiKey?.trim() || '';
+  const envKey = (
+    (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+    (import.meta.env.GEMINI_API_KEY as string) ||
+    ''
+  ).trim();
+
+  const effectiveKey = (
+    customApiKey ||
+    storeKey ||
+    (envKey && !envKey.includes('your_gemini') ? envKey : '')
+  ).trim();
+
+  if (!effectiveKey) {
+    useMimoStore.getState().updateLiveQuotaHealth({
+      status: 'UNCONFIGURED',
+      latencyMs: 0,
+      models: [],
+    });
+    return {
+      valid: false,
+      status: 'UNCONFIGURED',
+      latencyMs: 0,
+      availableModels: [],
+      error: 'No personal Gemini API key connected. Running on shared demo quota.',
+      checkedAt: Date.now(),
+    };
+  }
+
+  useMimoStore.getState().updateLiveQuotaHealth({
+    status: 'CHECKING',
+  });
+
+  const startTime = Date.now();
+  try {
+    const ai = new GoogleGenAI({ apiKey: effectiveKey });
+    const listRes = await withAbortAndTimeout(
+      ai.models.list({ config: { pageSize: 25 } }),
+      undefined,
+      7000
+    );
+
+    const latencyMs = Math.max(15, Date.now() - startTime);
+    const modelsFound: string[] = [];
+
+    if (listRes && Array.isArray((listRes as any).models)) {
+      for (const m of (listRes as any).models) {
+        const id = (m.name || '').replace(/^models\//, '');
+        if (id.includes('gemini-3')) {
+          modelsFound.push(id);
+        }
+      }
+    }
+
+    const availableModels =
+      modelsFound.length > 0
+        ? modelsFound
+        : ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
+
+    useMimoStore.getState().updateLiveQuotaHealth({
+      status: 'HEALTHY',
+      latencyMs,
+      models: availableModels,
+    });
+
+    return {
+      valid: true,
+      status: 'HEALTHY',
+      latencyMs,
+      availableModels,
+      checkedAt: Date.now(),
+    };
+  } catch (err: any) {
+    const latencyMs = Math.max(15, Date.now() - startTime);
+    const parsed = parseGeminiError(err);
+
+    let status: 'THROTTLED' | 'HIGH_DEMAND' | 'OFFLINE' = 'OFFLINE';
+    let errorMsg = parsed.message || 'Failed to connect to Google Gemini API';
+
+    if (parsed.isRateLimited) {
+      status = 'THROTTLED';
+      errorMsg = 'Per-minute token burst limit (TPM) currently saturated on Google AI Studio';
+    } else if (parsed.isHighDemand) {
+      status = 'HIGH_DEMAND';
+      errorMsg = 'Google AI servers experiencing temporary high demand';
+    } else if (parsed.isApiKeyInvalid) {
+      status = 'OFFLINE';
+      errorMsg = 'Invalid Gemini API key. Please check your key from Google AI Studio';
+    }
+
+    useMimoStore.getState().updateLiveQuotaHealth({
+      status,
+      latencyMs,
+    });
+
+    return {
+      valid: !parsed.isApiKeyInvalid,
+      status,
+      latencyMs,
+      availableModels: [],
+      error: errorMsg,
+      checkedAt: Date.now(),
+    };
+  }
+}
+
 /**
  * Streams response from Gemini with instant abort support, smart model failover,
  * privacy sanitization, and real token accounting.
@@ -647,6 +772,9 @@ export async function streamMimoResponse(options: {
       );
 
       const iterator = responseStream[Symbol.asyncIterator]();
+      let promptTokensCount = inputTokensEst;
+      let candidatesTokensCount = 0;
+      let totalTokensCount = 0;
 
       while (true) {
         if (signal?.aborted) {
@@ -661,6 +789,13 @@ export async function streamMimoResponse(options: {
 
         if (nextStep.done) break;
         const chunk = nextStep.value;
+
+        if ((chunk as any)?.usageMetadata) {
+          const um = (chunk as any).usageMetadata;
+          if (typeof um.promptTokenCount === 'number') promptTokensCount = um.promptTokenCount;
+          if (typeof um.candidatesTokenCount === 'number') candidatesTokensCount = um.candidatesTokenCount;
+          if (typeof um.totalTokenCount === 'number') totalTokensCount = um.totalTokenCount;
+        }
 
         const candidates = chunk.candidates || [];
         if (candidates.length > 0) {
@@ -694,12 +829,15 @@ export async function streamMimoResponse(options: {
       if (signal?.aborted) {
         const restoredPartial = sanitizedContext.restore(sanitizedPrompt.restore(fullText));
         const outputTokensEst = Math.ceil((restoredPartial.length + thoughtText.length) / 4);
+        const tokensUsed = totalTokensCount > 0 ? totalTokensCount : inputTokensEst + outputTokensEst;
         return {
           fullText: restoredPartial,
           thoughtText,
           modelUsed: candidateModel.displayLabel,
           resolvedLevel,
-          tokensUsed: inputTokensEst + outputTokensEst,
+          tokensUsed,
+          promptTokens: promptTokensCount,
+          candidatesTokens: candidatesTokensCount > 0 ? candidatesTokensCount : outputTokensEst,
           aborted: true,
         };
       }
@@ -707,12 +845,15 @@ export async function streamMimoResponse(options: {
       if (fullText.trim()) {
         const restoredText = sanitizedContext.restore(sanitizedPrompt.restore(fullText));
         const outputTokensEst = Math.ceil((restoredText.length + thoughtText.length) / 4);
+        const tokensUsed = totalTokensCount > 0 ? totalTokensCount : inputTokensEst + outputTokensEst;
         return {
           fullText: restoredText,
           thoughtText,
           modelUsed: candidateModel.displayLabel,
           resolvedLevel,
-          tokensUsed: inputTokensEst + outputTokensEst,
+          tokensUsed,
+          promptTokens: promptTokensCount,
+          candidatesTokens: candidatesTokensCount > 0 ? candidatesTokensCount : outputTokensEst,
         };
       }
     } catch (err: any) {

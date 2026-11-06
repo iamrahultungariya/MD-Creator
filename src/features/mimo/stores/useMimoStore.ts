@@ -59,6 +59,18 @@ interface MimoStoreState {
   setIsPrivacyModalOpen: (open: boolean) => void;
   acceptPrivacyNotice: () => void;
   consumeCredit: (costPercent: number, isDocGen?: boolean) => { allowed: boolean; reason?: string };
+  recordRealUsage: (params: {
+    tokensUsed: number;
+    promptTokens?: number;
+    candidateTokens?: number;
+    modelId: string;
+    latencyMs?: number;
+  }) => void;
+  updateLiveQuotaHealth: (update: {
+    status: 'HEALTHY' | 'THROTTLED' | 'HIGH_DEMAND' | 'CHECKING' | 'OFFLINE' | 'UNCONFIGURED';
+    latencyMs?: number;
+    models?: string[];
+  }) => void;
   addMessage: (msg: MimoMessage) => void;
   updateLastMessage: (updater: (prev: MimoMessage) => MimoMessage) => void;
   clearMessages: () => void;
@@ -80,6 +92,15 @@ const INITIAL_QUOTA: MimoQuotaState = {
   lastMonthReset: getThisMonthString(),
   userApiKey: '',
   hasAcceptedPrivacyNotice: false,
+  totalTokensToday: 0,
+  promptTokensToday: 0,
+  candidatesTokensToday: 0,
+  requestsToday: 0,
+  lastRequestLatencyMs: 0,
+  liveApiStatus: 'UNCONFIGURED',
+  liveLatencyMs: 0,
+  liveAvailableModels: [],
+  modelUsageToday: {},
 };
 
 function createWelcomeMessage(docTitle?: string): MimoMessage {
@@ -396,6 +417,54 @@ export const useMimoStore = create<MimoStoreState>()(
         });
 
         return { allowed: true };
+      },
+
+      recordRealUsage: ({ tokensUsed, promptTokens, candidateTokens, modelId, latencyMs }) => {
+        const state = get();
+        const today = getTodayString();
+        const isNewDay = state.quota.lastResetDate !== today;
+
+        const currentRequests = isNewDay ? 0 : state.quota.requestsToday || 0;
+        const currentTokens = isNewDay ? 0 : state.quota.totalTokensToday || 0;
+        const currentPrompt = isNewDay ? 0 : state.quota.promptTokensToday || 0;
+        const currentCandidate = isNewDay ? 0 : state.quota.candidatesTokensToday || 0;
+        const currentModelMap = isNewDay ? {} : state.quota.modelUsageToday || {};
+
+        const prevModel = currentModelMap[modelId] || { requests: 0, tokens: 0 };
+        const updatedModelMap = {
+          ...currentModelMap,
+          [modelId]: {
+            requests: prevModel.requests + 1,
+            tokens: prevModel.tokens + tokensUsed,
+            lastUsed: Date.now(),
+          },
+        };
+
+        set({
+          quota: {
+            ...state.quota,
+            lastResetDate: today,
+            requestsToday: currentRequests + 1,
+            totalTokensToday: currentTokens + tokensUsed,
+            promptTokensToday: currentPrompt + (promptTokens || Math.round(tokensUsed * 0.7)),
+            candidatesTokensToday: currentCandidate + (candidateTokens || Math.round(tokensUsed * 0.3)),
+            lastRequestLatencyMs: latencyMs,
+            modelUsageToday: updatedModelMap,
+          },
+        });
+      },
+
+      updateLiveQuotaHealth: ({ status, latencyMs, models }) => {
+        const state = get();
+        set({
+          quota: {
+            ...state.quota,
+            liveApiStatus: status,
+            liveLatencyMs: latencyMs ?? state.quota.liveLatencyMs,
+            liveAvailableModels: models ?? state.quota.liveAvailableModels,
+            lastCheckedTimestamp: Date.now(),
+          },
+        });
       },
 
       addMessage: (msg) => {

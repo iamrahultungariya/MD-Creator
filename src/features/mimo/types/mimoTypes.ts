@@ -110,6 +110,12 @@ export interface MimoMessage {
   mascotState?: MascotState;
 }
 
+export interface MimoModelUsageItem {
+  requests: number;
+  tokens: number;
+  lastUsed?: number;
+}
+
 export interface MimoQuotaState {
   dailyUsagePercent: number; // 0 to 100% capacity
   lastResetDate: string; // YYYY-MM-DD
@@ -117,6 +123,18 @@ export interface MimoQuotaState {
   lastMonthReset: string; // YYYY-MM
   userApiKey?: string; // BYOK personal Gemini API Key
   hasAcceptedPrivacyNotice?: boolean;
+
+  // Real Usage & Visual Telemetry
+  totalTokensToday?: number;
+  promptTokensToday?: number;
+  candidatesTokensToday?: number;
+  requestsToday?: number;
+  lastRequestLatencyMs?: number;
+  lastCheckedTimestamp?: number;
+  liveApiStatus?: 'HEALTHY' | 'THROTTLED' | 'HIGH_DEMAND' | 'CHECKING' | 'OFFLINE' | 'UNCONFIGURED';
+  liveLatencyMs?: number;
+  liveAvailableModels?: string[];
+  modelUsageToday?: Record<string, MimoModelUsageItem>;
 }
 
 export interface PinnedDocReference {
