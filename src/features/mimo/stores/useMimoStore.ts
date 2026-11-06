@@ -192,7 +192,15 @@ export const useMimoStore = create<MimoStoreState>()(
 
       setThinkingLevel: (thinkingLevel) => set({ thinkingLevel }),
 
-      setSelectedModel: (selectedModel) => set({ selectedModel }),
+      setSelectedModel: (selectedModel) => {
+        const validModel: MimoModelChoice =
+          selectedModel === 'gemini-3.8-flash' ||
+          selectedModel === 'gemini-3.5-flash' ||
+          selectedModel === 'gemini-3.5-flash-lite'
+            ? selectedModel
+            : 'gemini-3.5-flash-lite';
+        set({ selectedModel: validModel });
+      },
 
       setShowThinking: (showThinking) => set({ showThinking }),
 
@@ -500,6 +508,11 @@ export const useMimoStore = create<MimoStoreState>()(
     }),
     {
       name: 'md-writer-mimo-store',
+      onRehydrateStorage: () => (state) => {
+        if (state && (state.selectedModel as string)?.startsWith('gemini-2.')) {
+          state.selectedModel = 'gemini-3.5-flash-lite';
+        }
+      },
       partialize: (state) => ({
         quota: state.quota,
         thinkingLevel: state.thinkingLevel,

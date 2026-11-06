@@ -350,13 +350,13 @@ export async function validateGeminiApiKey(
       };
     }
 
-    // Secondary fallback probe with lightweight generateContent on gemini-2.5-flash
+    // Secondary fallback probe with lightweight generateContent on gemini-3.5-flash-lite
     // in case the key has strict endpoint restrictions that block models.list
     try {
       const ai2 = new GoogleGenAI({ apiKey: trimmed });
       const probe2 = await withAbortAndTimeout(
         ai2.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.5-flash-lite',
           contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
           config: {
             maxOutputTokens: 2,
@@ -450,34 +450,18 @@ export async function streamMimoResponse(options: {
     displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)',
     ttftTimeout: 18000,
   };
-  const flash25Model = {
-    modelId: 'gemini-2.5-flash',
-    displayLabel: 'Gemini 2.5 Flash (Reliable Workhorse)',
-    ttftTimeout: 18000,
-  };
-  const flash20Model = {
-    modelId: 'gemini-2.0-flash',
-    displayLabel: 'Gemini 2.0 Flash (Stable Quota)',
-    ttftTimeout: 16000,
-  };
 
-  // Resilient multi-tier model cascade:
-  // - Flash-Lite: cascade to high-throughput stable models (2.5 Flash, 2.0 Flash, 3.5 Flash), NEVER escalate upwards to heavy 3.8 Flash!
-  // - 3.5 Flash: cascade to 2.5 Flash, 3.5 Flash-Lite, 2.0 Flash
-  // - 2.5 Flash: cascade to 2.0 Flash, 3.5 Flash-Lite, 3.5 Flash
-  // - 2.0 Flash: cascade to 2.5 Flash, 3.5 Flash-Lite, 3.5 Flash
-  // - 3.8 Flash: deep reasoning with 2.5 Flash and 3.5 Flash fallbacks
+  // Pure Gemini 3.x resilient cascade:
+  // - Flash-Lite: try Flash-Lite first, then fall back to 3.5 Flash. NEVER escalate upwards to heavy 3.8 Flash!
+  // - 3.5 Flash: try 3.5 Flash first, then fall back to 3.5 Flash-Lite.
+  // - 3.8 Flash: deep reasoning with 3.5 Flash and 3.5 Flash-Lite fallbacks.
   let modelsToTry: Array<{ modelId: string; displayLabel: string; ttftTimeout: number }>;
   if (selectedModel === 'gemini-3.5-flash-lite') {
-    modelsToTry = [liteModel, flash25Model, flash20Model, flash35Model];
+    modelsToTry = [liteModel, flash35Model];
   } else if (selectedModel === 'gemini-3.5-flash') {
-    modelsToTry = [flash35Model, flash25Model, liteModel, flash20Model];
-  } else if (selectedModel === 'gemini-2.5-flash') {
-    modelsToTry = [flash25Model, flash20Model, liteModel, flash35Model];
-  } else if (selectedModel === 'gemini-2.0-flash') {
-    modelsToTry = [flash20Model, flash25Model, liteModel, flash35Model];
+    modelsToTry = [flash35Model, liteModel];
   } else {
-    modelsToTry = [flash38Model, flash25Model, flash35Model, liteModel];
+    modelsToTry = [flash38Model, flash35Model, liteModel];
   }
 
   const intent = classifyUserIntent(prompt, !!context.selectedText);
@@ -789,9 +773,11 @@ export async function streamMimoResponse(options: {
       if (parsedErr.isHighDemand) {
         let switchHighDemand = '';
         if (selectedModel === 'gemini-3.5-flash-lite') {
-          switchHighDemand = `- ⚡ Switch to [Gemini 2.5 Flash](#switch-model-25) or wait 15–30 seconds.`;
+          switchHighDemand = `- ⚡ Switch to [Gemini 3.5 Flash](#switch-model-35) or wait 15–30 seconds.`;
+        } else if (selectedModel === 'gemini-3.5-flash') {
+          switchHighDemand = `- ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) or wait 15–30 seconds.`;
         } else {
-          switchHighDemand = `- ⚡ Switch to [Gemini 2.5 Flash](#switch-model-25) or [Gemini 3.5 Flash-Lite](#switch-lite) from the model dock.`;
+          switchHighDemand = `- ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) or [Gemini 3.5 Flash](#switch-model-35) from the model dock.`;
         }
 
         const highDemandMsg = `> [!WARNING]\n> **Google AI High Demand Spike (HTTP 503)**\n> Google's Gemini servers are temporarily experiencing high demand on **${candidateModel.displayLabel}**.\n> \n> *Details*: \`${parsedErr.message.slice(0, 200) || 'Model is currently experiencing high demand. Spikes are temporary.'}\`\n> \n> **How to continue**:\n> - ⏳ **Wait 15–30 seconds** for server load to clear and [Retry Prompt](#retry-prompt)\n${switchHighDemand}`;
@@ -821,11 +807,11 @@ export async function streamMimoResponse(options: {
 
         let switchAction = '';
         if (selectedModel === 'gemini-3.5-flash-lite') {
-          switchAction = `- ⚡ Switch to [Gemini 2.5 Flash (Workhorse)](#switch-model-25) or wait 20–30 seconds for Google's per-minute burst window to reset.`;
-        } else if (selectedModel === 'gemini-2.5-flash' || selectedModel === 'gemini-2.0-flash') {
+          switchAction = `- ⚡ Switch to [Gemini 3.5 Flash](#switch-model-35) or wait 20–30 seconds for Google's per-minute burst window to reset.`;
+        } else if (selectedModel === 'gemini-3.5-flash') {
           switchAction = `- ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) or wait 20–30 seconds for Google's per-minute burst window to reset.`;
         } else {
-          switchAction = `- ⚡ Switch to [Gemini 2.5 Flash (Workhorse)](#switch-model-25) or [Gemini 3.5 Flash-Lite](#switch-lite) for high throughput (up to 1,500 req/day).`;
+          switchAction = `- ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) or [Gemini 3.5 Flash](#switch-model-35) for lighter rate limits.`;
         }
 
         const throttledMsg = isUserKey
@@ -846,7 +832,7 @@ export async function streamMimoResponse(options: {
       if (parsedErr.isTimeout) {
         let switchTimeout = '';
         if (selectedModel === 'gemini-3.5-flash-lite') {
-          switchTimeout = `👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 2.5 Flash](#switch-model-25).`;
+          switchTimeout = `👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 3.5 Flash](#switch-model-35).`;
         } else {
           switchTimeout = `👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 3.5 Flash-Lite](#switch-lite).`;
         }

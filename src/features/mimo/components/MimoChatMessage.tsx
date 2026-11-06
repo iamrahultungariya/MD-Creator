@@ -214,21 +214,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
                     </button>
                   );
                 }
-                if (href === '#switch-model-25') {
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        useMimoStore.getState().setSelectedModel('gemini-2.5-flash');
-                        useMimoStore.getState().touchMimoActivity();
-                      }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 text-[11px] font-semibold hover:opacity-90 cursor-pointer shadow-2xs my-1"
-                    >
-                      {children}
-                    </button>
-                  );
-                }
-                if (href === '#switch-model-35') {
+                if (href === '#switch-model-35' || href === '#switch-flash') {
                   return (
                     <button
                       type="button"

@@ -233,10 +233,6 @@ export function useMimoChatStream({
             ? 'Gemini 3.5 Flash-Lite'
             : selectedModel === 'gemini-3.5-flash'
             ? 'Gemini 3.5 Flash'
-            : selectedModel === 'gemini-2.5-flash'
-            ? 'Gemini 2.5 Flash'
-            : selectedModel === 'gemini-2.0-flash'
-            ? 'Gemini 2.0 Flash'
             : 'Gemini 3.8 Flash',
         thinkingLevel: selectedModel === 'gemini-3.5-flash-lite' ? 'MINIMAL' : thinkingLevel,
         elapsedMs: 0,
