@@ -316,7 +316,11 @@ export const useMimoStore = create<MimoStoreState>()(
         // If user has personal BYOK Gemini Key or configured project key, no mock quota restrictions apply!
         // Re-read directly from the latest store state to avoid stale closure captures.
         const freshApiKey = get().quota.userApiKey?.trim();
-        const envKey = ((import.meta.env.VITE_GEMINI_API_KEY as string) || '').trim();
+        const envKey = (
+          (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+          (import.meta.env.GEMINI_API_KEY as string) ||
+          ''
+        ).trim();
         const hasProjectKey = Boolean(
           envKey &&
           envKey !== 'your_gemini_api_key_here' &&

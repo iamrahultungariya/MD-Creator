@@ -10,7 +10,7 @@ import {
   ChevronUp,
   Check,
 } from 'lucide-react';
-import { ThinkingLevel } from '../../types/mimoTypes';
+import { ThinkingLevel, MimoModelChoice } from '../../types/mimoTypes';
 import { useMimoStore } from '../../stores/useMimoStore';
 import { MimoSettingsPopover } from './MimoSettingsPopover';
 import { MimoDocPinSelector } from './MimoDocPinSelector';
@@ -25,7 +25,7 @@ export interface MimoInputDockProps {
   isGenerating: boolean;
   isAiExcluded?: boolean;
   selectedModel: string;
-  setSelectedModel: (model: 'gemini-3.8-flash' | 'gemini-3.5-flash' | 'gemini-3.5-flash-lite') => void;
+  setSelectedModel: (model: MimoModelChoice) => void;
   thinkingLevel: ThinkingLevel;
   setThinkingLevel: (level: 'AUTO' | 'LOW' | 'MEDIUM' | 'HIGH') => void;
   onSend: (customPrompt?: string) => void;

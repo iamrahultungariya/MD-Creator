@@ -4,6 +4,7 @@ import { resolveThinkingLevel, classifyUserIntent } from './promptRouter';
 import { PreparedContext } from './contextEngine';
 import { sanitizeTextForAi } from './privacySanitizer';
 import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDnaStore';
+import { useMimoStore } from '../stores/useMimoStore';
 import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
 import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
 import { useAdminAiStore } from '../../../stores/useAdminAiStore';
@@ -141,6 +142,24 @@ function withAbortAndTimeout<T>(
         reject(err);
       }
     );
+  });
+}
+
+/**
+ * Clean timer-based backoff that releases immediately if the user cancels or aborts.
+ */
+function sleepWithAbort(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted by user', 'AbortError'));
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException('Aborted by user', 'AbortError'));
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
   });
 }
 
@@ -331,13 +350,13 @@ export async function validateGeminiApiKey(
       };
     }
 
-    // Secondary fallback probe with lightweight generateContent on gemini-3.5-flash-lite
+    // Secondary fallback probe with lightweight generateContent on gemini-2.5-flash
     // in case the key has strict endpoint restrictions that block models.list
     try {
       const ai2 = new GoogleGenAI({ apiKey: trimmed });
       const probe2 = await withAbortAndTimeout(
         ai2.models.generateContent({
-          model: 'gemini-3.5-flash-lite',
+          model: 'gemini-2.5-flash',
           contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
           config: {
             maxOutputTokens: 2,
@@ -423,7 +442,7 @@ export async function streamMimoResponse(options: {
   const flash38Model = getModelForComplexity(resolvedLevel);
   const flash35Model = {
     modelId: 'gemini-3.5-flash',
-    displayLabel: 'Gemini 3.5 Flash',
+    displayLabel: 'Gemini 3.5 Flash (Balanced)',
     ttftTimeout: 20000,
   };
   const liteModel = {
@@ -431,25 +450,44 @@ export async function streamMimoResponse(options: {
     displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)',
     ttftTimeout: 18000,
   };
+  const flash25Model = {
+    modelId: 'gemini-2.5-flash',
+    displayLabel: 'Gemini 2.5 Flash (Reliable Workhorse)',
+    ttftTimeout: 18000,
+  };
+  const flash20Model = {
+    modelId: 'gemini-2.0-flash',
+    displayLabel: 'Gemini 2.0 Flash (Stable Quota)',
+    ttftTimeout: 16000,
+  };
 
-  // Modern Gemini 3.x cascade (All legacy Gemini 2.x models retired by Google):
-  // - Gemini 3.5 Flash: balanced, ultra-stable, high-speed workhorse
-  // - Gemini 3.5 Flash-Lite: lowest latency, high throughput
-  // - Gemini 3.8 Flash: deep reasoning & complex synthesis
+  // Resilient multi-tier model cascade:
+  // - Flash-Lite: cascade to high-throughput stable models (2.5 Flash, 2.0 Flash, 3.5 Flash), NEVER escalate upwards to heavy 3.8 Flash!
+  // - 3.5 Flash: cascade to 2.5 Flash, 3.5 Flash-Lite, 2.0 Flash
+  // - 2.5 Flash: cascade to 2.0 Flash, 3.5 Flash-Lite, 3.5 Flash
+  // - 2.0 Flash: cascade to 2.5 Flash, 3.5 Flash-Lite, 3.5 Flash
+  // - 3.8 Flash: deep reasoning with 2.5 Flash and 3.5 Flash fallbacks
   let modelsToTry: Array<{ modelId: string; displayLabel: string; ttftTimeout: number }>;
-  if (selectedModel === 'gemini-3.5-flash') {
-    modelsToTry = [flash35Model, liteModel, flash38Model];
-  } else if (selectedModel === 'gemini-3.5-flash-lite') {
-    modelsToTry = [liteModel, flash35Model, flash38Model];
+  if (selectedModel === 'gemini-3.5-flash-lite') {
+    modelsToTry = [liteModel, flash25Model, flash20Model, flash35Model];
+  } else if (selectedModel === 'gemini-3.5-flash') {
+    modelsToTry = [flash35Model, flash25Model, liteModel, flash20Model];
+  } else if (selectedModel === 'gemini-2.5-flash') {
+    modelsToTry = [flash25Model, flash20Model, liteModel, flash35Model];
+  } else if (selectedModel === 'gemini-2.0-flash') {
+    modelsToTry = [flash20Model, flash25Model, liteModel, flash35Model];
   } else {
-    modelsToTry = [flash38Model, flash35Model, liteModel];
+    modelsToTry = [flash38Model, flash25Model, flash35Model, liteModel];
   }
 
   const intent = classifyUserIntent(prompt, !!context.selectedText);
 
+  const storeKey = useMimoStore.getState().quota.userApiKey?.trim() || '';
   const effectiveApiKey = (
     apiKey ||
+    storeKey ||
     (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+    (import.meta.env.GEMINI_API_KEY as string) ||
     ''
   ).trim();
 
@@ -541,11 +579,19 @@ export async function streamMimoResponse(options: {
     { role: 'user' as const, parts: [{ text: currentTurnPayload }] },
   ];
   const inputTokensEst = Math.max(10, Math.ceil(currentTurnPayload.length / 4));
+  let currentContents = fullContents;
 
   for (let attempt = 0; attempt < modelsToTry.length; attempt++) {
     const candidateModel = modelsToTry[attempt];
     if (attempt > 0) {
       callbacks.onStreamReset?.();
+      // On retry after a rate-limit or error, reduce historical turns to 2 to shrink the token payload below Google's TPM window
+      if (historyContents.length > 2) {
+        currentContents = [
+          ...historyContents.slice(-2),
+          { role: 'user' as const, parts: [{ text: currentTurnPayload }] },
+        ];
+      }
     }
     if (signal?.aborted) {
       return {
@@ -609,7 +655,7 @@ export async function streamMimoResponse(options: {
       const responseStream = await withAbortAndTimeout(
         ai.models.generateContentStream({
           model: candidateModel.modelId,
-          contents: fullContents,
+          contents: currentContents,
           config: config as any,
         }),
         signal,
@@ -716,15 +762,15 @@ export async function streamMimoResponse(options: {
         };
       }
 
-      // If there is another model to cascade to, try it immediately
+      // If there is another model to cascade to, try it with safe backoff delay
       if (attempt < modelsToTry.length - 1) {
         if (parsedErr.isHighDemand) {
           callbacks.onReasoningStep?.(
-            `⚡ ${candidateModel.displayLabel} high demand (503). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
+            `⚡ ${candidateModel.displayLabel} high demand (503). Retrying with ${modelsToTry[attempt + 1].displayLabel}...`
           );
         } else if (parsedErr.isRateLimited) {
           callbacks.onReasoningStep?.(
-            `⚡ ${candidateModel.displayLabel} quota reached (429). Auto-switching to ${modelsToTry[attempt + 1].displayLabel}...`
+            `⚡ ${candidateModel.displayLabel} per-minute limit (429). Retrying with ${modelsToTry[attempt + 1].displayLabel}...`
           );
         } else if (parsedErr.isNotFound) {
           callbacks.onReasoningStep?.(
@@ -735,12 +781,20 @@ export async function streamMimoResponse(options: {
             `⚡ Switching to ${modelsToTry[attempt + 1].displayLabel} for faster response...`
           );
         }
+        await sleepWithAbort(1500, signal);
         continue;
       }
 
       // If all cascading models returned 503 High Demand:
       if (parsedErr.isHighDemand) {
-        const highDemandMsg = `> [!WARNING]\n> **Google AI High Demand Spike (HTTP 503)**\n> Google's Gemini servers are temporarily experiencing high demand on **${candidateModel.displayLabel}**.\n> \n> *Details*: \`${parsedErr.message.slice(0, 200) || 'Model is currently experiencing high demand. Spikes are temporary.'}\`\n> \n> **How to continue**:\n> - ⏳ **Wait 15–30 seconds** for server load to clear and [Retry Prompt](#retry-prompt)\n> - ⚡ Switch to [Gemini 3.5 Flash (Balanced)](#switch-model-35) or [Gemini 3.5 Flash-Lite](#switch-lite) from the model dock.`;
+        let switchHighDemand = '';
+        if (selectedModel === 'gemini-3.5-flash-lite') {
+          switchHighDemand = `- ⚡ Switch to [Gemini 2.5 Flash](#switch-model-25) or wait 15–30 seconds.`;
+        } else {
+          switchHighDemand = `- ⚡ Switch to [Gemini 2.5 Flash](#switch-model-25) or [Gemini 3.5 Flash-Lite](#switch-lite) from the model dock.`;
+        }
+
+        const highDemandMsg = `> [!WARNING]\n> **Google AI High Demand Spike (HTTP 503)**\n> Google's Gemini servers are temporarily experiencing high demand on **${candidateModel.displayLabel}**.\n> \n> *Details*: \`${parsedErr.message.slice(0, 200) || 'Model is currently experiencing high demand. Spikes are temporary.'}\`\n> \n> **How to continue**:\n> - ⏳ **Wait 15–30 seconds** for server load to clear and [Retry Prompt](#retry-prompt)\n${switchHighDemand}`;
 
         callbacks.onTextChunk?.(highDemandMsg);
         return {
@@ -754,13 +808,28 @@ export async function streamMimoResponse(options: {
 
       // If all models hit Rate Limit (429):
       if (parsedErr.isRateLimited) {
-        const envKey = ((import.meta.env.VITE_GEMINI_API_KEY as string) || '').trim();
+        const envKey = (
+          (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+          (import.meta.env.GEMINI_API_KEY as string) ||
+          ''
+        ).trim();
+        const storeKey = useMimoStore.getState().quota.userApiKey?.trim();
         const isUserKey =
           Boolean(apiKey?.trim()) ||
+          Boolean(storeKey) ||
           Boolean(envKey && envKey !== 'your_gemini_api_key_here' && envKey !== 'your-gemini-key');
 
+        let switchAction = '';
+        if (selectedModel === 'gemini-3.5-flash-lite') {
+          switchAction = `- ⚡ Switch to [Gemini 2.5 Flash (Workhorse)](#switch-model-25) or wait 20–30 seconds for Google's per-minute burst window to reset.`;
+        } else if (selectedModel === 'gemini-2.5-flash' || selectedModel === 'gemini-2.0-flash') {
+          switchAction = `- ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) or wait 20–30 seconds for Google's per-minute burst window to reset.`;
+        } else {
+          switchAction = `- ⚡ Switch to [Gemini 2.5 Flash (Workhorse)](#switch-model-25) or [Gemini 3.5 Flash-Lite](#switch-lite) for high throughput (up to 1,500 req/day).`;
+        }
+
         const throttledMsg = isUserKey
-          ? `> [!WARNING]\n> **Google AI Rate Limit Reached (HTTP 429)**\n> Your Gemini API key has reached its current throughput limit on Google AI Studio.\n> \n> **Suggestions**:\n> - ⏳ **Wait 30–60 seconds** for Google's quota window to reset, then [Retry Prompt](#retry-prompt).\n> - ⚡ Switch to [Gemini 3.5 Flash-Lite](#switch-lite) for high throughput (up to 1,500 req/day).\n> - 📊 Check your quota status at [Google AI Studio](https://aistudio.google.com/).`
+          ? `> [!WARNING]\n> **Google AI Rate Limit Reached (HTTP 429)**\n> Your Gemini API key reached its current per-minute throughput limit on Google AI Studio.\n> \n> **Why this happens**:\n> Google's free tier enforces a 60-second burst limit on Tokens-Per-Minute (TPM). Large document contexts can momentarily fill this window while your daily/monthly quota on Google AI Studio remains 100% healthy.\n> \n> **Suggestions**:\n> - ⏳ **Wait 20–30 seconds** for Google's per-minute burst window to reset, then [Retry Prompt](#retry-prompt).\n${switchAction}\n> - 📊 View your real-time quota status at [Google AI Studio](https://aistudio.google.com/).`
           : `> [!WARNING]\n> **Free Demo Rate Limit Reached (HTTP 429)**\n> The shared demo quota is temporarily exhausted.\n> \n> **How to continue**:\n> - [Connect your free personal Gemini API Key](#connect-key) for high daily limits.\n> - Get your free key at [Google AI Studio](https://aistudio.google.com/apikey).`;
 
         callbacks.onTextChunk?.(throttledMsg);
@@ -775,7 +844,14 @@ export async function streamMimoResponse(options: {
 
       // If request timed out:
       if (parsedErr.isTimeout) {
-        const timeoutMsg = `> [!WARNING]\n> **Request Timed Out (${candidateModel.ttftTimeout / 1000}s)**\n> Google Gemini took longer than expected to respond due to network latency or server load.\n> \n> 👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 3.5 Flash-Lite](#switch-lite).`;
+        let switchTimeout = '';
+        if (selectedModel === 'gemini-3.5-flash-lite') {
+          switchTimeout = `👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 2.5 Flash](#switch-model-25).`;
+        } else {
+          switchTimeout = `👉 [Retry Prompt](#retry-prompt) or switch to [Gemini 3.5 Flash-Lite](#switch-lite).`;
+        }
+
+        const timeoutMsg = `> [!WARNING]\n> **Request Timed Out (${candidateModel.ttftTimeout / 1000}s)**\n> Google Gemini took longer than expected to respond due to network latency or server load.\n> \n> ${switchTimeout}`;
         callbacks.onTextChunk?.(timeoutMsg);
         return {
           fullText: timeoutMsg,

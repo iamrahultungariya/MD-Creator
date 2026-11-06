@@ -46,7 +46,13 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
   const selectedModel = useMimoStore((s) => s.selectedModel);
   const setSelectedModel = useMimoStore((s) => s.setSelectedModel);
   const touchMimoActivity = useMimoStore((s) => s.touchMimoActivity);
-  const userApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
+  const storeApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
+  const envApiKey = (
+    (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+    (import.meta.env.GEMINI_API_KEY as string) ||
+    ''
+  ).trim();
+  const userApiKey = storeApiKey || (envApiKey && !envApiKey.includes('your_gemini') ? envApiKey : '');
   const setUserApiKey = useMimoStore((s) => s.setUserApiKey);
   const dailyUsagePercent = useMimoStore((s) => s.quota.dailyUsagePercent) || 0;
   const monthlyDocGenCount = useMimoStore((s) => s.quota.monthlyDocGenCount) || 0;

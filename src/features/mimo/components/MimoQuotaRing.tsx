@@ -6,7 +6,15 @@ export const MimoQuotaRing: React.FC = () => {
   const quota = useMimoStore((s) => s.quota);
   const setIsKeyModalOpen = useMimoStore((s) => s.setIsKeyModalOpen);
 
-  const isByokActive = Boolean(quota.userApiKey?.trim());
+  const envApiKey = (
+    (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+    (import.meta.env.GEMINI_API_KEY as string) ||
+    ''
+  ).trim();
+  const isByokActive = Boolean(
+    quota.userApiKey?.trim() ||
+    (envApiKey && !envApiKey.includes('your_gemini'))
+  );
 
   if (isByokActive) {
     return (
