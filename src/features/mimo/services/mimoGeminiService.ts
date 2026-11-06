@@ -688,7 +688,7 @@ export async function streamMimoResponse(options: {
     `Loaded "${context.docTitle}" (${context.linesAnalyzed} lines, ${context.totalWords} words) • Intent: ${intent}`
   );
 
-  // 1.5. User AI Dispatcher: Route to OpenRouter (openai/gpt-4o) if selected by User in Settings
+  // 1.5. User AI Dispatcher: Route to OpenRouter (stealth/crouton-alpha) if selected by User in Settings
   const userAi = useUserAiStore.getState();
   if (userAi.provider === 'openrouter' && userAi.isOpenRouterReady()) {
     const privacyResult = evaluateContextPrivacyPolicy(prompt, context, userAi.privacy);
@@ -711,7 +711,7 @@ export async function streamMimoResponse(options: {
     try {
       return await streamOpenRouterResponse({
         apiKey: userAi.openRouterApiKey,
-        model: userAi.openRouterModel || 'openai/gpt-4o',
+        model: userAi.openRouterModel || 'stealth/crouton-alpha',
         systemPrompt: MIMO_SYSTEM_PROMPT,
         messages: openRouterMessages,
         enableThinking: userAi.enableThinking,

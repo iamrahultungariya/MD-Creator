@@ -90,7 +90,7 @@ const DEFAULT_STATE: UserAiConfigState = {
   temperature: 0.7,
   maxTokens: 4096,
   topP: 1.0,
-  enableThinking: false, // Default false for gpt-4o standard completion
+  enableThinking: true, // Default true for stealth/crouton-alpha reasoning model
   reasoningEffort: 'medium',
   privacy: DEFAULT_PRIVACY_CONFIG,
   probeResult: null,
@@ -215,6 +215,18 @@ export const useUserAiStore = create<UserAiStoreState>()(
         privacy: state.privacy,
         probeResult: state.probeResult,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          if (
+            !state.openRouterModel ||
+            state.openRouterModel.includes('gpt-4o') ||
+            state.openRouterModel === 'openai/gpt-4o'
+          ) {
+            state.openRouterModel = OPENROUTER_DEFAULT_MODEL;
+            state.enableThinking = true;
+          }
+        }
+      },
     }
   )
 );

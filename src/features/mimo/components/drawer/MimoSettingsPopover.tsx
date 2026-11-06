@@ -552,7 +552,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              OpenRouter (gpt-4o)
+              OpenRouter (crouton-alpha)
             </button>
           </div>
 

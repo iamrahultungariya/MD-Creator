@@ -1,6 +1,6 @@
 /**
  * Types for User AI Engine & Provider Configuration (Gemini & OpenRouter).
- * Allows users to choose between Google Gemini and OpenRouter (with openai/gpt-4o as 1st model).
+ * Allows users to choose between Google Gemini and OpenRouter (with stealth/crouton-alpha as 1st model).
  */
 
 export type AiProviderChoice = 'gemini' | 'openrouter';
@@ -123,21 +123,15 @@ export interface OpenRouterModelOption {
   recommended?: boolean;
 }
 
-export const OPENROUTER_DEFAULT_MODEL = 'openai/gpt-4o';
+export const OPENROUTER_DEFAULT_MODEL = 'stealth/crouton-alpha';
 
 export const OPENROUTER_MODELS: OpenRouterModelOption[] = [
   {
-    id: 'openai/gpt-4o',
-    name: 'GPT-4o (OpenAI)',
-    description: 'Flagship multimodal model with high intelligence, deep reasoning, and vision',
-    badge: '1st / Default',
+    id: 'stealth/crouton-alpha',
+    name: 'Crouton Alpha (Stealth)',
+    description: 'High-speed reasoning model with step-by-step thinking tokens',
+    badge: '1st / Default Reasoning',
     recommended: true,
-  },
-  {
-    id: 'openai/gpt-4o-mini',
-    name: 'GPT-4o Mini (OpenAI)',
-    description: 'Ultra-fast, lightweight model for pair writing and quick drafting',
-    badge: 'Fast',
   },
   {
     id: 'anthropic/claude-3.5-sonnet',

@@ -7,7 +7,7 @@ import {
 import { StreamCallbacks, MimoStreamResult } from '../features/mimo/services/mimoGeminiService';
 
 export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-export const DEFAULT_OPENROUTER_MODEL = 'openai/gpt-4o';
+export const DEFAULT_OPENROUTER_MODEL = 'stealth/crouton-alpha';
 
 export const APP_REFERER = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://mdcreator.app';
 export const getAppReferer = () => APP_REFERER;
@@ -299,7 +299,12 @@ export async function streamOpenRouterResponse(options: {
     top_p: topP,
   };
 
-  const isReasoningModel = model.includes('r1') || model.includes('o1') || model.includes('o3');
+  const isReasoningModel =
+    model.includes('crouton') ||
+    model.includes('stealth') ||
+    model.includes('r1') ||
+    model.includes('o1') ||
+    model.includes('o3');
   if (enableThinking && isReasoningModel) {
     requestPayload.reasoning = { effort: reasoningEffort };
     requestPayload.reasoning_effort = reasoningEffort;
@@ -374,10 +379,15 @@ export async function streamOpenRouterResponse(options: {
             if (!delta) continue;
 
             // 1. Native Reasoning Stream (delta.reasoning)
-            if (delta.reasoning) {
-              thoughtText += delta.reasoning;
-              callbacks.onThoughtChunk?.(delta.reasoning);
-              tokenCount += Math.max(1, Math.ceil(delta.reasoning.length / 4));
+            const reasoningDelta =
+              delta.reasoning ||
+              (typeof delta.reasoning_details === 'string'
+                ? delta.reasoning_details
+                : delta.reasoning_details?.[0]?.text || '');
+            if (reasoningDelta) {
+              thoughtText += reasoningDelta;
+              callbacks.onThoughtChunk?.(reasoningDelta);
+              tokenCount += Math.max(1, Math.ceil(reasoningDelta.length / 4));
             }
 
             // 2. Content stream (with optional tag-based <think> detection)

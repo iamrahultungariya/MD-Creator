@@ -162,7 +162,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
             }`}
           >
-            OpenRouter (gpt-4o)
+            OpenRouter (crouton-alpha)
           </button>
         </div>
 
@@ -176,7 +176,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
               </span>
             </div>
             <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
-              Connect your personal OpenRouter API key. Requests route directly to OpenRouter chat completions with 1st model <code className="font-mono text-[#8257F5]">openai/gpt-4o</code>.
+              Connect your personal OpenRouter API key. Requests route directly to OpenRouter chat completions with 1st model <code className="font-mono text-[#8257F5]">stealth/crouton-alpha</code>.
             </p>
             <a
               href="https://openrouter.ai/keys"

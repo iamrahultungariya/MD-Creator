@@ -203,7 +203,7 @@ export const PreferencesAiTab: React.FC = () => {
                     OpenRouter
                   </span>
                   <div className="text-[10px] text-[#8257F5] dark:text-violet-400 font-medium">
-                    1st Model: openai/gpt-4o
+                    1st Model: stealth/crouton-alpha
                   </div>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export const PreferencesAiTab: React.FC = () => {
               />
             </div>
             <p className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-2">
-              Universal AI Gateway. Access GPT-4o, Claude 3.5, and DeepSeek with your personal OpenRouter key.
+              Universal AI Gateway. Access Crouton Alpha reasoning, Claude 3.5, and DeepSeek with your personal OpenRouter key.
             </p>
           </button>
         </div>
@@ -238,7 +238,7 @@ export const PreferencesAiTab: React.FC = () => {
                 Primary Model
               </label>
               <span className="text-[10px] text-neutral-400">
-                Default: <code className="font-mono text-[#8257F5]">openai/gpt-4o</code>
+                Default: <code className="font-mono text-[#8257F5]">stealth/crouton-alpha</code>
               </span>
             </div>
 
