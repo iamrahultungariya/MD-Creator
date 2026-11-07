@@ -124,6 +124,19 @@ export const MimoStarterCards: React.FC<MimoStarterCardsProps> = ({
             </button>
           ))}
         </div>
+
+        {/* Quick Slash Commands Tip Bar */}
+        <div className="pt-2 flex items-center justify-center gap-1.5 flex-wrap">
+          <span className="text-[10px] text-neutral-400 font-mono">Commands:</span>
+          {['/compact', '/clean-md', '/action-items', '/trim', '/review'].map((cmd) => (
+            <span
+              key={cmd}
+              className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/80 dark:border-neutral-700/80 text-[10px] font-mono text-neutral-600 dark:text-neutral-400 font-medium"
+            >
+              {cmd}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

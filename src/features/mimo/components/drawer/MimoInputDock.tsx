@@ -9,12 +9,19 @@ import {
   Pin,
   ChevronUp,
   Check,
+  Archive,
+  Sparkles,
+  ListTodo,
+  Scissors,
+  FileSearch,
+  Terminal,
 } from 'lucide-react';
 import { ThinkingLevel, MimoModelChoice } from '../../types/mimoTypes';
 import { useMimoStore } from '../../stores/useMimoStore';
 import { MimoSettingsPopover } from './MimoSettingsPopover';
 import { MimoDocPinSelector } from './MimoDocPinSelector';
 import { db } from '../../../../db';
+import { getMatchingSlashCommands } from '../../services/mimoSlashCommands';
 
 export interface MimoInputDockProps {
   docId?: string;
@@ -34,6 +41,14 @@ export interface MimoInputDockProps {
 }
 
 const EMPTY_PINNED_ARRAY: string[] = [];
+
+const SLASH_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  Archive,
+  Sparkles,
+  ListTodo,
+  Scissors,
+  FileSearch,
+};
 
 export const MimoInputDock: React.FC<MimoInputDockProps> = ({
   docId,
@@ -58,6 +73,21 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
   const [pinnedDocsMeta, setPinnedDocsMeta] = useState<Array<{ id: string; title: string }>>([]);
   const thinkingMenuRef = useRef<HTMLDivElement>(null);
   const modelMenuRef = useRef<HTMLDivElement>(null);
+
+  // Slash Commands Autocomplete State
+  const [selectedSlashIndex, setSelectedSlashIndex] = useState(0);
+  const [isSlashMenuDismissed, setIsSlashMenuDismissed] = useState(false);
+
+  const isSlashActive = inputPrompt.startsWith('/') && !isSlashMenuDismissed;
+  const matchingSlashCommands = isSlashActive ? getMatchingSlashCommands(inputPrompt) : [];
+  const showSlashMenu = isSlashActive && matchingSlashCommands.length > 0;
+
+  useEffect(() => {
+    if (inputPrompt.startsWith('/')) {
+      setIsSlashMenuDismissed(false);
+      setSelectedSlashIndex(0);
+    }
+  }, [inputPrompt]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -393,6 +423,74 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
 
       {/* Text Area & Action */}
       <div className="relative flex items-end gap-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2.5 focus-within:border-neutral-400 dark:focus-within:border-neutral-600 transition-colors">
+        {/* Floating Slash Commands Autocomplete Menu */}
+        {showSlashMenu && (
+          <div
+            className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-3 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/80 dark:bg-neutral-950/60 flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-1.5 font-semibold text-neutral-600 dark:text-neutral-400">
+                <Terminal className="w-3 h-3 text-[#8257F5]" />
+                <span>Mimo Slash Commands</span>
+              </div>
+              <span className="text-[9px] text-neutral-400 font-mono">
+                ↑↓ navigate • Enter select • Esc close
+              </span>
+            </div>
+
+            <div className="max-h-56 overflow-y-auto p-1 space-y-0.5">
+              {matchingSlashCommands.map((cmd, idx) => {
+                const IconComp = SLASH_ICON_MAP[cmd.iconName] || Sparkles;
+                const isSelected = idx === selectedSlashIndex;
+                return (
+                  <button
+                    key={cmd.id}
+                    type="button"
+                    onMouseEnter={() => setSelectedSlashIndex(idx)}
+                    onClick={() => {
+                      if (cmd.id === 'compact') {
+                        onSend('/compact');
+                      } else {
+                        setInputPrompt(`${cmd.command} `);
+                      }
+                      setIsSlashMenuDismissed(true);
+                    }}
+                    className={`w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-left transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
+                          isSelected
+                            ? 'bg-[#8257F5]/10 text-[#8257F5]'
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                        }`}
+                      >
+                        <IconComp className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-mono font-bold text-neutral-900 dark:text-white">
+                          {cmd.command}
+                        </span>
+                        <span className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                          {cmd.description}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 font-mono shrink-0 ml-2 border border-neutral-200/60 dark:border-neutral-700">
+                      {cmd.badge}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <textarea
           value={inputPrompt}
           onChange={(e) => {
@@ -405,6 +503,37 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
           }}
           disabled={isAiExcluded}
           onKeyDown={(e) => {
+            if (showSlashMenu && matchingSlashCommands.length > 0) {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setSelectedSlashIndex((prev) => (prev + 1) % matchingSlashCommands.length);
+                return;
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setSelectedSlashIndex((prev) => (prev - 1 + matchingSlashCommands.length) % matchingSlashCommands.length);
+                return;
+              }
+              if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                const chosen = matchingSlashCommands[selectedSlashIndex];
+                if (chosen) {
+                  if (chosen.id === 'compact') {
+                    onSend('/compact');
+                  } else {
+                    setInputPrompt(`${chosen.command} `);
+                  }
+                  setIsSlashMenuDismissed(true);
+                }
+                return;
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setIsSlashMenuDismissed(true);
+                return;
+              }
+            }
+
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               onSend();
@@ -415,7 +544,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
               ? 'This document is shielded from AI scanning'
               : activeSelection
               ? 'Ask about selected text or request an edit...'
-              : 'Ask Mimo or type in Hinglish... (Enter to send)'
+              : 'Ask Mimo or type "/" for commands (/compact, /clean-md...)'
           }
           rows={2}
           className="w-full bg-transparent text-xs text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none resize-none leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
