@@ -42,6 +42,9 @@ const MimoIntroModal = React.lazy(() =>
 const DailyFeedbackNudge = React.lazy(() =>
   import('./components/common/DailyFeedbackNudge').then((m) => ({ default: m.DailyFeedbackNudge }))
 );
+const GeminiFixedToast = React.lazy(() =>
+  import('./components/common/GeminiFixedToast').then((m) => ({ default: m.GeminiFixedToast }))
+);
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -217,6 +220,11 @@ export const App: React.FC = () => {
         {/* Daily Feedback Nudge Toast (10s on 1st visit of day, 2 min thereafter, with 'Don't show today') */}
         <Suspense fallback={null}>
           <DailyFeedbackNudge />
+        </Suspense>
+
+        {/* Gemini AI Fixed & OpenRouter Retirement Announcement Toast */}
+        <Suspense fallback={null}>
+          <GeminiFixedToast />
         </Suspense>
 
         <AppRoutes />

@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Key, ExternalLink, Check, Trash2, Loader2, AlertCircle, Zap } from 'lucide-react';
 import { useMimoStore } from '../stores/useMimoStore';
-import { useUserAiStore } from '../../../stores/useUserAiStore';
 import { validateGeminiApiKey } from '../services/mimoGeminiService';
-import { validateOpenRouterApiKey } from '../../../services/openRouterService';
-import { OPENROUTER_DEFAULT_MODEL } from '../../../types/userAi';
 
 interface MimoApiKeyModalProps {
   isOpen: boolean;
@@ -13,13 +10,6 @@ interface MimoApiKeyModalProps {
 }
 
 export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClose }) => {
-  const provider = useUserAiStore((s) => s.provider);
-  const setProvider = useUserAiStore((s) => s.setProvider);
-  const openRouterApiKey = useUserAiStore((s) => s.openRouterApiKey);
-  const setOpenRouterApiKey = useUserAiStore((s) => s.setOpenRouterApiKey);
-  const openRouterModel = useUserAiStore((s) => s.openRouterModel || OPENROUTER_DEFAULT_MODEL);
-  const setIsOpenRouterKeyVerified = useUserAiStore((s) => s.setIsOpenRouterKeyVerified);
-
   const userGeminiApiKey = useMimoStore((s) => s.quota.userApiKey) || '';
   const setUserGeminiApiKey = useMimoStore((s) => s.setUserApiKey);
   const quota = useMimoStore((s) => s.quota);
@@ -29,89 +19,46 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
   const candidatesTokensToday = quota.candidatesTokensToday || 0;
   const liveLatencyMs = quota.liveLatencyMs || quota.lastRequestLatencyMs || 0;
 
-  const [activeProviderTab, setActiveProviderTab] = useState<'gemini' | 'openrouter'>(provider);
-  const [inputKey, setInputKey] = useState(
-    activeProviderTab === 'openrouter' ? openRouterApiKey : userGeminiApiKey
-  );
+  const [inputKey, setInputKey] = useState(userGeminiApiKey);
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleTabChange = (nextProvider: 'gemini' | 'openrouter') => {
-    setActiveProviderTab(nextProvider);
-    setValidationError(null);
-    setValidationWarning(null);
-    setInputKey(nextProvider === 'openrouter' ? openRouterApiKey : userGeminiApiKey);
-  };
-
   const handleSave = async () => {
     const trimmed = inputKey.trim();
     if (!trimmed) {
-      setValidationError(`Please enter a valid ${activeProviderTab === 'openrouter' ? 'OpenRouter' : 'Gemini'} API key`);
+      setValidationError('Please enter a valid Gemini API key');
       return;
     }
 
     setIsValidating(true);
     setValidationError(null);
-    setValidationWarning(null);
 
-    if (activeProviderTab === 'openrouter') {
-      const res = await validateOpenRouterApiKey(trimmed, openRouterModel);
-      setIsValidating(false);
+    const check = await validateGeminiApiKey(trimmed);
+    setIsValidating(false);
 
-      if (res.valid) {
-        setOpenRouterApiKey(trimmed);
-        setIsOpenRouterKeyVerified(true);
-        setProvider('openrouter');
-        setSavedSuccess(true);
-        if (res.warning) {
-          setValidationWarning(res.warning);
-        }
-        setTimeout(() => {
-          setSavedSuccess(false);
-          onClose();
-        }, 900);
-      } else {
-        setValidationError(res.error || 'Invalid OpenRouter API key. Please verify in openrouter.ai.');
-      }
+    if (check.valid) {
+      setUserGeminiApiKey(trimmed);
+      setSavedSuccess(true);
+      setValidationError(null);
+      setTimeout(() => {
+        setSavedSuccess(false);
+        onClose();
+      }, 900);
     } else {
-      const check = await validateGeminiApiKey(trimmed);
-      setIsValidating(false);
-
-      if (check.valid) {
-        setUserGeminiApiKey(trimmed);
-        setProvider('gemini');
-        setSavedSuccess(true);
-        setValidationError(null);
-        setTimeout(() => {
-          setSavedSuccess(false);
-          onClose();
-        }, 900);
-      } else {
-        setValidationError(check.error || 'Invalid API key. Please verify from Google AI Studio.');
-      }
+      setValidationError(check.error || 'Invalid API key. Please verify from Google AI Studio.');
     }
   };
 
   const handleRemove = () => {
     setInputKey('');
     setValidationError(null);
-    setValidationWarning(null);
-    if (activeProviderTab === 'openrouter') {
-      setOpenRouterApiKey('');
-      setIsOpenRouterKeyVerified(false);
-    } else {
-      setUserGeminiApiKey('');
-    }
+    setUserGeminiApiKey('');
   };
 
-  const isConnected =
-    activeProviderTab === 'openrouter'
-      ? Boolean(openRouterApiKey && inputKey === openRouterApiKey)
-      : Boolean(userGeminiApiKey && inputKey === userGeminiApiKey);
+  const isConnected = Boolean(userGeminiApiKey && inputKey === userGeminiApiKey);
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs font-sans animate-in fade-in duration-150">
@@ -127,12 +74,12 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800 flex items-center justify-center text-[#8257F5]">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Key className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-neutral-950 dark:text-white">
-              Connect AI API Key
+              Connect Gemini API Key
             </h3>
             <p className="text-xs text-neutral-500">
               Bring Your Own Key (BYOK) for Mimo pair writing
@@ -140,79 +87,30 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
           </div>
         </div>
 
-        {/* Provider Tabs */}
-        <div className="grid grid-cols-2 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 mb-4 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => handleTabChange('gemini')}
-            className={`py-1.5 rounded-md transition-all cursor-pointer ${
-              activeProviderTab === 'gemini'
-                ? 'bg-white dark:bg-neutral-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            Google Gemini
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabChange('openrouter')}
-            className={`py-1.5 rounded-md transition-all cursor-pointer ${
-              activeProviderTab === 'openrouter'
-                ? 'bg-white dark:bg-neutral-900 text-[#8257F5] dark:text-violet-400 shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            OpenRouter (crouton-alpha)
-          </button>
-        </div>
-
         {/* Info Banner */}
-        {activeProviderTab === 'openrouter' ? (
-          <div className="mb-4 p-3 rounded-lg bg-violet-50/60 dark:bg-violet-950/30 border border-violet-200/80 dark:border-violet-900 text-xs text-neutral-700 dark:text-neutral-300 space-y-1">
-            <div className="font-semibold text-neutral-900 dark:text-white flex items-center justify-between">
-              <span>OpenRouter Universal Gateway</span>
-              <span className="font-mono text-[10px] text-[#8257F5] bg-violet-100 dark:bg-violet-900/60 px-1.5 py-0.5 rounded">
-                Model: {openRouterModel}
-              </span>
-            </div>
-            <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
-              Connect your personal OpenRouter API key. Requests route directly to OpenRouter chat completions with 1st model <code className="font-mono text-[#8257F5]">stealth/crouton-alpha</code>.
-            </p>
-            <a
-              href="https://openrouter.ai/keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#8257F5] dark:text-violet-400 font-semibold underline underline-offset-2 hover:opacity-80 inline-flex items-center gap-1 mt-1"
-            >
-              <span>Get your OpenRouter key at openrouter.ai/keys</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+        <div className="mb-4 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-800 text-xs text-neutral-700 dark:text-neutral-300 space-y-1">
+          <div className="font-semibold text-neutral-900 dark:text-white">
+            Free via Google AI Studio
           </div>
-        ) : (
-          <div className="mb-4 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-800 text-xs text-neutral-700 dark:text-neutral-300 space-y-1">
-            <div className="font-semibold text-neutral-900 dark:text-white">
-              Free via Google AI Studio
-            </div>
-            <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
-              Google provides free Gemini API keys (supports both <code className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">AIza...</code> and <code className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">AQ...</code> formats). Your key stays stored locally in your browser.
-            </p>
-            <a
-              href="https://aistudio.google.com/apikey"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-600 dark:text-emerald-400 font-semibold underline underline-offset-2 hover:opacity-80 inline-flex items-center gap-1 mt-1"
-            >
-              <span>Get your free Gemini key at aistudio.google.com/apikey</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        )}
+          <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
+            Google provides free Gemini API keys (supports both <code className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">AIza...</code> and <code className="font-mono font-semibold text-neutral-900 dark:text-neutral-100">AQ...</code> formats). Your key stays stored locally in your browser.
+          </p>
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-600 dark:text-emerald-400 font-semibold underline underline-offset-2 hover:opacity-80 inline-flex items-center gap-1 mt-1"
+          >
+            <span>Get your free Gemini key at aistudio.google.com/apikey</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
 
         {/* Input Field with live feedback */}
         <div className="space-y-2 mb-5">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300">
-              {activeProviderTab === 'openrouter' ? 'OpenRouter API Key' : 'Gemini API Key'}
+              Gemini API Key
             </label>
             {isConnected && !validationError && (
               <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -227,7 +125,6 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
             onChange={(e) => {
               setInputKey(e.target.value);
               if (validationError) setValidationError(null);
-              if (validationWarning) setValidationWarning(null);
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -235,22 +132,15 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
                 handleSave();
               }
             }}
-            placeholder={activeProviderTab === 'openrouter' ? 'sk-or-v1-...' : 'AIza... or AQ...'}
+            placeholder="AIza... or AQ..."
             className={`w-full px-3 py-2 rounded-lg border bg-neutral-50 dark:bg-neutral-800 text-xs text-neutral-900 dark:text-white font-mono focus:outline-none transition-colors ${
               validationError
                 ? 'border-rose-500 ring-2 ring-rose-500/20'
                 : savedSuccess || isConnected
                 ? 'border-emerald-500 ring-2 ring-emerald-500/20'
-                : 'border-neutral-200 dark:border-neutral-700 focus:border-[#8257F5] focus:ring-2 focus:ring-[#8257F5]/20'
+                : 'border-neutral-200 dark:border-neutral-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'
             }`}
           />
-
-          {validationWarning && (
-            <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-              <span className="leading-relaxed">{validationWarning}</span>
-            </div>
-          )}
 
           {validationError && (
             <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-700 dark:text-rose-300 space-y-1">
@@ -263,7 +153,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Live Visual Quota & Usage Card if Gemini Key is Connected */}
-        {activeProviderTab === 'gemini' && userGeminiApiKey && (
+        {userGeminiApiKey && (
           <div className="mb-5 p-3 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-850/40 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
@@ -342,7 +232,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
             <button
               onClick={handleSave}
               disabled={isValidating}
-              className="px-3.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-neutral-100 dark:hover:bg-neutral-200 text-white dark:text-neutral-950 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+              className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
             >
               {isValidating ? (
                 <>
@@ -351,7 +241,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
                 </>
               ) : savedSuccess ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <Check className="w-3.5 h-3.5 text-white" />
                   <span>Connected</span>
                 </>
               ) : (

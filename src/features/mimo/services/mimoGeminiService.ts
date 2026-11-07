@@ -7,9 +7,6 @@ import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDn
 import { useMimoStore } from '../stores/useMimoStore';
 import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
 import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
-import { useUserAiStore } from '../../../stores/useUserAiStore';
-import { streamOpenRouterResponse } from '../../../services/openRouterService';
-import { evaluateContextPrivacyPolicy } from '../../../services/adminAiContextFilter';
 
 export interface StreamCallbacks {
   onStreamReset?: () => void;
@@ -687,51 +684,6 @@ export async function streamMimoResponse(options: {
   callbacks.onReasoningStep?.(
     `Loaded "${context.docTitle}" (${context.linesAnalyzed} lines, ${context.totalWords} words) • Intent: ${intent}`
   );
-
-  // 1.5. User AI Dispatcher: Route to OpenRouter (stealth/crouton-alpha) if selected by User in Settings
-  const userAi = useUserAiStore.getState();
-  if (userAi.provider === 'openrouter' && userAi.isOpenRouterReady()) {
-    const privacyResult = evaluateContextPrivacyPolicy(prompt, context, userAi.privacy);
-
-    callbacks.onReasoningStep?.(
-      privacyResult.isContextAttached
-        ? `📎 Context Attached: ${privacyResult.reason}`
-        : `🛡️ Zero Pre-Feed Active: ${privacyResult.reason}`
-    );
-
-    const openRouterMessages = (history || []).slice(-8).map((m) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.text,
-    }));
-    openRouterMessages.push({
-      role: 'user' as const,
-      content: privacyResult.finalPrompt,
-    });
-
-    try {
-      return await streamOpenRouterResponse({
-        apiKey: userAi.openRouterApiKey,
-        model: userAi.openRouterModel || 'stealth/crouton-alpha',
-        systemPrompt: MIMO_SYSTEM_PROMPT,
-        messages: openRouterMessages,
-        enableThinking: userAi.enableThinking,
-        reasoningEffort: userAi.reasoningEffort,
-        temperature: userAi.temperature,
-        maxTokens: userAi.maxTokens,
-        topP: userAi.topP,
-        callbacks,
-        signal,
-      });
-    } catch (openRouterErr: any) {
-      if (userAi.openRouterFallbackToGemini) {
-        callbacks.onReasoningStep?.(
-          `⚠️ OpenRouter Error (${openRouterErr?.message || 'Unavailable'}). Gracefully failing over to Gemini 3.8 Flash...`
-        );
-      } else {
-        throw openRouterErr;
-      }
-    }
-  }
 
   // If no API key configured or browser is offline, run document-aware local synthesis
   if (!effectiveApiKey || (typeof navigator !== 'undefined' && !navigator.onLine)) {

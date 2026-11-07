@@ -3,8 +3,6 @@ import { UserReview } from '../services/reviewsStorage';
 
 export type AdminTab = 'overview' | 'analytics' | 'blogs' | 'reviews' | 'feedback';
 
-export * from './adminAi';
-
 export type FeedbackCategory = 'bug' | 'feature' | 'praise' | 'question';
 export type FeedbackSentiment = 'terrible' | 'bad' | 'okay' | 'good' | 'amazing';
 export type FeedbackPriority = 'low' | 'normal' | 'high' | 'critical';
