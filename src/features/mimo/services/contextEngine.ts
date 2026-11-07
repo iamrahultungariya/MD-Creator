@@ -227,7 +227,16 @@ ${outlineHeader}`,
   }
 
   const pLower = userPrompt.toLowerCase();
+  const detectedIntent = classifyUserIntent(userPrompt, !!selectedText);
+
+  // Detect if the prompt is asking about the document broadly (questions, quiz, review, summary)
+  const isDocWideQuery =
+    detectedIntent === 'DOC_QUERY' ||
+    /\b(?:iss?|this|the|my)?\s*(?:doc|document|file|note)\b/i.test(pLower) ||
+    /\b(?:questions?|puch|pucho|quiz|mcq|test|review|summarize|summary|overview|takeaway|kya hai)\b/i.test(pLower);
+
   const isFullDocRequested =
+    isDocWideQuery ||
     pLower.includes('entire document') ||
     pLower.includes('full document') ||
     pLower.includes('pura document') ||
@@ -235,9 +244,8 @@ ${outlineHeader}`,
     pLower.includes('generate document');
 
   // Case 2.5: General Conceptual Questions (e.g. "What is Python?", "Explain async/await")
-  // For queries not asking about or modifying the document, provide lightweight outline to save tokens!
-  const detectedIntent = classifyUserIntent(userPrompt, !!selectedText);
-  if (!forceFullScan && !selectedText && !isFullDocRequested && detectedIntent === 'GENERAL_QA' && totalDocLines > 50) {
+  // Only triggered when prompt has NO relation to the active document and document is large (>300 LOC)
+  if (!forceFullScan && !selectedText && !isFullDocRequested && detectedIntent === 'GENERAL_QA' && totalDocLines > 300) {
     const outlineStr =
       summary.headingsSummary.length > 0 ? `\nDocument Outline:\n${summary.headingsSummary.join('\n')}` : '';
     const keywordsStr =
@@ -258,9 +266,10 @@ ${outlineHeader}`,
     };
   }
 
-  // Case 3: Complete Document Context for documents <= 300 LOC or when full doc is explicitly requested
-  // Under 300 LOC (~1,200 tokens), complete document context is fast, 100% accurate, and safe from TPM limits.
-  if (isFullDocRequested || totalDocLines <= 300) {
+  // Case 3: Complete Document Context for documents <= 1,200 LOC or when document-wide query is requested
+  // Up to 1,200 LOC (~10,000-12,000 tokens) is safely under Google's 250k TPM limit on Gemini 3.5 models.
+  // Never blind the AI by starving it of actual descriptions, library details, or technical nuances!
+  if (isFullDocRequested || totalDocLines <= 1200) {
     const outlineHeader =
       summary.headingsSummary.length > 0
         ? `Document Outline:\n${summary.headingsSummary.join('\n')}\n\n`
@@ -282,7 +291,7 @@ ${outlineHeader}`,
     };
   }
 
-  // Case 4: AST-Based Sliding Context for multi-section documents (>300 LOC)
+  // Case 4: AST-Based Sliding Context for massive documents (>1,200 LOC)
   const sliding = extractASTSlidingContext(content, cursorLine, summary.title);
   if (sliding.isSlidingApplied) {
     return {
@@ -303,8 +312,8 @@ ${sliding.slidingContextText}`,
     };
   }
 
-  // Case 5: Under 1000 LOC safe limit (when AST sliding was not applicable, e.g. single monolithic section)
-  if (totalDocLines <= 1000) {
+  // Case 5: Under 2,500 LOC fallback (when AST sliding was not applicable, e.g. single monolithic code block)
+  if (totalDocLines <= 2500) {
     const outlineHeader =
       summary.headingsSummary.length > 0
         ? `Document Outline:\n${summary.headingsSummary.join('\n')}\n\n`
@@ -326,8 +335,8 @@ ${sliding.slidingContextText}`,
     };
   }
 
-  // Case 4: >1000 LOC -> STRICT GUARDRAIL TRIGGERED
-  const safeRadius = 120;
+  // Case 6: >2,500 LOC -> STRICT GUARDRAIL TRIGGERED
+  const safeRadius = 200;
   const targetLine = Math.max(1, Math.min(cursorLine, totalDocLines));
   const startLine = Math.max(1, targetLine - safeRadius);
   const endLine = Math.min(totalDocLines, targetLine + safeRadius);
@@ -341,7 +350,7 @@ ${sliding.slidingContextText}`,
     docTitle: summary.title,
     rawContent: content,
     contextMode: 'chunked_loc_guarded',
-    contextText: `⚠️ Large Document Guardrail Active (${totalDocLines} LOC total > 1000 LOC limit).
+    contextText: `⚠️ Large Document Guardrail Active (${totalDocLines} LOC total > 2500 LOC limit).
 Active Document Title: "${summary.title}"
 ${pathStr}Analyzed Range: Lines ${startLine} to ${endLine} (around active cursor line ${targetLine}).
 Full Document Outline:

@@ -4,30 +4,41 @@ export function extractClarificationFromResponse(aiResponse: string): {
   cleanText: string;
   clarification: MimoClarificationData | null;
 } {
-  const clarificationRegex = /```(?:json:)?mimo-clarification\s*([\s\S]*?)```/i;
+  const clarificationRegex = /```(?:json:)?(?:mimo-clarification|mimo-quiz|clarification)\s*([\s\S]*?)```/i;
   const match = aiResponse.match(clarificationRegex);
   if (match) {
     try {
-      const parsed = JSON.parse(match[1]);
+      // Clean up common AI JSON formatting quirks (trailing commas, escaped quotes)
+      const sanitizedJsonStr = match[1]
+        .trim()
+        .replace(/,\s*([\]}])/g, '$1');
+
+      const parsed = JSON.parse(sanitizedJsonStr);
       if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) {
         const clarification: MimoClarificationData = {
           id: `clarification-${Date.now()}`,
-          title: parsed.title || 'Help Mimo customize your response',
+          title: parsed.title || 'Interactive Questions from your Document',
           description: parsed.description,
           questions: parsed.questions.map((q: any, idx: number) => ({
             id: q.id || `q-${idx}`,
-            question: q.question || 'Please clarify your requirement:',
+            question: q.question || 'Please select an option:',
             type: q.type === 'multi' ? 'multi' : 'single',
-            options: Array.isArray(q.options) ? q.options.slice(0, 3) : ['Option A', 'Option B', 'Option C'],
+            options: Array.isArray(q.options) && q.options.length > 0
+              ? q.options.slice(0, 4)
+              : ['Option A', 'Option B', 'Option C'],
             allowCustom: q.allowCustom ?? true,
           })),
           isSubmitted: false,
         };
-        const cleanText = aiResponse.replace(clarificationRegex, '').trim();
+        let cleanText = aiResponse.replace(clarificationRegex, '').trim();
+        // Prevent empty response rendering if AI only emitted the clarification block
+        if (!cleanText) {
+          cleanText = parsed.title || 'Here are interactive questions based on your document:';
+        }
         return { cleanText, clarification };
       }
-    } catch {
-      // JSON parse error, pass through safely
+    } catch (err) {
+      console.warn('[extractClarificationFromResponse] JSON parse failed:', err);
     }
   }
   return { cleanText: aiResponse, clarification: null };

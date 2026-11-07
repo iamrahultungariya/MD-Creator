@@ -46,6 +46,8 @@ export function classifyUserIntent(prompt: string, hasSelection = false): MimoIn
     /\biss?\s+document\s+(?:me|mein)\s+kya\s+hai\b/i,
     /\bkya\s+yeh\s+useful\s+hai\b/i,
     /\bexplain\s+.*(?:in|from|of)\s+(?:the\s+)?(?:document|doc|file)\b/i,
+    /\b(?:selectable|slectable|options?|option\s*wale|mcq|quiz|test\s*me|swal|sawal)\b/i,
+    /\b(?:puch|pucho|questions?)\b/i,
   ];
   if (docQueryRegexes.some((re) => re.test(p))) {
     return 'DOC_QUERY';

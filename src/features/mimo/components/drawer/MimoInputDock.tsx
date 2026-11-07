@@ -54,20 +54,26 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isThinkingMenuOpen, setIsThinkingMenuOpen] = useState(false);
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [pinnedDocsMeta, setPinnedDocsMeta] = useState<Array<{ id: string; title: string }>>([]);
   const thinkingMenuRef = useRef<HTMLDivElement>(null);
+  const modelMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close thinking menu on outside click
+  // Close menus on outside click
   useEffect(() => {
-    if (!isThinkingMenuOpen) return;
+    if (!isThinkingMenuOpen && !isModelMenuOpen) return;
     const handleOutsideClick = (e: MouseEvent) => {
-      if (thinkingMenuRef.current && !thinkingMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (thinkingMenuRef.current && !thinkingMenuRef.current.contains(target)) {
         setIsThinkingMenuOpen(false);
+      }
+      if (modelMenuRef.current && !modelMenuRef.current.contains(target)) {
+        setIsModelMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isThinkingMenuOpen]);
+  }, [isThinkingMenuOpen, isModelMenuOpen]);
 
   const showThinking = useMimoStore((s) => s.showThinking);
   const userApiKey = useMimoStore((s) => s.quota.userApiKey);
@@ -128,49 +134,103 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
       {/* Controls Bar: Model & Thinking */}
       <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs">
         <div className="flex items-center flex-wrap gap-1.5">
-          {/* Model Switcher Segment */}
-          <div className="inline-flex items-center p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-[11px]">
+          {/* Model Up-Arrow Popover Selector (Matching Thinking Selector) */}
+          <div className="relative" ref={modelMenuRef}>
             <button
               type="button"
-              onClick={() => setSelectedModel('gemini-3.5-flash-lite')}
-              className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedModel === 'gemini-3.5-flash-lite'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
+              onClick={() => {
+                touchMimoActivity();
+                setIsModelMenuOpen(!isModelMenuOpen);
+              }}
+              className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                isModelMenuOpen
+                  ? 'border-neutral-900 dark:border-white bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                  : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800'
               }`}
-              title="Gemini 3.5 Flash-Lite (Default • High Speed & 1,500 RPD)"
+              title="Select Gemini Engine"
             >
-              <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-              <span>3.5 Lite</span>
+              {selectedModel === 'gemini-3.8-flash' ? (
+                <Brain className="w-3 h-3 text-indigo-500" />
+              ) : (
+                <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              )}
+              <span>
+                {selectedModel === 'gemini-3.8-flash'
+                  ? '3.8 Flash'
+                  : selectedModel === 'gemini-3.5-flash'
+                  ? '3.5 Flash'
+                  : '3.5 Lite'}
+              </span>
+              <ChevronUp
+                className={`w-3 h-3 text-neutral-500 transition-transform ${
+                  isModelMenuOpen ? 'rotate-180' : ''
+                }`}
+              />
             </button>
 
-            <button
-              type="button"
-              onClick={() => setSelectedModel('gemini-3.5-flash')}
-              className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedModel === 'gemini-3.5-flash'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
-              }`}
-              title="Gemini 3.5 Flash (Balanced & High Stability)"
-            >
-              <Zap className="w-3 h-3" />
-              <span>3.5 Flash</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedModel('gemini-3.8-flash')}
-              className={`px-2 py-0.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedModel === 'gemini-3.8-flash'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-medium shadow-2xs'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
-              }`}
-              title="Gemini 3.8 Flash (Deep Reasoning & Heavy Tasks)"
-            >
-              <Brain className="w-3 h-3 text-indigo-500" />
-              <span>3.8 Flash</span>
-            </button>
+            {isModelMenuOpen && (
+              <div
+                className="absolute bottom-full left-0 mb-1.5 w-52 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl p-1 z-50 text-xs animate-in fade-in zoom-in-95 duration-100 select-none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-2 py-1 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+                  Gemini Engine
+                </div>
+                {[
+                  {
+                    id: 'gemini-3.5-flash-lite',
+                    label: '3.5 Flash-Lite',
+                    desc: 'Fast Pair-Writing • 1,500 RPD',
+                    icon: Zap,
+                    iconColor: 'text-emerald-500',
+                  },
+                  {
+                    id: 'gemini-3.5-flash',
+                    label: '3.5 Flash',
+                    desc: 'Balanced Multi-Turn • 1,500 RPD',
+                    icon: Zap,
+                    iconColor: 'text-neutral-500 dark:text-neutral-400',
+                  },
+                  {
+                    id: 'gemini-3.8-flash',
+                    label: '3.8 Flash',
+                    desc: 'Deep Reasoning & Heavy Tasks',
+                    icon: Brain,
+                    iconColor: 'text-indigo-500',
+                  },
+                ].map((item) => {
+                  const ItemIcon = item.icon;
+                  const isSelected = selectedModel === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedModel(item.id as any);
+                        setIsModelMenuOpen(false);
+                        touchMimoActivity();
+                      }}
+                      className={`w-full px-2 py-1.5 rounded-lg flex items-center justify-between text-left text-xs transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-neutral-100 dark:bg-neutral-800 font-semibold text-neutral-900 dark:text-white'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <ItemIcon className={`w-3.5 h-3.5 shrink-0 ${item.iconColor}`} />
+                        <div className="flex flex-col">
+                          <span>{item.label}</span>
+                          <span className="text-[10px] text-neutral-400 font-normal">{item.desc}</span>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-neutral-900 dark:text-white shrink-0 ml-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Thinking Level Up-Arrow Popover Selector */}
