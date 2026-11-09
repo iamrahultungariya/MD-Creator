@@ -90,30 +90,78 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
       const allDocs = await db.documents.toArray();
       const activeDocs = allDocs.filter(d => !d.isDeleted);
       const trashedDocs = allDocs.filter(d => Boolean(d.isDeleted));
+      const existingDocIdSet = new Set(allDocs.map(d => d.id));
+      const activeDocIdSet = new Set(activeDocs.map(d => d.id));
 
       let activeBytes = 0;
       for (const doc of activeDocs) {
-        activeBytes += doc.sizeBytes || 0;
+        let size = doc.sizeBytes;
+        if (size === undefined || size === null || size <= 0) {
+          try {
+            const cached = await db.document_cache.get(doc.id);
+            if (cached?.content) {
+              size = new Blob([cached.content]).size;
+              db.documents.update(doc.id, { sizeBytes: size }).catch(() => {});
+            } else if (doc.snippet) {
+              size = new Blob([doc.snippet]).size;
+            } else {
+              size = 0;
+            }
+          } catch {
+            size = 0;
+          }
+        }
+        activeBytes += size;
       }
 
       let trashedBytes = 0;
       for (const doc of trashedDocs) {
-        trashedBytes += doc.sizeBytes || 0;
+        let size = doc.sizeBytes;
+        if (size === undefined || size === null || size <= 0) {
+          try {
+            const cached = await db.document_cache.get(doc.id);
+            if (cached?.content) {
+              size = new Blob([cached.content]).size;
+              db.documents.update(doc.id, { sizeBytes: size }).catch(() => {});
+            } else if (doc.snippet) {
+              size = new Blob([doc.snippet]).size;
+            } else {
+              size = 0;
+            }
+          } catch {
+            size = 0;
+          }
+        }
+        trashedBytes += size;
       }
 
       const allRevisions = await db.revisions.toArray();
+      const orphanedRevIds: number[] = [];
       let revisionBytes = 0;
+      let activeRevisionCount = 0;
       const docMap = new Map(allDocs.map(d => [d.id, d.title]));
       const revGroupMap = new Map<string, DocRevisionSummary>();
 
       for (const rev of allRevisions) {
+        if (!existingDocIdSet.has(rev.documentId)) {
+          if (typeof rev.id === 'number') {
+            orphanedRevIds.push(rev.id);
+          }
+          continue;
+        }
+
         const size = (rev.storedSizeBytes && rev.storedSizeBytes > 0)
           ? rev.storedSizeBytes
           : rev.deltaData
           ? new Blob([rev.deltaData]).size
           : new Blob([rev.content || '']).size;
 
-        revisionBytes += size;
+        if (activeDocIdSet.has(rev.documentId)) {
+          revisionBytes += size;
+          activeRevisionCount++;
+        } else {
+          trashedBytes += size;
+        }
 
         const docId = rev.documentId;
         const existing = revGroupMap.get(docId);
@@ -134,15 +182,43 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
         }
       }
 
+      if (orphanedRevIds.length > 0) {
+        db.revisions.bulkDelete(orphanedRevIds).catch(() => {});
+      }
+
       setDocRevisions(Array.from(revGroupMap.values()).sort((a, b) => b.totalBytes - a.totalBytes));
 
       const allImages = await db.images.toArray();
       let imageBytes = 0;
-      for (const img of allImages) {
-        imageBytes += img.sizeBytes || 0;
+      let activeImageCount = 0;
+      if (allImages.length > 0) {
+        const allCached = await db.document_cache.toArray();
+        const activeCachedContent = allCached.filter((c) => activeDocIdSet.has(c.id)).map((c) => c.content).join(' ');
+        const trashedCachedContent = allCached.filter((c) => !activeDocIdSet.has(c.id)).map((c) => c.content).join(' ');
+
+        const orphanedImageIds: string[] = [];
+        for (const img of allImages) {
+          const isReferencedInActive = activeCachedContent.includes(img.id);
+          const isReferencedInTrash = trashedCachedContent.includes(img.id);
+
+          if (!isReferencedInActive && !isReferencedInTrash) {
+            orphanedImageIds.push(img.id);
+          } else if (isReferencedInActive) {
+            imageBytes += img.sizeBytes || 0;
+            activeImageCount++;
+          } else {
+            trashedBytes += img.sizeBytes || 0;
+          }
+        }
+
+        if (orphanedImageIds.length > 0) {
+          db.images.bulkDelete(orphanedImageIds).catch(() => {});
+        }
       }
 
-      const vaultTotalBytes = activeBytes + trashedBytes + revisionBytes + imageBytes;
+      // Vault total usage strictly represents active notes, revisions, and images.
+      // Trashed notes are partitioned into trashedBytes so deletions immediately reduce consumption.
+      const vaultTotalBytes = activeBytes + revisionBytes + imageBytes;
       let browserEstimateBytes = 0;
       if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
         try {
@@ -156,9 +232,9 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
         activeBytes,
         trashedCount: trashedDocs.length,
         trashedBytes,
-        revisionCount: allRevisions.length,
+        revisionCount: activeRevisionCount,
         revisionBytes,
-        imageCount: allImages.length,
+        imageCount: activeImageCount,
         imageBytes,
         totalBytes: vaultTotalBytes,
         browserEstimateBytes,
@@ -251,6 +327,9 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
       setTrashPurgedSuccess(true);
       await fetchBreakdown();
       if (onStorageChanged) onStorageChanged();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('md-writer-storage-changed'));
+      }
       setTimeout(() => setTrashPurgedSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to purge trash:', err);
@@ -265,6 +344,9 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
       await deleteDocumentRevisions(docId);
       await fetchBreakdown();
       if (onStorageChanged) onStorageChanged();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('md-writer-storage-changed'));
+      }
     } catch (err) {
       console.error('Failed to purge doc revisions:', err);
     } finally {
@@ -280,6 +362,9 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
       setRevsPurgedSuccess(true);
       await fetchBreakdown();
       if (onStorageChanged) onStorageChanged();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('md-writer-storage-changed'));
+      }
       setTimeout(() => setRevsPurgedSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to purge all revisions:', err);

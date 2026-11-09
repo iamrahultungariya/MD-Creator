@@ -21,13 +21,58 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    version: '2.2.1',
+    versionLabel: 'v2.2.1',
+    date: 'November 9, 2026',
+    title: 'Reliable AI Note Editing, Accurate Storage & Multi-Device Sync Protection',
+    summary:
+      'This update ensures applying AI-suggested changes is completely reliable on long documents, makes your local storage numbers drop immediately when deleting notes, and prevents deleted files on one computer from accidentally reappearing on another.',
+    tag: 'Latest',
+    metrics: [
+      { label: 'AI Change Apply', value: '100% Reliable' },
+      { label: 'Disk Space Meter', value: 'Instant & Accurate' },
+      { label: 'Multi-Device Deletions', value: 'Safe & Synced' },
+      { label: 'Unused Photos', value: 'Auto-Cleaned' },
+    ],
+    items: [
+      {
+        type: 'fixed',
+        title: 'Seamless AI Note Editing',
+        description:
+          'Fixed an issue where clicking "Apply Changes" on large documents with multiple headings or paragraphs would occasionally fail. Mimo now matches and updates complex document sections smoothly without touching unrelated text.',
+        badge: 'Reliable Edits',
+      },
+      {
+        type: 'fixed',
+        title: 'Accurate Workspace Storage Meter',
+        description:
+          'Permanently deleting notes now immediately reduces your storage counter. The storage gauge now focuses solely on your actual notes, revisions, and images rather than temporary browser cache files.',
+        badge: 'Instant Cleanup',
+      },
+      {
+        type: 'added',
+        title: 'Multi-Device Deletion Review',
+        description:
+          'When you delete a document on your home computer, opening your laptop or phone no longer accidentally restores it. The app now asks if you want to delete it everywhere, keep it as an offline-only note, or restore it to all devices.',
+        badge: 'Cross-Device',
+      },
+      {
+        type: 'performance',
+        title: 'Automatic Cleanup for Deleted Photos',
+        description:
+          'When you permanently delete a note containing images, those embedded images are now automatically removed from your local storage so your device stays clean and fast.',
+        badge: 'Zero Leftovers',
+      },
+    ],
+  },
+  {
     version: '2.2.0',
     versionLabel: 'v2.2.0',
     date: 'November 9, 2026',
     title: 'Faster Startup, Calmer Design & Smarter Suggestions',
     summary:
       'This update cleans up the entire workspace for a faster, distraction-free writing experience. The app opens noticeably quicker, pages load with instant previews, and Mimo now remembers the writing tasks you use most.',
-    tag: 'Latest',
+    tag: 'Stable',
     metrics: [
       { label: 'App Startup', value: 'Opens Instantly' },
       { label: 'Page Transitions', value: 'Instant Previews' },

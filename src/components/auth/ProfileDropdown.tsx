@@ -253,6 +253,11 @@ export const ProfileDropdown: React.FC = () => {
       <StorageDetailsModal
         isOpen={isStorageModalOpen}
         onClose={() => setIsStorageModalOpen(false)}
+        onStorageChanged={() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('md-writer-storage-changed'));
+          }
+        }}
       />
 
       {/* Bespoke Character Avatar Selection Modal */}

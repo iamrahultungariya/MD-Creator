@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { APP_VERSION_LABEL } from '../../config/version';
+import { APP_VERSION_LABEL, MIMO_VERSION } from '../../config/version';
 import { useUpdateModalStore } from '../../stores/useUpdateModalStore';
 
 interface UpdateSection {
@@ -235,7 +235,7 @@ export const UpdateAvailableModal: React.FC = () => {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-brand-700 dark:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/25 transition-colors cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
-            Meet Mimo 2.2.0
+            Meet Mimo {MIMO_VERSION}
           </button>
 
           <div className="w-full sm:w-auto flex items-center justify-end gap-2.5">

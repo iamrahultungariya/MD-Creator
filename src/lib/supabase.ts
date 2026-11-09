@@ -424,7 +424,7 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
       if (d.id === 'doc-getting-started' && d.tags?.includes('Guide')) return false;
       if (isDocumentLocalOnly(d.id)) return false;
       if (conflictingIds.has(d.id)) return false; // Never push during deletion conflict
-      if (d.isDeleted && !d.cloudSynced) return false;
+      if (d.isDeleted) return false;
 
       const cloudTime = cloudMap.get(d.id);
       // If doc was already synced before (cloudSynced: true) but missing from cloud,

@@ -198,6 +198,19 @@ function queueQueryInvalidation(queryKey: string) {
 }
 
 /**
+ * Dispatches a lightweight window event to immediately notify reactive storage meters
+ * across the application (navbar, profile dropdown, preferences, storage modal)
+ * without waiting for full page reloads.
+ */
+export function dispatchStorageChangedEvent(): void {
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent('md-writer-storage-changed'));
+    } catch {}
+  }
+}
+
+/**
  * P2: Microtask-batched, scoped query invalidation engine.
  * Coalesces rapid sequential DB operations (e.g. bulk delete, multiple saves)
  * into a single unified query refresh, eliminating redundant network/IndexedDB waterfalls.
@@ -205,6 +218,7 @@ function queueQueryInvalidation(queryKey: string) {
 export function notifyDocumentStoreChanged(docId?: string, scope: InvalidationScope = 'all'): void {
   try {
     queueQueryInvalidation('documents');
+    dispatchStorageChangedEvent();
 
     if (scope === 'pin') {
       return;
@@ -213,6 +227,7 @@ export function notifyDocumentStoreChanged(docId?: string, scope: InvalidationSc
     if (scope === 'trash') {
       queueQueryInvalidation('active-document-count');
       queueQueryInvalidation('trash-count');
+      queueQueryInvalidation('storage-stats');
       return;
     }
 
@@ -341,15 +356,15 @@ export async function deleteDocument(id: string, permanent = false): Promise<voi
       await db.document_cache.delete(id);
       await db.revisions.where('documentId').equals(id).delete();
     });
+    notifyDocumentStoreChanged(id, 'all');
   } else {
     await db.documents.update(id, {
       isDeleted: true,
       deletedAt: Date.now(),
       updatedAt: Date.now()
     });
+    notifyDocumentStoreChanged(id, 'trash');
   }
-
-  notifyDocumentStoreChanged(id, 'trash');
 }
 
 /**
@@ -362,7 +377,7 @@ export async function restoreDocument(id: string): Promise<void> {
     updatedAt: Date.now()
   });
 
-  notifyDocumentStoreChanged(id, 'trash');
+  notifyDocumentStoreChanged(id, 'all');
 }
 
 /**
@@ -447,7 +462,7 @@ export async function emptyTrash(): Promise<number> {
     }
   });
 
-  notifyDocumentStoreChanged(undefined, 'trash');
+  notifyDocumentStoreChanged(undefined, 'all');
   return ids.length;
 }
 
@@ -698,34 +713,115 @@ export async function calculateVaultStorageBreakdown(): Promise<VaultStorageMetr
   const allDocs = await db.documents.toArray();
   const activeDocs = allDocs.filter((d) => !d.isDeleted);
   const trashedDocs = allDocs.filter((d) => Boolean(d.isDeleted));
+  const existingDocIdSet = new Set(allDocs.map((d) => d.id));
+  const activeDocIdSet = new Set(activeDocs.map((d) => d.id));
 
   let activeBytes = 0;
   for (const doc of activeDocs) {
-    activeBytes += doc.sizeBytes || 0;
+    let size = doc.sizeBytes;
+    if (size === undefined || size === null || size <= 0) {
+      try {
+        const cached = await db.document_cache.get(doc.id);
+        if (cached?.content) {
+          size = new Blob([cached.content]).size;
+          db.documents.update(doc.id, { sizeBytes: size }).catch(() => {});
+        } else if (doc.snippet) {
+          size = new Blob([doc.snippet]).size;
+        } else {
+          size = 0;
+        }
+      } catch {
+        size = 0;
+      }
+    }
+    activeBytes += size;
   }
 
   let trashedBytes = 0;
   for (const doc of trashedDocs) {
-    trashedBytes += doc.sizeBytes || 0;
+    let size = doc.sizeBytes;
+    if (size === undefined || size === null || size <= 0) {
+      try {
+        const cached = await db.document_cache.get(doc.id);
+        if (cached?.content) {
+          size = new Blob([cached.content]).size;
+          db.documents.update(doc.id, { sizeBytes: size }).catch(() => {});
+        } else if (doc.snippet) {
+          size = new Blob([doc.snippet]).size;
+        } else {
+          size = 0;
+        }
+      } catch {
+        size = 0;
+      }
+    }
+    trashedBytes += size;
   }
 
   const allRevisions = await db.revisions.toArray();
+  const orphanedRevIds: number[] = [];
   let revisionBytes = 0;
+  let activeRevisionCount = 0;
+
   for (const rev of allRevisions) {
-    revisionBytes += (rev.storedSizeBytes && rev.storedSizeBytes > 0)
+    if (!existingDocIdSet.has(rev.documentId)) {
+      if (typeof rev.id === 'number') {
+        orphanedRevIds.push(rev.id);
+      }
+      continue;
+    }
+
+    const size = (rev.storedSizeBytes && rev.storedSizeBytes > 0)
       ? rev.storedSizeBytes
       : rev.deltaData
       ? new Blob([rev.deltaData]).size
       : new Blob([rev.content || '']).size;
+
+    if (activeDocIdSet.has(rev.documentId)) {
+      revisionBytes += size;
+      activeRevisionCount++;
+    } else {
+      // Revisions of trashed docs belong to trashed quota
+      trashedBytes += size;
+    }
+  }
+
+  // Self-heal: automatically purge any orphaned revisions whose document was deleted
+  if (orphanedRevIds.length > 0) {
+    db.revisions.bulkDelete(orphanedRevIds).catch(() => {});
   }
 
   const allImages = await db.images.toArray();
   let imageBytes = 0;
-  for (const img of allImages) {
-    imageBytes += img.sizeBytes || 0;
+  let activeImageCount = 0;
+  if (allImages.length > 0) {
+    const allCached = await db.document_cache.toArray();
+    const activeCachedContent = allCached.filter((c) => activeDocIdSet.has(c.id)).map((c) => c.content).join(' ');
+    const trashedCachedContent = allCached.filter((c) => !activeDocIdSet.has(c.id)).map((c) => c.content).join(' ');
+
+    const orphanedImageIds: string[] = [];
+    for (const img of allImages) {
+      const isReferencedInActive = activeCachedContent.includes(img.id);
+      const isReferencedInTrash = trashedCachedContent.includes(img.id);
+
+      if (!isReferencedInActive && !isReferencedInTrash) {
+        orphanedImageIds.push(img.id);
+      } else if (isReferencedInActive) {
+        imageBytes += img.sizeBytes || 0;
+        activeImageCount++;
+      } else {
+        trashedBytes += img.sizeBytes || 0;
+      }
+    }
+
+    if (orphanedImageIds.length > 0) {
+      db.images.bulkDelete(orphanedImageIds).catch(() => {});
+    }
   }
 
-  const vaultBytes = activeBytes + trashedBytes + revisionBytes + imageBytes;
+  // Active workspace storage strictly tracks active notes, active revisions, and images.
+  // Trashed notes are accounted for under trashedBytes, so moving a note to Trash immediately frees storage.
+  const vaultBytes = activeBytes + revisionBytes + imageBytes;
 
   let browserEstimateBytes = 0;
   if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
@@ -740,9 +836,9 @@ export async function calculateVaultStorageBreakdown(): Promise<VaultStorageMetr
     activeBytes,
     trashedCount: trashedDocs.length,
     trashedBytes,
-    revisionCount: allRevisions.length,
+    revisionCount: activeRevisionCount,
     revisionBytes,
-    imageCount: allImages.length,
+    imageCount: activeImageCount,
     imageBytes,
     vaultBytes,
     browserEstimateBytes,

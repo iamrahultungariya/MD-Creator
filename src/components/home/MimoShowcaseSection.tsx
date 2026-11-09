@@ -54,7 +54,7 @@ export const MimoShowcaseSection: React.FC = () => {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80">
-            <span>MEET MIMO • VERSION 2.2.0</span>
+            <span>MEET MIMO • VERSION 2.2.1</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em] leading-tight">
             An AI companion built for writers, not chatbots.

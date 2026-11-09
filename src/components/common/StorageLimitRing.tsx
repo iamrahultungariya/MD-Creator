@@ -53,8 +53,18 @@ export function useWorkspaceStorage(): StorageUsageData {
     }
 
     calculateUsage();
+
+    const handleStorageUpdate = () => {
+      calculateUsage();
+    };
+
+    window.addEventListener('md-writer-storage-changed', handleStorageUpdate);
+    window.addEventListener('storage', handleStorageUpdate);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('md-writer-storage-changed', handleStorageUpdate);
+      window.removeEventListener('storage', handleStorageUpdate);
     };
   }, []);
 
@@ -270,6 +280,11 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
       <StorageDetailsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onStorageChanged={() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('md-writer-storage-changed'));
+          }
+        }}
       />
     </>
   );

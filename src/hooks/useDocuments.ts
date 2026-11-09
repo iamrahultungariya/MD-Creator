@@ -13,7 +13,8 @@ import {
   duplicateDocument,
   togglePinDocument, 
   getStorageStats,
-  renameDocument
+  renameDocument,
+  dispatchStorageChangedEvent
 } from '../db';
 import { 
   pullCloudDocuments, 
@@ -247,9 +248,8 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
       await deleteDocument(id, permanent);
-      if (permanent) {
-        markTombstoneResolved(id, Date.now());
-      }
+      markTombstoneResolved(id, Date.now());
+      dispatchStorageChangedEvent();
       if (isSupabaseConfigured()) {
         if (permanent) {
           deleteDocumentFromSupabase(id).catch(console.warn);
@@ -265,6 +265,7 @@ export function useRestoreDocument() {
   return useMutation({
     mutationFn: async (id: string) => {
       await restoreDocument(id);
+      dispatchStorageChangedEvent();
       if (isSupabaseConfigured()) {
         syncDocumentTrashToSupabase(id, false).catch(console.warn);
       }
@@ -284,6 +285,7 @@ export function useEmptyTrash() {
       for (const id of ids) {
         markTombstoneResolved(id, now);
       }
+      dispatchStorageChangedEvent();
 
       if (isSupabaseConfigured()) {
         for (const id of ids) {

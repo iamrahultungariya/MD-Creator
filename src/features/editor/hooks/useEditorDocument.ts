@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { 
   db, 
   saveDocument, 
+  deleteDocument,
   getDocumentContent, 
   createNewDocument, 
   createRevisionSnapshot, 
   DocumentMetadata 
 } from '../../../db';
 import { IDLE_COALESCE_MS } from '../../../utils/deltaCompression';
-import { syncDocumentToSupabase, isSupabaseConfigured, supabase } from '../../../lib/supabase';
+import { syncDocumentToSupabase, deleteDocumentFromSupabase, isSupabaseConfigured, supabase } from '../../../lib/supabase';
+import { markTombstoneResolved } from '../../../stores/useCrossDeviceConflictStore';
 import { useConfirm } from '../../../stores/useConfirmStore';
 import { MarkdownTemplate } from '../../../data/templates';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
@@ -362,12 +364,22 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     });
 
     if (ok) {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+      isSavedRef.current = true; // Crucial: prevents unmount hook from resurrecting deleted doc!
+
       removeDocFromOfflineQueue(docId);
       try {
         localStorage.removeItem(`md-writer-offline-backup-${docId}`);
       } catch {}
-      await db.documents.delete(docId);
-      await db.document_cache.delete(docId);
+
+      await deleteDocument(docId, true);
+      markTombstoneResolved(docId, Date.now());
+
+      if (isSupabaseConfigured()) {
+        deleteDocumentFromSupabase(docId).catch(console.warn);
+      }
+
       navigate('/documents');
     }
   }, [confirm, docId, title, navigate]);
