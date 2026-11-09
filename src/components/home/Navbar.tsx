@@ -10,7 +10,8 @@ import {
   Menu, 
   X,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  History
 } from 'lucide-react';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -43,6 +44,17 @@ interface ResourceItem {
 }
 
 const RESOURCE_ITEMS: ResourceItem[] = [
+  {
+    id: 'changelog',
+    title: 'Changelog',
+    desc: 'Release history, new features & fixes',
+    badge: APP_VERSION_LABEL,
+    icon: History,
+    iconColor: 'text-indigo-600 dark:text-indigo-400',
+    iconBg: 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200/40 dark:border-indigo-900/40',
+    path: '/changelog',
+    action: ({ navigate }) => navigate('/changelog')
+  },
   {
     id: 'templates',
     title: 'Starter Templates',
@@ -193,7 +205,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           <button
             onClick={(e) => {
               e.stopPropagation();
-              window.dispatchEvent(new CustomEvent('open-update-modal'));
+              navigate('/changelog');
             }}
             className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 hover:bg-brand-500/20 hover:border-brand-500/40 transition-colors cursor-pointer"
             title={`View what's new in ${APP_VERSION_LABEL}`}

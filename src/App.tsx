@@ -19,6 +19,7 @@ const AuthPage = React.lazy(() => import('./pages/AuthPage').then((m) => ({ defa
 const FeedbackPage = React.lazy(() => import('./pages/FeedbackPage').then((m) => ({ default: m.FeedbackPage })));
 const PublicDocumentPage = React.lazy(() => import('./pages/PublicDocumentPage').then((m) => ({ default: m.PublicDocumentPage })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
+const ChangelogPage = React.lazy(() => import('./pages/ChangelogPage').then((m) => ({ default: m.ChangelogPage })));
 
 // Lazy-loaded global utility modals
 const GlobalConfirmDialog = React.lazy(() =>
@@ -81,8 +82,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/showcase" element={<Navigate to="/" replace />} />
           <Route path="/record" element={<Navigate to="/" replace />} />
           <Route path="/studio" element={<Navigate to="/" replace />} />
-          <Route path="/updates" element={<Navigate to="/" replace />} />
-          <Route path="/changelog" element={<Navigate to="/" replace />} />
+          <Route path="/changelog" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><ChangelogPage /></Suspense></PageTransition>} />
+          <Route path="/updates" element={<Navigate to="/changelog" replace />} />
           <Route path="/about" element={<Navigate to="/" replace />} />
           <Route path="/pricing" element={<Navigate to="/" replace />} />
           <Route path="/blog" element={<Navigate to="/" replace />} />

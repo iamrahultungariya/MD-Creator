@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   HardDrive, 
@@ -13,10 +14,9 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { APP_VERSION_LABEL } from '../../config/version';
-import { useUpdateModalStore } from '../../stores/useUpdateModalStore';
 
 export const RoadmapSection: React.FC = () => {
-  const { openUpdate } = useUpdateModalStore();
+  const navigate = useNavigate();
 
   const releaseFeatures = [
     {
@@ -93,7 +93,7 @@ export const RoadmapSection: React.FC = () => {
           </h2>
 
           <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Re-engineered for ambient AI companion intelligence, zero-guesswork interactive clarification, and surgical section editing.
+            Re-engineered with studio craftsmanship, font payload optimization, Mimo task preference scoreboard, and row-wise suggestions.
           </p>
         </div>
 
@@ -120,7 +120,7 @@ export const RoadmapSection: React.FC = () => {
             </div>
 
             <button
-              onClick={openUpdate}
+              onClick={() => navigate('/changelog')}
               className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700 transition-colors cursor-pointer shadow-2xs group"
             >
               <Sparkles className="w-3.5 h-3.5 text-neutral-500" />

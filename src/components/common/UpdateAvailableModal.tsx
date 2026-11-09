@@ -48,71 +48,59 @@ export const UpdateAvailableModal: React.FC = () => {
 
   const sections: UpdateSection[] = [
     {
-      id: 'mimo_states',
-      title: 'Mimo Mascot & 30s Auto-Sleep',
-      tag: 'Ambient AI',
+      id: 'studio_craftsmanship',
+      title: 'Studio Craftsmanship & Anti-AI Slop UI',
+      tag: 'Bespoke UI',
       items: [
-        'Intelligent 30-second idle inactivity auto-sleep mode with gentle floating animations',
-        'Instant wake-up whenever you hover, click, or begin typing in Mimo',
-        'Real-time state transitions: Thinking → Typing → Excited (on diffs) → Happy',
-        'Dynamic chat message avatars reflecting live assistant state rather than static icons',
+        'Purged decorative icon bloat from all buttons, modals, and feature cards',
+        'Eliminated glassmorphism blurs and glowing gradients in favor of crisp 1px borders and flat surfaces',
+        'Standardized the entire interface on high-contrast Geist Sans and Geist Mono typography',
       ],
     },
     {
-      id: 'clarification',
-      title: 'Interactive Clarification Cards',
-      tag: 'Zero Guesswork',
+      id: 'perf_skeletons',
+      title: 'Font Purge & Universal Route Skeletons',
+      tag: 'Performance',
       items: [
-        'Never guess blindly: Mimo asks targeted multi-choice questions on ambiguous requests',
-        '3 tailored options with radio or checkbox selection for tone, audience, and depth',
-        '4th free-write field to enter your own custom notes and specific constraints',
-        'One-click "Continue & Generate" passes answers directly to produce accurate output',
+        'Purged 115 KB of dead Google web font requests from cold-start payload',
+        'Replaced heavy 3D physics loader with lightweight, instant route skeletons for every page',
+        'Reduced full production build time from over 2 minutes down to 39 seconds',
       ],
     },
     {
-      id: 'settings_popover',
-      title: 'Anchored Controls & Token Optimization',
-      tag: 'Cost & Speed',
+      id: 'mimo_scoreboard',
+      title: 'Mimo Task Preference Scoreboard',
+      tag: 'Local-First AI',
       items: [
-        'Replaced legacy Enhance button with a sleek Settings icon button right on the input dock',
-        'Pop-up menu opens directly anchored above the button without background blur or modal overlays',
-        'Show Thinking toggle (off by default) to slash token consumption and speed up responses',
-        'Google Web Search Grounding toggle for real-time facts and live reference citations',
+        'Local-first Dexie IndexedDB task tracking with zero-token regex/stemming classifier',
+        '10-second inactivity debounced push to Supabase with atomic conflict resolution',
+        'Automatic synonym deduplication to keep task weights fast and organized',
       ],
     },
     {
-      id: 'section_surgeon',
-      title: 'AST Section Surgeon',
-      tag: 'Scoped Editing',
+      id: 'suggestions_slash',
+      title: 'Row-Wise Suggestions & Clean Slash Popover',
+      tag: 'Ergonomics',
       items: [
-        'Targeted section edits: modifies only the active heading without touching the rest of your note',
-        'Respects document hierarchy, KaTeX math formulas, frontmatter, and footnotes',
-        'Maintains global outline context while eliminating 80% of unnecessary rewrite tokens',
+        'Replaced bulky 2-column cards with exactly 3 row-wise suggestions on empty state',
+        'Anchored exactly 2 contextual follow-up pills directly above the input dock during active chat',
+        'Text-only / quick actions popover with arrow key navigation and zero icon clutter',
       ],
     },
     {
-      id: 'diff_preview',
-      title: 'Modern Minimal Diff Preview',
-      tag: 'GitHub & Linear Style',
+      id: 'clarification_memory',
+      title: 'Clarification Cards & /compact Memory',
+      tag: 'Productivity',
       items: [
-        'Redesigned dual-column line-numbered diff gutter inspired by GitHub and Linear',
-        'Soft emerald and rose inline tints for effortless visual comparison',
-        'One-click "Copy proposed text" and "Apply Changes" with instant editor synchronization',
-      ],
-    },
-    {
-      id: 'feedback',
-      title: 'Feedback & Bug Reporting',
-      tag: 'Community',
-      items: [
-        'Found a bug or have an idea? Share your thoughts on our Feedback page to shape future updates!',
-        'Continuous weekly updates shaping MD Writer into the fastest markdown workspace',
+        'Interactive questions on ambiguous prompts to eliminate guesswork before generating',
+        'AST section surgeon modifying only the active section without touching surrounding content',
+        '/compact command condensing long chat conversations into lightweight episodic memory',
       ],
       actionLink: {
-        label: 'Open Feedback Page →',
+        label: 'View Full Changelog & Release Notes →',
         onClick: () => {
           closeUpdate();
-          navigate('/feedback');
+          navigate('/changelog');
         },
       },
     },
@@ -159,7 +147,7 @@ export const UpdateAvailableModal: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-                A new version is ready with intelligent Mimo state transitions, interactive clarification, and minimal diffing.
+                A major update is ready with studio-grade craftsmanship, font payload optimization, Mimo task preference scoreboard, and row-wise suggestions.
               </p>
             </div>
 
@@ -247,7 +235,7 @@ export const UpdateAvailableModal: React.FC = () => {
             className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-brand-700 dark:text-brand-300 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/25 transition-colors cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
-            Meet Mimo 2.1.0 ✦
+            Meet Mimo 2.2.0
           </button>
 
           <div className="w-full sm:w-auto flex items-center justify-end gap-2.5">
@@ -258,10 +246,13 @@ export const UpdateAvailableModal: React.FC = () => {
               Later
             </button>
             <button
-              onClick={closeUpdate}
-              className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 active:scale-[0.98] shadow-md shadow-brand-500/25 transition-all cursor-pointer"
+              onClick={() => {
+                closeUpdate();
+                navigate('/changelog');
+              }}
+              className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] transition-all cursor-pointer"
             >
-              Explore {APP_VERSION_LABEL}
+              View Full Changelog
             </button>
           </div>
         </div>

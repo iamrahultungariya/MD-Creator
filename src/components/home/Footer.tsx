@@ -59,14 +59,16 @@ export const Footer: React.FC<FooterProps> = () => {
               <Link to="/feedback" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 Feedback
               </Link>
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-update-modal'))}
+              <Link to="/changelog" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
+                Changelog
+              </Link>
+              <Link
+                to="/changelog"
                 className="px-2 py-0.5 rounded-full font-mono text-[10px] bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold border border-brand-500/20 hover:bg-brand-500/20 transition-colors cursor-pointer"
                 title={`View what's new in ${APP_VERSION_LABEL}`}
               >
                 {APP_VERSION_LABEL}
-              </button>
+              </Link>
               <button 
                 type="button" 
                 onClick={() => setIsLegalOpen(true)} 
