@@ -24,65 +24,65 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
     version: '2.2.0',
     versionLabel: 'v2.2.0',
     date: 'November 9, 2026',
-    title: 'Studio Craftsmanship, Anti-AI Slop UI & Mimo Preference Scoreboard',
+    title: 'Faster Startup, Calmer Design & Smarter Suggestions',
     summary:
-      'A comprehensive engineering overhaul eliminating decorative AI design tropes, purging unused font payloads, introducing modular route skeletons, and deploying an adaptive task preference scoreboard for Mimo.',
+      'This update cleans up the entire workspace for a faster, distraction-free writing experience. The app opens noticeably quicker, pages load with instant previews, and Mimo now remembers the writing tasks you use most.',
     tag: 'Latest',
     metrics: [
-      { label: 'Cold-start payload cut', value: '-115 KB' },
-      { label: 'Production build time', value: '39.1s' },
-      { label: 'Slash menu icons', value: '0 (Pure text)' },
-      { label: 'Cloud sync idle debounce', value: '10s' },
+      { label: 'App Startup', value: 'Opens Instantly' },
+      { label: 'Page Transitions', value: 'Instant Previews' },
+      { label: 'Visual Design', value: 'Calm & Minimal' },
+      { label: 'Cloud Backup', value: 'Automatic & Silent' },
     ],
     items: [
       {
         type: 'performance',
-        title: 'Purged Dead Web Font Requests',
+        title: 'Faster Page Load Times',
         description:
-          'Eliminated redundant Plus Jakarta Sans and Caveat font links from index.html. Standardized the entire application on Geist Sans for crisp UI controls and Geist Mono for code/tabular numbers.',
-        badge: '-115 KB',
+          'Cleaned up unused background fonts so the app opens noticeably faster on both desktop and mobile, especially over cellular or slower networks.',
+        badge: 'Faster Load',
       },
       {
         type: 'changed',
-        title: 'Universal Modular Route Skeletons',
+        title: 'Instant Screen Previews',
         description:
-          'Retired the 518-line 3D physics PageLoader. Replaced with lightweight, instant skeleton states tailored for each route (Home, Documents, Editor, Admin, Auth, Feedback), eliminating layout shifts and initial lag.',
-        badge: 'Zero CLS',
+          'Replaced the old spinning loading screen with instant skeleton previews. Switching between your notes, settings, and documents now feels instant and smooth.',
+        badge: 'Smooth Feel',
       },
       {
         type: 'added',
-        title: 'Mimo Task Preference Scoreboard',
+        title: 'Mimo Learns Your Writing Habits',
         description:
-          'Implemented a local-first Dexie IndexedDB system (mimo_task_scoreboard.md). Automatically tracks operation frequencies (summarization, tables, grammar polish) upon task completion with zero-token regex classification.',
-        badge: 'Local-First',
+          'Mimo quietly notices what you ask for most—such as quick summaries, comparison tables, or proofreading—and puts those suggestions first so you spend less time typing prompts.',
+        badge: 'Personalized',
       },
       {
         type: 'added',
-        title: 'Supabase Scoreboard Sync & Atomic RPC',
+        title: 'Seamless Device Sync',
         description:
-          'Added public.mimo_task_scores table with GREATEST() conflict resolution. Features 10-second inactivity debounced push and cross-device hydration on login with strict Row Level Security (RLS).',
-        badge: 'Postgres RPC',
+          'Your learned writing shortcuts and preferences automatically sync across your laptop, tablet, and phone in the background without any manual steps.',
+        badge: 'Multi-Device',
       },
       {
         type: 'changed',
-        title: 'Dynamic Row-Wise Suggestions (3 vs 2 Rule)',
+        title: 'Compact, Helpful Suggestions',
         description:
-          'Purged bulky 2-column cards and giant hero blocks from Mimo. Initial empty state now provides exactly 3 compact row-wise buttons based on document analysis, while active chat displays 2 contextual follow-up pills anchored above the dock.',
-        badge: 'Ergonomic',
+          'Replaced bulky suggestion boxes with neat, single-line recommendation chips anchored right above the chat bar, giving you quick actions based on your current note.',
+        badge: 'Clean Workspace',
       },
       {
         type: 'removed',
-        title: 'Decorative Icon Purge (Anti-AI Slop)',
+        title: 'Distraction-Free Visuals',
         description:
-          'Removed non-functional decorative icons from the Editor slash command menu and Mimo input dock. Replaced with high-contrast typography, category headers, and tactile keyboard shortcut tags.',
-        badge: 'Studio UI',
+          'Cleaned up flashy neon colors, busy icon boxes, and visual clutter across menus and buttons, leaving a calm, studio-grade writing space focused on your words.',
+        badge: 'Focused',
       },
       {
         type: 'added',
-        title: 'Mimo Text-Only Slash Quick Actions',
+        title: 'Quick Slash Commands (/)',
         description:
-          'Introduced an inline / popover within Mimo prompt textarea supporting keyboard navigation (Arrow keys, Enter to execute, Escape to dismiss) for /summarize, /polish, /table, /compact, and /clean-md.',
-        badge: 'Keyboard Fast',
+          'Type "/" inside Mimo\'s prompt box or the editor to instantly see shortcuts for summarizing, generating tables, cleaning markdown notes, and polishing prose.',
+        badge: 'Shortcuts',
       },
     ],
   },
@@ -90,57 +90,57 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
     version: '2.1.0',
     versionLabel: 'v2.1.0',
     date: 'October 31, 2026',
-    title: 'Intelligent Clarification, Scoped AST Surgeon & Context Compaction',
+    title: 'Clearer AI Suggestions, Focused Edits & Conversation Cleanup',
     summary:
-      'Introduced interactive clarification questions to eliminate ambiguous prompts, AST-based section edits, Mimo ambient sleeping states, and conversation memory compaction.',
+      'Mimo now asks clarifying questions before writing so you get exactly what you want, edits specific sections without altering the rest of your note, and lets you clean up chat history with a single command.',
     tag: 'Stable',
     metrics: [
-      { label: 'Token savings on edits', value: 'Up to 80%' },
-      { label: 'Inactivity auto-sleep', value: '30s' },
-      { label: 'Chat turns per compaction', value: '14+ turns' },
+      { label: 'Prompt Clarity', value: 'Zero Guesswork' },
+      { label: 'Edit Precision', value: 'Section by Section' },
+      { label: 'Idle AI State', value: 'Sleeps When Idle' },
     ],
     items: [
       {
         type: 'added',
-        title: 'Interactive Clarification Cards',
+        title: 'Helpful Clarification Questions',
         description:
-          'Mimo automatically detects ambiguous requests and renders targeted multi-choice questions with 3 curated options plus a custom text field before generating output, eliminating guesswork.',
-        badge: 'Zero Guesswork',
+          'When a request could be interpreted in multiple ways, Mimo asks a quick multiple-choice question to confirm your preferred tone, audience, and detail level before writing.',
+        badge: 'Clear Results',
       },
       {
         type: 'added',
-        title: 'AST Section Surgeon',
+        title: 'Section-Only Editing',
         description:
-          'Scoped markdown transformer modifies only the active heading section without touching or re-generating the rest of your note, keeping document hierarchy intact and saving rewrite tokens.',
-        badge: 'Token Saver',
+          'Ask Mimo to revise just a specific heading or paragraph without worrying that it will change or re-write the rest of your document.',
+        badge: 'Safe Edits',
       },
       {
         type: 'added',
-        title: 'Mimo Ambient Sleep & Activity States',
+        title: 'Quiet Presence When Inactive',
         description:
-          'Ambient 30-second inactivity auto-sleep mode with gentle breathing animation. Wakes up instantly on cursor hover or typing, with real-time mascot transitions (Thinking, Typing, Excited, Happy).',
-        badge: 'Ambient AI',
+          'Mimo gently rests when you pause writing and wakes up the moment you move your mouse or start typing, keeping your screen peaceful while you focus.',
+        badge: 'Quiet Presence',
       },
       {
         type: 'added',
-        title: '/compact Conversational Compaction',
+        title: 'One-Click Chat Cleanup (/compact)',
         description:
-          'Executes high-density episodic memory extraction, distilling extended conversational turns into persistent summary bullets while resetting chat history footprint for maximum speed.',
-        badge: 'Memory Engine',
+          'Type /compact anytime to condense long conversations into a neat summary, keeping Mimo fast, responsive, and lightweight during long writing sessions.',
+        badge: 'Chat Cleanup',
       },
       {
         type: 'changed',
-        title: 'Minimal Dual-Column Diff Viewer',
+        title: 'Side-by-Side Change Review',
         description:
-          'Redesigned line-numbered diff gutter inspired by GitHub and Linear. Soft emerald and rose inline tints for effortless review with one-click non-destructive diff application.',
-        badge: 'Clean Diff',
+          'Inspect proposed text edits with clear green and red highlighted lines so you can review every change before accepting it into your note.',
+        badge: 'Visual Preview',
       },
       {
         type: 'added',
-        title: 'Anchored Dock Settings Popover',
+        title: 'Quick Generation Settings',
         description:
-          'Replaced modal dialogues with a tactile anchored popover on the input dock. Direct access to Thinking budget toggles and Google Search Grounding without blocking screen view.',
-        badge: 'Anchored',
+          'Easily adjust how deeply Mimo reasons and toggle live web search on or off right from a tidy popover directly above the input bar.',
+        badge: 'Customizable',
       },
     ],
   },
@@ -148,56 +148,56 @@ export const CHANGELOG_RELEASES: ChangelogRelease[] = [
     version: '2.0.0',
     versionLabel: 'v2.0.0',
     date: 'October 12, 2026',
-    title: 'MD Writer 2.0 — Offline-First Engine, Supabase Realtime & Pure Gemini',
+    title: 'The All-New MD Writer — Offline First, Instant Backup & Built-In AI',
     summary:
-      'The foundational 2.0 release delivering 100% free offline writing with Dexie IndexedDB local caching, Supabase Postgres cloud synchronization, pure Gemini BYOK streaming, and mathematical formula authoring.',
+      'A major milestone built from the ground up: complete offline writing freedom, automatic cloud sync, direct Google Gemini AI pair-writing, and visual math and table creators.',
     tag: 'Major',
     metrics: [
-      { label: 'Typing latency', value: '0 ms' },
-      { label: 'Offline capacity', value: 'Unlimited' },
-      { label: 'Gemini Models', value: '3.5 Lite, 3.5 & 3.8' },
+      { label: 'Typing Feel', value: 'Zero Lag' },
+      { label: 'Offline Access', value: '100% Free & Local' },
+      { label: 'AI Models', value: 'Gemini 3.5 & 3.8' },
     ],
     items: [
       {
         type: 'added',
-        title: 'Dual-Layer Offline & Cloud Architecture',
+        title: 'Write Anywhere Offline',
         description:
-          'Instant 0ms local reads and writes powered by Dexie IndexedDB. Background non-blocking sync to Supabase Postgres with offline queueing and cross-device reconciliation.',
-        badge: 'Offline-First',
+          'Every keystroke saves immediately on your computer. You can write on a train, plane, or without internet, and your notes will automatically backup to the cloud as soon as you reconnect.',
+        badge: 'Offline Capable',
       },
       {
         type: 'added',
-        title: 'Pure Gemini BYOK Streaming Integration',
+        title: 'Direct Google Gemini Writing Assistant',
         description:
-          'Direct client-side streaming using the official @google/genai SDK. Zero intermediary backend hops, full rate limit transparency, and customizable reasoning depth (Auto, Low, Medium, High).',
-        badge: 'Official SDK',
+          'Fast, real-time AI assistance built right in. Choose between fast pair-writing or deeper reflection for complex essays and technical docs.',
+        badge: 'Direct Streaming',
       },
       {
         type: 'added',
-        title: 'KaTeX Math Studio & Formula Builder',
+        title: 'Interactive Math & Equation Editor',
         description:
-          'Integrated KaTeX math studio supporting inline math ($...$) and display formulas ($$...$$). Includes auto-shorthand conversion, matrix templates, and live visual preview.',
-        badge: 'KaTeX Engine',
+          'Write beautiful mathematical formulas and scientific symbols with live visual previews as you type.',
+        badge: 'Math & Science',
       },
       {
         type: 'added',
-        title: 'Interactive Table Generator',
+        title: 'Spreadsheet-Friendly Table Creator',
         description:
-          'Visual spreadsheet-like table creator with paste-from-Excel support, automatic GFM alignment, and dynamic row/column insertion.',
-        badge: 'GFM Tables',
+          'Create clean formatted tables with a visual grid, or paste data directly from Excel or Google Sheets.',
+        badge: 'Tables',
       },
       {
         type: 'added',
-        title: 'Cross-Device Deletion & Supabase Realtime',
+        title: 'Automatic Multi-Device Backup',
         description:
-          'Full replica identity broadcast synchronization across browser tabs and devices, ensuring soft-deletions and restores propagate instantly.',
-        badge: 'Realtime Sync',
+          'Your notes, revisions, and favorites automatically sync across all your devices, so you can pick up right where you left off.',
+        badge: 'Cloud Backup',
       },
       {
         type: 'added',
-        title: 'Community Feedback & Moderation Hub',
+        title: 'Feedback & Ideas Portal',
         description:
-          'Integrated bug reporting, feature suggestions, and sentiment tracking with administrative moderation panel and real-time status management.',
+          'Share feedback, request new features, or report bugs directly inside the app to help shape the future of MD Writer.',
         badge: 'Community',
       },
     ],

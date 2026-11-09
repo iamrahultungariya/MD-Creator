@@ -61,25 +61,25 @@ export const ChangelogPage: React.FC = () => {
       case 'added':
         return (
           <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
-            Added
+            New
           </span>
         );
       case 'performance':
         return (
           <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80">
-            Performance
+            Speed
           </span>
         );
       case 'changed':
         return (
           <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/80">
-            Changed
+            Improved
           </span>
         );
       case 'removed':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold bg-rose-50 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/80">
-            Removed
+          <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700/80">
+            Simplified
           </span>
         );
       case 'fixed':
@@ -117,7 +117,7 @@ export const ChangelogPage: React.FC = () => {
           </div>
 
           <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-            Detailed, chronologically ordered records of every feature shipped, font payload purged, and performance optimization delivered across MD Writer.
+            A chronological record of new writing features, speed improvements, and workspace enhancements across MD Writer.
           </p>
 
           {/* Quick Version Anchor Jump Links */}
@@ -143,9 +143,9 @@ export const ChangelogPage: React.FC = () => {
             {(
               [
                 { id: 'all', label: 'All Updates' },
-                { id: 'added', label: 'Features' },
-                { id: 'performance', label: 'Performance' },
-                { id: 'changed', label: 'Refinements' },
+                { id: 'added', label: 'New Features' },
+                { id: 'performance', label: 'Speed & Polish' },
+                { id: 'changed', label: 'Improvements' },
               ] as const
             ).map((tab) => {
               const isSelected = selectedFilter === tab.id;
