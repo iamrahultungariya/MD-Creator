@@ -12,6 +12,7 @@ import { streamMimoResponse } from '../services/mimoGeminiService';
 import { telemetryService } from '../../../services/telemetryService';
 import { fetchPinnedDocReferences, formatPinnedDocsPromptLayer } from '../services/docPinningService';
 import { extractEpisodicBulletsLocally, shouldCompressEpisodicTurns } from '../services/episodicMemoryEngine';
+import { recordTaskExecution } from '../services/mimoScoreboardService';
 
 export interface UseMimoChatStreamProps {
   docId: string;
@@ -445,6 +446,11 @@ export function useMimoChatStream({
       setActiveActivity(null);
       touchMimoActivity();
       setMascotState(clarification ? 'thinking' : hunk ? 'excited' : 'happy');
+
+      // Update task scoreboard in IndexedDB & trigger debounced cloud sync
+      recordTaskExecution(raw).catch((err) => {
+        console.warn('[MimoScoreboard] Failed to record task execution:', err);
+      });
 
       // Refresh rolling episodic memory after successful turn
       const turnConversation = [

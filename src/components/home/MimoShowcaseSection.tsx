@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Sparkles,
-  ShieldCheck,
-  GitBranch,
-  Key,
-  Check,
-  CheckCircle2,
-  Undo2,
-} from 'lucide-react';
+import { CheckCircle2, Undo2 } from 'lucide-react';
 import { MascotState } from '../../features/mimo/types/mimoTypes';
 
 const MASCOT_STATES: { state: MascotState; label: string; tag: string; description: string; img: string }[] = [
@@ -61,8 +53,7 @@ export const MimoShowcaseSection: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-violet-50 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300 border border-violet-200/80 dark:border-violet-800/80 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-violet-500" />
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80">
             <span>MEET MIMO • VERSION 2.1.0</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em] leading-tight">
@@ -77,17 +68,17 @@ export const MimoShowcaseSection: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* Left Column: Mascot Selector & Minimal Card */}
-          <div className="lg:col-span-5 p-6 sm:p-7 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-sm flex flex-col items-center justify-between text-center space-y-5">
+          <div className="lg:col-span-5 p-6 sm:p-7 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xs flex flex-col items-center justify-between text-center space-y-5">
             {/* Mascot State Tabs */}
             <div className="flex flex-wrap justify-center gap-1.5 w-full">
               {MASCOT_STATES.map((item) => (
                 <button
                   key={item.state}
                   onClick={() => setActiveMascotState(item.state)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px] ${
                     activeMascotState === item.state
-                      ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shadow-2xs'
-                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-900 dark:hover:text-white'
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-2xs font-semibold'
+                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/70 dark:hover:bg-neutral-700 hover:text-neutral-900 dark:hover:text-white'
                   }`}
                 >
                   {item.label}
@@ -95,12 +86,12 @@ export const MimoShowcaseSection: React.FC = () => {
               ))}
             </div>
 
-            {/* Mascot Visual Display (Clean Image Without Bloat) */}
+            {/* Mascot Visual Display (Clean Crisp 2D Image without scaling jitter) */}
             <div className="relative my-2 flex items-center justify-center w-40 h-40 sm:w-48 sm:h-48">
               <img
                 src={currentMascot.img}
                 alt={`Mimo ${currentMascot.label}`}
-                className="w-full h-full object-contain filter drop-shadow-md transition-transform duration-200 hover:scale-105 select-none"
+                className="w-full h-full object-contain select-none"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = '/mimo/happy.png';
                 }}
@@ -109,7 +100,7 @@ export const MimoShowcaseSection: React.FC = () => {
 
             {/* Mascot State Metadata */}
             <div className="space-y-1.5 max-w-xs">
-              <div className="inline-block text-[10px] font-mono font-semibold uppercase tracking-wider text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 px-2 py-0.5 rounded-md border border-violet-200/60 dark:border-violet-800/60">
+              <div className="inline-block text-[10px] font-mono font-semibold uppercase tracking-wider text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 px-2 py-0.5 rounded-md border border-brand-200/60 dark:border-brand-800/60">
                 {currentMascot.tag}
               </div>
               <h3 className="font-semibold text-sm text-neutral-950 dark:text-white">
@@ -122,14 +113,11 @@ export const MimoShowcaseSection: React.FC = () => {
           </div>
 
           {/* Right Column: Sleek Non-Destructive Diff Demonstration */}
-          <div className="lg:col-span-7 p-6 sm:p-7 rounded-2xl bg-neutral-950 text-neutral-100 border border-neutral-800/90 shadow-md flex flex-col justify-between space-y-4 font-mono">
-            {/* Diff Card Top Header */}
+          <div className="lg:col-span-7 p-6 sm:p-7 rounded-2xl bg-neutral-950 text-neutral-100 border border-neutral-800 shadow-xs flex flex-col justify-between space-y-4 font-mono">
+            {/* Diff Card Top Header with calm status indicator */}
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3 font-sans">
               <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                </span>
+                <span className="inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 <span className="text-xs font-semibold text-white">Mimo Proposed Changes</span>
                 <span className="text-[10px] text-neutral-500 font-mono">Section: System Architecture</span>
               </div>
@@ -153,7 +141,7 @@ export const MimoShowcaseSection: React.FC = () => {
               </div>
               <div className="bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
                 <span className="select-none text-emerald-500 font-bold">+</span>
-                <span>+ Local-first IndexedDB storage with zero keystroke lag.</span>
+                <span>+ Local storage with zero keystroke latency.</span>
               </div>
               <div className="bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
                 <span className="select-none text-emerald-500 font-bold">+</span>
@@ -183,7 +171,7 @@ export const MimoShowcaseSection: React.FC = () => {
                 {demoDiffApplied ? (
                   <button
                     onClick={() => setDemoDiffApplied(false)}
-                    className="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-300 text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-300 text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px] flex items-center gap-1.5"
                   >
                     <Undo2 className="w-3.5 h-3.5" />
                     <span>Undo</span>
@@ -192,15 +180,14 @@ export const MimoShowcaseSection: React.FC = () => {
                   <>
                     <button
                       onClick={() => setDemoDiffApplied(false)}
-                      className="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 text-xs font-medium cursor-pointer transition-colors"
+                      className="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px]"
                     >
                       Discard
                     </button>
                     <button
                       onClick={() => setDemoDiffApplied(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer transition-all shadow-xs flex items-center gap-1.5"
+                      className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold cursor-pointer transition-colors active:translate-y-[1px] shadow-2xs"
                     >
-                      <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                       <span>Accept Diff</span>
                     </button>
                   </>
@@ -210,11 +197,11 @@ export const MimoShowcaseSection: React.FC = () => {
           </div>
         </div>
 
-        {/* 3 Core Minimalist Pillars */}
+        {/* 3 Core Minimalist Pillars (Typography-led, zero decorative icon boxes) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xs space-y-3">
-            <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center border border-violet-200/60 dark:border-violet-800/60">
-              <GitBranch className="w-4 h-4" />
+          <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xs space-y-2.5">
+            <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              01 • Review
             </div>
             <h4 className="font-semibold text-sm text-neutral-950 dark:text-white">
               Surgical Visual Diffs
@@ -224,9 +211,9 @@ export const MimoShowcaseSection: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xs space-y-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/60 dark:border-emerald-800/60">
-              <ShieldCheck className="w-4 h-4" />
+          <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xs space-y-2.5">
+            <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              02 • Control
             </div>
             <h4 className="font-semibold text-sm text-neutral-950 dark:text-white">
               Document Privacy Shield
@@ -236,9 +223,9 @@ export const MimoShowcaseSection: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xs space-y-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-800/60">
-              <Key className="w-4 h-4" />
+          <div className="p-6 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xs space-y-2.5">
+            <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
+              03 • Autonomy
             </div>
             <h4 className="font-semibold text-sm text-neutral-950 dark:text-white">
               Bring Your Own Key (BYOK)

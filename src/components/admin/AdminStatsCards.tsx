@@ -30,18 +30,18 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
         {/* Card 1: Pending Blogs */}
         <div 
           onClick={() => onNavigateTab('blogs')}
-          className={`p-5 rounded-3xl border transition-all cursor-pointer group relative overflow-hidden ${
+          className={`p-5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${
             stats.pendingBlogs > 0
-              ? 'bg-gradient-to-br from-amber-500/10 via-neutral-900 to-neutral-900 border-amber-500/40 hover:border-amber-500/70 shadow-lg shadow-amber-500/5'
+              ? 'bg-neutral-900 border-amber-500/50 hover:border-amber-500/80 shadow-xs'
               : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+            <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
               <BookOpen className="w-5 h-5" />
             </div>
             {stats.pendingBlogs > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black animate-pulse">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black">
                 Action Required
               </span>
             ) : (
@@ -58,21 +58,21 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
           </div>
           <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
             <span>Awaiting live publishing</span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 transition-all" />
           </p>
         </div>
 
         {/* Card 2: Pending Reviews */}
         <div 
           onClick={() => onNavigateTab('reviews')}
-          className={`p-5 rounded-3xl border transition-all cursor-pointer group relative overflow-hidden ${
+          className={`p-5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${
             stats.pendingReviews > 0
-              ? 'bg-gradient-to-br from-brand-500/10 via-neutral-900 to-neutral-900 border-brand-500/40 hover:border-brand-500/70 shadow-lg shadow-brand-500/5'
+              ? 'bg-neutral-900 border-brand-500/50 hover:border-brand-500/80 shadow-xs'
               : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <div className="w-9 h-9 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
               <MessageSquare className="w-5 h-5" />
             </div>
             {stats.pendingReviews > 0 ? (
@@ -91,25 +91,25 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
           </div>
           <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
             <span>Awaiting homepage feature</span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-brand-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-brand-400 transition-all" />
           </p>
         </div>
 
         {/* Card 3: Feedback & Bugs */}
         <div 
           onClick={() => onNavigateTab('feedback')}
-          className={`p-5 rounded-3xl border transition-all cursor-pointer group relative overflow-hidden ${
+          className={`p-5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${
             stats.newFeedback > 0
-              ? 'bg-gradient-to-br from-rose-500/10 via-neutral-900 to-neutral-900 border-rose-500/40 hover:border-rose-500/70 shadow-lg shadow-rose-500/5'
+              ? 'bg-neutral-900 border-rose-500/50 hover:border-rose-500/80 shadow-xs'
               : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
+            <div className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
               <Bug className="w-5 h-5" />
             </div>
             {stats.criticalFeedback > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white flex items-center gap-1 animate-pulse">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" /> {stats.criticalFeedback} Critical
               </span>
             ) : stats.newFeedback > 0 ? (
@@ -128,14 +128,14 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
           </div>
           <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
             <span>{stats.newFeedback} needing attention</span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-rose-400 group-hover:translate-x-1 transition-all" />
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-rose-400 transition-all" />
           </p>
         </div>
 
         {/* Card 4: Total Live Content */}
-        <div className="p-5 rounded-3xl bg-neutral-900 border border-neutral-800 relative overflow-hidden">
+        <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 relative overflow-hidden">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
               <Sparkles className="w-5 h-5" />
             </div>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">

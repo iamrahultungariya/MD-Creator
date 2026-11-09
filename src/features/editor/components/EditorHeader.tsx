@@ -5,7 +5,6 @@ import {
   Columns, 
   PenTool, 
   Eye, 
-  FileText, 
   Info, 
   ChevronDown, 
   FolderOpen, 
@@ -14,7 +13,6 @@ import {
   FolderTree,
   Printer,
   Check,
-  Cloud
 } from 'lucide-react';
 import { ViewMode } from '../types';
 import { DocumentMetadata } from '../../../db';
@@ -156,7 +154,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
     if (isSaving) {
       return (
         <span className="text-amber-500 flex items-center gap-1.5" title="Saving changes...">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
           {showText && <span className="text-[11px]">Saving...</span>}
         </span>
       );
@@ -197,7 +195,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
           {/* Desktop Title & Save Indicator (hidden on mobile, rendered in sub-row) */}
           <div className="hidden sm:flex items-center gap-2 min-w-0">
             <div className="h-4 w-px bg-neutral-200 dark:bg-neutral-800 shrink-0" />
-            <FileText className="w-4 h-4 text-neutral-400 shrink-0" />
             <input
               type="text"
               value={title}
@@ -214,7 +211,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                   className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 font-sans"
                   title={`Cloud backup active: ${user.email}`}
                 >
-                  <Cloud className="w-3 h-3 text-emerald-500" />
                   <span>Synced</span>
                 </div>
               ) : (
@@ -224,7 +220,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                   className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800 dark:hover:bg-neutral-700/80 border border-neutral-200 dark:border-neutral-700/60 transition-all cursor-pointer shadow-2xs font-sans"
                   title="Notes saved locally in this browser. Click to back up to cloud."
                 >
-                  <Cloud className="w-3 h-3 text-neutral-400" />
                   <span>Back Up</span>
                 </button>
               )}
@@ -241,7 +236,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
               setIsToolsMenuOpen(false);
               setIsOverflowMenuOpen(false);
             }}
-            className="min-h-[44px] px-3 sm:px-3.5 py-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-900 dark:text-neutral-100 shadow-2xs transition-all cursor-pointer flex items-center gap-2 font-sans select-none active:scale-98"
+            className="min-h-[44px] px-3 sm:px-3.5 py-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-900 dark:text-neutral-100 shadow-2xs transition-all cursor-pointer flex items-center gap-2 font-sans select-none active:translate-y-[1px]"
             title="Switch Active Mode (Ctrl+M or Alt+M)"
             aria-label="Switch Active Workspace Mode"
           >
@@ -468,7 +463,6 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
       {/* Mobile Title Sub-Row (< 640px) */}
       <div className="sm:hidden px-3 py-2 border-b border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/90 dark:bg-neutral-900/60 flex items-center justify-between gap-2.5 text-xs transition-colors">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <FileText className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
           <input
             type="text"
             value={title}

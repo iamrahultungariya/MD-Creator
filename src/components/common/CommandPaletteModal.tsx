@@ -368,19 +368,17 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-150 select-none font-sans"
+        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150 select-none font-sans"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
         <div 
-          className="w-full max-w-xl bg-white/95 dark:bg-[#121118]/95 backdrop-blur-2xl border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-150 text-neutral-900 dark:text-neutral-100 font-sans"
+          className="w-full max-w-xl bg-white/95 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[80vh] text-neutral-900 dark:text-neutral-100 font-sans"
           role="dialog"
           aria-modal="true"
           aria-label="Command Palette"
         >
-          {/* Subtle Electric Violet Top Sheen */}
-          <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-500/80 to-transparent shrink-0" />
 
           {/* Top Window Header: macOS Traffic Lights & Title */}
           <div className="px-4 py-2.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-950/40 shrink-0">

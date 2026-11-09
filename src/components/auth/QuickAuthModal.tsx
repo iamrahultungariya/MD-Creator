@@ -91,18 +91,16 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md select-none font-sans animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-2xl bg-white dark:bg-[#121118] border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[92vh] text-neutral-900 dark:text-neutral-100 font-sans"
+        className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[92vh] text-neutral-900 dark:text-neutral-100 font-sans"
         role="dialog"
         aria-modal="true"
         aria-label="Account & Cloud Sync"
       >
-        {/* Subtle Violet Sheen */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-500/80 to-transparent shrink-0" />
 
         {/* Window Titlebar Header (Follows App Design Language) */}
-        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-[#181620] shrink-0">
+        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-800 shrink-0">
           <div className="flex items-center gap-2.5">
             {/* macOS Window Controls */}
             <div className="flex items-center gap-1.5 mr-1.5">
@@ -178,7 +176,7 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
           </div>
 
           {/* ── RIGHT COLUMN: Interactive Form ──────────────────────────────── */}
-          <div className="md:col-span-3 p-6 sm:p-7 flex flex-col justify-between overflow-y-auto bg-white dark:bg-[#121118]">
+          <div className="md:col-span-3 p-6 sm:p-7 flex flex-col justify-between overflow-y-auto bg-white dark:bg-neutral-900">
             <div className="space-y-4">
               
               {/* Header Titles */}

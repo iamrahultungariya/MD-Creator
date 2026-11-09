@@ -15,9 +15,50 @@ import { useMimoStore } from '../../stores/useMimoStore';
 import { MimoSettingsPopover } from './MimoSettingsPopover';
 import { MimoDocPinSelector } from './MimoDocPinSelector';
 import { db } from '../../../../db';
+import { getActiveChatFollowUpSuggestions } from '../../services/mimoScoreboardService';
+
+const MIMO_SLASH_COMMANDS = [
+  {
+    cmd: '/summarize',
+    label: 'Summarize Note',
+    prompt: 'Extract key takeaways and action items in clean, high-impact bullet points.',
+    desc: 'Summarize core insights',
+  },
+  {
+    cmd: '/polish',
+    label: 'Polish Flow & Tone',
+    prompt: 'Review and improve phrasing, clarity, and tone with a clean diff.',
+    desc: 'Grammar and readability',
+  },
+  {
+    cmd: '/table',
+    label: 'Synthesize Table',
+    prompt: 'Convert key parameters, metrics, or comparisons into a clean Markdown table.',
+    desc: 'Generate markdown table',
+  },
+  {
+    cmd: '/hinglish',
+    label: 'Explain in Hinglish',
+    prompt: 'Explain the core arguments and details in natural, tech-savvy Hinglish.',
+    desc: 'Conversational explanation',
+  },
+  {
+    cmd: '/clarity',
+    label: 'Chaos to Clarity',
+    prompt: 'Transform raw, unorganized thoughts into a clear, structured document.',
+    desc: 'Structure raw notes',
+  },
+  {
+    cmd: '/insights',
+    label: 'Scan Vault Insights',
+    prompt: 'Check for contradictions and unlinked connections across notes in my vault.',
+    desc: 'Cross-note links & checks',
+  },
+];
 
 export interface MimoInputDockProps {
   docId?: string;
+  docContent?: string;
   inputPrompt: string;
   setInputPrompt: (val: string) => void;
   activeSelection: string;
@@ -37,6 +78,7 @@ const EMPTY_PINNED_ARRAY: string[] = [];
 
 export const MimoInputDock: React.FC<MimoInputDockProps> = ({
   docId,
+  docContent,
   inputPrompt,
   setInputPrompt,
   activeSelection,
@@ -56,8 +98,39 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
   const [isThinkingMenuOpen, setIsThinkingMenuOpen] = useState(false);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [pinnedDocsMeta, setPinnedDocsMeta] = useState<Array<{ id: string; title: string }>>([]);
+  const [followUps, setFollowUps] = useState<Array<{ id: string; label: string; prompt: string }>>([]);
+  const [slashSelectedIndex, setSlashSelectedIndex] = useState(0);
   const thinkingMenuRef = useRef<HTMLDivElement>(null);
   const modelMenuRef = useRef<HTMLDivElement>(null);
+
+  const messages = useMimoStore((s) => s.messages);
+
+  const isSlashActive = inputPrompt.startsWith('/');
+  const slashQuery = isSlashActive ? inputPrompt.slice(1).toLowerCase().trim() : '';
+  const filteredSlashCommands = MIMO_SLASH_COMMANDS.filter(
+    (c) =>
+      c.cmd.toLowerCase().includes(slashQuery) ||
+      c.label.toLowerCase().includes(slashQuery) ||
+      c.desc.toLowerCase().includes(slashQuery)
+  );
+
+  useEffect(() => {
+    setSlashSelectedIndex(0);
+  }, [inputPrompt]);
+
+  useEffect(() => {
+    if (!messages || messages.length === 0) {
+      setFollowUps([]);
+      return;
+    }
+    let cancelled = false;
+    getActiveChatFollowUpSuggestions(messages, docContent || '').then((suggs) => {
+      if (!cancelled) setFollowUps(suggs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, docContent]);
 
   // Close menus on outside click
   useEffect(() => {
@@ -391,8 +464,83 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
         </div>
       )}
 
+      {/* 2 Contextual Follow-Up Suggestions (Active Chat) */}
+      {messages.length > 0 && followUps.length > 0 && !isGenerating && !isAiExcluded && (
+        <div className="flex items-center gap-1.5 flex-wrap px-0.5 pb-0.5">
+          {followUps.slice(0, 2).map((sug) => (
+            <button
+              key={sug.id}
+              type="button"
+              onClick={() => onSend(sug.prompt)}
+              className="text-[11px] px-2.5 py-1 rounded-md border border-neutral-200/80 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/80 dark:hover:bg-neutral-800 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer text-left truncate max-w-[210px]"
+              title={sug.prompt}
+            >
+              {sug.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Text Area & Action */}
       <div className="relative flex items-end gap-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2.5 focus-within:border-neutral-400 dark:focus-within:border-neutral-600 transition-colors">
+        {/* Floating Slash Quick Actions Popover (Text-only, Zero Icons) */}
+        {isSlashActive && !isAiExcluded && (
+          <div
+            className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl p-1 z-30 select-none animate-in fade-in zoom-in-95 duration-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 mb-1">
+              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+                Quick Slash Actions
+              </span>
+              <span className="text-[9px] font-mono text-neutral-400">
+                ESC to dismiss
+              </span>
+            </div>
+
+            <div className="max-h-48 overflow-y-auto space-y-0.5">
+              {filteredSlashCommands.length === 0 ? (
+                <div className="py-3 text-center text-xs text-neutral-400">
+                  No commands matching "{inputPrompt}"
+                </div>
+              ) : (
+                filteredSlashCommands.map((cmd, idx) => {
+                  const isSelected = idx === (slashSelectedIndex % filteredSlashCommands.length);
+                  return (
+                    <button
+                      key={cmd.cmd}
+                      type="button"
+                      onClick={() => {
+                        setInputPrompt('');
+                        onSend(cmd.prompt);
+                      }}
+                      className={`w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between text-left text-xs transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-neutral-100 dark:bg-neutral-800 font-semibold text-neutral-900 dark:text-white'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <div className="flex flex-col min-w-0 pr-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-semibold text-neutral-900 dark:text-neutral-100">
+                            {cmd.cmd}
+                          </span>
+                          <span className="text-xs truncate font-medium">{cmd.label}</span>
+                        </div>
+                        <span className="text-[10px] text-neutral-400 font-normal truncate mt-0.5">
+                          {cmd.desc}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-neutral-400 shrink-0">
+                        ↵
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
         <textarea
           value={inputPrompt}
           onChange={(e) => {
@@ -405,6 +553,33 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
           }}
           disabled={isAiExcluded}
           onKeyDown={(e) => {
+            if (isSlashActive && filteredSlashCommands.length > 0) {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setSlashSelectedIndex((prev) => (prev + 1) % filteredSlashCommands.length);
+                return;
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setSlashSelectedIndex((prev) => (prev - 1 + filteredSlashCommands.length) % filteredSlashCommands.length);
+                return;
+              }
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                setInputPrompt('');
+                return;
+              }
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const selected = filteredSlashCommands[slashSelectedIndex % filteredSlashCommands.length];
+                if (selected) {
+                  setInputPrompt('');
+                  onSend(selected.prompt);
+                }
+                return;
+              }
+            }
+
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               onSend();

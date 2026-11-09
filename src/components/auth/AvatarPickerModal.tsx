@@ -76,17 +76,17 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs select-none animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm select-none animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-neutral-900 dark:text-neutral-100 font-sans animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-neutral-900 dark:text-neutral-100 font-sans"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] flex items-center justify-center border border-[#8257F5]/20">
+            <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
@@ -120,19 +120,19 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
                 onClick={() => setSelectedId(preset.id)}
                 className={`group p-3 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-2 relative ${
                   isSelected
-                    ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 ring-2 ring-[#8257F5]/40 shadow-sm'
+                    ? 'border-brand-500 bg-brand-500/10 ring-2 ring-brand-500/30'
                     : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50'
                 }`}
               >
                 {/* Selected Checkmark Badge */}
                 {isSelected && (
-                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[#8257F5] text-white flex items-center justify-center shadow-xs">
+                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-xs">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
                   </span>
                 )}
 
                 {/* Avatar SVG Preview Circle */}
-                <div className="w-14 h-14 rounded-full p-1 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-full p-1 bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 shadow-xs flex items-center justify-center overflow-hidden shrink-0 transition-transform">
                   <img
                     src={avatarUrl}
                     alt={preset.name}
@@ -165,7 +165,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
           <button
             onClick={handleApply}
-            className="px-4 py-1.5 rounded-lg bg-[#8257F5] hover:bg-[#7245E5] text-white text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:translate-y-[1px]"
           >
             <Check className="w-3.5 h-3.5" />
             <span>Apply Avatar</span>

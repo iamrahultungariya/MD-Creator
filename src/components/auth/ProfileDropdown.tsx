@@ -128,7 +128,7 @@ export const ProfileDropdown: React.FC = () => {
                       setIsOpen(false);
                       setIsAvatarModalOpen(true);
                     }}
-                    className="text-[10px] font-semibold text-[#8257F5] dark:text-[#a07cf8] hover:underline cursor-pointer"
+                    className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
                   >
                     Change Face
                   </button>
@@ -218,7 +218,7 @@ export const ProfileDropdown: React.FC = () => {
                     setIsOpen(false);
                     setIsStorageModalOpen(true);
                   }}
-                  className="text-[10px] font-semibold text-[#8257F5] dark:text-[#a07cf8] hover:underline cursor-pointer"
+                  className="text-[10px] font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
                 >
                   Manage
                 </button>

@@ -48,8 +48,8 @@
   --leading-loose: 1.8;
   --leading-prose: 1.85;
 
-  /* Handwriting Font */
-  --font-handwriting: "Caveat", cursive;
+
+
 }
 
 @layer base {
@@ -57,7 +57,7 @@
     --font-sans: "Geist Variable", system-ui, sans-serif;
     --font-mono: "Geist Mono Variable", ui-monospace, monospace;
     --font-serif: "Literata Variable", Georgia, serif;
-    --font-handwriting: 'Caveat', cursive;
+
     --font-lexend: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-arial: Arial, Helvetica, -apple-system, sans-serif;
     --font-lato: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -275,11 +275,6 @@ article mark,
   border-left-color: #e11d48 !important;
   border-left-width: 4px !important;
   border-left-style: solid !important;
-}
-
-
-.font-handwriting {
-  font-family: var(--font-handwriting);
 }
 
 .font-mono-code {

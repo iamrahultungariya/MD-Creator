@@ -54,7 +54,7 @@ const AppRoutes: React.FC = () => {
   if (isEditor) {
     return (
       <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<PageLoader variant="editor" />}>
           <Routes location={location} key="editor-routes">
             <Route path="/editor" element={<EditorPage />} />
             <Route path="/editor/:id" element={<EditorPage />} />
@@ -68,15 +68,15 @@ const AppRoutes: React.FC = () => {
     <ErrorBoundary>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader />}><HomePage /></Suspense></PageTransition>} />
-          <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader />}><DocumentsPage /></Suspense></PageTransition>} />
-          <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader />}><FeedbackPage /></Suspense></PageTransition>} />
-          <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader />}><AuthPage /></Suspense></PageTransition>} />
-          <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader />}><AdminPage /></Suspense></PageTransition>} />
-          <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-          <Route path="/p/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-          <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
-          <Route path="/share/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader variant="home" />}><HomePage /></Suspense></PageTransition>} />
+          <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><DocumentsPage /></Suspense></PageTransition>} />
+          <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader variant="feedback" />}><FeedbackPage /></Suspense></PageTransition>} />
+          <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader variant="auth" />}><AuthPage /></Suspense></PageTransition>} />
+          <Route path="/admin" element={<PageTransition><Suspense fallback={<PageLoader variant="admin" />}><AdminPage /></Suspense></PageTransition>} />
+          <Route path="/p/:slug" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/p/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/share/:slug" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><PublicDocumentPage /></Suspense></PageTransition>} />
+          <Route path="/share/bundle/:slug" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><PublicDocumentPage /></Suspense></PageTransition>} />
           {/* Graceful redirects for pruned pages */}
           <Route path="/showcase" element={<Navigate to="/" replace />} />
           <Route path="/record" element={<Navigate to="/" replace />} />

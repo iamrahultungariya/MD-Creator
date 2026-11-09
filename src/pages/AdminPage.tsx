@@ -7,6 +7,7 @@ import { AdminTab, Article } from '../types/admin';
 import { BlogCategory } from '../data/blogArticles';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { useAdminData } from '../hooks/useAdminData';
+import { AdminContentSkeleton } from '../components/common/PageLoader';
 
 const ActiveUserDashboard = React.lazy(() =>
   import('../components/admin/analytics/ActiveUserDashboard').then((m) => ({ default: m.ActiveUserDashboard }))
@@ -238,7 +239,7 @@ export const AdminPage: React.FC = () => {
       />
 
       {/* Main Container */}
-      <React.Suspense fallback={<div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center text-neutral-500 font-mono text-xs">Loading studio dashboard...</div>}>
+      <React.Suspense fallback={<AdminContentSkeleton />}>
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           {/* Tab 1: Overview */}
           {activeTab === 'overview' && (

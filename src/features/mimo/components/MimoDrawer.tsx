@@ -9,9 +9,7 @@ import { MimoStarterCards } from './drawer/MimoStarterCards';
 import { MimoInputDock } from './drawer/MimoInputDock';
 import { useMimoChatStream } from '../hooks/useMimoChatStream';
 import { useMimoDocumentActions } from '../hooks/useMimoDocumentActions';
-import { MimoQuickAction } from '../types/mimoTypes';
 import { useMimoInactivityTimer } from '../hooks/useMimoInactivityTimer';
-import { buildChaosToClarityPrompt } from '../services/chaosToClarityTransformer';
 
 export interface MimoDrawerProps {
   docId: string;
@@ -117,81 +115,6 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
     setInputPrompt,
   });
 
-  const handleQuickAction = (action: MimoQuickAction) => {
-    const liveSelection = getSelectedText ? getSelectedText().trim() : '';
-    const sel = activeSelection || liveSelection;
-    if (sel) {
-      if (action === 'chaos-to-clarity') {
-        handleSendPrompt(buildChaosToClarityPrompt(sel, true));
-      } else if (action === 'improve') {
-        handleSendPrompt('Improve this selected text, fixing grammar, clarity, and tone with a clean diff.');
-      } else if (action === 'summarize') {
-        handleSendPrompt('Summarize this selected text in crisp bullet points.');
-      } else if (action === 'write') {
-        handleSendPrompt('Continue and expand upon this selected text with next logical points.');
-      } else if (action === 'explain') {
-        handleSendPrompt('Explain this selected text in simple, clear terms.');
-      } else if (action === 'translate') {
-        handleSendPrompt('Translate this selected text into natural Hinglish.');
-      }
-      return;
-    }
-
-    if (action === 'chaos-to-clarity') {
-      handleSendPrompt(buildChaosToClarityPrompt(content, false));
-    } else if (action === 'vault-insights') {
-      import('../services/crossNoteLinkerService').then(async (m) => {
-        const addMsg = useMimoStore.getState().addMessage;
-        const setMascot = useMimoStore.getState().setMascotState;
-        addMsg({
-          id: `user-${Date.now()}`,
-          role: 'user',
-          text: '🔍 Scan my vault for cross-note internal links and parameter contradictions.',
-          timestamp: Date.now(),
-        });
-        setMascot('thinking');
-        const report = await m.generateCrossNoteReport(docId, content);
-        setMascot('happy');
-
-        if (report.findings.length === 0) {
-          addMsg({
-            id: `asst-${Date.now()}`,
-            role: 'assistant',
-            text: `### ✦ Vault Scan Complete\nScanned **${report.totalDocsScanned} local document(s)** in your workspace.\n\n✅ **Zero contradictions found** across parameters (rate limits, timeouts, ports, versions).\n✅ **No unlinked document mentions detected**. Your vault connections are clean!`,
-            timestamp: Date.now(),
-          });
-        } else {
-          const findingBullets = report.findings
-            .map((f, i) => {
-              if (f.type === 'fact_check') {
-                return `#### ${i + 1}. ⚠️ Parameter Divergence with "${f.targetDocTitle}"\n${f.explanation}\n\`\`\`text\n${f.lineContext || f.matchedText}\n\`\`\``;
-              }
-              return `#### ${i + 1}. 🔗 Unlinked Reference: "${f.targetDocTitle}"\nFound mention of **"${f.matchedText}"** without internal link. Suggest linking as \`${f.suggestedLink}\`.\n> "${f.lineContext || f.matchedText}"`;
-            })
-            .join('\n\n');
-
-          addMsg({
-            id: `asst-${Date.now()}`,
-            role: 'assistant',
-            text: `### ✦ Vault Graph & Fact-Check Report\nScanned **${report.totalDocsScanned} local documents** and found **${report.findings.length} insight(s)**:\n\n${findingBullets}\n\n---\n*You can add internal links using \`[[Document Title]]\` syntax to connect your notes.*`,
-            timestamp: Date.now(),
-          });
-        }
-      });
-      return;
-    } else if (action === 'improve') {
-      handleSendPrompt('Review the current document and propose improvements with a clean diff.');
-    } else if (action === 'summarize') {
-      handleSendPrompt('Summarize key takeaways of this document in high-impact bullet points.');
-    } else if (action === 'write') {
-      handleSendPrompt('Help me outline the next section with headings and structured notes.');
-    } else if (action === 'explain') {
-      handleSendPrompt('Explain the core concepts and arguments made in this document.');
-    } else if (action === 'translate') {
-      handleSendPrompt('Translate the main takeaways into Hinglish with clear technical explanations.');
-    }
-  };
-
   const handleClarificationSubmit = (formattedPrompt: string, messageId: string, answers: any) => {
     // Mark the message clarification as submitted with the chosen answers
     useMimoStore.getState().updateLastMessage((m) =>
@@ -239,10 +162,11 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
           {isChatEmpty ? (
             <MimoStarterCards
               title={title}
+              docContent={content}
               mascotState={mascotState}
               isGenerating={isGenerating}
               isAiExcluded={isAiExcluded}
-              onQuickAction={handleQuickAction}
+              onSendPrompt={handleSendPrompt}
             />
           ) : (
             messages.map((msg) => (
@@ -266,6 +190,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
         {/* Input Dock */}
         <MimoInputDock
           docId={docId}
+          docContent={content}
           inputPrompt={inputPrompt}
           setInputPrompt={setInputPrompt}
           activeSelection={activeSelection}

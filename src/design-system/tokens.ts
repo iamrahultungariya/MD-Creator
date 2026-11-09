@@ -114,7 +114,7 @@ export const fontFamily = {
   lexend: '"Lexend", -apple-system, BlinkMacSystemFont, sans-serif',
   arial: 'Arial, Helvetica, -apple-system, sans-serif',
   lato: '"Lato", -apple-system, BlinkMacSystemFont, sans-serif',
-  handwriting: '"Caveat", cursive',
+
 } as const;
 
 export const fontSize = {

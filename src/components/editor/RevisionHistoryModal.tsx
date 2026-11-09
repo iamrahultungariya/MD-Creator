@@ -12,6 +12,7 @@ import { DocumentRevision, getDocumentRevisions, createRevisionSnapshot } from '
 import { useConfirm } from '../../stores/useConfirmStore';
 import { APP_VERSION_LABEL } from '../../config/version';
 import { DiffViewer } from '../common/DiffViewer';
+import { CheckpointsListSkeleton } from '../common/PageLoader';
 
 interface RevisionHistoryModalProps {
   isOpen: boolean;
@@ -90,19 +91,17 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-md select-none font-sans animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150">
       <div 
-        className="relative w-full max-w-4xl bg-white dark:bg-[#121118] border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[85vh] text-neutral-900 dark:text-neutral-100 font-sans"
+        className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[85vh] text-neutral-900 dark:text-neutral-100 font-sans"
         role="dialog"
         aria-modal="true"
         aria-label="Revision History"
         onClick={e => e.stopPropagation()}
       >
-        {/* Subtle Violet Sheen */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-brand-500/80 to-transparent shrink-0" />
 
         {/* Window Titlebar Header (Follows App Design Language) */}
-        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-[#181620] shrink-0">
+        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-800 shrink-0">
           <div className="flex items-center gap-2.5">
             {/* macOS Window Controls */}
             <div className="flex items-center gap-1.5 mr-1.5">
@@ -150,9 +149,9 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden font-sans">
           
           {/* Left: Revisions Timeline List */}
-          <div className="w-full md:w-80 border-r border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-[#15131c] overflow-y-auto p-3 space-y-2">
+          <div className="w-full md:w-80 border-r border-neutral-100 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900 overflow-y-auto p-3 space-y-2">
             {isLoading ? (
-              <div className="p-6 text-center text-xs text-neutral-400">Loading checkpoints...</div>
+              <CheckpointsListSkeleton />
             ) : revisions.length === 0 ? (
               <div className="p-8 text-center">
                 <Clock className="w-8 h-8 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
@@ -215,10 +214,10 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
           </div>
 
           {/* Right: Snapshot Preview & Rollback Action */}
-          <div className="flex-1 flex flex-col bg-white dark:bg-[#121118] overflow-hidden font-sans">
+          <div className="flex-1 flex flex-col bg-white dark:bg-neutral-900 overflow-hidden font-sans">
             {selectedRevision ? (
               <>
-                <div className="px-5 py-2.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/40 dark:bg-[#181620]/60 text-xs shrink-0">
+                <div className="px-5 py-2.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/40 dark:bg-neutral-800 text-xs shrink-0">
                   <div className="flex items-center gap-3">
                     {/* View Switcher: Diff vs Raw */}
                     <div className="inline-flex rounded-lg bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-medium">
@@ -286,7 +285,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-2.5 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-[#181620] flex items-center justify-between text-xs text-neutral-500 font-sans">
+        <div className="px-6 py-2.5 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-800 flex items-center justify-between text-xs text-neutral-500 font-sans">
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1 text-[11px]">
               <Zap className="w-3 h-3 text-amber-500" />

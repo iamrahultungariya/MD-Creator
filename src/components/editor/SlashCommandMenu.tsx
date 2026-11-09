@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Command, X } from 'lucide-react';
-import { DynamicIcon, type IconName } from '../common/DynamicIcon';
+import { X } from 'lucide-react';
 import { FEATURE_FLAGS } from '../../config/features';
 
 export interface CommandItem {
@@ -8,7 +7,7 @@ export interface CommandItem {
   title: string;
   description: string;
   icon?: React.ElementType;
-  iconName: IconName | string;
+  iconName?: string;
   shortcut: string;
   insertSnippet: string;
   category: 'Structure' | 'Rich Blocks' | 'Callouts' | 'Media & Tools';
@@ -474,7 +473,7 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
     <div 
       data-slash-menu="true" 
       style={caretCoords ? positionStyle : undefined}
-      className={`z-50 select-none overflow-hidden rounded-xl bg-white/95 dark:bg-[#15121e]/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl shadow-black/20 flex flex-col p-1.5 animate-in fade-in zoom-in-95 duration-100 ${
+      className={`z-50 select-none overflow-hidden rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl flex flex-col p-1.5 animate-in fade-in zoom-in-95 duration-100 ${
         !caretCoords
           ? 'fixed bottom-14 left-4 right-4 sm:left-auto sm:right-auto sm:w-[300px] sm:bottom-16 sm:left-6'
           : ''
@@ -482,15 +481,7 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
     >
       {/* Sleek Minimal Header with Traffic Lights & Search Query */}
       <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-neutral-100 dark:border-neutral-800/80 mb-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <div className="flex items-center gap-1 mr-1">
-            <span className="w-2 h-2 rounded-full bg-[#ff5f56]" />
-            <span className="w-2 h-2 rounded-full bg-[#ffbd2e]" />
-            <span className="w-2 h-2 rounded-full bg-[#27c93f]" />
-          </div>
-          <div className="w-4 h-4 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
-            <Command className="w-2.5 h-2.5" />
-          </div>
+        <div className="flex items-center gap-2 min-w-0">
           <span className="text-[11px] font-semibold text-neutral-800 dark:text-neutral-200 truncate">
             {searchQuery ? `"${searchQuery}"` : 'Insert Block'}
           </span>
@@ -549,15 +540,8 @@ export const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
                       : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
-                      isSelected 
-                        ? 'bg-brand-500 text-white shadow-xs' 
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
-                    }`}>
-                      <DynamicIcon name={cmd.iconName} className="w-3 h-3" />
-                    </div>
-                    <div className="min-w-0 flex-1">
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 pl-1">
                       <p className="text-xs truncate leading-tight font-medium">{cmd.title}</p>
                       <p className={`text-[10px] truncate leading-tight ${isSelected ? 'text-brand-600/80 dark:text-brand-300/80' : 'text-neutral-400 dark:text-neutral-500'}`}>
                         {cmd.description}

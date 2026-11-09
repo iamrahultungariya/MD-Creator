@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   X, 
   FileText, 
-  Sparkles, 
-  ArrowRight, 
   Check, 
   Tag, 
   Plus, 
@@ -298,7 +296,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
@@ -306,15 +304,13 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="w-full max-w-xl bg-white dark:bg-[#141419] rounded-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col max-h-[90vh] text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans animate-in zoom-in-95 duration-150"
+        className="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col max-h-[90vh] text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header: Title & Close */}
         <div className="px-6 py-4.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/40 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] flex items-center justify-center border border-[#8257F5]/25 shadow-2xs">
-              <Sparkles className="w-4 h-4" />
-            </div>
+            
             <div>
               <h3 id="modal-title" className="text-sm font-bold text-neutral-950 dark:text-white tracking-tight">
                 Create New Document
@@ -349,7 +345,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Weekly Sprint Planning.md"
                 required
-                className="w-full pl-3.5 pr-14 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/60 dark:bg-neutral-900/60 text-xs text-neutral-900 dark:text-white font-medium placeholder-neutral-400 focus:outline-none focus:border-[#8257F5] focus:ring-2 focus:ring-[#8257F5]/20 transition-all font-sans"
+                className="w-full pl-3.5 pr-14 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/60 dark:bg-neutral-900/60 text-xs text-neutral-900 dark:text-white font-medium placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all font-sans"
               />
               <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono font-semibold text-neutral-400">
                 .md
@@ -379,14 +375,14 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
                     onClick={() => setSelectedTemplateId(tmpl.id)}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 relative font-sans ${
                       isSelected
-                        ? 'border-[#8257F5] bg-[#8257F5]/8 dark:bg-[#8257F5]/15 ring-2 ring-[#8257F5]/30 shadow-xs'
+                        ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 ring-1 ring-brand-500/30 shadow-2xs'
                         : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-700 dark:text-neutral-300'
                     }`}
                   >
                     <div
                       className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
                         isSelected
-                          ? 'bg-[#8257F5] text-white border-[#8257F5]'
+                          ? 'bg-brand-600 text-white border-brand-600'
                           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200/80 dark:border-neutral-700/80'
                       }`}
                     >
@@ -397,7 +393,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
                       <div className="font-semibold text-xs text-neutral-900 dark:text-white truncate flex items-center justify-between">
                         <span>{tmpl.name}</span>
                         {isSelected && (
-                          <Check className="w-3.5 h-3.5 text-[#8257F5] dark:text-[#a07cf8] stroke-[3]" />
+                          <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 stroke-[3]" />
                         )}
                       </div>
                       <div className="text-[10px] text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-0.5">
@@ -418,7 +414,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
               className="w-full flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-300 py-1 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer font-sans"
             >
               <div className="flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-[#8257F5]" />
+                <Tag className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                 <span>Workspace Tags</span>
                 <span className="text-[10px] font-normal normal-case text-neutral-400">
                   ({selectedTags.length} selected)
@@ -443,7 +439,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
                         onClick={() => toggleTag(tag)}
                         className={`group px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer border flex items-center gap-1.5 font-sans ${
                           isSelected
-                            ? 'border-[#8257F5] bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] font-bold shadow-2xs'
+                            ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold shadow-2xs'
                             : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'
                         }`}
                       >
@@ -473,13 +469,13 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
                       value={customTagInput}
                       onChange={(e) => setCustomTagInput(e.target.value)}
                       onKeyDown={handleAddCustomTag}
-                      className="w-28 px-2 py-1 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[11px] placeholder:text-neutral-400 focus:outline-none focus:border-[#8257F5] text-neutral-900 dark:text-white font-sans"
+                      className="w-28 px-2 py-1 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-[11px] placeholder:text-neutral-400 focus:outline-none focus:border-brand-500 text-neutral-900 dark:text-white font-sans"
                     />
                     {customTagInput.trim() && (
                       <button
                         type="button"
                         onClick={() => handleAddCustomTag()}
-                        className="p-1 rounded-lg bg-[#8257F5] text-white hover:bg-[#7245e6] cursor-pointer transition-colors shadow-2xs"
+                        className="p-1 rounded-lg bg-brand-600 text-white hover:bg-brand-700 cursor-pointer transition-colors shadow-2xs"
                         title="Add tag"
                       >
                         <Plus className="w-3 h-3" />
@@ -515,10 +511,9 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
               type="button"
               onClick={handleCreate}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] active:bg-[#6335e0] text-white font-bold text-xs transition-colors shadow-xs hover:shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-bold text-xs transition-all shadow-xs cursor-pointer flex items-center justify-center disabled:opacity-50"
             >
               <span>{isSubmitting ? 'Creating...' : 'Create Note'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

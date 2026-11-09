@@ -317,9 +317,9 @@ if (!password.trim() || isVerifyingPassword) return;
       border: 'border-neutral-200/80',
     },
     dark: {
-      bg: 'bg-[#0e0d14]',
+      bg: 'bg-neutral-950',
       text: 'text-neutral-100',
-      headerBg: 'bg-[#0e0d14]/90',
+      headerBg: 'bg-neutral-950/90',
       border: 'border-neutral-800/80',
     },
   };
@@ -339,7 +339,7 @@ if (!password.trim() || isVerifyingPassword) return;
   // 2. Password Prompt
   if (status === 'password_required' || status === 'invalid_password' || status === 'rate_limited') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200 font-sans">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans">
         <div className="max-w-md w-full p-8 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl space-y-6 font-sans">
           <div className="flex flex-col items-center text-center space-y-2">
             <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-2xs">
@@ -402,7 +402,7 @@ disabled={isVerifyingPassword}
   // 3. 404 / Private Notice
   if (status === 'not_found' || !doc) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50 dark:bg-[#0e0e11] text-neutral-800 dark:text-neutral-200 font-sans">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-neutral-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-200 font-sans">
         <div className="max-w-md w-full p-8 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-2xl text-center space-y-5 font-sans">
           <div className="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-500 mx-auto flex items-center justify-center border border-neutral-200/60 dark:border-neutral-700/60">
             <FileText className="w-6 h-6" />
@@ -434,7 +434,7 @@ disabled={isVerifyingPassword}
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${currentTheme.bg} ${currentTheme.text}`}>
       {/* Top Reading Progress Bar */}
       <div 
-        className="fixed top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#8257F5] to-indigo-500 z-50 transition-all duration-75 pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-0.5 bg-brand-600 z-50 transition-all duration-75 pointer-events-none"
         style={{ width: `${readingProgress}%` }}
       />
 
@@ -685,7 +685,7 @@ disabled={isVerifyingPassword}
                 type="button"
                 disabled={isSubmittingEdit || editableContent === originalContent}
                 onClick={handleSubmitEdits}
-                className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:translate-y-[1px]"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{isSubmittingEdit ? 'Submitting...' : 'Submit Changes'}</span>
@@ -697,7 +697,7 @@ disabled={isVerifyingPassword}
           <div className="flex-1 flex flex-col md:flex-row gap-4 min-h-[60vh]">
             {/* Editor Canvas (Visible when edit tab is selected or desktop) */}
             <div
-              className={`flex-1 flex flex-col rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-[#15141c] overflow-hidden shadow-xs ${
+              className={`flex-1 flex flex-col rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-xs ${
                 mobileTab === 'edit' ? 'flex' : 'hidden md:flex'
               }`}
             >
@@ -716,7 +716,7 @@ disabled={isVerifyingPassword}
 
             {/* Live Markdown Preview (Visible when preview tab is selected or desktop) */}
             <div
-              className={`flex-1 flex flex-col rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-[#15141c] overflow-hidden shadow-xs ${
+              className={`flex-1 flex flex-col rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-xs ${
                 mobileTab === 'preview' ? 'flex' : 'hidden md:flex'
               }`}
             >
@@ -774,9 +774,9 @@ disabled={isVerifyingPassword}
 
       {/* Difference Preview Modal in View-Edit */}
       {isDiffModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm font-sans">
           <div
-            className="relative w-full max-w-3xl bg-white dark:bg-[#121118] border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            className="relative w-full max-w-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-5 py-3 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">

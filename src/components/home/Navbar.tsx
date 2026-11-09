@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Sun, 
   Moon, 
-  FolderOpen, 
   ChevronDown, 
   BookOpen, 
   MessageSquare, 
@@ -175,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/85 dark:bg-neutral-950/85 backdrop-blur-md border-b border-neutral-200/80 dark:border-neutral-800 transition-colors font-sans">
+    <header className="sticky top-0 z-50 w-full bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 transition-colors font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         
         {/* Brand Logo & Name */}
@@ -186,7 +185,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           <img 
             src="/logo.png" 
             alt="MD Writer Logo" 
-            className="w-7 h-7 rounded-lg object-contain shadow-xs group-hover:scale-105 transition-transform" 
+            className="w-7 h-7 rounded-lg object-contain shadow-xs" 
           />
           <span className="font-semibold text-sm sm:text-base text-neutral-950 dark:text-white tracking-tight">
             MD Writer
@@ -218,13 +217,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
 
           <button 
             onClick={() => navigate('/documents')}
-            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
               location.pathname === '/documents' 
                 ? 'text-neutral-950 dark:text-white font-semibold bg-neutral-100 dark:bg-neutral-800/80' 
                 : 'hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
             }`}
           >
-            <FolderOpen className="w-3.5 h-3.5 text-neutral-400" />
             <span>Documents</span>
           </button>
 
@@ -245,7 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             </button>
 
             {isResourcesOpen && (
-              <div className="absolute left-0 mt-2 w-72 p-1.5 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/80 dark:border-neutral-800 shadow-xl shadow-neutral-950/10 dark:shadow-black/40 z-50 animate-in fade-in zoom-in-95 duration-150 font-sans">
+              <div className="absolute left-0 mt-2 w-72 p-1.5 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg z-50 animate-in fade-in zoom-in-95 duration-150 font-sans">
                 <div className="space-y-0.5">
                   {RESOURCE_ITEMS.map((item) => {
                     const Icon = item.icon;
@@ -258,8 +256,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                           isActive ? 'bg-neutral-100/80 dark:bg-neutral-800/70' : ''
                         }`}
                       >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${item.iconBg} ${item.iconColor}`}>
-                          <Icon className="w-4 h-4" />
+                        <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 border border-neutral-200/80 dark:border-neutral-700/80 bg-neutral-100/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+                          <Icon className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
@@ -354,7 +352,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
       {isMobileMenuOpen && (
         <div 
           ref={mobileMenuRef}
-          className="md:hidden border-t border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-150 shadow-lg"
+          className="md:hidden border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-150 shadow-md"
         >
           {/* Core Links */}
           <div className="grid grid-cols-2 gap-2 font-sans">
@@ -363,7 +361,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                 setIsMobileMenuOpen(false);
                 handleBrandClick();
               }}
-              className={`p-2.5 rounded-lg text-left font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer font-sans ${
+              className={`p-2.5 rounded-lg text-left font-semibold text-xs transition-colors flex items-center justify-center cursor-pointer font-sans ${
                 location.pathname === '/' 
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs' 
                   : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
@@ -377,13 +375,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
                 setIsMobileMenuOpen(false);
                 navigate('/documents');
               }}
-              className={`p-2.5 rounded-lg text-left font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer font-sans ${
+              className={`p-2.5 rounded-lg text-left font-semibold text-xs transition-colors flex items-center justify-center cursor-pointer font-sans ${
                 location.pathname === '/documents' 
                   ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs' 
                   : 'bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200'
               }`}
             >
-              <FolderOpen className="w-3.5 h-3.5" />
               <span>Documents</span>
             </button>
           </div>

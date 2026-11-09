@@ -36,6 +36,7 @@ import {
 import { db, saveDocument, getDocumentContent, DocumentMetadata } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
+import { DocumentsContentSkeleton } from '../components/common/PageLoader';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useDocumentFilterStore } from '../stores/useDocumentFilterStore';
 
@@ -486,7 +487,7 @@ export const DocumentsPage: React.FC = () => {
 
               {isMoreActionsOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1.5 z-50 w-52 p-1.5 rounded-xl bg-white/95 dark:bg-[#18181c]/95 backdrop-blur-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl animate-in fade-in zoom-in-95 duration-150 font-sans"
+                  className="absolute right-0 top-full mt-1.5 z-50 w-52 p-1.5 rounded-xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm border border-neutral-200 dark:border-neutral-800 shadow-xl animate-in fade-in zoom-in-95 duration-150 font-sans"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -532,7 +533,7 @@ export const DocumentsPage: React.FC = () => {
             <button
               type="button"
               onClick={handleCreateNew}
-              className="justify-center px-4 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] active:bg-[#6335e0] text-white text-xs font-bold shadow-xs hover:shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+              className="justify-center px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Note</span>
@@ -624,7 +625,7 @@ export const DocumentsPage: React.FC = () => {
         {/* Documents Content */}
         <div className="min-h-[420px]">
           {isLoading && !documents.length ? (
-            <div className="py-20 text-center text-xs text-neutral-400">Loading documents...</div>
+            <DocumentsContentSkeleton viewMode={viewMode} />
           ) : documents.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center text-center border border-dashed border-neutral-200 dark:border-neutral-800 rounded-xl p-8">
             <div className="w-12 h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-400 mb-4">
@@ -641,7 +642,7 @@ export const DocumentsPage: React.FC = () => {
             {currentTab === 'active' && (
               <button
                 onClick={handleCreateNew}
-                className="px-5 py-2.5 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-colors"
+                className="px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
               >
                 <Plus className="w-4 h-4" />
                 <span>Create Document</span>

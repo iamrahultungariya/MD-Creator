@@ -51,13 +51,13 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 pt-16 sm:pt-20 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 pt-16 sm:pt-20 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="relative w-full max-w-3xl max-h-[85vh] my-auto bg-white dark:bg-[#121316] rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col text-neutral-900 dark:text-neutral-100 overflow-hidden animate-in zoom-in-95 duration-150 font-sans"
+        className="relative w-full max-w-3xl max-h-[85vh] my-auto bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl flex flex-col text-neutral-900 dark:text-neutral-100 overflow-hidden font-sans"
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
@@ -65,7 +65,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         {/* Header with Document Metadata */}
         <div className="p-4 sm:px-6 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-50/70 dark:bg-neutral-900/40">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#8257F5]/10 text-[#8257F5] dark:text-[#a07cf8] flex items-center justify-center border border-[#8257F5]/20 shrink-0">
+            <div className="w-9 h-9 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shrink-0">
               {activeTab === 'privacy' ? (
                 <ShieldCheck className="w-5 h-5" />
               ) : (
@@ -352,7 +352,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none px-5 py-2 rounded-lg bg-[#8257F5] hover:bg-[#7245e6] text-white font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95"
+              className="flex-1 sm:flex-none px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition-all cursor-pointer shadow-xs active:translate-y-[1px]"
             >
               I Understand &amp; Agree
             </button>

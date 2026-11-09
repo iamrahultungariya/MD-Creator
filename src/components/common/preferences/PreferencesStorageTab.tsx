@@ -58,9 +58,9 @@ export const PreferencesStorageTab: React.FC<PreferencesStorageTabProps> = ({ do
       <div className="p-4 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 space-y-2.5 text-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-[#8257F5]" />
+            <Database className="w-4 h-4 text-brand-600 dark:text-brand-400" />
             <span className="font-semibold text-neutral-900 dark:text-white">
-              Local Offline IndexedDB Vault
+              Offline Local Storage
             </span>
           </div>
           <span className="px-2 py-0.5 rounded-md font-mono text-[11px] bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">

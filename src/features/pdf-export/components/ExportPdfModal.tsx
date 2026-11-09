@@ -180,11 +180,11 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   return (
     <div
       data-pdf-studio-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs overflow-hidden animate-in fade-in duration-200 font-sans"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden animate-in fade-in duration-200 font-sans"
     >
-      <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-[#15111E] border-0 sm:border border-neutral-200 dark:border-[#2A2338] rounded-none sm:rounded-xl shadow-2xl flex flex-col overflow-hidden min-h-0 font-sans">
+      <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-neutral-900 border-0 sm:border border-neutral-200 dark:border-neutral-800 rounded-none sm:rounded-xl shadow-2xl flex flex-col overflow-hidden min-h-0 font-sans">
         {/* Studio Top Navigation Bar */}
-        <div data-pdf-studio-navbar="true" className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-200 dark:border-[#2A2338] flex items-center justify-between bg-neutral-50/80 dark:bg-[#100D18]/90 shrink-0">
+        <div data-pdf-studio-navbar="true" className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-900 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shadow-2xs shrink-0">
               <Printer className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 dark:text-brand-400" />
@@ -207,7 +207,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
 
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Desktop Zoom Controls */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-[#1D1829] border border-neutral-200 dark:border-[#2A2338] rounded-lg shadow-2xs">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-2xs">
               <button
                 type="button"
                 onClick={() => setZoomLevel((prev) => Math.max(30, prev - 10))}
@@ -252,7 +252,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               type="button"
               onClick={handleDirectDownload}
               disabled={isDownloading}
-              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-[#1D1829] dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-[#2A2338] transition-all hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-neutral-800 transition-all hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               title="Direct File Download (Ctrl+S / Cmd+S)"
             >
               {isDownloading ? (

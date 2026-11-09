@@ -6,7 +6,6 @@ import {
   Mail, 
   User, 
   AlertCircle, 
-  ArrowRight, 
   Cloud, 
   ShieldCheck, 
   Wifi, 
@@ -64,7 +63,7 @@ export const AuthPage: React.FC = () => {
   const benefits = [
     { icon: Cloud, title: 'Instant Cloud Sync', desc: 'Syncs notes between your laptop, tablet, and phone automatically.' },
     { icon: ShieldCheck, title: 'Immunity to Cache Wipes', desc: 'Your notes are protected if browser cookies or history are cleared.' },
-    { icon: Wifi, title: '100% Offline Capable', desc: 'All notes still load and save offline, syncing seamlessly when online.' },
+    { icon: Wifi, title: '100% Offline Capable', desc: 'All notes still load and save offline, syncing automatically when online.' },
     { icon: Globe2, title: 'Claim Public Links', desc: 'Publish, edit, and manage read-only web documents with your account.' },
   ];
 
@@ -78,7 +77,7 @@ export const AuthPage: React.FC = () => {
       {/* Back to Home button */}
       <button
         onClick={() => navigate('/')}
-        className="absolute top-6 left-6 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shadow-2xs font-sans"
+        className="absolute top-6 left-6 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer shadow-2xs font-sans"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Back to Home</span>
@@ -88,8 +87,8 @@ export const AuthPage: React.FC = () => {
       <div className="w-full max-w-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-5 animate-in fade-in zoom-in-95 duration-200">
         
         {/* ── LEFT COLUMN: Brand & Benefits Showcase ──────────────────────── */}
-        <div className="hidden md:flex md:col-span-2 p-8 bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-white flex-col justify-between border-r border-neutral-800/80 relative overflow-hidden">
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="hidden md:flex md:col-span-2 p-8 bg-neutral-900 text-white flex-col justify-between border-r border-neutral-800/80 relative overflow-hidden">
+          
 
           <div className="space-y-6 relative z-10">
             <div className="flex items-center gap-3">
@@ -228,7 +227,7 @@ export const AuthPage: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="author@journal.org"
                     required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
                   />
@@ -262,7 +261,7 @@ export const AuthPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 mt-2 active:scale-[0.99] disabled:opacity-50"
+                className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
@@ -270,11 +269,7 @@ export const AuthPage: React.FC = () => {
                     <span>Connecting...</span>
                   </>
                 ) : (
-                  <>
-                    <Cloud className="w-4 h-4" />
-                    <span>{mode === 'signup' ? 'Create Account & Enable Sync' : 'Sign In'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </>
+                  <span>{mode === 'signup' ? 'Create Account & Enable Sync' : 'Sign In'}</span>
                 )}
               </button>
             </form>

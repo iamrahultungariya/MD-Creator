@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { X, Type, Sliders, HardDrive, Sparkles, Loader2 } from 'lucide-react';
+import { X, Type, Sliders, HardDrive, Cpu, Loader2 } from 'lucide-react';
 import { usePreferencesStore, PreferencesTab } from '../../stores/usePreferencesStore';
 import { db } from '../../db';
 
@@ -24,7 +24,7 @@ export const PreferencesModal: React.FC = () => {
   const setActiveTab = usePreferencesStore((s) => s.setActiveTab);
   const [docCount, setDocCount] = React.useState<number>(0);
 
-  // Load document count from IndexedDB
+  // Load document count from local DB
   useEffect(() => {
     if (isOpen) {
       db.documents.count().then(setDocCount).catch(() => {});
@@ -49,27 +49,20 @@ export const PreferencesModal: React.FC = () => {
     { id: 'editor', label: 'Editor & Type', icon: Type },
     { id: 'toolbar', label: 'Toolbar Dock', icon: Sliders },
     { id: 'storage', label: 'Storage & Backup', icon: HardDrive },
-    { id: 'ai', label: 'AI Models', icon: Sparkles },
+    { id: 'ai', label: 'AI Models', icon: Cpu },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-150">
       <motion.div
-        initial={{ opacity: 0, scale: 0.97, y: 8 }}
+        initial={{ opacity: 0, scale: 0.98, y: 6 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 8 }}
+        exit={{ opacity: 0, scale: 0.98, y: 6 }}
         transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-xl bg-white dark:bg-[#131118] border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-neutral-900 dark:text-neutral-100 font-sans"
+        className="w-full max-w-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] text-neutral-900 dark:text-neutral-100 font-sans"
       >
-        {/* Window Titlebar */}
-        <div className="px-5 py-3.5 border-b border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-[#181620] shrink-0">
-          {/* Mac-style Traffic Light Window Controls */}
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] border border-[#e0443e]/50 shadow-xs" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] border border-[#dea123]/50 shadow-xs" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] border border-[#1aab29]/50 shadow-xs" />
-          </div>
-
+        {/* Window Titlebar (Clean, typography-led, zero fake traffic light dots) */}
+        <div className="px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-900 shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-xs sm:text-sm tracking-tight text-neutral-900 dark:text-neutral-100">
               Preferences
@@ -90,7 +83,7 @@ export const PreferencesModal: React.FC = () => {
         </div>
 
         {/* Clean Segmented Navigation Tab Bar */}
-        <div className="px-5 pt-3.5 pb-2 border-b border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/30 dark:bg-[#131118] shrink-0">
+        <div className="px-5 pt-3.5 pb-2 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900 shrink-0">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 rounded-lg bg-neutral-100/90 dark:bg-neutral-800/80 border border-neutral-200/60 dark:border-neutral-700/60 text-xs">
             {tabList.map((tab) => {
               const Icon = tab.icon;
@@ -102,11 +95,11 @@ export const PreferencesModal: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 font-medium transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-semibold'
+                      ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs font-semibold'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#8257F5]' : 'text-neutral-500'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-500'}`} />
                   <span className="truncate">{tab.label}</span>
                 </button>
               );
@@ -119,7 +112,7 @@ export const PreferencesModal: React.FC = () => {
           <Suspense
             fallback={
               <div className="py-12 flex items-center justify-center text-xs text-neutral-400 gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-[#8257F5]" />
+                <Loader2 className="w-4 h-4 animate-spin text-brand-600 dark:text-brand-400" />
                 <span>Loading preferences...</span>
               </div>
             }
@@ -132,14 +125,14 @@ export const PreferencesModal: React.FC = () => {
         </div>
 
         {/* Clean Footer Bar */}
-        <div className="px-5 py-3 border-t border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/50 dark:bg-[#181620] shrink-0 text-xs">
+        <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900 shrink-0 text-xs">
           <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
             Changes apply instantly to the active workspace.
           </span>
           <button
             type="button"
             onClick={closePreferences}
-            className="px-4 py-1.5 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-semibold text-xs hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+            className="px-4 py-1.5 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-semibold text-xs active:translate-y-[1px] hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
           >
             Done
           </button>

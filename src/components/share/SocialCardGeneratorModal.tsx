@@ -126,23 +126,17 @@ export const SocialCardGeneratorModal: React.FC<SocialCardGeneratorModalProps> =
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200 select-none font-sans"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 select-none font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 font-sans"
+        className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] font-sans"
       >
         {/* Header Bar */}
         <div className="px-5 py-3.5 border-b border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/40 shrink-0">
           <div className="flex items-center gap-2">
-            {/* Mac Traffic Lights */}
-            <div className="flex items-center gap-1.5 mr-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-            </div>
             <Sparkles className="w-4 h-4 text-[#8257F5]" />
             <h2 className="font-semibold text-xs sm:text-sm text-neutral-900 dark:text-neutral-100">
               Branded Social Share Card
@@ -201,7 +195,7 @@ export const SocialCardGeneratorModal: React.FC<SocialCardGeneratorModalProps> =
                     <span className="font-bold text-xs tracking-tight text-white/95">
                       MD Writer Studio
                     </span>
-                    <span className="block text-[9px] font-mono text-[#A892FF] opacity-90">
+                    <span className="block text-[9px] font-mono text-brand-400 opacity-90">
                       The Modern Markdown Studio
                     </span>
                   </div>
@@ -237,7 +231,7 @@ export const SocialCardGeneratorModal: React.FC<SocialCardGeneratorModalProps> =
                   </div>
                 </div>
 
-                <div className="px-2.5 py-1 rounded-md bg-[#8257F5]/20 border border-[#8257F5]/40 text-[10px] font-mono font-bold text-[#C7B5FF] tracking-wide">
+                <div className="px-2.5 py-1 rounded-md bg-brand-500/20 border border-brand-500/30 text-[10px] font-mono font-bold text-brand-300 tracking-wide">
                   {authorName}
                 </div>
               </div>

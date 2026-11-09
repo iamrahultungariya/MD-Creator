@@ -87,15 +87,13 @@ export const BulkShareModal: React.FC<BulkShareModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md font-sans select-none animate-in fade-in duration-150">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm font-sans select-none animate-in fade-in duration-150">
         <div
-          className="relative w-full max-w-xl bg-white dark:bg-[#121118] border border-neutral-200/90 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden font-sans text-neutral-900 dark:text-neutral-100 flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden font-sans text-neutral-900 dark:text-neutral-100 flex flex-col max-h-[90vh]"
           role="dialog"
           aria-modal="true"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top Rainbow Sheen */}
-          <div className="h-1.5 w-full bg-gradient-to-r from-brand-500 via-purple-500 to-indigo-500 shrink-0" />
 
           {/* Modal Header */}
           <div className="px-6 py-4 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between shrink-0">

@@ -75,7 +75,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
           onOpen(doc.id);
         }
       }}
-      className={`group relative p-6 rounded-xl bg-white dark:bg-[#121217] border cursor-pointer select-none active:scale-[0.99] transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-md flex flex-col justify-between h-full will-change-transform ${
+      className={`group relative p-6 rounded-xl bg-white dark:bg-neutral-900 border cursor-pointer select-none active:translate-y-[1px] transition-[border-color,box-shadow] duration-150 flex flex-col justify-between h-full ${
         isSelected
           ? 'border-brand-500 ring-2 ring-brand-500/30 dark:border-brand-500'
           : doc.isPinned && currentTab === 'active'
@@ -105,10 +105,10 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
               </div>
             ) : (
               <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                   currentTab === 'trash'
                     ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60'
                 }`}
               >
                 <FileText className="w-4 h-4" />
@@ -259,7 +259,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
               {/* Mobile Micro-Popover Menu */}
               {isMobileMenuOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1.5 z-50 min-w-[165px] p-1.5 rounded-xl bg-white/95 dark:bg-[#18181c]/95 backdrop-blur-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl animate-in fade-in zoom-in-95 duration-150 font-sans text-left"
+                  className="absolute right-0 top-full mt-1.5 z-50 min-w-[165px] p-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl duration-150 font-sans text-left"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {currentTab === 'active' ? (

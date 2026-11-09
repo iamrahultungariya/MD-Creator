@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Sparkles,
+
   KeyRound,
   ExternalLink,
   CheckCircle2,
@@ -58,11 +58,8 @@ export const PreferencesAiTab: React.FC = () => {
   return (
     <div className="space-y-6 text-neutral-800 dark:text-neutral-200">
       {/* Overview Banner */}
-      <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-teal-500/10 border border-emerald-500/20 flex items-start gap-3">
-        <div className="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-          <Sparkles className="w-4 h-4" />
-        </div>
-        <div className="space-y-1">
+      <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-800 space-y-1">
+<div className="space-y-1">
           <div className="font-semibold text-xs text-neutral-900 dark:text-white flex items-center gap-2">
             <span>AI Engine &amp; Model Selection</span>
             <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-bold">
@@ -76,7 +73,7 @@ export const PreferencesAiTab: React.FC = () => {
       </div>
 
       {/* Gemini Section */}
-      <div className="p-4 rounded-xl bg-neutral-50/70 dark:bg-[#181620] border border-neutral-200/90 dark:border-neutral-800 space-y-5">
+      <div className="p-4 rounded-xl bg-neutral-50/70 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 space-y-5">
         <div className="flex items-center justify-between border-b border-neutral-200/60 dark:border-neutral-800 pb-3">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
