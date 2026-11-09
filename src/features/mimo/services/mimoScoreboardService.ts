@@ -1,5 +1,5 @@
 import { db, saveDocument, getDocumentContent } from '../../../db';
-import { syncDocumentToSupabase } from '../../../lib/supabase';
+import { syncDocumentToSupabase, supabase } from '../../../lib/supabase';
 import { MimoMessage } from '../types/mimoTypes';
 
 export const SCOREBOARD_DOC_ID = 'mimo_task_scoreboard';
@@ -175,6 +175,34 @@ export async function loadScoreboard(): Promise<TaskScore[]> {
     lastUsedAt: Date.now(),
   }));
 
+  // Hydrate from Supabase RPC if user is logged in
+  if (supabase) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      if (session?.user) {
+        const { data: remoteScores } = await supabase.rpc('get_mimo_task_scores');
+        if (Array.isArray(remoteScores) && remoteScores.length > 0) {
+          for (const r of remoteScores) {
+            const idx = initial.findIndex((it) => it.task === r.task);
+            if (idx >= 0) {
+              initial[idx].score = Math.max(initial[idx].score, r.score);
+              initial[idx].lastUsedAt = Math.max(initial[idx].lastUsedAt, new Date(r.last_used_at).getTime());
+            } else {
+              initial.push({
+                task: r.task,
+                label: r.label || r.task,
+                score: r.score,
+                lastUsedAt: new Date(r.last_used_at).getTime(),
+              });
+            }
+          }
+        }
+      }
+    } catch {
+      // Offline or table not migrated yet
+    }
+  }
+
   const initialMd = serializeScoreboardMarkdown(initial);
   await saveDocument(
     SCOREBOARD_DOC_ID,
@@ -208,8 +236,24 @@ function scheduleDebouncedCloudSync(): void {
       const content = await getDocumentContent(SCOREBOARD_DOC_ID);
       if (meta && content) {
         await syncDocumentToSupabase(meta, content);
-        isScoreboardDirty = false;
       }
+
+      // Also sync to dedicated public.mimo_task_scores table if available
+      if (supabase && cachedScoreboard && cachedScoreboard.length > 0) {
+        const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+        if (session?.user) {
+          await supabase.rpc('sync_mimo_task_scores', {
+            p_scores: cachedScoreboard.map((s) => ({
+              task: s.task,
+              label: s.label,
+              score: s.score,
+              lastUsedAt: new Date(s.lastUsedAt).toISOString(),
+            })),
+          }).catch(() => {});
+        }
+      }
+
+      isScoreboardDirty = false;
     } catch (err) {
       console.warn('[MimoScoreboard] Debounced cloud push deferred (offline or unauthenticated):', err);
     }
