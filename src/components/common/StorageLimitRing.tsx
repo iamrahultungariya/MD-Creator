@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../../db';
+import { calculateVaultStorageBreakdown } from '../../db';
 import { StorageDetailsModal } from './StorageDetailsModal';
 
 export const SOFT_LIMIT_MB = 300;
@@ -27,33 +27,8 @@ export function useWorkspaceStorage(): StorageUsageData {
       try {
         let bytes = 0;
 
-        // Try native storage estimate first
-        if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
-          const estimate = await navigator.storage.estimate();
-          if (estimate.usage && estimate.usage > 0) {
-            bytes = estimate.usage;
-          }
-        }
-
-        // Fallback or addition from local Dexie IndexedDB documents and images if estimate is 0
-        if (bytes === 0) {
-          try {
-            const docs = await db.documents.toArray();
-            let docBytes = 0;
-            for (const doc of docs) {
-              docBytes += doc.sizeBytes || 0;
-            }
-            const images = await db.images.toArray();
-            let imageBytes = 0;
-            for (const img of images) {
-              imageBytes += img.sizeBytes || 0;
-            }
-            bytes = docBytes + imageBytes;
-          } catch {
-            // In case of DB read error, default to minimal footprint
-            bytes = 1024 * 250; // 250 KB
-          }
-        }
+        const metrics = await calculateVaultStorageBreakdown();
+        bytes = metrics.vaultBytes;
 
         if (isMounted) {
           const usedMb = Number((bytes / (1024 * 1024)).toFixed(1));

@@ -1,5 +1,11 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { db, DocumentMetadata, notifyDocumentStoreChanged, getPendingDeletions, queuePendingDeletion, removePendingDeletion } from '../db';
+import {
+  useCrossDeviceConflictStore,
+  isTombstoneResolved,
+  isDocumentLocalOnly,
+  type RemoteDeletionConflict
+} from '../stores/useCrossDeviceConflictStore';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -245,60 +251,60 @@ export async function pullCloudDocuments(force = false): Promise<number> {
         }
 
         const cloudDocsList = cloudDocs || [];
-        const cloudDocIds = new Set(cloudDocsList.map((d: any) => d.id));
+        const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
 
-        // 1. Reconcile remote permanent deletions:
-        // Any document present locally in Dexie that was previously synced to the cloud (cloudSynced: true)
-        // but is now absent from cloudDocsList was permanently removed on another machine!
+        // 1. Separate active cloud documents from deletion tombstones
+        const tombstoneDocs = cloudDocsList.filter((d: any) => {
+          if (!d.is_deleted) return false;
+          const delTime = d.deleted_at ? new Date(d.deleted_at).getTime() : 0;
+          return now - delTime < THIRTY_DAYS_MS;
+        });
+        const tombstoneMap = new Map<string, any>(tombstoneDocs.map((d: any) => [d.id, d]));
+
+        // Check local documents for remote deletion conflicts
         const localDocs = await db.documents.toArray();
-        let remoteChangesCount = 0;
+        const pendingConflicts: RemoteDeletionConflict[] = [];
+
         for (const localDoc of localDocs) {
           if (localDoc.id === 'doc-getting-started' && localDoc.tags?.includes('Guide')) continue;
-          if (localDoc.cloudSynced && !cloudDocIds.has(localDoc.id)) {
-            await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
-              await db.documents.delete(localDoc.id);
-              await db.document_cache.delete(localDoc.id);
-              await db.revisions.where('documentId').equals(localDoc.id).delete();
-            });
-            remoteChangesCount++;
+          if (isDocumentLocalOnly(localDoc.id)) continue;
+
+          const tomb = tombstoneMap.get(localDoc.id);
+          if (tomb) {
+            const delTime = tomb.deleted_at ? new Date(tomb.deleted_at).getTime() : now;
+            if (!isTombstoneResolved(localDoc.id, delTime)) {
+              pendingConflicts.push({
+                id: localDoc.id,
+                title: localDoc.title,
+                deletedAt: delTime,
+                localUpdatedAt: localDoc.updatedAt,
+                snippet: localDoc.snippet,
+                wordCount: localDoc.wordCount,
+              });
+            }
           }
         }
 
+        if (pendingConflicts.length > 0) {
+          useCrossDeviceConflictStore.getState().addConflicts(pendingConflicts);
+        }
+
+        const conflictingIds = new Set(pendingConflicts.map((c) => c.id));
+        let remoteChangesCount = 0;
+
         if (cloudDocsList.length === 0) {
-          if (remoteChangesCount > 0) notifyDocumentStoreChanged();
           return 0;
         }
 
-        // 2. Identify active documents requiring content pull vs soft-deleted metadata updates
+        // 2. Identify active documents requiring content pull
         const pendingDocs: typeof cloudDocs = [];
         for (const cloudDoc of cloudDocsList) {
+          if (cloudDoc.is_deleted) continue; // Tombstones handled via reconciliation
+          if (conflictingIds.has(cloudDoc.id)) continue;
+
           const localDoc = await db.documents.get(cloudDoc.id);
           const cloudUpdated = new Date(cloudDoc.updated_at).getTime();
-
-          if (cloudDoc.is_deleted) {
-            // Soft-deleted in cloud: update local status without downloading content
-            if (!localDoc || !localDoc.isDeleted || cloudUpdated > localDoc.updatedAt + 1000) {
-              await db.documents.put({
-                id: cloudDoc.id,
-                title: cloudDoc.title,
-                snippet: cloudDoc.snippet || localDoc?.snippet || '',
-                tags: cloudDoc.tags || localDoc?.tags || [],
-                createdAt: new Date(cloudDoc.created_at).getTime(),
-                updatedAt: cloudUpdated,
-                lastOpenedAt: cloudDoc.last_opened_at ? new Date(cloudDoc.last_opened_at).getTime() : Date.now(),
-                openCount: 1,
-                isPinned: Boolean(cloudDoc.is_pinned),
-                isFavorite: Boolean(cloudDoc.is_favorite),
-                isDeleted: true,
-                deletedAt: cloudDoc.deleted_at ? new Date(cloudDoc.deleted_at).getTime() : Date.now(),
-                wordCount: cloudDoc.word_count || 0,
-                sizeBytes: cloudDoc.size_bytes || 0,
-                cloudSynced: true
-              });
-              remoteChangesCount++;
-            }
-            continue;
-          }
 
           // Active document: pull if missing locally or newer in cloud
           if (!localDoc || cloudUpdated > localDoc.updatedAt + 1000) {
@@ -411,8 +417,13 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
 
     // 3. Only push local documents that are missing in cloud OR modified locally since last cloud update
     const localDocs = await db.documents.toArray();
+    const activeConflicts = useCrossDeviceConflictStore.getState().conflicts;
+    const conflictingIds = new Set(activeConflicts.map((c) => c.id));
+
     const docsToSync = localDocs.filter((d) => {
       if (d.id === 'doc-getting-started' && d.tags?.includes('Guide')) return false;
+      if (isDocumentLocalOnly(d.id)) return false;
+      if (conflictingIds.has(d.id)) return false; // Never push during deletion conflict
       if (d.isDeleted && !d.cloudSynced) return false;
 
       const cloudTime = cloudMap.get(d.id);
@@ -509,7 +520,7 @@ export async function deleteDocumentFromSupabase(id: string): Promise<boolean> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return false;
 
-    // 1. Delete content from document_contents
+    // 1. Delete content from document_contents to purge heavy cloud text
     const { error: contentError } = await supabase
       .from('document_contents')
       .delete()
@@ -519,10 +530,14 @@ export async function deleteDocumentFromSupabase(id: string): Promise<boolean> {
       console.warn('[Supabase Delete] Content deletion warning:', contentError.message);
     }
 
-    // 2. Delete metadata from documents (RLS checks user_id)
+    // 2. Write lightweight deletion tombstone to documents table
     const { error: metaError } = await supabase
       .from('documents')
-      .delete()
+      .update({
+        is_deleted: true,
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id)
       .eq('user_id', session.user.id);
 
@@ -585,6 +600,22 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
               const cloudUpdated = new Date(updatedDoc.updated_at).getTime();
               const existing = await db.documents.get(updatedDoc.id);
               if (existing) {
+                // If updatedDoc was tombstoned on another device, trigger conflict review
+                if (updatedDoc.is_deleted) {
+                  const delTime = updatedDoc.deleted_at ? new Date(updatedDoc.deleted_at).getTime() : Date.now();
+                  if (!isTombstoneResolved(updatedDoc.id, delTime) && !isDocumentLocalOnly(updatedDoc.id)) {
+                    useCrossDeviceConflictStore.getState().addConflicts([{
+                      id: updatedDoc.id,
+                      title: updatedDoc.title,
+                      deletedAt: delTime,
+                      localUpdatedAt: existing.updatedAt,
+                      snippet: existing.snippet,
+                      wordCount: existing.wordCount,
+                    }]);
+                    return;
+                  }
+                }
+
                 await db.documents.update(updatedDoc.id, {
                   title: updatedDoc.title,
                   snippet: updatedDoc.snippet || existing.snippet,
@@ -638,4 +669,28 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
       activeRealtimeChannel = null;
     }
   };
+}
+
+
+/**
+ * Purges lightweight deletion tombstones older than 30 days from Supabase.
+ */
+export async function purgeExpiredCloudTombstones(): Promise<number> {
+  if (!supabase) return 0;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return 0;
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabase
+      .from('documents')
+      .delete()
+      .eq('user_id', session.user.id)
+      .eq('is_deleted', true)
+      .lt('deleted_at', thirtyDaysAgo)
+      .select('id');
+    return data?.length || 0;
+  } catch (err) {
+    console.warn('[purgeExpiredCloudTombstones] Warning:', err);
+    return 0;
+  }
 }

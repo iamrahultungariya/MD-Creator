@@ -15,6 +15,9 @@ import {
 } from 'lucide-react';
 import { db, emptyTrash, deleteDocumentRevisions, deleteAllRevisions } from '../../db';
 import { SOFT_LIMIT_MB, SOFT_LIMIT_BYTES } from './StorageLimitRing';
+import { APP_VERSION } from '../../config/version';
+import { isSupabaseConfigured, deleteDocumentFromSupabase } from '../../lib/supabase';
+import { markTombstoneResolved } from '../../stores/useCrossDeviceConflictStore';
 
 interface StorageDetailsModalProps {
   isOpen: boolean;
@@ -32,6 +35,7 @@ interface StorageBreakdown {
   imageCount: number;
   imageBytes: number;
   totalBytes: number;
+  browserEstimateBytes?: number;
 }
 
 export interface DocRevisionSummary {
@@ -138,12 +142,13 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
         imageBytes += img.sizeBytes || 0;
       }
 
-      let totalBytes = activeBytes + trashedBytes + revisionBytes + imageBytes;
+      const vaultTotalBytes = activeBytes + trashedBytes + revisionBytes + imageBytes;
+      let browserEstimateBytes = 0;
       if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
-        const est = await navigator.storage.estimate();
-        if (est.usage && est.usage > 0) {
-          totalBytes = est.usage;
-        }
+        try {
+          const est = await navigator.storage.estimate();
+          browserEstimateBytes = est.usage || 0;
+        } catch {}
       }
 
       setBreakdown({
@@ -155,7 +160,8 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
         revisionBytes,
         imageCount: allImages.length,
         imageBytes,
-        totalBytes,
+        totalBytes: vaultTotalBytes,
+        browserEstimateBytes,
       });
     } catch (err) {
       console.error('Failed to load storage breakdown:', err);
@@ -200,7 +206,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
       const allRevisions = await db.revisions.toArray();
       const exportData = {
         app: 'MD Writer',
-        version: '0.9.3.0',
+        version: APP_VERSION,
         exportedAt: new Date().toISOString(),
         documentsCount: allDocs.length,
         revisionsCount: allRevisions.length,
@@ -232,7 +238,16 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
     if (breakdown.trashedCount === 0) return;
     setIsPurgingTrash(true);
     try {
+      const trashedDocs = await db.documents.filter(d => Boolean(d.isDeleted)).toArray();
+      const ids = trashedDocs.map(d => d.id);
       await emptyTrash();
+      const now = Date.now();
+      for (const id of ids) {
+        markTombstoneResolved(id, now);
+        if (isSupabaseConfigured()) {
+          deleteDocumentFromSupabase(id).catch(console.warn);
+        }
+      }
       setTrashPurgedSuccess(true);
       await fetchBreakdown();
       if (onStorageChanged) onStorageChanged();
@@ -524,12 +539,19 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
             )}
           </div>
 
-          {/* Storage Information Note */}
-          <div className="p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 flex items-start gap-2.5 text-neutral-600 dark:text-neutral-400">
-            <HardDrive className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
-            <p className="leading-relaxed text-[11px]">
-              Workspace data is stored locally in your browser's IndexedDB. The {SOFT_LIMIT_MB} MB guideline helps maintain responsive indexing, search, and document autosaves.
-            </p>
+          {/* Storage Information Note & Origin Cache Footnote */}
+          <div className="p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/30 space-y-1.5 text-neutral-600 dark:text-neutral-400">
+            <div className="flex items-start gap-2.5">
+              <HardDrive className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
+              <p className="leading-relaxed text-[11px]">
+                Workspace data is stored locally in your browser's IndexedDB. The {SOFT_LIMIT_MB} MB guideline helps maintain responsive indexing, search, and document autosaves.
+              </p>
+            </div>
+            {Boolean(breakdown.browserEstimateBytes && breakdown.browserEstimateBytes > breakdown.totalBytes) && (
+              <div className="pl-6 text-[10px] text-neutral-400 dark:text-neutral-500 font-mono">
+                Total browser origin footprint (including PWA offline assets & temporary WAL): {formatBytes(breakdown.browserEstimateBytes!)}
+              </div>
+            )}
           </div>
 
           {/* Action Row */}

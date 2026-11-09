@@ -1,4 +1,10 @@
+import DiffMatchPatch from 'diff-match-patch';
 import { MimoDiffHunk, MimoToolCall, MimoClarificationData } from '../types/mimoTypes';
+
+const dmp = new DiffMatchPatch();
+dmp.Match_Distance = 5000;
+dmp.Match_Threshold = 0.5; // Resilient fuzzy match threshold
+dmp.Patch_DeleteThreshold = 0.5;
 
 export function extractClarificationFromResponse(aiResponse: string): {
   cleanText: string;
@@ -187,17 +193,52 @@ export function extractDiffHunkFromResponse(
   aiResponse: string,
   _currentDocContent: string
 ): { cleanText: string; hunk: MimoDiffHunk | null } {
+  // Pattern 0: Search / Replace blocks (<<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE)
+  const searchReplaceRegex = /<<<<<<< SEARCH\r?\n([\s\S]*?)\r?\n=======\r?\n([\s\S]*?)\r?\n>>>>>>> REPLACE/;
+  const srMatch = aiResponse.match(searchReplaceRegex);
+  if (srMatch) {
+    const orig = srMatch[1];
+    const prop = srMatch[2];
+    const hunk: MimoDiffHunk = {
+      id: `hunk-${Date.now()}`,
+      originalLines: orig,
+      proposedLines: prop,
+      explanation: 'Review the modified lines below before applying.',
+    };
+    const cleanText = aiResponse.replace(searchReplaceRegex, '').trim();
+    return { cleanText, hunk };
+  }
+
   // Pattern 1: Explicit diff code block
-  const diffBlockRegex = /```diff\n([\s\S]*?)```/;
+  const diffBlockRegex = /```diff\r?\n([\s\S]*?)```/;
   const match = aiResponse.match(diffBlockRegex);
 
   if (match) {
     const rawDiff = match[1];
+
+    // Check if inner diff contains SEARCH/REPLACE
+    const innerSr = rawDiff.match(/<<<<<<< SEARCH\r?\n([\s\S]*?)\r?\n=======\r?\n([\s\S]*?)\r?\n>>>>>>> REPLACE/);
+    if (innerSr) {
+      const orig = innerSr[1];
+      const prop = innerSr[2];
+      const hunk: MimoDiffHunk = {
+        id: `hunk-${Date.now()}`,
+        originalLines: orig,
+        proposedLines: prop,
+        explanation: 'Review the modified lines below before applying.',
+      };
+      const cleanText = aiResponse.replace(diffBlockRegex, '').trim();
+      return { cleanText, hunk };
+    }
+
     const removed: string[] = [];
     const added: string[] = [];
 
     const lines = rawDiff.split('\n');
     for (const l of lines) {
+      if (l.startsWith('@@') || l.startsWith('---') || l.startsWith('+++')) {
+        continue;
+      }
       if (l.startsWith('-')) {
         removed.push(l.replace(/^-\s?/, ''));
       } else if (l.startsWith('+')) {
@@ -221,7 +262,7 @@ export function extractDiffHunkFromResponse(
   }
 
   // Pattern 2: Proposed replacement block
-  const replaceBlockRegex = /```replacement\n([\s\S]*?)```/;
+  const replaceBlockRegex = /```replacement\r?\n([\s\S]*?)```/;
   const repMatch = aiResponse.match(replaceBlockRegex);
   if (repMatch) {
     const prop = repMatch[1].trim();
@@ -241,11 +282,13 @@ export function extractDiffHunkFromResponse(
 /**
  * Safely applies a MimoDiffHunk to document content without overwriting unrelated lines.
  * Employs multi-tier matching:
- * 1. Exact substring match
- * 2. Trimmed match
- * 3. Normalized line-endings match (\r\n vs \n)
- * 4. Whitespace-tolerant sliding window line scan
- * 5. Safe append fallback for pure additions
+ * 1. Pure insertion / generation fallback
+ * 2. Exact substring match
+ * 3. Trimmed substring match
+ * 4. Normalized line-endings match (\r\n vs \n)
+ * 5. Whitespace-tolerant line-by-line sliding window scan with internal blank-line preservation
+ * 6. DiffMatchPatch fuzzy patch application (Google DMP algorithm with tolerance)
+ * 7. First/Last Anchor Matching for refactored sections
  */
 export function applyDiffHunkToDocument(
   currentContent: string,
@@ -278,23 +321,39 @@ export function applyDiffHunkToDocument(
   // Tier 4: Normalized line-endings match (\r\n vs \n)
   const normDoc = currentContent.replace(/\r\n/g, '\n');
   const normOrig = orig.replace(/\r\n/g, '\n');
+  const normProp = prop.replace(/\r\n/g, '\n');
+
   if (normDoc.includes(normOrig)) {
-    const nextContent = normDoc.replace(normOrig, prop);
+    const nextContent = normDoc.replace(normOrig, normProp);
+    return { nextContent, success: true };
+  }
+
+  if (origTrimmed && normDoc.includes(normOrig.trim())) {
+    const nextContent = normDoc.replace(normOrig.trim(), normProp.trim());
     return { nextContent, success: true };
   }
 
   // Tier 5: Line-by-line whitespace-tolerant sliding window scan
+  // Note: We trim leading/trailing blank lines but PRESERVE internal blank lines for accurate line mapping!
   const docLines = normDoc.split('\n');
-  const origLines = normOrig.split('\n').filter((l) => l.trim().length > 0);
+  const rawOrigLines = normOrig.split('\n');
+
+  let startIdx = 0;
+  while (startIdx < rawOrigLines.length && !rawOrigLines[startIdx].trim()) startIdx++;
+  let endIdx = rawOrigLines.length - 1;
+  while (endIdx >= 0 && !rawOrigLines[endIdx].trim()) endIdx--;
+
+  const origLines = rawOrigLines.slice(startIdx, endIdx + 1);
 
   if (origLines.length > 0) {
+    const origLen = origLines.length;
     const firstOrigTrim = origLines[0].trim();
 
-    for (let i = 0; i < docLines.length; i++) {
+    for (let i = 0; i <= docLines.length - origLen; i++) {
       if (docLines[i].trim() === firstOrigTrim) {
         let allMatch = true;
-        for (let j = 1; j < origLines.length; j++) {
-          if (i + j >= docLines.length || docLines[i + j].trim() !== origLines[j].trim()) {
+        for (let j = 1; j < origLen; j++) {
+          if (docLines[i + j].trim() !== origLines[j].trim()) {
             allMatch = false;
             break;
           }
@@ -302,8 +361,48 @@ export function applyDiffHunkToDocument(
 
         if (allMatch) {
           const before = docLines.slice(0, i);
-          const after = docLines.slice(i + origLines.length);
-          const nextLines = [...before, prop, ...after];
+          const after = docLines.slice(i + origLen);
+          const nextLines = [...before, normProp, ...after];
+          return { nextContent: nextLines.join('\n'), success: true };
+        }
+      }
+    }
+  }
+
+  // Tier 6: DiffMatchPatch fuzzy patch fallback
+  // Tolerant to minor indentation, spacing, or surrounding context drift
+  try {
+    const patches = dmp.patch_make(normOrig, normProp);
+    if (patches && patches.length > 0) {
+      const [patchedResult, results] = dmp.patch_apply(patches, normDoc);
+      if (results && results.some(Boolean)) {
+        return { nextContent: patchedResult, success: true };
+      }
+    }
+  } catch (err) {
+    console.warn('[applyDiffHunkToDocument] DMP patch fallback error:', err);
+  }
+
+  // Tier 7: Anchor matching (first and last significant line)
+  if (origLines.length >= 3) {
+    const firstAnchor = origLines[0].trim();
+    const lastAnchor = origLines[origLines.length - 1].trim();
+
+    let firstMatchIdx = -1;
+    let matchCountFirst = 0;
+    for (let i = 0; i < docLines.length; i++) {
+      if (docLines[i].trim() === firstAnchor) {
+        firstMatchIdx = i;
+        matchCountFirst++;
+      }
+    }
+
+    if (matchCountFirst === 1 && firstMatchIdx !== -1) {
+      for (let j = firstMatchIdx + 1; j < Math.min(docLines.length, firstMatchIdx + origLines.length * 3); j++) {
+        if (docLines[j].trim() === lastAnchor) {
+          const before = docLines.slice(0, firstMatchIdx);
+          const after = docLines.slice(j + 1);
+          const nextLines = [...before, normProp, ...after];
           return { nextContent: nextLines.join('\n'), success: true };
         }
       }

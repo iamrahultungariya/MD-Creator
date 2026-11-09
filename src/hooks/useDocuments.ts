@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { markTombstoneResolved } from '../stores/useCrossDeviceConflictStore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   db, 
@@ -246,6 +247,9 @@ export function useDeleteDocument() {
   return useMutation({
     mutationFn: async ({ id, permanent = false }: { id: string; permanent?: boolean }) => {
       await deleteDocument(id, permanent);
+      if (permanent) {
+        markTombstoneResolved(id, Date.now());
+      }
       if (isSupabaseConfigured()) {
         if (permanent) {
           deleteDocumentFromSupabase(id).catch(console.warn);
@@ -276,6 +280,10 @@ export function useEmptyTrash() {
       const ids = trashedDocs.map(d => d.id);
       
       const count = await emptyTrash();
+      const now = Date.now();
+      for (const id of ids) {
+        markTombstoneResolved(id, now);
+      }
 
       if (isSupabaseConfigured()) {
         for (const id of ids) {

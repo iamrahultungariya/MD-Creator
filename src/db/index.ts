@@ -312,6 +312,30 @@ export async function createNewDocument(title = 'Untitled Document', initialCont
  */
 export async function deleteDocument(id: string, permanent = false): Promise<void> {
   if (permanent) {
+    // 1. Clean up unreferenced local images embedded in this document
+    try {
+      const cached = await db.document_cache.get(id);
+      if (cached?.content) {
+        const matches = Array.from(cached.content.matchAll(/image:\/\/(img_[a-z0-9_]+)/g));
+        if (matches.length > 0) {
+          const imgIds = new Set(matches.map(m => m[1]));
+          const allOtherCached = await db.document_cache.where('id').notEqual(id).toArray();
+          for (const other of allOtherCached) {
+            for (const imgId of Array.from(imgIds)) {
+              if (other.content.includes(imgId)) {
+                imgIds.delete(imgId);
+              }
+            }
+          }
+          for (const imgId of imgIds) {
+            await db.images.delete(imgId);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[deleteDocument] Image cleanup warning:', e);
+    }
+
     await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
       await db.documents.delete(id);
       await db.document_cache.delete(id);
@@ -389,6 +413,31 @@ export async function emptyTrash(): Promise<number> {
   const trashedDocs = await db.documents.filter(d => Boolean(d.isDeleted)).toArray();
   const ids = trashedDocs.map(d => d.id);
   if (ids.length === 0) return 0;
+
+  try {
+    for (const id of ids) {
+      const cached = await db.document_cache.get(id);
+      if (cached?.content) {
+        const matches = Array.from(cached.content.matchAll(/image:\/\/(img_[a-z0-9_]+)/g));
+        if (matches.length > 0) {
+          const imgIds = new Set(matches.map(m => m[1]));
+          const allOtherCached = await db.document_cache.filter(c => !ids.includes(c.id)).toArray();
+          for (const other of allOtherCached) {
+            for (const imgId of Array.from(imgIds)) {
+              if (other.content.includes(imgId)) {
+                imgIds.delete(imgId);
+              }
+            }
+          }
+          for (const imgId of imgIds) {
+            await db.images.delete(imgId);
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[emptyTrash] Image cleanup warning:', e);
+  }
 
   await db.transaction('rw', db.documents, db.document_cache, db.revisions, async () => {
     for (const id of ids) {
@@ -628,5 +677,74 @@ export async function getStorageStats(): Promise<{ totalDocs: number; cachedDocs
     totalDocs,
     cachedDocs: cached.length,
     totalBytes
+  };
+}
+
+
+export interface VaultStorageMetrics {
+  activeCount: number;
+  activeBytes: number;
+  trashedCount: number;
+  trashedBytes: number;
+  revisionCount: number;
+  revisionBytes: number;
+  imageCount: number;
+  imageBytes: number;
+  vaultBytes: number;
+  browserEstimateBytes: number;
+}
+
+export async function calculateVaultStorageBreakdown(): Promise<VaultStorageMetrics> {
+  const allDocs = await db.documents.toArray();
+  const activeDocs = allDocs.filter((d) => !d.isDeleted);
+  const trashedDocs = allDocs.filter((d) => Boolean(d.isDeleted));
+
+  let activeBytes = 0;
+  for (const doc of activeDocs) {
+    activeBytes += doc.sizeBytes || 0;
+  }
+
+  let trashedBytes = 0;
+  for (const doc of trashedDocs) {
+    trashedBytes += doc.sizeBytes || 0;
+  }
+
+  const allRevisions = await db.revisions.toArray();
+  let revisionBytes = 0;
+  for (const rev of allRevisions) {
+    revisionBytes += (rev.storedSizeBytes && rev.storedSizeBytes > 0)
+      ? rev.storedSizeBytes
+      : rev.deltaData
+      ? new Blob([rev.deltaData]).size
+      : new Blob([rev.content || '']).size;
+  }
+
+  const allImages = await db.images.toArray();
+  let imageBytes = 0;
+  for (const img of allImages) {
+    imageBytes += img.sizeBytes || 0;
+  }
+
+  const vaultBytes = activeBytes + trashedBytes + revisionBytes + imageBytes;
+
+  let browserEstimateBytes = 0;
+  if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+    try {
+      const est = await navigator.storage.estimate();
+      browserEstimateBytes = est.usage || 0;
+    } catch {}
+  }
+
+  return {
+    activeCount: activeDocs.length,
+    activeBytes,
+    trashedCount: trashedDocs.length,
+    trashedBytes,
+    revisionCount: allRevisions.length,
+    revisionBytes,
+    imageCount: allImages.length,
+    imageBytes,
+    vaultBytes,
+    browserEstimateBytes,
   };
 }

@@ -46,6 +46,9 @@ const DailyFeedbackNudge = React.lazy(() =>
 const GeminiFixedToast = React.lazy(() =>
   import('./components/common/GeminiFixedToast').then((m) => ({ default: m.GeminiFixedToast }))
 );
+const CrossDeviceDeletionModal = React.lazy(() =>
+  import('./components/common/CrossDeviceDeletionModal').then((m) => ({ default: m.CrossDeviceDeletionModal }))
+);
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -226,6 +229,11 @@ export const App: React.FC = () => {
         {/* Gemini AI Fixed & OpenRouter Retirement Announcement Toast */}
         <Suspense fallback={null}>
           <GeminiFixedToast />
+        </Suspense>
+
+        {/* Cross-Device Remote Deletion Reconciliation Modal */}
+        <Suspense fallback={null}>
+          <CrossDeviceDeletionModal />
         </Suspense>
 
         <AppRoutes />
