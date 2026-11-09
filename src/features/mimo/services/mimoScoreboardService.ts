@@ -249,7 +249,7 @@ function scheduleDebouncedCloudSync(): void {
               score: s.score,
               lastUsedAt: new Date(s.lastUsedAt).toISOString(),
             })),
-          }).catch(() => {});
+          });
         }
       }
 
