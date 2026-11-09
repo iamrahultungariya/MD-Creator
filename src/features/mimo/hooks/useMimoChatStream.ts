@@ -13,6 +13,14 @@ import { telemetryService } from '../../../services/telemetryService';
 import { fetchPinnedDocReferences, formatPinnedDocsPromptLayer } from '../services/docPinningService';
 import { extractEpisodicBulletsLocally, shouldCompressEpisodicTurns } from '../services/episodicMemoryEngine';
 import { recordTaskExecution } from '../services/mimoScoreboardService';
+import {
+  parseSlashCommand,
+  executeCompactCommand,
+  buildCleanMarkdownPrompt,
+  buildActionItemsPrompt,
+  buildTrimPrompt,
+  buildReviewPrompt,
+} from '../services/mimoSlashCommands';
 
 export interface UseMimoChatStreamProps {
   docId: string;
@@ -102,6 +110,19 @@ export function useMimoChatStream({
     const raw = customPrompt !== undefined ? customPrompt : inputPrompt;
     if (!raw.trim() || isGenerating || isGeneratingRef.current) return;
 
+    // Handle /compact command immediately without triggering standard generation loop
+    const parsedSlash = parseSlashCommand(raw);
+    if (parsedSlash && parsedSlash.def.id === 'compact') {
+      setInputPrompt('');
+      await executeCompactCommand({
+        docId,
+        docTitle: title,
+        onToast,
+        apiKey: userApiKey,
+      });
+      return;
+    }
+
     // AI-exclusion document guardrail
     if (isAiExcluded) {
       onToast('🛡️ This document is excluded from AI scan. Change setting in Document Sidebar.');
@@ -156,6 +177,32 @@ export function useMimoChatStream({
 
     const liveSelection = getSelectedText ? getSelectedText().trim() : '';
     const currentSelectionSnapshot = activeSelection || liveSelection;
+
+    // Resolve specialized prompt transformation if a generation slash command was invoked
+    let promptToSend = raw;
+    let slashActivityType: MimoActivityType | null = null;
+    let slashActivityTitle: string | null = null;
+
+    if (parsedSlash) {
+      if (parsedSlash.def.id === 'clean-md') {
+        promptToSend = buildCleanMarkdownPrompt(content, currentSelectionSnapshot, parsedSlash.args);
+        slashActivityType = 'improving';
+        slashActivityTitle = '🧹 Formatting Markdown Syntax & Tables';
+      } else if (parsedSlash.def.id === 'action-items') {
+        promptToSend = buildActionItemsPrompt(content, currentSelectionSnapshot, parsedSlash.args);
+        slashActivityType = 'analyzing';
+        slashActivityTitle = '📋 Extracting Action Items & Tasks';
+      } else if (parsedSlash.def.id === 'trim') {
+        promptToSend = buildTrimPrompt(content, currentSelectionSnapshot, parsedSlash.args);
+        slashActivityType = 'improving';
+        slashActivityTitle = '✂️ Trimming Fluff & Redundancy';
+      } else if (parsedSlash.def.id === 'review') {
+        promptToSend = buildReviewPrompt(content, parsedSlash.args);
+        slashActivityType = 'analyzing';
+        slashActivityTitle = '🔍 Auditing Document Quality & Gaps';
+      }
+    }
+
     const userMessageId = `user-${Date.now()}`;
     addMessage({
       id: userMessageId,
@@ -179,26 +226,29 @@ export function useMimoChatStream({
       docId,
       title,
       content,
-      userPrompt: raw,
+      userPrompt: promptToSend,
       cursorLine,
       selectedText: currentSelectionSnapshot || undefined,
     });
 
     // Activity setup
-    const activityType: MimoActivityType = isDocGen
-      ? 'generating'
-      : isEdit
-      ? 'improving'
-      : isTranslate
-      ? 'translating'
-      : isSummarize
-      ? 'summarizing'
-      : context.guardrailTriggered
-      ? 'analyzing'
-      : 'thinking';
+    const activityType: MimoActivityType =
+      slashActivityType ||
+      (isDocGen
+        ? 'generating'
+        : isEdit
+        ? 'improving'
+        : isTranslate
+        ? 'translating'
+        : isSummarize
+        ? 'summarizing'
+        : context.guardrailTriggered
+        ? 'analyzing'
+        : 'thinking');
 
     const activityTitle =
-      activityType === 'generating'
+      slashActivityTitle ||
+      (activityType === 'generating'
         ? 'Synthesizing Document'
         : activityType === 'improving'
         ? 'Computing Non-Destructive Diff'
@@ -208,7 +258,7 @@ export function useMimoChatStream({
         ? `Summarizing "${context.docTitle}"`
         : activityType === 'analyzing'
         ? 'Scanning Document (LOC Guardrail)'
-        : `Analyzing "${context.docTitle}"`;
+        : `Analyzing "${context.docTitle}"`);
 
     // Resolve pinned reference documents from workspace
     const pinnedDocs = await fetchPinnedDocReferences(pinnedDocIds);
@@ -275,7 +325,7 @@ export function useMimoChatStream({
 
       const result = await streamMimoResponse({
         apiKey: userApiKey,
-        prompt: raw,
+        prompt: promptToSend,
         context,
         thinkingLevel: thinkingLevel,
         selectedModel: selectedModel,

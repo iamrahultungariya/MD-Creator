@@ -29,3 +29,4 @@ export * from './services/crossNoteLinkerService';
 export * from './services/docPinningService';
 export * from './services/episodicMemoryEngine';
 export * from './services/chaosToClarityTransformer';
+export * from './services/mimoSlashCommands';
