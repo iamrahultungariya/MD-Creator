@@ -1,90 +1,93 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Sparkles, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface PricingTier {
   id: string;
   name: string;
   tagline: string;
-  badge?: string;
-  monthlyPrice: string;
-  annualPrice: string;
-  annualBilled: string;
-  lifetimePrice?: string;
-  isPopular?: boolean;
+  priceDisplay: {
+    monthly: string;
+    annual: string;
+    note: string;
+  };
+  isFeatured?: boolean;
+  featuredBadge?: string;
   ctaText: string;
-  ctaAction: 'editor' | 'auth' | 'contact';
-  features: Array<{ text: string; highlight?: boolean; beta?: boolean; roadmap?: boolean }>;
+  ctaAction: 'editor' | 'auth';
+  features: string[];
 }
 
 const TIERS: PricingTier[] = [
   {
     id: 'free',
-    name: 'Starter & BYOK',
+    name: 'Free Forever (BYOK)',
     tagline: 'Pure distraction-free writing for developers, researchers, and students.',
-    monthlyPrice: '$0',
-    annualPrice: '$0',
-    annualBilled: 'Free forever',
-    ctaText: 'Start Writing Free',
+    priceDisplay: {
+      monthly: '$0',
+      annual: '$0',
+      note: 'Free forever • No credit card',
+    },
+    ctaText: 'Start Free',
     ctaAction: 'editor',
     features: [
-      { text: '100% Local-First with offline IndexedDB' },
-      { text: 'Direct local folder access via File System API (Ctrl+O)' },
-      { text: 'Full GitHub Flavored Markdown, KaTeX & Mermaid' },
-      { text: 'Direct BYOK for Google Gemini 3.x Family', highlight: true },
-      { text: 'Standard Markdown & browser print export' },
-      { text: '15+ curated markdown blueprints' },
-      { text: 'Zero mandatory account required to write' },
+      '100% Local-first IndexedDB storage',
+      'Direct local folder access via File System API',
+      'GitHub Flavored Markdown & KaTeX equations',
+      'Direct BYOK Google Gemini 3.x key connection',
+      'Client-side HTML, Markdown & browser print export',
+      '15+ curated markdown blueprints',
+    ],
+  },
+  {
+    id: 'lifetime',
+    name: 'Early-Bird Lifetime',
+    tagline: 'Permanent access with lifetime updates for craft-focused writers.',
+    isFeatured: true,
+    featuredBadge: 'Early-Bird Deal',
+    priceDisplay: {
+      monthly: '$49',
+      annual: '$49',
+      note: 'One-time payment • Lifetime updates',
+    },
+    ctaText: 'Get Lifetime Access',
+    ctaAction: 'auth',
+    features: [
+      'Everything in Free Forever',
+      'Lifetime license for all future v2.x and v3.x releases',
+      'Encrypted multi-device cloud backup & sync',
+      'Unlimited delta version snapshots & rollback',
+      'Camera-ready publication PDF studio export',
+      'Clean Word DOCX conversion with equations',
     ],
   },
   {
     id: 'pro',
-    name: 'Pro Writer',
-    tagline: 'Continuous cross-device sync, delta history, and publication-ready studio exports.',
-    badge: 'Most Popular',
-    monthlyPrice: '$8',
-    annualPrice: '$6',
-    annualBilled: '$72 billed annually',
-    lifetimePrice: '$49 Lifetime Early-Bird',
-    isPopular: true,
-    ctaText: 'Upgrade to Pro',
+    name: 'Pro Studio',
+    tagline: 'Continuous cross-device sync and managed AI quota for teams and professionals.',
+    priceDisplay: {
+      monthly: '$8',
+      annual: '$6',
+      note: 'per month • billed annually or $8 monthly',
+    },
+    ctaText: 'Start 14-Day Trial',
     ctaAction: 'auth',
     features: [
-      { text: 'Everything in Free' },
-      { text: 'Encrypted multi-device sync across laptops, tablets & phones', highlight: true },
-      { text: 'Unlimited version snapshots & delta diff restore' },
-      { text: 'Publication-Grade Vector PDF Studio', beta: true },
-      { text: 'Microsoft Word (.docx) export with tables & callouts', beta: true },
-      { text: 'Password-protected public sharing links' },
-      { text: '"View & Propose Changes" collaborative mode' },
-      { text: 'Hosted AI Infrastructure', roadmap: true },
-    ],
-  },
-  {
-    id: 'team',
-    name: 'Team & Organization',
-    tagline: 'Centralized knowledge vaults and shared documentation for engineering teams.',
-    monthlyPrice: '$16',
-    annualPrice: '$12',
-    annualBilled: 'per user / month billed annually',
-    ctaText: 'Create Team Vault',
-    ctaAction: 'auth',
-    features: [
-      { text: 'Everything in Pro' },
-      { text: 'Shared team workspace vaults & folders' },
-      { text: 'Shared organization blueprints & templates' },
-      { text: 'Role-based access control (Admin, Editor, Viewer)' },
-      { text: 'Priority sync infrastructure & unified billing' },
-      { text: 'Dedicated support & onboarding' },
+      'Everything in Free Forever',
+      'Encrypted cloud synchronization across devices',
+      'Managed Gemini 3.x AI quota without personal GCP key',
+      'Delta revision history & diff viewer',
+      'Password-protected public sharing links',
+      'Priority email & Discord engineering support',
     ],
   },
 ];
 
 export const PricingSection: React.FC = () => {
   const navigate = useNavigate();
-  const [billingCycle, setBillingCycle] = useState<'annual' | 'monthly'>('annual');
+  const [billingInterval, setBillingInterval] = useState<'annual' | 'monthly'>('annual');
 
-  const handleCta = (action: string) => {
+  const handleCta = (action: 'editor' | 'auth') => {
     if (action === 'editor') {
       navigate('/editor');
     } else {
@@ -93,41 +96,37 @@ export const PricingSection: React.FC = () => {
   };
 
   return (
-    <section id="pricing" className="py-20 sm:py-28 relative overflow-hidden bg-neutral-50/50 dark:bg-neutral-900/20 border-t border-neutral-200/80 dark:border-neutral-800 transition-colors font-sans">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>TRANSPARENT PRICING</span>
+    <section id="pricing" className="py-16 sm:py-24 border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Section Header */}
+        <div className="mb-12 max-w-2xl">
+          <div className="font-mono text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-2">
+            Pricing Architecture
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white tracking-[-0.03em] leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-neutral-950 dark:text-white">
             Local core free forever. Pay for sync &amp; studio power.
           </h2>
-          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Your local files and BYOK AI are never locked behind a paywall. Support development and unlock continuous cloud backup, unlimited revisions, and publication exports.
+          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            Your local files and BYOK AI are never locked behind a paywall. Upgrade when you need encrypted multi-device sync and camera-ready exports.
           </p>
 
-          {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-3 p-1 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xs mt-2">
+          {/* Billing Interval Toggle */}
+          <div className="mt-6 inline-flex items-center p-0.5 rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
             <button
-              type="button"
-              onClick={() => setBillingCycle('annual')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                billingCycle === 'annual'
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              onClick={() => setBillingInterval('annual')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+                billingInterval === 'annual'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              <span>Annual</span>
-              <span className="ml-1.5 text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-medium">Save 25%</span>
+              Annual (Save 25%)
             </button>
             <button
-              type="button"
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all ${
-                billingCycle === 'monthly'
-                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+              onClick={() => setBillingInterval('monthly')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+                billingInterval === 'monthly'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
@@ -136,117 +135,82 @@ export const PricingSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        {/* 3 Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {TIERS.map((tier) => {
-            const isAnnual = billingCycle === 'annual';
-            const price = isAnnual ? tier.annualPrice : tier.monthlyPrice;
-            const billedNote = isAnnual ? tier.annualBilled : 'billed monthly';
+            const price = billingInterval === 'annual' ? tier.priceDisplay.annual : tier.priceDisplay.monthly;
 
             return (
               <div
                 key={tier.id}
-                className={`relative rounded-2xl p-7 flex flex-col justify-between transition-all ${
-                  tier.isPopular
-                    ? 'bg-white dark:bg-neutral-900 border-2 border-brand-500/80 shadow-md ring-1 ring-brand-500/20'
-                    : 'bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xs'
+                className={`rounded-lg p-6 sm:p-7 flex flex-col justify-between transition-colors ${
+                  tier.isFeatured
+                    ? 'border-2 border-brand-500/80 bg-neutral-50/60 dark:bg-neutral-900/60 relative'
+                    : 'border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950'
                 }`}
               >
-                {/* Popular Pill */}
-                {tier.isPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-brand-600 text-white font-semibold text-[10px] tracking-wide uppercase shadow-xs">
-                    {tier.badge}
-                  </div>
-                )}
-
-                <div className="space-y-5">
-                  {/* Card Title & Tagline */}
-                  <div>
-                    <h3 className="text-xl font-bold text-neutral-950 dark:text-white tracking-tight">
+                <div>
+                  {/* Top Label & Featured Badge */}
+                  <div className="flex items-center justify-between mb-3 min-h-[22px]">
+                    <span className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-semibold">
                       {tier.name}
-                    </h3>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5 leading-relaxed min-h-[34px]">
-                      {tier.tagline}
-                    </p>
-                  </div>
-
-                  {/* Price Display */}
-                  <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
-                        {price}
+                    </span>
+                    {tier.featuredBadge && (
+                      <span className="font-mono text-[10px] px-2 py-0.5 rounded border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 font-medium">
+                        {tier.featuredBadge}
                       </span>
-                      {tier.monthlyPrice !== '$0' && (
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">/ month</span>
-                      )}
-                    </div>
-                    <div className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5">
-                      {billedNote}
-                    </div>
-
-                    {/* Lifetime Pill Option for Pro */}
-                    {tier.lifetimePrice && (
-                      <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
-                        <Zap className="w-3 h-3 text-emerald-500" />
-                        <span>Or <strong>{tier.lifetimePrice}</strong></span>
-                      </div>
                     )}
                   </div>
 
-                  {/* Feature Checklist */}
-                  <div className="space-y-2.5 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                    <div className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider font-mono">
-                      Included Capabilities
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[32px] leading-relaxed mb-6">
+                    {tier.tagline}
+                  </p>
+
+                  {/* Price */}
+                  <div className="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+                        {price}
+                      </span>
+                      {tier.id === 'pro' && (
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
+                          /month
+                        </span>
+                      )}
                     </div>
-                    <ul className="space-y-2 text-xs text-neutral-700 dark:text-neutral-300">
-                      {tier.features.map((feat, fIdx) => (
-                        <li key={fIdx} className="flex items-start gap-2">
-                          <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                          <span className={feat.highlight ? 'font-semibold text-neutral-950 dark:text-white' : ''}>
-                            {feat.text}
-                            {feat.beta && (
-                              <span className="ml-1.5 px-1.5 py-0.2 rounded-md text-[9px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                Beta
-                              </span>
-                            )}
-                            {feat.roadmap && (
-                              <span className="ml-1.5 px-1.5 py-0.2 rounded-md text-[9px] font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                                In Dev
-                              </span>
-                            )}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 mt-1">
+                      {tier.priceDisplay.note}
+                    </div>
+                  </div>
+
+                  {/* Feature List */}
+                  <div className="space-y-2.5 mb-8">
+                    <div className="text-[11px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold font-mono">
+                      Capabilities
+                    </div>
+                    {tier.features.map((feature, fIdx) => (
+                      <div key={fIdx} className="flex items-start gap-2.5 text-xs text-neutral-700 dark:text-neutral-300">
+                        <Check className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500 shrink-0 mt-0.5" />
+                        <span className="leading-snug">{feature}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Card CTA Button */}
-                <div className="pt-6 mt-6 border-t border-neutral-100 dark:border-neutral-800">
-                  <button
-                    type="button"
-                    onClick={() => handleCta(tier.ctaAction)}
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs active:translate-y-[1px] ${
-                      tier.isPopular
-                        ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-xs'
-                        : 'bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900'
-                    }`}
-                  >
-                    <span>{tier.ctaText}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                {/* Action CTA Button */}
+                <button
+                  onClick={() => handleCta(tier.ctaAction)}
+                  className={`w-full py-2.5 px-4 rounded text-xs font-medium active:translate-y-[1px] transition-colors cursor-pointer ${
+                    tier.isFeatured
+                      ? 'bg-brand-600 hover:bg-brand-700 text-white'
+                      : 'border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700'
+                  }`}
+                >
+                  {tier.ctaText}
+                </button>
               </div>
             );
           })}
-        </div>
-
-        {/* Guarantee Banner */}
-        <div className="p-4 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-center max-w-xl mx-auto shadow-2xs">
-          <div className="flex items-center justify-center gap-2 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>14-day money-back guarantee on Pro subscriptions. Cancel anytime in one click.</span>
-          </div>
         </div>
       </div>
     </section>
