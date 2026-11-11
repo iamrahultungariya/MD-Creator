@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { markTombstoneResolved } from '../stores/useCrossDeviceConflictStore';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
@@ -17,7 +16,6 @@ import {
   dispatchStorageChangedEvent
 } from '../db';
 import { 
-  pullCloudDocuments, 
   deleteDocumentFromSupabase, 
   syncDocumentToSupabase, 
   syncDocumentPinToSupabase, 
@@ -25,7 +23,6 @@ import {
   isSupabaseConfigured,
   supabase
 } from '../lib/supabase';
-import { useAuthStore } from '../stores/useAuthStore';
 import { searchDocumentsFullText } from '../utils/searchEngine';
 
 export interface PaginatedDocumentsResult {
