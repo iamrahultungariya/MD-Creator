@@ -563,16 +563,27 @@ export async function createRevisionSnapshot(
       baseRevisionId = undefined;
       deltaData = compressText(content);
     } else {
-      // Delta Patch: compute diff against latest revision
-      const baseContent = allExisting[allExisting.length - 1]?.content || latestSnapshot?.content || '';
-      const patchText = createDeltaPatch(baseContent, content);
-      
+      // Delta Patch: compute diff against immediate previous revision
+      const previousRev = allExisting[allExisting.length - 1];
+      let baseContent = previousRev?.content || '';
+      if (!baseContent && previousRev?.deltaData) {
+        if (previousRev.isSnapshot) {
+          baseContent = decompressText(previousRev.deltaData);
+        } else if (previousRev.baseRevisionId) {
+          // Fallback to latest snapshot content if needed
+          baseContent = latestSnapshot?.content || (latestSnapshot?.deltaData ? decompressText(latestSnapshot.deltaData) : '') || '';
+        }
+      }
+
+      const patchText = baseContent ? createDeltaPatch(baseContent, content) : '';
+
       if (!patchText) {
         isSnapshot = true;
+        baseRevisionId = undefined;
         deltaData = compressText(content);
       } else {
         isSnapshot = false;
-        baseRevisionId = latestSnapshot?.id ?? allExisting[allExisting.length - 1]?.id;
+        baseRevisionId = previousRev?.id ?? latestSnapshot?.id;
         deltaData = compressText(patchText);
       }
     }
@@ -581,10 +592,11 @@ export async function createRevisionSnapshot(
     const spaceSavedPercent = calculateSpaceSavings(rawSizeBytes, storedSizeBytes);
 
     // 4. Insert revision with deltaData & metadata
+    // For keyframe snapshots: store content. For deltas: omit raw content to achieve true 5x-50x space savings!
     const newId = await db.revisions.add({
       documentId,
       title,
-      content,
+      content: isSnapshot ? content : '',
       wordCount,
       timestamp: now,
       reason,
@@ -609,11 +621,21 @@ export async function createRevisionSnapshot(
 
       // If the revision becoming the oldest is a delta, rebase it to a full snapshot
       if (newOldest && !newOldest.isSnapshot && newOldest.id) {
-        await db.revisions.update(newOldest.id, {
-          isSnapshot: true,
-          deltaData: compressText(newOldest.content),
-          baseRevisionId: undefined
-        });
+        let rebasedContent = newOldest.content;
+        if (!rebasedContent && newOldest.deltaData) {
+          const revs = await getDocumentRevisions(documentId);
+          const found = revs.find(r => r.id === newOldest.id);
+          if (found?.content) rebasedContent = found.content;
+        }
+
+        if (rebasedContent) {
+          await db.revisions.update(newOldest.id, {
+            isSnapshot: true,
+            content: rebasedContent,
+            deltaData: compressText(rebasedContent),
+            baseRevisionId: undefined
+          });
+        }
       }
 
       const toDelete = updatedRevisions.slice(0, excess);
@@ -638,7 +660,7 @@ export async function getDocumentRevisions(documentId: string): Promise<Document
   const reconstructedMap = new Map<number, string>();
 
   for (const rev of revs) {
-    if (!rev.content && rev.deltaData) {
+    if ((!rev.content || !rev.content.trim()) && rev.deltaData) {
       if (rev.isSnapshot) {
         rev.content = decompressText(rev.deltaData);
       } else {

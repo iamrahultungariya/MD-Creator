@@ -184,7 +184,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
         contentRef.current = newRemoteContent;
         lastSnapshotContentRef.current = newRemoteContent;
         if (editorRef?.current && typeof editorRef.current.setValue === 'function') {
-          editorRef.current.setValue(newRemoteContent);
+          editorRef.current.setValue(newRemoteContent, true);
         }
         if (newRemoteTitle && newRemoteTitle !== titleRef.current) {
           setTitle(newRemoteTitle);
@@ -358,22 +358,38 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     [docId, title, content, onToast]
   );
 
-  // Toggle interactive task in preview
+  // Toggle interactive task in preview (strictly ignores code blocks to prevent index desync)
   const handleToggleTask = useCallback(
     (taskIndex: number, _currentChecked: boolean) => {
       let counter = 0;
-      const taskRegex = /^(\s*[-*+]\s*\[)([ xX])(\]\s.*)$/gm;
+      let inCodeBlock = false;
+      const lines = content.split('\n');
 
-      const nextContent = content.replace(taskRegex, (match, prefix, checkChar, suffix) => {
-        if (counter === taskIndex) {
-          counter++;
-          const nextChar = checkChar.trim().toLowerCase() === 'x' ? ' ' : 'x';
-          return `${prefix}${nextChar}${suffix}`;
+      const nextLines = lines.map((line) => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('```') || trimmed.startsWith('~~~')) {
+          inCodeBlock = !inCodeBlock;
+          return line;
         }
-        counter++;
-        return match;
+
+        if (inCodeBlock) {
+          return line;
+        }
+
+        const taskMatch = line.match(/^(\s*[-*+]\s*\[)([ xX])(\]\s.*)$/);
+        if (taskMatch) {
+          if (counter === taskIndex) {
+            counter++;
+            const nextChar = taskMatch[2].trim().toLowerCase() === 'x' ? ' ' : 'x';
+            return `${taskMatch[1]}${nextChar}${taskMatch[3]}`;
+          }
+          counter++;
+        }
+
+        return line;
       });
 
+      const nextContent = nextLines.join('\n');
       setContent(nextContent);
       setIsSaved(false);
       executeSave(nextContent, title);

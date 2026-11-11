@@ -1,7 +1,7 @@
 export interface CodeMirrorEditorHandle {
   focus: () => void;
   getValue: () => string;
-  setValue: (val: string) => void;
+  setValue: (val: string, preserveViewport?: boolean) => void;
   getSelection: () => string;
   replaceSelection: (text: string) => void;
   setCursor: (offset: number) => void;

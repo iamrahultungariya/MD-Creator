@@ -131,15 +131,28 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       flush: () => {
         flushChange();
       },
-      setValue: (val: string) => {
+      setValue: (val: string, preserveViewport = false) => {
         if (!viewRef.current) return;
         const current = viewRef.current.state.doc.toString();
         if (current !== val) {
           isExternalDispatchRef.current = true;
           lastInternalDocRef.current = val;
+          const prevSelection = viewRef.current.state.selection.main;
+          const scrollDOM = viewRef.current.scrollDOM;
+          const prevScrollTop = scrollDOM ? scrollDOM.scrollTop : 0;
+          const safeAnchor = Math.min(prevSelection.anchor, val.length);
+          const safeHead = Math.min(prevSelection.head, val.length);
+
           viewRef.current.dispatch({
             changes: { from: 0, to: current.length, insert: val },
+            ...(preserveViewport ? { selection: { anchor: safeAnchor, head: safeHead } } : {}),
           });
+
+          if (preserveViewport && scrollDOM) {
+            requestAnimationFrame(() => {
+              scrollDOM.scrollTop = prevScrollTop;
+            });
+          }
         }
       },
       getSelection: () => {

@@ -127,7 +127,22 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
 
   // 1.2 Protect math blocks ($$ and $) from DOMPurify & HTML escaping
   const protectedMathBlocks: string[] = [];
-  sanitized = sanitized.replace(/(\$\$[\s\S]*?\$\$|\$(?!\s)[^\$\n]+(?<!\s)\$)/g, (match) => {
+
+  // Protect display math ($$...$$) first
+  sanitized = sanitized.replace(/\$\$[\s\S]*?\$\$/g, (match) => {
+    const placeholder = `%%PROTECTED_MATH_${protectedMathBlocks.length}%%`;
+    protectedMathBlocks.push(match);
+    return placeholder;
+  });
+
+  // Protect valid inline math ($...$) while strictly ignoring currency figures ($50, $100, etc.)
+  sanitized = sanitized.replace(/(?<![\w\$])\$(?!\s)(?!\d+(?:\.\d+)?(?:\s|,|\.|\)|$))([^\$\n]+?)(?<!\s)\$(?![\w\d])/g, (match, inner) => {
+    // If the inner content is plain English prose with no math operators, treat as plain text (e.g. currency)
+    const hasMathIndicator = /[\\_=^+\-*/<>{}|]/.test(inner) || !inner.includes(' ');
+    const isCurrencySentence = /\b(and|or|for|is|costs?|was|were|to|at|per|in)\b/i.test(inner);
+    if (!hasMathIndicator || isCurrencySentence) {
+      return match;
+    }
     const placeholder = `%%PROTECTED_MATH_${protectedMathBlocks.length}%%`;
     protectedMathBlocks.push(match);
     return placeholder;

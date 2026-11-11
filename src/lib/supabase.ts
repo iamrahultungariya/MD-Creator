@@ -94,7 +94,18 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
         const userId = session?.user?.id || null;
         if (!userId) return false;
 
-        // 1. Upsert document metadata with user_id
+        // 1. Check if document metadata already exists in cloud
+        const { data: existingDoc } = await supabase
+          .from('documents')
+          .select('id, updated_at')
+          .eq('id', doc.id)
+          .maybeSingle();
+
+        const targetUpdatedAt = new Date(doc.updatedAt).toISOString();
+        const safeInitialUpdatedAt = existingDoc?.updated_at || targetUpdatedAt;
+
+        // Upsert document metadata with user_id
+        // Preserve prior updated_at if updating an existing record until content succeeds
         const { error: metaError } = await supabase.from('documents').upsert({
           id: doc.id,
           user_id: userId,
@@ -107,7 +118,7 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
           deleted_at: doc.deletedAt ? new Date(doc.deletedAt).toISOString() : null,
           word_count: doc.wordCount || 0,
           size_bytes: doc.sizeBytes || 0,
-          updated_at: new Date(doc.updatedAt).toISOString()
+          updated_at: safeInitialUpdatedAt
         });
 
         if (metaError) {
@@ -119,12 +130,20 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
         const { error: contentError } = await supabase.from('document_contents').upsert({
           id: doc.id,
           content,
-          updated_at: new Date(doc.updatedAt).toISOString()
+          updated_at: targetUpdatedAt
         });
 
         if (contentError) {
           console.warn('[Supabase Sync] Content error:', contentError.message);
           return false;
+        }
+
+        // 3. Content committed cleanly: finalize updated_at on documents metadata
+        if (safeInitialUpdatedAt !== targetUpdatedAt) {
+          await supabase
+            .from('documents')
+            .update({ updated_at: targetUpdatedAt })
+            .eq('id', doc.id);
         }
 
         await db.documents.update(doc.id, { cloudSynced: true }).catch(() => {});

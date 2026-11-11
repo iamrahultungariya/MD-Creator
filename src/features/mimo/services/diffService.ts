@@ -307,14 +307,14 @@ export function applyDiffHunkToDocument(
 
   // Tier 2: Exact substring match
   if (orig && currentContent.includes(orig)) {
-    const nextContent = currentContent.replace(orig, prop);
+    const nextContent = currentContent.replace(orig, () => prop);
     return { nextContent, success: true };
   }
 
   // Tier 3: Trimmed substring match
   const origTrimmed = orig.trim();
   if (origTrimmed && currentContent.includes(origTrimmed)) {
-    const nextContent = currentContent.replace(origTrimmed, prop.trim());
+    const nextContent = currentContent.replace(origTrimmed, () => prop.trim());
     return { nextContent, success: true };
   }
 
@@ -324,12 +324,12 @@ export function applyDiffHunkToDocument(
   const normProp = prop.replace(/\r\n/g, '\n');
 
   if (normDoc.includes(normOrig)) {
-    const nextContent = normDoc.replace(normOrig, normProp);
+    const nextContent = normDoc.replace(normOrig, () => normProp);
     return { nextContent, success: true };
   }
 
   if (origTrimmed && normDoc.includes(normOrig.trim())) {
-    const nextContent = normDoc.replace(normOrig.trim(), normProp.trim());
+    const nextContent = normDoc.replace(normOrig.trim(), () => normProp.trim());
     return { nextContent, success: true };
   }
 
