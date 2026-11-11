@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface FaqItem {
   question: string;
@@ -8,34 +8,34 @@ interface FaqItem {
 
 const FAQ_ITEMS: FaqItem[] = [
   {
-    question: 'Is MD Writer truly 100% offline and local-first?',
+    question: 'Where are my documents saved?',
     answer:
-      'Yes. All your notes, folders, and settings persist directly inside your browser storage (IndexedDB via Dexie) and your local computer filesystem via the File System Access API (Ctrl+O). You can draft on airplanes, subway commutes, or during network outages without losing a single character.',
+      'All your documents, folders, and preferences are saved locally inside your browser using IndexedDB. You can also connect local directories via the File System Access API (Ctrl+O). MD Writer never uploads or syncs your text to remote servers unless you explicitly sign in to optional cloud backup.',
   },
   {
-    question: 'How does the Google Gemini 3.x BYOK (Bring Your Own Key) work?',
+    question: 'How does the Google Gemini 3.x BYOK connection work?',
     answer:
-      'MD Writer is exclusively engineered for the Google Gemini 3.x family (gemini-3.5-flash-lite, gemini-3.5-flash, and gemini-3.8-flash). You can input your personal Google AI Studio API key in Mimo settings. Your key is stored solely in your local browser and communicates directly with Google API servers with zero intermediary proxy and zero platform token markup.',
+      'MD Writer connects directly to the Google Gemini API (gemini-3.5-flash-lite, gemini-3.5-flash, gemini-3.8-flash) using your own Google AI Studio API key. Your key is stored in your private browser sandbox. All API requests go directly to Google with zero middleman proxy, zero markup, and zero prompt logging.',
   },
   {
-    question: 'Do I need an account to start writing?',
+    question: 'Do I need an account to write or use MD Writer?',
     answer:
-      'No account is required to start writing immediately. However, signing in with an account is recommended if you want to unlock seamless cross-device cloud sync, automatic version snapshots, and encrypted cloud backups so you never lose your drafts across laptops, tablets, and phones.',
+      'No. You can open MD Writer and start drafting immediately without signing up, entering an email, or creating a password. It operates completely offline.',
   },
   {
-    question: 'Does Mimo AI read my private notes or send data without permission?',
+    question: 'Does Mimo AI inspect my private notes?',
     answer:
-      'Never. Mimo features a built-in client-side Privacy Shield that automatically detects and redacts passwords, phone numbers, and <private> tags before any prompt reaches the AI. Furthermore, you can toggle AI exclusion on individual sensitive documents in one click.',
+      'Never without your explicit instruction. Mimo includes a client-side Privacy Shield that redacts sensitive tokens before sending prompts, and you can mark any individual document as private or disable AI features entirely.',
   },
   {
     question: 'What export formats are supported?',
     answer:
-      'MD Writer supports standard Markdown (.md), clean copy-to-clipboard HTML, and presentation slide decks. The Pro tier features the Studio Export Suite (currently in Beta), which includes publication-grade Vector PDF generation with custom margins and cover pages, and Microsoft Word (.docx) export with styled tables and callout blocks.',
+      'You can export to clean Markdown (.md), styled HTML, standalone presentation slides, vector-grade PDF with custom margins, and Microsoft Word (.docx) with formatted KaTeX formulas and tables.',
   },
   {
-    question: 'Can I cancel or change my plan anytime?',
+    question: 'Can I export and take my data with me at any time?',
     answer:
-      'Yes. You can manage or cancel your Pro subscription at any time with a single click from your account profile. Your existing local documents will always remain accessible on your device with 100% data sovereignty.',
+      'Yes. You own 100% of your data. You can perform a full JSON/Markdown vault backup from Preferences (Ctrl+,) with one click at any time. There is zero vendor lock-in.',
   },
 ];
 
@@ -47,38 +47,34 @@ export const FaqSection: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="py-20 sm:py-28 relative overflow-hidden bg-white dark:bg-neutral-950 border-t border-neutral-200/80 dark:border-neutral-800 transition-colors font-sans">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-700/80">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>FREQUENTLY ASKED QUESTIONS</span>
+    <section id="faq" className="py-16 sm:py-24 border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 font-sans">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        {/* Section Header */}
+        <div className="mb-12 max-w-2xl">
+          <div className="font-mono text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-2">
+            Frequently Asked Questions
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white tracking-[-0.03em] leading-tight">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-neutral-950 dark:text-white">
             Everything you need to know.
           </h2>
-          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Straightforward answers about our offline architecture, Gemini 3.x BYOK, privacy guarantees, and sync infrastructure.
+          <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            Straightforward answers about our local-first storage, Gemini BYOK, privacy guarantees, and export formats.
           </p>
         </div>
 
-        {/* Accordion List */}
-        <div className="space-y-3">
+        {/* Clean Accordion with Hairline Dividers & Global rounded-2xl Container */}
+        <div className="max-w-3xl border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden bg-white dark:bg-neutral-950 divide-y divide-neutral-200 dark:divide-neutral-800 shadow-xs">
           {FAQ_ITEMS.map((item, idx) => {
             const isOpen = openIndex === idx;
             return (
-              <div
-                key={idx}
-                className="rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/30 overflow-hidden transition-colors"
-              >
+              <div key={idx} className="transition-colors">
                 <button
                   type="button"
                   onClick={() => toggleIndex(idx)}
-                  className="w-full py-4 px-5 sm:px-6 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-neutral-100/50 dark:hover:bg-neutral-800/40 transition-colors"
+                  className="w-full py-4.5 px-6 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-neutral-100">
+                  <span className="font-semibold text-sm sm:text-base text-neutral-950 dark:text-white">
                     {item.question}
                   </span>
                   <ChevronDown
@@ -88,7 +84,7 @@ export const FaqSection: React.FC = () => {
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-5 sm:px-6 pb-4 pt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed border-t border-neutral-200/40 dark:border-neutral-800/40 bg-white dark:bg-neutral-900/50">
+                  <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed bg-neutral-50/50 dark:bg-neutral-900/30">
                     {item.answer}
                   </div>
                 )}
