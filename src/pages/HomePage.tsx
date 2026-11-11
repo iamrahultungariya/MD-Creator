@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
-import { BentoFeatures } from '../components/home/BentoFeatures';
+import { StudioWorkspaceDemo } from '../components/home/StudioWorkspaceDemo';
+import { CoreValuesSection } from '../components/home/CoreValuesSection';
 import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
 import { BenchmarkSection } from '../components/home/BenchmarkSection';
 import { PricingSection } from '../components/home/PricingSection';
@@ -61,16 +62,19 @@ export const HomePage: React.FC = () => {
 
       {/* Main Content Sections */}
       <main className="flex-1">
-        {/* Notion-Style Centered Hero with Interactive Studio Showcase */}
+        {/* Outcome-focused Hero */}
         <Hero 
           onOpenCreateDoc={() => setIsCreateModalOpen(true)}
-        />
-
-        {/* 3-Block Notion-Style Features Story */}
-        <BentoFeatures 
-          onExploreFeatures={() => navigate('/editor')} 
           onOpenTemplates={() => setIsTemplatesOpen(true)}
         />
+
+        {/* Interactive Dual-Pane Studio Workspace Console */}
+        <StudioWorkspaceDemo 
+          onOpenEditor={() => navigate('/editor')}
+        />
+
+        {/* 3-Column Core Architecture Pillars */}
+        <CoreValuesSection />
 
         {/* Flagship AI Markdown Companion Showcase */}
         {FEATURE_FLAGS.mimo && <MimoShowcaseSection />}
@@ -105,14 +109,14 @@ export const HomePage: React.FC = () => {
             <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="w-full sm:w-auto px-7 py-3 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer font-sans"
+                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer font-sans"
               >
                 Create Document
               </button>
 
               <button
                 onClick={() => navigate('/documents')}
-                className="w-full sm:w-auto px-5 py-3 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs font-sans"
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 font-medium text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs font-sans"
               >
                 <BookOpen className="w-4 h-4 text-neutral-400" />
                 <span>Open Documents</span>

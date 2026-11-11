@@ -99,7 +99,7 @@ export const StudioWorkspaceDemo: React.FC<StudioWorkspaceDemoProps> = ({ onOpen
   };
 
   return (
-    <section className="py-8 sm:py-12 max-w-6xl mx-auto px-4 sm:px-6">
+    <section id="features" className="py-8 sm:py-12 max-w-6xl mx-auto px-4 sm:px-6">
       {/* Console Frame with Global rounded-2xl Token */}
       <div className="border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden bg-white dark:bg-neutral-950 shadow-xs">
         {/* Frame Header Bar */}
