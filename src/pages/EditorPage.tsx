@@ -18,6 +18,7 @@ import { writeLocalFile } from '../services/localFolderService';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
 import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
+import { EditorConflictBanner } from '../features/editor/components/EditorConflictBanner';
 import { telemetryService } from '../services/telemetryService';
 import {
   MimoEditorDiffBanner,
@@ -416,6 +417,14 @@ export const EditorPage: React.FC = () => {
           onToast={showToast}
         />
       )}
+
+      {/* Realtime Cross-Device Conflict Banner */}
+      <EditorConflictBanner
+        conflict={doc.remoteConflict}
+        onKeepMine={doc.resolveConflictKeepMine}
+        onUseRemote={doc.resolveConflictUseRemote}
+        onDismiss={doc.dismissRemoteConflict}
+      />
 
       {/* Main Workspace (Split View, Textarea, Markdown Preview, FX) */}
       <EditorWorkspace

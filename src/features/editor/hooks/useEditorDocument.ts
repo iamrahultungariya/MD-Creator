@@ -15,6 +15,7 @@ import { markTombstoneResolved } from '../../../stores/useCrossDeviceConflictSto
 import { useConfirm } from '../../../stores/useConfirmStore';
 import { MarkdownTemplate } from '../../../data/templates';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
+import { RemoteConflictData } from '../components/EditorConflictBanner';
 
 const OFFLINE_QUEUE_KEY = 'md-writer-offline-sync-queue';
 
@@ -63,6 +64,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
   const [isSaved, setIsSaved] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [remoteConflict, setRemoteConflict] = useState<RemoteConflictData | null>(null);
 
   const contentRef = useRef<string>(content);
   contentRef.current = content;
@@ -168,7 +170,68 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     };
   }, [onToast]);
 
-  // 3. Supabase Realtime WebSocket Channel (Bug 7 Fix)
+  // 3. Remote Content Change Handler with Non-Destructive Conflict Guard
+  const handleRemoteChange = useCallback(
+    (newRemoteContent: string, newRemoteTitle?: string, remoteUpdatedAt?: number) => {
+      if (newRemoteContent === contentRef.current) return;
+
+      const isClean = isSavedRef.current && Date.now() - lastLocalEditTimeRef.current > 3000;
+
+      if (isClean) {
+        // Clean state: update editor and view smoothly (<500ms)
+        setContent(newRemoteContent);
+        contentRef.current = newRemoteContent;
+        lastSnapshotContentRef.current = newRemoteContent;
+        if (editorRef?.current && typeof editorRef.current.setValue === 'function') {
+          editorRef.current.setValue(newRemoteContent);
+        }
+        if (newRemoteTitle && newRemoteTitle !== titleRef.current) {
+          setTitle(newRemoteTitle);
+          titleRef.current = newRemoteTitle;
+        }
+        setIsSaved(true);
+        db.document_cache.put({ id: docId, content: newRemoteContent, cachedAt: Date.now() }).catch(() => {});
+        onToast?.('⚡ Synced latest changes from another device');
+      } else {
+        // Dirty state: non-destructive conflict protection!
+        createRevisionSnapshot(docId, 'Pre-conflict local draft', contentRef.current, 'local_auto').catch(() => {});
+        setRemoteConflict({
+          remoteContent: newRemoteContent,
+          remoteTitle: newRemoteTitle,
+          remoteUpdatedAt: remoteUpdatedAt || Date.now(),
+        });
+      }
+    },
+    [docId, editorRef, onToast]
+  );
+
+  // Global Remote Document Update & Flush Listeners
+  useEffect(() => {
+    const handleRemoteEvent = (event: Event) => {
+      const custom = event as CustomEvent;
+      const { docId: updatedId, content: remoteContent, title: remoteTitle, updatedAt: remoteUpdated } =
+        custom.detail || {};
+      if (updatedId === docId && typeof remoteContent === 'string') {
+        handleRemoteChange(remoteContent, remoteTitle, remoteUpdated);
+      }
+    };
+
+    const handleFlushDrafts = () => {
+      if (!isSavedRef.current && contentRef.current !== undefined && docId) {
+        saveDocument(docId, titleRef.current, contentRef.current, docMetadata?.tags).catch(console.warn);
+      }
+    };
+
+    window.addEventListener('md-writer-remote-doc-update', handleRemoteEvent as EventListener);
+    window.addEventListener('md-writer-flush-drafts', handleFlushDrafts);
+
+    return () => {
+      window.removeEventListener('md-writer-remote-doc-update', handleRemoteEvent as EventListener);
+      window.removeEventListener('md-writer-flush-drafts', handleFlushDrafts);
+    };
+  }, [docId, docMetadata?.tags, handleRemoteChange]);
+
+  // Supabase Realtime WebSocket Channel for direct document_contents updates
   useEffect(() => {
     if (!isSupabaseConfigured() || !supabase || !docId) return;
 
@@ -183,18 +246,9 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
           filter: `id=eq.${docId}`,
         },
         (payload: any) => {
-          // If the user has edited locally within the last 8 seconds, ignore incoming remote updates
-          // to prevent overwriting active typing or freezing the UI thread with remote echoes
-          if (Date.now() - lastLocalEditTimeRef.current < 8000) {
-            return;
-          }
           const remoteContent = payload.new?.content;
-          if (typeof remoteContent === 'string' && remoteContent !== contentRef.current) {
-            setContent(remoteContent);
-            contentRef.current = remoteContent;
-            lastSnapshotContentRef.current = remoteContent;
-            db.document_cache.put({ id: docId, content: remoteContent, cachedAt: Date.now() });
-            onToast?.('⚡ Synced live from another device');
+          if (typeof remoteContent === 'string') {
+            handleRemoteChange(remoteContent);
           }
         }
       )
@@ -203,7 +257,7 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     return () => {
       supabase?.removeChannel(channel);
     };
-  }, [docId, onToast]);
+  }, [docId, handleRemoteChange]);
 
   // 4. Save Execution: Multi-tier fallback (Dexie + localStorage + Supabase Cloud)
   const executeSave = useCallback(
@@ -494,6 +548,42 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     onToast?.('Copied Markdown!');
   }, [content, onToast]);
 
+  // Conflict Resolution Handlers
+  const resolveConflictKeepMine = useCallback(async () => {
+    setRemoteConflict(null);
+    await executeSave(contentRef.current, titleRef.current);
+    onToast?.('Kept your version & updated cloud');
+  }, [executeSave, onToast]);
+
+  const resolveConflictUseRemote = useCallback(async () => {
+    if (!remoteConflict) return;
+    const targetContent = remoteConflict.remoteContent;
+    const targetTitle = remoteConflict.remoteTitle || titleRef.current;
+
+    // Backup current local draft into revisions first
+    await createRevisionSnapshot(docId, 'Pre-conflict local draft', contentRef.current, 'local_auto').catch(() => {});
+
+    setContent(targetContent);
+    contentRef.current = targetContent;
+    lastSnapshotContentRef.current = targetContent;
+    if (editorRef?.current && typeof editorRef.current.setValue === 'function') {
+      editorRef.current.setValue(targetContent);
+    }
+    if (targetTitle) {
+      setTitle(targetTitle);
+      titleRef.current = targetTitle;
+    }
+    setIsSaved(true);
+    setRemoteConflict(null);
+
+    await saveDocument(docId, targetTitle, targetContent, docMetadata?.tags);
+    onToast?.('Applied remote version');
+  }, [docId, docMetadata?.tags, editorRef, onToast, remoteConflict]);
+
+  const dismissRemoteConflict = useCallback(() => {
+    setRemoteConflict(null);
+  }, []);
+
   return {
     docId,
     docMetadata,
@@ -504,6 +594,10 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
     isSaved,
     isSaving,
     isOffline,
+    remoteConflict,
+    resolveConflictKeepMine,
+    resolveConflictUseRemote,
+    dismissRemoteConflict,
     executeSave,
     queueAutoSave,
     handleToggleTask,
