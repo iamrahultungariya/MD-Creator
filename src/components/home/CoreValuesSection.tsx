@@ -17,8 +17,8 @@ export const CoreValuesSection: React.FC = () => {
           </p>
         </div>
 
-        {/* 3 Pillars Separated by 1px Hairline Borders */}
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-hidden bg-white dark:bg-neutral-950">
+        {/* 3 Pillars Separated by 1px Hairline Borders with Global rounded-2xl Token */}
+        <div className="border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden bg-white dark:bg-neutral-950 shadow-xs">
           <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-200 dark:divide-neutral-800">
             {/* Pillar 1: Local Storage */}
             <div className="p-6 sm:p-8 flex flex-col justify-between">

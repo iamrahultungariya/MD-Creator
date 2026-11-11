@@ -63,8 +63,8 @@ export const BenchmarkSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Crisp Tabular Matrix */}
-        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg overflow-x-auto bg-white dark:bg-neutral-950">
+        {/* Crisp Tabular Matrix with Global rounded-2xl Token */}
+        <div className="border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-x-auto bg-white dark:bg-neutral-950 shadow-xs">
           <table className="w-full text-left border-collapse min-w-[680px]">
             <thead>
               <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 text-xs font-semibold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">
@@ -72,7 +72,7 @@ export const BenchmarkSection: React.FC = () => {
                 <th className="py-3 px-4 w-1/3 bg-neutral-100/60 dark:bg-neutral-900/60 border-x border-neutral-200 dark:border-neutral-800 text-neutral-950 dark:text-white">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">MD Writer</span>
-                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border border-brand-200 dark:border-brand-800/80 bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300">
+                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full border border-brand-200 dark:border-brand-800/80 bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300">
                       v2.3
                     </span>
                   </div>

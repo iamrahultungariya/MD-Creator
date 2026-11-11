@@ -28,8 +28,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates }) 
   return (
     <section className="relative pt-12 pb-14 sm:pt-20 sm:pb-18 overflow-hidden text-center">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        {/* Monospace kicker badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 font-mono text-xs mb-6 select-none">
+        {/* Monospace kicker badge with global rounded-full token */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 font-mono text-xs mb-6 select-none shadow-2xs">
           <span>LOCAL-FIRST • ZERO TELEMETRY • GEMINI 3.X BYOK</span>
         </div>
 
@@ -44,17 +44,17 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates }) 
           Connect your own Google Gemini key for private, zero-markup AI editing.
         </p>
 
-        {/* Actions */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+        {/* Actions with global rounded-xl tokens */}
+        <div className="flex flex-wrap items-center justify-center gap-3.5 mb-6">
           <button
             onClick={handleCreateDoc}
-            className="bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-medium text-sm px-5 py-2.5 rounded transition-colors cursor-pointer"
+            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-semibold text-sm px-7 py-3 rounded-xl transition-all cursor-pointer shadow-xs hover:shadow"
           >
             Create Document
           </button>
           <button
             onClick={handleBrowseTemplates}
-            className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium text-sm px-4 py-2.5 rounded active:translate-y-[1px] transition-colors cursor-pointer"
+            className="w-full sm:w-auto border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium text-sm px-5 py-3 rounded-xl active:translate-y-[1px] transition-all cursor-pointer shadow-2xs"
           >
             Browse Templates
           </button>
@@ -70,8 +70,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates }) 
           </button>
         </div>
 
-        {/* Typographic reassurance pill */}
-        <div className="inline-block text-xs font-mono text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800/80 rounded px-3 py-1 bg-neutral-50 dark:bg-neutral-900/60">
+        {/* Typographic reassurance pill with global rounded-full token */}
+        <div className="inline-block text-xs font-mono text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800/80 rounded-full px-4 py-1.5 bg-neutral-50 dark:bg-neutral-900/60 shadow-2xs">
           100% private • Works completely offline • Export directly to PDF, Word &amp; Markdown
         </div>
       </div>

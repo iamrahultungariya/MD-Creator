@@ -110,24 +110,24 @@ export const PricingSection: React.FC = () => {
             Your local files and BYOK AI are never locked behind a paywall. Upgrade when you need encrypted multi-device sync and camera-ready exports.
           </p>
 
-          {/* Billing Interval Toggle */}
-          <div className="mt-6 inline-flex items-center p-0.5 rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900">
+          {/* Billing Interval Toggle with Global rounded-xl Container and rounded-lg Buttons */}
+          <div className="mt-6 inline-flex items-center p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 shadow-2xs">
             <button
               onClick={() => setBillingInterval('annual')}
-              className={`px-3 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                 billingInterval === 'annual'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
               Annual (Save 25%)
             </button>
             <button
               onClick={() => setBillingInterval('monthly')}
-              className={`px-3 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                 billingInterval === 'monthly'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
               Monthly
@@ -135,7 +135,7 @@ export const PricingSection: React.FC = () => {
           </div>
         </div>
 
-        {/* 3 Pricing Cards */}
+        {/* 3 Pricing Cards with Global rounded-2xl Token */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {TIERS.map((tier) => {
             const price = billingInterval === 'annual' ? tier.priceDisplay.annual : tier.priceDisplay.monthly;
@@ -143,20 +143,20 @@ export const PricingSection: React.FC = () => {
             return (
               <div
                 key={tier.id}
-                className={`rounded-lg p-6 sm:p-7 flex flex-col justify-between transition-colors ${
+                className={`rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-colors shadow-xs ${
                   tier.isFeatured
                     ? 'border-2 border-brand-500/80 bg-neutral-50/60 dark:bg-neutral-900/60 relative'
                     : 'border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950'
                 }`}
               >
                 <div>
-                  {/* Top Label & Featured Badge */}
+                  {/* Top Label & Featured Badge with rounded-full */}
                   <div className="flex items-center justify-between mb-3 min-h-[22px]">
                     <span className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-semibold">
                       {tier.name}
                     </span>
                     {tier.featuredBadge && (
-                      <span className="font-mono text-[10px] px-2 py-0.5 rounded border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 font-medium">
+                      <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 font-medium">
                         {tier.featuredBadge}
                       </span>
                     )}
@@ -197,13 +197,13 @@ export const PricingSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Action CTA Button */}
+                {/* Action CTA Button with Global rounded-xl Token */}
                 <button
                   onClick={() => handleCta(tier.ctaAction)}
-                  className={`w-full py-2.5 px-4 rounded text-xs font-medium active:translate-y-[1px] transition-colors cursor-pointer ${
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold active:translate-y-[1px] transition-all cursor-pointer shadow-xs ${
                     tier.isFeatured
-                      ? 'bg-brand-600 hover:bg-brand-700 text-white'
-                      : 'border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700'
+                      ? 'bg-brand-600 hover:bg-brand-700 text-white hover:shadow'
+                      : 'border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                   }`}
                 >
                   {tier.ctaText}
