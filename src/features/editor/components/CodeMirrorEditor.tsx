@@ -560,21 +560,34 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     viewRef.current.dispatch({
       effects: vimCompartment.current.reconfigure(keymapMode === 'vim' ? [vim()] : []),
     });
+
+    let attachedCm: any = null;
+    let modeHandler: ((data: { mode: string }) => void) | null = null;
+
     if (keymapMode === 'vim') {
       const cm = getCM(viewRef.current);
       if (cm) {
-        const handleVimMode = (data: { mode: string }) => {
+        attachedCm = cm;
+        modeHandler = (data: { mode: string }) => {
           const m = data.mode?.toUpperCase();
           if (m === 'NORMAL' || m === 'INSERT' || m === 'VISUAL' || m === 'REPLACE') {
             onVimModeChangeRef.current?.(m as any);
           }
         };
-        cm.on('vim-mode-change', handleVimMode);
+        cm.on('vim-mode-change', modeHandler);
         onVimModeChangeRef.current?.('NORMAL');
       }
     } else {
       onVimModeChangeRef.current?.(undefined as any);
     }
+
+    return () => {
+      if (attachedCm && modeHandler) {
+        try {
+          attachedCm.off('vim-mode-change', modeHandler);
+        } catch {}
+      }
+    };
   }, [keymapMode]);
 
   // Dynamically toggle typewriter mode and focus paragraph dimming

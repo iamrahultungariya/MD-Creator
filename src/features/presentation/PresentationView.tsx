@@ -187,8 +187,17 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           break;
         case 'Escape':
           e.preventDefault();
+          if (showHelp) {
+            setShowHelp(false);
+            return;
+          }
+          if (isNotesOpen) {
+            setIsNotesOpen(false);
+            return;
+          }
           if (document.fullscreenElement) {
             document.exitFullscreen().catch(console.warn);
+            return;
           }
           onExit();
           break;
@@ -197,7 +206,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nextSlide, prevSlide, totalSlides, toggleFullscreen, onExit]);
+  }, [nextSlide, prevSlide, totalSlides, toggleFullscreen, onExit, showHelp, isNotesOpen]);
 
   // Auto-hiding HUD on mouse idle
   const handleMouseMove = useCallback(() => {

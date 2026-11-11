@@ -945,6 +945,11 @@ export async function streamMimoResponse(options: {
 
       // If there is another model to cascade to, try it with safe backoff delay
       if (attempt < modelsToTry.length - 1) {
+        // Reset partial streaming buffer in UI so next model does not append duplicated text
+        if (firstTokenRecorded || fullText.length > 0) {
+          callbacks.onStreamReset?.();
+        }
+
         if (parsedErr.isHighDemand) {
           callbacks.onReasoningStep?.(
             `⚡ ${candidateModel.displayLabel} high demand (503). Retrying with ${modelsToTry[attempt + 1].displayLabel}...`

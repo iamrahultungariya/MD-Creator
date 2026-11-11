@@ -2,6 +2,7 @@
  * High-Performance Dynamic Word (.docx) Export Service
  * Lazy-loads the docx engine only on-demand, preserving 0kB bundle overhead on initial page load.
  */
+import { resolveImageSrc } from '../../../services/imageStorageService';
 
 export interface DocxExportOptions {
   title: string;
@@ -85,6 +86,7 @@ export async function exportMarkdownToDocx(options: DocxExportOptions): Promise<
     BorderStyle,
     WidthType,
     Packer,
+    ImageRun,
   } = await import('docx');
 
   const children: any[] = [];
@@ -137,17 +139,19 @@ export async function exportMarkdownToDocx(options: DocxExportOptions): Promise<
       continue;
     }
 
-    // Frontmatter skip
+    // Frontmatter skip (with safe boundary check)
     if (i === 0 && trimmed.startsWith('---')) {
       i++;
       while (i < lines.length && !lines[i].trim().startsWith('---')) {
         i++;
       }
-      i++;
+      if (i < lines.length && lines[i].trim().startsWith('---')) {
+        i++; // consume closing ---
+      }
       continue;
     }
 
-    // Code Blocks (```)
+    // Code Blocks (```) (with safe boundary check)
     if (trimmed.startsWith('```')) {
       const codeLines: string[] = [];
       i++;
@@ -155,7 +159,9 @@ export async function exportMarkdownToDocx(options: DocxExportOptions): Promise<
         codeLines.push(lines[i]);
         i++;
       }
-      i++; // consume closing ```
+      if (i < lines.length && lines[i].trim().startsWith('```')) {
+        i++; // consume closing ```
+      }
 
       children.push(
         new Table({
@@ -193,6 +199,57 @@ export async function exportMarkdownToDocx(options: DocxExportOptions): Promise<
         })
       );
       continue;
+    }
+
+    // Images: ![alt](url)
+    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imgMatch) {
+      const alt = imgMatch[1] || 'Image';
+      const imgSrc = imgMatch[2].trim();
+      let handled = false;
+      try {
+        const resolvedSrc = await resolveImageSrc(imgSrc);
+        if (resolvedSrc && resolvedSrc.startsWith('data:image/')) {
+          const matchMime = resolvedSrc.match(/^data:image\/(png|jpeg|jpg|gif|bmp|webp);/i);
+          const rawMime = matchMime ? matchMime[1].toLowerCase() : 'png';
+          const imgType = rawMime === 'jpeg' ? 'jpg' : rawMime === 'webp' ? 'png' : (rawMime as 'jpg' | 'png' | 'gif' | 'bmp');
+          const base64Data = resolvedSrc.split(',')[1];
+          if (base64Data && ImageRun) {
+            const binary = atob(base64Data);
+            const bytes = new Uint8Array(binary.length);
+            for (let b = 0; b < binary.length; b++) bytes[b] = binary.charCodeAt(b);
+
+            children.push(
+              new Paragraph({
+                spacing: { before: 160, after: 160 },
+                children: [
+                  new ImageRun({
+                    type: imgType === 'gif' || imgType === 'bmp' ? imgType : (imgType === 'jpg' ? 'jpg' : 'png'),
+                    data: bytes,
+                    transformation: {
+                      width: 500,
+                      height: 280,
+                    },
+                    altText: {
+                      name: alt,
+                      title: alt,
+                      description: alt,
+                    },
+                  }),
+                ],
+              })
+            );
+            handled = true;
+          }
+        }
+      } catch (err) {
+        console.warn('[DocxExport] Failed to embed image:', err);
+      }
+
+      if (handled) {
+        i++;
+        continue;
+      }
     }
 
     // Tables (| col | col |)

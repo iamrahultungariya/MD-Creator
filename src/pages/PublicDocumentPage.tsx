@@ -167,6 +167,8 @@ export const PublicDocumentPage: React.FC = () => {
     const pageTitle = `${doc.title || 'Published Document'} • MD Writer`;
     document.title = pageTitle;
 
+    const createdElements: Element[] = [];
+
     const setMeta = (name: string, content: string, isProp = false) => {
       const attr = isProp ? 'property' : 'name';
       let el = document.querySelector(`meta[${attr}="${name}"]`);
@@ -174,6 +176,7 @@ export const PublicDocumentPage: React.FC = () => {
         el = document.createElement('meta');
         el.setAttribute(attr, name);
         document.head.appendChild(el);
+        createdElements.push(el);
       }
       el.setAttribute('content', content);
     };
@@ -188,6 +191,11 @@ export const PublicDocumentPage: React.FC = () => {
 
     return () => {
       document.title = originalTitle;
+      createdElements.forEach((el) => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
     };
   }, [doc]);
 

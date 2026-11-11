@@ -168,6 +168,10 @@ export const DocumentsPage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset input value immediately so re-uploading the same file triggers onChange
+    const inputEl = e.target;
+    inputEl.value = '';
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       const content = (event.target?.result as string) || '';
@@ -175,6 +179,9 @@ export const DocumentsPage: React.FC = () => {
       const id = `doc_${Date.now()}_import`;
       await saveDocument(id, title, content, ['Imported']);
       navigate(`/editor/${id}`);
+    };
+    reader.onerror = () => {
+      console.warn('Failed to read file from disk:', file.name);
     };
     reader.readAsText(file);
   };
