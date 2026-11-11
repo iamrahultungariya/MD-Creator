@@ -227,6 +227,45 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             Home
           </button>
 
+          <button
+            onClick={() => {
+              if (location.pathname !== '/') {
+                navigate('/#features');
+              } else {
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="px-2.5 py-1 rounded-md transition-colors cursor-pointer hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60"
+          >
+            Features
+          </button>
+
+          <button
+            onClick={() => {
+              if (location.pathname !== '/') {
+                navigate('/#pricing');
+              } else {
+                document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="px-2.5 py-1 rounded-md transition-colors cursor-pointer hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60"
+          >
+            Pricing
+          </button>
+
+          <button
+            onClick={() => {
+              if (location.pathname !== '/') {
+                navigate('/#benchmarks');
+              } else {
+                document.getElementById('benchmarks')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="px-2.5 py-1 rounded-md transition-colors cursor-pointer hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60"
+          >
+            Benchmarks
+          </button>
+
           <button 
             onClick={() => navigate('/documents')}
             className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${

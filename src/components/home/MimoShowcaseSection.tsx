@@ -54,13 +54,13 @@ export const MimoShowcaseSection: React.FC = () => {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200/80 dark:border-brand-800/80">
-            <span>MEET MIMO • VERSION 2.2.1</span>
+            <span>MEET MIMO • GEMINI 3.x INTENT ENGINE • v2.3.0</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-semibold text-neutral-950 dark:text-white tracking-[-0.03em] leading-tight">
             An AI companion built for writers, not chatbots.
           </h2>
           <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Mimo doesn&apos;t blindly overwrite your files. It understands document structure, respects privacy shields, and proposes clean non-destructive diffs you can inspect before applying.
+            Mimo doesn&apos;t blindly overwrite your files. It features direct BYOK for the Google Gemini 3.x family, respects privacy shields, and proposes clean non-destructive diffs you can inspect before applying.
           </p>
         </div>
 

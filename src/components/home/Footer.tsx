@@ -49,6 +49,12 @@ export const Footer: React.FC<FooterProps> = () => {
               <Link to="/documents" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
                 Documents
               </Link>
+              <a href="/#pricing" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
+                Pricing
+              </a>
+              <a href="/#benchmarks" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
+                Benchmarks
+              </a>
               <button 
                 type="button" 
                 onClick={() => usePreferencesStore.getState().openPreferences()} 

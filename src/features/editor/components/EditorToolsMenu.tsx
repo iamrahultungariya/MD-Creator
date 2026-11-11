@@ -20,7 +20,6 @@ interface EditorToolsMenuProps {
   setIsOpen: (val: boolean | ((prev: boolean) => boolean)) => void;
   onBeforeOpen?: () => void;
   onOpenPdfStudio: () => void;
-  onOpenSocialCard?: () => void;
   isAdmin?: boolean;
   onOpenOutline: () => void;
   onOpenTableBuilder: () => void;
@@ -37,7 +36,6 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
   setIsOpen,
   onBeforeOpen,
   onOpenPdfStudio,
-  onOpenSocialCard,
   isAdmin: _isAdmin,
   onOpenOutline,
   onOpenTableBuilder,
@@ -120,31 +118,6 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
                 Ctrl+P
               </kbd>
             </button>
-
-
-            {onOpenSocialCard && (
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  onOpenSocialCard();
-                }}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4 text-[#8257F5]" />
-                  <div>
-                    <div className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
-                      <span>Social Share Card</span>
-                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-                        1200×630
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-neutral-500">Generate branded preview for X &amp; LinkedIn</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-medium text-neutral-400 font-sans">Card</span>
-              </button>
-            )}
 
             <button
               onClick={() => {

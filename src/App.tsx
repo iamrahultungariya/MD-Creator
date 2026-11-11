@@ -41,9 +41,6 @@ const UpdateAvailableModal = React.lazy(() =>
 const MimoIntroModal = React.lazy(() =>
   import('./components/common/MimoIntroModal').then((m) => ({ default: m.MimoIntroModal }))
 );
-const DailyFeedbackNudge = React.lazy(() =>
-  import('./components/common/DailyFeedbackNudge').then((m) => ({ default: m.DailyFeedbackNudge }))
-);
 const GeminiFixedToast = React.lazy(() =>
   import('./components/common/GeminiFixedToast').then((m) => ({ default: m.GeminiFixedToast }))
 );
@@ -227,11 +224,6 @@ export const App: React.FC = () => {
             <MimoIntroModal />
           </Suspense>
         )}
-
-        {/* Daily Feedback Nudge Toast (10s on 1st visit of day, 2 min thereafter, with 'Don't show today') */}
-        <Suspense fallback={null}>
-          <DailyFeedbackNudge />
-        </Suspense>
 
         {/* Gemini AI Fixed & OpenRouter Retirement Announcement Toast */}
         <Suspense fallback={null}>

@@ -382,7 +382,6 @@ export const EditorPage: React.FC = () => {
           onOpenSwitcher={() => modals.setIsSwitcherOpen(true)}
           onOpenDrawer={() => modals.setIsDrawerOpen(true)}
           onOpenPdfStudio={() => modals.setIsPdfStudioOpen(true)}
-          onOpenSocialCard={() => modals.setIsSocialCardOpen(true)}
           isAdmin={isAdmin}
           onOpenTableBuilder={() => modals.setIsTableBuilderOpen(true)}
           onOpenImageModal={() => modals.setIsImageModalOpen(true)}
@@ -557,8 +556,6 @@ export const EditorPage: React.FC = () => {
         onCloseLocalFolder={() => modals.setIsLocalFolderOpen(false)}
         onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
         onSelectLocalFile={handleSelectLocalFile}
-        isSocialCardOpen={modals.isSocialCardOpen}
-        onCloseSocialCard={() => modals.setIsSocialCardOpen(false)}
         onToast={showToast}
       />
 

@@ -16,7 +16,6 @@ export function useEditorModals() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
-  const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
 
   return {
     isDrawerOpen,
@@ -49,7 +48,5 @@ export function useEditorModals() {
     setIsPublishModalOpen,
     isLocalFolderOpen,
     setIsLocalFolderOpen,
-    isSocialCardOpen,
-    setIsSocialCardOpen,
   };
 }

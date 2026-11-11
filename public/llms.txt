@@ -1,0 +1,21 @@
+# MD Writer (MD Creator)
+
+> The high-performance, local-first markdown studio with Google Gemini 3.x AI intelligence, KaTeX mathematical typesetting, Mermaid flowcharts, and zero cloud vendor lock-in.
+
+## Overview
+MD Writer is a publication-grade markdown editor built for developers, researchers, and technical writers. It stores all documents locally on the user's machine using IndexedDB (Dexie) and direct filesystem access via the File System Access API (`Ctrl+O`). It features continuous offline capability, sub-80ms cold boot latency, and optional multi-device encrypted cloud sync via Supabase.
+
+## Core Capabilities
+- **Local-First Architecture:** 100% offline persistence. Draft, edit, and organize notes without internet access or mandatory account creation.
+- **Mimo AI Companion:** An intelligent pair writer engineered exclusively for the Google Gemini 3.x model family (`gemini-3.5-flash-lite`, `gemini-3.5-flash`, and `gemini-3.8-flash`). Supports direct BYOK (Bring Your Own Key) with zero platform token markup.
+- **AST Section Surgeon:** Mimo executes scoped, non-destructive modifications anchored to specific markdown headings without rewriting or duplicating the rest of the document.
+- **Mathematical Typesetting:** Native KaTeX LaTeX math support for inline formulas (`$...$`) and display blocks (`$$...$$`).
+- **Interactive Visuals:** Built-in Mermaid.js diagramming (flowcharts, sequence diagrams, class diagrams, state machines) and interactive spreadsheet tables.
+- **Studio Export Suite [Beta]:** Vector PDF export with custom margins and headers, styled Microsoft Word (`.docx`) export, and keyboard-driven slide presentation mode.
+- **Pricing:** Core local editor and BYOK AI are free forever. Pro tier ($8/month or $49 Lifetime Early-Bird) unlocks multi-device encrypted sync, delta revision history, and publication studio exports.
+
+## Key Links
+- [Application Landing Page](https://mdwriter.com/): Official studio homepage, live interactive markdown sandbox, and pricing details.
+- [Web Editor](https://mdwriter.com/editor): Distraction-free browser workspace.
+- [Changelog](https://mdwriter.com/changelog): Detailed release history and performance metrics.
+- [Full Documentation](https://mdwriter.com/llms-full.txt): Comprehensive technical specifications and architecture.

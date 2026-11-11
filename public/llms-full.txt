@@ -1,0 +1,45 @@
+# MD Writer (MD Creator) — Full Technical Specification & Architecture
+
+## 1. System Architecture
+MD Writer is structured as a client-side reactive single-page progressive web application (PWA).
+
+### Technology Stack
+- **Frontend Framework:** React 19, TypeScript 5.7, Vite 6.
+- **Styling & Design System:** Tailwind CSS v4, Geist Variable Font family (`@fontsource-variable/geist` and `@fontsource-variable/geist-mono`).
+- **Core Editor Buffer:** CodeMirror 6 (`@codemirror/view`, `@codemirror/state`, `@codemirror/lang-markdown`) with optional Vim keybindings (`@replit/codemirror-vim`).
+- **Local Persistence Layer:** Dexie IndexedDB with LZString delta compression. Real-time sub-10ms auto-saving.
+- **Local Filesystem Access:** W3C File System Access API (`showDirectoryPicker`) allowing users to open and save `.md` files directly on their operating system storage.
+- **Cloud Infrastructure:** Supabase PostgreSQL with Row Level Security (RLS) policies, delta sync reconciliation queues, and WebSocket conflict detection.
+- **AI Engine:** Google GenAI SDK (`@google/genai`) interfacing with Google Gemini 3.x models exclusively.
+
+## 2. Artificial Intelligence Engine: Mimo
+Mimo is an embedded pair writer and document assistant.
+
+### Supported Model Tier
+MD Writer enforces strict model boundaries, supporting only the Gemini 3.x generation:
+1. `gemini-3.5-flash-lite`: Ultra-low latency (<400ms TTFT), high throughput, lowest quota consumption. Recommended for pair drafting and grammar corrections.
+2. `gemini-3.5-flash`: Balanced reasoning and synthesis.
+3. `gemini-3.8-flash`: Deep reasoning engine for complex research synthesis, structural analysis, and multi-chapter outlines.
+
+### Token Economy & Engineering Guardrails
+- **Dynamic Intent Micro-Prompts:** Specialized prompt layers (~80 tokens) replace monolithic instructions, saving ~800 tokens per turn.
+- **Conceptual Query Isolation:** Prompts classified under `GENERAL_QA` never ingest the user's active document markdown, reducing prompt token costs by up to 90%.
+- **Thinking Token Budget Clamping:** `thinkingBudget: 0` is applied on direct edits and translation for instantaneous streaming, while complex queries receive a clamped 512–1024 token budget.
+- **Non-Destructive AST Diffs:** Mimo anchors changes to Markdown AST heading hashes and returns structured hunks that merge without formula corruption.
+- **Zero Platform Markup:** Users connect their personal Google AI Studio API key via BYOK (Bring Your Own Key). Keys are stored strictly on the user's local browser and never transmitted to MD Writer servers.
+
+## 3. Typesetting & Visual Media
+- **Mathematical Equations:** Ingests standard LaTeX syntax and renders via KaTeX 0.18.5. Supports currency symbols (`$20 and $50`) alongside inline equations (`$x = y$`) without typesetting conflicts.
+- **Diagrams & Flowcharts:** Real-time client-side rendering of Mermaid 11.x diagrams.
+- **Interactive Tables:** WYSIWYG spreadsheet table overlay with column/row insertion, alignment controls, and CSV paste support.
+- **Alert Callouts:** GitHub Flavored Markdown alerts (`[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`).
+
+## 4. Monetization & Pricing Tiers
+- **Starter & BYOK ($0 Forever):** 100% Local-first, offline Dexie database, direct local disk folder access, KaTeX, Mermaid, community blueprints, and direct Google Gemini 3.x BYOK.
+- **Pro Writer ($8/mo or $6/mo billed annually, or $49 Lifetime Early-Bird):** Encrypted multi-device sync, unlimited version snapshots, publication-grade Vector PDF & Microsoft Word export [Beta], password-protected links.
+- **Team Vault ($16/user/mo):** Shared team organization vaults, shared template library, unified billing, and workspace permissions.
+
+## 5. Security & Privacy Guarantees
+- No tracking pixels, keystroke loggers, or advertisement beacons.
+- Client-side Privacy Shield redacts sensitive patterns (passwords, auth tokens, phone numbers, private tags) prior to AI submission.
+- Password-protected public links verify access hashes on the server before transferring content.

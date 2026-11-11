@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InteractiveStudioShowcase } from './InteractiveStudioShowcase';
+import { InteractiveMarkdownSandbox } from './InteractiveMarkdownSandbox';
 import { WritingHoverTrigger } from './WritingHoverTrigger';
 import { useUpdateModalStore } from '../../stores/useUpdateModalStore';
 import { APP_VERSION_LABEL } from '../../config/version';
@@ -48,10 +49,10 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc }) => {
           </span>
           <span className="text-neutral-300 dark:text-neutral-700 font-light">•</span>
           <span className="text-neutral-600 dark:text-neutral-300 hidden xs:inline">
-            Smooth Performance &amp; Reliable Sync
+            Gemini 3.x Engine &amp; Intent Router
           </span>
           <span className="text-neutral-600 dark:text-neutral-300 xs:hidden">
-            Fast &amp; Private
+            Local-First
           </span>
         </div>
 
@@ -61,9 +62,9 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc }) => {
           for your notes and <WritingHoverTrigger />.
         </h1>
 
-        {/* ── REFINED HUMAN-CENTRIC SUBTITLE ── */}
+        {/* ── REFINED HUMAN-CENTRIC SUBTITLE WITH PSYCHOLOGICAL VALUE ── */}
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-8">
-          Write with pure focus and zero lag. Insert formulas and tables with <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-mono text-xs text-neutral-800 dark:text-neutral-200">/</kbd> slash commands, auto-save continuously, and sync automatically across your devices.
+          Write with pure focus and zero lag. Start drafting immediately offline; sign in whenever you want encrypted multi-device cloud sync, automatic version snapshots, and real-time backups.
         </p>
 
         {/* ── TACTILE BESPOKE ACTION CTAS ── */}
@@ -85,11 +86,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc }) => {
 
         {/* Micro-guarantee label */}
         <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mb-12">
-          100% Free &amp; Open Source • Zero Sign-Up Required • Completely Private*
+          100% Local-First • Free Forever Core • Direct Google Gemini 3.x BYOK • Optional Cloud Backup
         </p>
 
-        {/* ── ELEVATED STUDIO SHOWCASE ── */}
-        <div className="relative mx-auto max-w-5xl">
+        {/* ── LIVE INTERACTIVE MARKDOWN SANDBOX & STUDIO SHOWCASE ── */}
+        <div className="relative mx-auto max-w-5xl space-y-12">
+          <InteractiveMarkdownSandbox />
           <InteractiveStudioShowcase />
         </div>
 

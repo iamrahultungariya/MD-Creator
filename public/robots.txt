@@ -1,0 +1,23 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Allow: /changelog
+Allow: /feedback
+Allow: /p/
+Disallow: /admin
+Disallow: /editor/
+
+# AI Crawlers & Answer Engines (Perplexity, OpenAI, Anthropic, Google Gemini)
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://mdwriter.com/sitemap.xml

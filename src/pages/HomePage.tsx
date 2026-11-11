@@ -5,6 +5,9 @@ import { Navbar } from '../components/home/Navbar';
 import { Hero } from '../components/home/Hero';
 import { BentoFeatures } from '../components/home/BentoFeatures';
 import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
+import { BenchmarkSection } from '../components/home/BenchmarkSection';
+import { PricingSection } from '../components/home/PricingSection';
+import { FaqSection } from '../components/home/FaqSection';
 import { RoadmapSection } from '../components/home/RoadmapSection';
 import { FEATURE_FLAGS } from '../config/features';
 
@@ -71,6 +74,15 @@ export const HomePage: React.FC = () => {
 
         {/* Flagship AI Markdown Companion Showcase */}
         {FEATURE_FLAGS.mimo && <MimoShowcaseSection />}
+
+        {/* Speed & Architecture Benchmark Matrix */}
+        <BenchmarkSection />
+
+        {/* Studio Pricing & Tier Architecture */}
+        <PricingSection />
+
+        {/* Developer & Researcher FAQ Accordion */}
+        <FaqSection />
 
         {/* Dedicated Product Roadmap & What's New */}
         <RoadmapSection />

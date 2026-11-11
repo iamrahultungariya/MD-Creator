@@ -39,10 +39,6 @@ import { MarkdownPreview } from '../components/editor/MarkdownPreview';
 import { PageLoader } from '../components/common/PageLoader';
 import { DiffViewer } from '../components/common/DiffViewer';
 
-const SocialCardGeneratorModal = React.lazy(() =>
-  import('../components/share/SocialCardGeneratorModal').then((m) => ({ default: m.SocialCardGeneratorModal }))
-);
-
 export const PublicDocumentPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const location = useLocation();
@@ -59,7 +55,6 @@ export const PublicDocumentPage: React.FC = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isCopied, setIsCopied] = useState(false);
   const [copyToast, setCopyToast] = useState<string | null>(null);
-  const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
   const [readingProgress, setReadingProgress] = useState(0);
   const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
 
@@ -533,16 +528,6 @@ disabled={isVerifyingPassword}
             )}
           </button>
 
-          {/* Social Card Button */}
-          <button
-            onClick={() => setIsSocialCardOpen(true)}
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-brand-500/30 bg-brand-500/10 text-brand-600 dark:text-brand-400 hover:bg-brand-500/20 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
-            title="Social Card"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-            <span className="hidden md:inline">Share</span>
-          </button>
-
           {/* Copy Markdown */}
           <button
             onClick={handleCopyMarkdown}
@@ -822,20 +807,6 @@ disabled={isVerifyingPassword}
             </div>
           </div>
         </div>
-      )}
-
-      {/* Branded Social Card Generator Modal */}
-      {isSocialCardOpen && (
-        <React.Suspense fallback={null}>
-          <SocialCardGeneratorModal
-            isOpen={isSocialCardOpen}
-            onClose={() => setIsSocialCardOpen(false)}
-            title={doc.title}
-            content={isEditMode ? editableContent : doc.content}
-            slug={doc.slug}
-            authorName="MD Writer Author"
-          />
-        </React.Suspense>
       )}
 
       {/* Floating Copy Feedback Toast */}

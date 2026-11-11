@@ -37,9 +37,6 @@ const PublishModal = React.lazy(() =>
 const LocalFolderDrawer = React.lazy(() =>
   import('../../../components/editor/LocalFolderDrawer').then((m) => ({ default: m.LocalFolderDrawer }))
 );
-const SocialCardGeneratorModal = React.lazy(() =>
-  import('../../../components/share/SocialCardGeneratorModal').then((m) => ({ default: m.SocialCardGeneratorModal }))
-);
 
 interface EditorModalsContainerProps {
   docId: string;
@@ -89,8 +86,6 @@ interface EditorModalsContainerProps {
   onCloseLocalFolder?: () => void;
   onOpenLocalFolder?: () => void;
   onSelectLocalFile?: (fileHandle: FileSystemFileHandle, fileName: string, content: string) => void;
-  isSocialCardOpen?: boolean;
-  onCloseSocialCard?: () => void;
   onToast?: (message: string) => void;
 }
 
@@ -142,8 +137,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   onCloseLocalFolder,
   onOpenLocalFolder,
   onSelectLocalFile,
-  isSocialCardOpen = false,
-  onCloseSocialCard,
   onToast,
 }) => {
   return (
@@ -265,17 +258,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
           onClose={onCloseLocalFolder || (() => {})}
           onSelectFile={onSelectLocalFile || (() => {})}
           activeFileName={title}
-        />
-      )}
-
-
-      {isSocialCardOpen && (
-        <SocialCardGeneratorModal
-          isOpen={isSocialCardOpen}
-          onClose={onCloseSocialCard || (() => {})}
-          title={title}
-          content={content}
-          onToast={onToast}
         />
       )}
     </Suspense>

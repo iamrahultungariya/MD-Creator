@@ -22,7 +22,6 @@ import {
   PublishedRecord 
 } from '../../services/publishService';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { SocialCardGeneratorModal } from '../share/SocialCardGeneratorModal';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { QuickAuthModal } from '../auth/QuickAuthModal';
 import { telemetryService } from '../../services/telemetryService';
@@ -50,7 +49,6 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [isSocialCardOpen, setIsSocialCardOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
@@ -337,15 +335,6 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 </button>
 
                 <div className="flex items-center gap-2 font-sans">
-                  <button
-                    type="button"
-                    onClick={() => setIsSocialCardOpen(true)}
-                    className="px-3 py-2 rounded-lg border border-brand-500/30 bg-brand-50/50 dark:bg-brand-950/20 hover:bg-brand-100/50 text-brand-600 dark:text-brand-400 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer font-sans shadow-2xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Social Card</span>
-                  </button>
-
                   <a
                     href={publicUrl}
                     target="_blank"
@@ -409,14 +398,6 @@ export const PublishModal: React.FC<PublishModalProps> = ({
           </div>
         )}
       </div>
-
-      <SocialCardGeneratorModal
-        isOpen={isSocialCardOpen}
-        onClose={() => setIsSocialCardOpen(false)}
-        title={title}
-        content={content}
-        slug={customSlug}
-      />
 
       {/* Floating Quick Auth Modal */}
       <QuickAuthModal

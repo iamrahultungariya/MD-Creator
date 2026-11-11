@@ -21,13 +21,53 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    version: '2.3.0',
+    versionLabel: 'v2.3.0',
+    date: 'November 11, 2026',
+    title: 'Gemini 3.x AI Companion, Modular Intent Architecture & Modern Studio Launch',
+    summary:
+      'Official v2.3.0 release featuring modular intent micro-prompts for Mimo AI, 65% token drop on conceptual queries, thinking token budget clamping, transparent pricing tiers, and a refined developer-first landing experience.',
+    tag: 'Latest',
+    metrics: [
+      { label: 'Token Reduction', value: 'Up to 80%' },
+      { label: 'Supported AI Family', value: 'Gemini 3.x Only' },
+      { label: 'Local Cold Boot', value: '<80ms' },
+    ],
+    items: [
+      {
+        type: 'performance',
+        title: 'Modular Mimo Intent Engine',
+        description:
+          'Mimo replaces monolithic prompts with specialized micro-prompts per intent. General conceptual questions no longer ingest active document lines, saving thousands of tokens per conversation.',
+      },
+      {
+        type: 'added',
+        title: 'Dynamic Thinking Token Budget Clamping',
+        description:
+          'Direct edits, grammar checks, and translations now execute with 0 thinking token burn for instant streaming, while complex research synthesis accesses full deep reasoning.',
+      },
+      {
+        type: 'added',
+        title: 'Studio Pricing & Transparent Tier Architecture',
+        description:
+          'Clear 3-tier structure: Free (100% Local-First with Gemini 3.x BYOK), Pro ($8/mo or $49 Lifetime Early-Bird), and Team workspaces.',
+      },
+      {
+        type: 'changed',
+        title: 'Streamlined Codebase & Bundle Diet',
+        description:
+          'Pruned intrusive feedback popups and heavy WebGL runtimes in favor of responsive 60fps 2D animated mascot states and lightweight local persistence.',
+      },
+    ],
+  },
+  {
     version: '2.2.2',
     versionLabel: 'v2.2.2',
     date: 'November 11, 2026',
     title: 'Document Privacy Protection, Reliable Exports & Writing Polish',
     summary:
       'This update secures public document sharing, keeps math equations clean alongside everyday prices, ensures Word exports include all images without cutoffs, and keeps your editor place intact during background sync.',
-    tag: 'Latest',
+    tag: 'Stable',
     items: [
       {
         type: 'fixed',
