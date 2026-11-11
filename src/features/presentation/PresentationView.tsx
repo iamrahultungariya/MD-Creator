@@ -38,9 +38,11 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   const [isHudVisible, setIsHudVisible] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
 
-  // Presenter Stopwatch
+  // Presenter Stopwatch (resilient to tab background throttling)
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const timerStartRef = useRef<number>(Date.now());
+  const accumulatedSecondsRef = useRef<number>(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const hudTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,18 +50,22 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   const totalSlides = slides.length;
   const currentSlide: SlideData = slides[currentSlideIndex] || slides[0];
 
-  // Stopwatch interval
+  // Stopwatch interval using wall-clock time to prevent drift when tab is backgrounded
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isTimerRunning) {
+      timerStartRef.current = Date.now();
       interval = setInterval(() => {
-        setTimerSeconds((prev) => prev + 1);
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - timerStartRef.current) / 1000);
+        setTimerSeconds(accumulatedSecondsRef.current + elapsed);
+      }, 500);
+    } else {
+      accumulatedSecondsRef.current = timerSeconds;
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isTimerRunning]);
+  }, [isTimerRunning, timerSeconds]);
 
   const formatTimer = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

@@ -164,7 +164,7 @@ export function sanitizeMarkdownForPreview(rawMarkdown: string): string {
       return `![${alt}](localfile://${encodeURIComponent(cleanUrl)})`;
     }
 
-    if (cleanUrl.includes(' ') && !cleanUrl.startsWith('<') && !cleanUrl.startsWith('http') && !cleanUrl.startsWith('data:')) {
+    if (cleanUrl.includes(' ') && !cleanUrl.startsWith('<') && !cleanUrl.endsWith('>') && !cleanUrl.startsWith('http') && !cleanUrl.startsWith('data:') && !cleanUrl.startsWith('image://')) {
       return `![${alt}](<${cleanUrl}>)`;
     }
 

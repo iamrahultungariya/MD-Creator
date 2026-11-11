@@ -158,6 +158,10 @@ export async function exportDirectPdf(options: DirectPdfOptions): Promise<void> 
 
             const pageSliceData = pageCanvas.toDataURL('image/jpeg', 0.98);
             pdf.addImage(pageSliceData, 'JPEG', 0, 0, pdfWidthMm, pdfHeightMm, undefined, 'FAST');
+
+            // Deallocate canvas dimensions immediately to prevent VRAM accumulation on long documents
+            pageCanvas.width = 0;
+            pageCanvas.height = 0;
           }
         }
       }

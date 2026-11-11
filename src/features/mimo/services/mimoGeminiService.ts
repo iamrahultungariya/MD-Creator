@@ -455,6 +455,16 @@ export function checkClientRpmAllowance(modelId: string): { allowed: boolean; wa
 }
 
 /**
+ * Rolls back the RPM tracker if a request was immediately aborted or failed authentication.
+ */
+export function rollbackRpmAllowance(modelId: string): void {
+  const idx = RPM_REQUEST_LOG.findIndex((r) => r.modelId === modelId);
+  if (idx !== -1) {
+    RPM_REQUEST_LOG.splice(idx, 1);
+  }
+}
+
+/**
  * Global Thinking Provider System Directive for Gemini 3.5 models.
  * Ultra-lean cognitive guide (~60 tokens) without heavy wrappers or extra token overhead.
  * Guides internal self-verification across any Markdown document before streaming output.
@@ -914,6 +924,7 @@ export async function streamMimoResponse(options: {
       }
     } catch (err: any) {
       if (err?.name === 'AbortError' || signal?.aborted) {
+        rollbackRpmAllowance(candidateModel.modelId);
         const restoredPartial = sanitizedContext.restore(sanitizedPrompt.restore(fullText));
         return {
           fullText: restoredPartial,
@@ -930,6 +941,7 @@ export async function streamMimoResponse(options: {
 
       // Check API key rejection FIRST — do NOT retry other models with the same broken key
       if (parsedErr.isApiKeyInvalid || parsedErr.isPermissionDenied) {
+        rollbackRpmAllowance(candidateModel.modelId);
         const statusLabel = parsedErr.status ? ` (HTTP ${parsedErr.status})` : '';
         const keyErrorMsg = `> [!CAUTION]\n> **Gemini API Key Authentication Failed${statusLabel}**\n> Google AI rejected the provided API key.\n> \n> *Error Details*: \`${parsedErr.message.slice(0, 200)}\`\n> \n> 👉 **Action Required**:\n> - Verify your key at [Google AI Studio](https://aistudio.google.com/apikey). Standard (\`AIza...\`) and Authorization (\`AQ...\`) keys are both supported.\n> - Connect or update your key in [Mimo Settings](#connect-key).`;
 

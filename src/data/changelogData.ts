@@ -21,13 +21,66 @@ export interface ChangelogRelease {
 
 export const CHANGELOG_RELEASES: ChangelogRelease[] = [
   {
+    version: '2.2.2',
+    versionLabel: 'v2.2.2',
+    date: 'November 11, 2026',
+    title: 'Document Privacy Protection, Reliable Exports & Writing Polish',
+    summary:
+      'This update secures public document sharing, keeps math equations clean alongside everyday prices, ensures Word exports include all images without cutoffs, and keeps your editor place intact during background sync.',
+    tag: 'Latest',
+    items: [
+      {
+        type: 'fixed',
+        title: 'Protected Public Document Sharing',
+        description:
+          'Password-protected shared links now remain strictly locked until the correct password is entered. Shared notes also preserve an automatic version backup before any collaborator submits edits.',
+      },
+      {
+        type: 'fixed',
+        title: 'Accurate Math & Formula Typesetting',
+        description:
+          'Everyday prices and currency values like $20 and $50 are no longer confused with math formulas. Mathematical equations and AI text changes preserve display symbols and formatting cleanly.',
+      },
+      {
+        type: 'fixed',
+        title: 'Complete Microsoft Word (.docx) Exports',
+        description:
+          'Exported Word documents now include embedded photos and illustrations, and longer documents with code blocks or divider lines will no longer get cut off.',
+      },
+      {
+        type: 'fixed',
+        title: 'Editor Cursor & Scroll Retention',
+        description:
+          'When updates sync from your other devices or tabs in the background, your cursor and scroll position remain right where you are reading or typing.',
+      },
+      {
+        type: 'fixed',
+        title: 'Task Checkbox Accuracy',
+        description:
+          'Clicking interactive checkboxes in the preview window toggles the exact checklist item clicked, even when code examples or snippets are present in your note.',
+      },
+      {
+        type: 'fixed',
+        title: 'Lighter Device Storage for Version History',
+        description:
+          'Saved revision history now stores compact changes rather than duplicating the entire text on every edit, keeping your note history complete while saving local disk space.',
+      },
+      {
+        type: 'fixed',
+        title: 'Presentation Mode Keyboard Navigation',
+        description:
+          'Pressing Escape during a slideshow now dismisses open notes or shortcuts first before leaving fullscreen or exiting the presentation.',
+      },
+    ],
+  },
+  {
     version: '2.2.1',
     versionLabel: 'v2.2.1',
     date: 'November 11, 2026',
     title: 'Instant Multi-Device Sync, Realtime Conflict Guard & Sub-3s App Update Detection',
     summary:
       'This release brings real-time cross-device note synchronization in under 500ms with non-destructive conflict prevention, instant multi-tab communication (<5ms), and sub-3-second app update notifications paired with a seamless minimalist update experience.',
-    tag: 'Latest',
+    tag: 'Stable',
     metrics: [
       { label: 'Cross-Device Sync', value: '< 500ms Latency' },
       { label: 'Multi-Tab Sync', value: '< 5ms (Broadcast)' },

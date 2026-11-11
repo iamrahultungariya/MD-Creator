@@ -33,6 +33,7 @@ import {
   useAllDocumentTags,
   useRenameDocument
 } from '../hooks/useDocuments';
+import { markDocLocalOnly } from '../stores/useCrossDeviceConflictStore';
 import { db, saveDocument, getDocumentContent, DocumentMetadata } from '../db';
 import { useConfirm } from '../stores/useConfirmStore';
 import { StorageLimitRing } from '../components/common/StorageLimitRing';
@@ -192,6 +193,7 @@ export const DocumentsPage: React.FC = () => {
     content: string
   ) => {
     const id = `doc_local_${Date.now()}`;
+    markDocLocalOnly(id);
     await saveDocument(id, fileName, content, ['Local Vault']);
     setIsLocalFolderOpen(false);
     navigate(`/editor/${id}`);
