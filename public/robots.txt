@@ -20,4 +20,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://mdwriter.com/sitemap.xml
+Sitemap: https://writermd.vercel.app/sitemap.xml

@@ -15,7 +15,7 @@ MD Writer is a publication-grade markdown editor built for developers, researche
 - **Pricing:** Core local editor and BYOK AI are free forever. Pro tier ($8/month or $49 Lifetime Early-Bird) unlocks multi-device encrypted sync, delta revision history, and publication studio exports.
 
 ## Key Links
-- [Application Landing Page](https://mdwriter.com/): Official studio homepage, live interactive markdown sandbox, and pricing details.
-- [Web Editor](https://mdwriter.com/editor): Distraction-free browser workspace.
-- [Changelog](https://mdwriter.com/changelog): Detailed release history and performance metrics.
-- [Full Documentation](https://mdwriter.com/llms-full.txt): Comprehensive technical specifications and architecture.
+- [Application Landing Page](https://writermd.vercel.app/): Official studio homepage, live interactive markdown sandbox, and pricing details.
+- [Web Editor](https://writermd.vercel.app/editor): Distraction-free browser workspace.
+- [Changelog](https://writermd.vercel.app/changelog): Detailed release history and performance metrics.
+- [Full Documentation](https://writermd.vercel.app/llms-full.txt): Comprehensive technical specifications and architecture.
