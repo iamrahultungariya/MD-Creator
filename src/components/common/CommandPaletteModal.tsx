@@ -13,9 +13,7 @@ import {
   Database,
   Eye,
   Type,
-  CornerDownLeft,
   X,
-  Command,
   Sparkles,
 } from 'lucide-react';
 import { db, DocumentMetadata, createNewDocument } from '../../db';
@@ -37,7 +35,6 @@ interface PaletteAction {
   category: ActionCategory;
   description?: string;
   icon: React.ElementType;
-  iconColor: string;
   shortcut?: string;
   perform: () => void;
 }
@@ -91,12 +88,12 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     if (isOpen) {
       setSearch('');
       setSelectedIndex(0);
-      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      const timer = setTimeout(() => inputRef.current?.focus(), 40);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  // Build curated actions catalogue: only documents, high-frequency actions & core navigation
+  // Build curated actions catalogue
   const allActions = useMemo<PaletteAction[]>(() => {
     const list: PaletteAction[] = [];
 
@@ -111,9 +108,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
         id: `doc-${doc.id}`,
         title: doc.title || 'Untitled Document.md',
         category: 'Documents',
-        description: `Last edited ${formattedDate}`,
+        description: `Edited ${formattedDate}`,
         icon: FileText,
-        iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
         shortcut: 'Open',
         perform: () => {
           navigate(`/editor/${doc.id}`);
@@ -129,7 +125,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       category: 'Actions & Navigation',
       description: 'Start a blank Markdown document in your offline vault',
       icon: Plus,
-      iconColor: 'text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/20 border-emerald-500/20',
       shortcut: 'New',
       perform: async () => {
         const title = search.trim() ? (search.endsWith('.md') ? search : `${search}.md`) : 'Untitled Document.md';
@@ -145,7 +140,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       category: 'Actions & Navigation',
       description: 'Browse, manage, and filter all offline notes',
       icon: FolderOpen,
-      iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
       shortcut: 'Vault',
       perform: () => {
         navigate('/documents');
@@ -159,7 +153,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       category: 'Actions & Navigation',
       description: 'Return to active writing editor screen',
       icon: FileCode,
-      iconColor: 'text-sky-600 bg-sky-500/10 dark:text-sky-400 dark:bg-sky-500/20 border-sky-500/20',
       shortcut: 'Editor',
       perform: () => {
         navigate('/editor');
@@ -173,7 +166,6 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       category: 'Actions & Navigation',
       description: `Toggle visual theme (${isDark ? 'Dark' : 'Light'} active)`,
       icon: isDark ? Sun : Moon,
-      iconColor: 'text-amber-600 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-500/20 border-amber-500/20',
       shortcut: 'Theme',
       perform: () => {
         toggleTheme();
@@ -185,11 +177,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'mode-typewriter',
       title: typewriterMode ? 'Disable Typewriter Mode' : 'Enable Typewriter Mode',
       category: 'Actions & Navigation',
-      description: 'Keep the current active writing line vertically centered',
+      description: 'Keep current writing line vertically centered',
       icon: Type,
-      iconColor: typewriterMode
-        ? 'text-brand-600 bg-brand-500/20 border-brand-500/30'
-        : 'text-neutral-600 bg-neutral-500/10 dark:text-neutral-400 dark:bg-neutral-800 border-neutral-500/20',
       shortcut: typewriterMode ? 'ON' : 'OFF',
       perform: () => {
         setTypewriterMode(!typewriterMode);
@@ -201,11 +190,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'mode-focus',
       title: focusMode ? 'Disable Focus Mode' : 'Enable Focus Mode',
       category: 'Actions & Navigation',
-      description: 'Dim surrounding paragraphs to highlight the current line',
+      description: 'Dim surrounding paragraphs to highlight active line',
       icon: Eye,
-      iconColor: focusMode
-        ? 'text-emerald-600 bg-emerald-500/20 border-emerald-500/30'
-        : 'text-neutral-600 bg-neutral-500/10 dark:text-neutral-400 dark:bg-neutral-800 border-neutral-500/20',
       shortcut: focusMode ? 'ON' : 'OFF',
       perform: () => {
         setFocusMode(!focusMode);
@@ -217,9 +203,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'action-pdf-export',
       title: 'Export / Print PDF Studio',
       category: 'Actions & Navigation',
-      description: 'Vector PDF generation with themes and cover layout',
+      description: 'Vector PDF generation with custom margins',
       icon: Printer,
-      iconColor: 'text-indigo-600 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-500/20 border-indigo-500/20',
       shortcut: 'Ctrl+P',
       perform: () => {
         if (onOpenPdfStudio) {
@@ -233,12 +218,11 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     list.push({
       id: 'action-preferences',
-      title: 'Editor Preferences',
+      title: 'Studio Preferences',
       category: 'Actions & Navigation',
-      description: 'Font choices, line height, tab sizes & editor behaviors',
+      description: 'Font choices, tab sizes, backups & AI config',
       icon: Settings,
-      iconColor: 'text-neutral-600 bg-neutral-500/10 dark:text-neutral-300 dark:bg-neutral-800 border-neutral-500/20',
-      shortcut: 'Prefs',
+      shortcut: 'Ctrl+,',
       perform: () => {
         openPreferences();
         onClose();
@@ -249,9 +233,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
       id: 'action-storage-details',
       title: 'Local Storage Details',
       category: 'Actions & Navigation',
-      description: 'View IndexedDB usage, backup data & empty trash',
+      description: 'View IndexedDB usage, backup vault & empty trash',
       icon: Database,
-      iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
       shortcut: 'Storage',
       perform: () => {
         setIsStorageModalOpen(true);
@@ -260,28 +243,13 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
     list.push({
       id: 'action-whats-new',
-      title: "What's New in v2.1.0",
+      title: "Changelog & Release History",
       category: 'Actions & Navigation',
-      description: 'Explore the latest features, performance numbers, and Mimo AI upgrades',
+      description: 'Explore the latest features and Mimo updates',
       icon: Sparkles,
-      iconColor: 'text-brand-600 bg-brand-500/10 dark:text-brand-400 dark:bg-brand-500/20 border-brand-500/20',
-      shortcut: 'v2.1.0',
+      shortcut: 'History',
       perform: () => {
-        window.dispatchEvent(new CustomEvent('open-update-modal'));
-        onClose();
-      },
-    });
-
-    list.push({
-      id: 'action-mimo-intro',
-      title: 'Meet Mimo AI ✦ Companion',
-      category: 'Actions & Navigation',
-      description: 'Learn about your intelligent agentic pair writer & co-pilot',
-      icon: Sparkles,
-      iconColor: 'text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/20 border-violet-500/20',
-      shortcut: 'Mimo',
-      perform: () => {
-        window.dispatchEvent(new CustomEvent('open-mimo-intro-modal'));
+        navigate('/changelog');
         onClose();
       },
     });
@@ -363,57 +331,23 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
   if (!isOpen) return null;
 
-  const selectedAction = filteredActions[selectedIndex];
-
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150 select-none font-sans"
+        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/40 select-none font-sans"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        <div 
-          className="w-full max-w-xl bg-white/95 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.3)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[80vh] text-neutral-900 dark:text-neutral-100 font-sans"
+        <div
+          className="w-full max-w-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-neutral-900 dark:text-neutral-100 font-sans"
           role="dialog"
           aria-modal="true"
           aria-label="Command Palette"
         >
-
-          {/* Top Window Header: macOS Traffic Lights & Title */}
-          <div className="px-4 py-2.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/60 dark:bg-neutral-950/40 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 mr-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] inline-block shadow-2xs" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] inline-block shadow-2xs" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] inline-block shadow-2xs" />
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                <Command className="w-3.5 h-3.5 text-brand-500" />
-                <span>Quick Commands &amp; Navigation</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono text-neutral-500 dark:text-neutral-400 border border-neutral-200/60 dark:border-neutral-700/60">
-                ⌘K / Ctrl+K
-              </span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-                aria-label="Close Command Palette"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Search Bar Input */}
-          <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center gap-3 bg-white dark:bg-neutral-900/60 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/20 shadow-2xs">
-              <Search className="w-4 h-4" />
-            </div>
+          {/* Mimo-Inspired Clean Search Bar Header */}
+          <div className="px-4 py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-3 bg-white dark:bg-neutral-900 shrink-0">
+            <Search className="w-4 h-4 text-neutral-400 shrink-0" />
 
             <input
               ref={inputRef}
@@ -421,8 +355,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search documents or jump to actions..."
-              className="flex-1 bg-transparent text-sm sm:text-base font-medium text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-hidden"
+              placeholder="Type a command or search documents..."
+              className="flex-1 bg-transparent text-sm font-medium text-neutral-950 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-hidden"
             />
 
             {search && (
@@ -436,13 +370,13 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
               </button>
             )}
 
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 border border-neutral-200/60 dark:border-neutral-700/60">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-[10px] font-mono text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700/80">
               ESC
             </kbd>
           </div>
 
-          {/* Results Action List */}
-          <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-1">
+          {/* Results Action List (Minimal Mimo / Raycast Style) */}
+          <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-0.5">
             {filteredActions.length > 0 ? (
               filteredActions.map((action, idx) => {
                 const isSelected = selectedIndex === idx;
@@ -455,7 +389,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                 return (
                   <React.Fragment key={action.id}>
                     {isFirstOfCategory && (
-                      <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                      <div className="px-3 pt-2 pb-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                         {action.category}
                       </div>
                     )}
@@ -465,28 +399,30 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                       type="button"
                       onClick={() => action.perform()}
                       onMouseEnter={() => setSelectedIndex(idx)}
-                      className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-all cursor-pointer border ${
+                      className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-brand-50/80 dark:bg-brand-950/40 border-brand-500/40 text-neutral-950 dark:text-white shadow-2xs'
-                          : 'border-transparent text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
+                          ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white'
+                          : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/60'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0 pr-2">
-                        <div
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border shadow-2xs transition-colors ${action.iconColor}`}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
+                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                        <Icon
+                          className={`w-4 h-4 shrink-0 ${
+                            isSelected
+                              ? 'text-neutral-950 dark:text-white'
+                              : 'text-neutral-400 dark:text-neutral-500'
+                          }`}
+                        />
 
-                        <div className="truncate">
-                          <div className="text-xs font-bold text-neutral-950 dark:text-white truncate">
+                        <div className="flex items-baseline gap-2 truncate">
+                          <span className="text-xs font-medium truncate text-neutral-950 dark:text-neutral-100">
                             {action.title}
-                          </div>
+                          </span>
 
                           {action.description && (
-                            <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
+                            <span className="text-[11px] text-neutral-400 dark:text-neutral-500 truncate hidden sm:inline">
                               {action.description}
-                            </div>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -494,20 +430,14 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                       {/* Right shortcut & enter cue */}
                       <div className="flex items-center gap-2 shrink-0 pl-2">
                         {action.shortcut && (
-                          <kbd
-                            className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md border shadow-2xs transition-colors ${
-                              isSelected
-                                ? 'bg-brand-500/10 text-brand-600 dark:text-brand-300 border-brand-500/30'
-                                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border-neutral-200/60 dark:border-neutral-700/60'
-                            }`}
-                          >
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400">
                             {action.shortcut}
-                          </kbd>
+                          </span>
                         )}
 
                         {isSelected && (
-                          <span className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 flex items-center">
-                            <CornerDownLeft className="w-3.5 h-3.5" />
+                          <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500">
+                            ↵
                           </span>
                         )}
                       </div>
@@ -518,10 +448,10 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
             ) : (
               /* Quick-Create Note state when no matches */
               <div className="py-10 px-4 flex flex-col items-center justify-center text-center">
-                <div className="w-10 h-10 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-2.5 text-neutral-400">
+                <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-2.5 text-neutral-400">
                   <FileCode className="w-5 h-5" />
                 </div>
-                <h3 className="text-xs font-bold text-neutral-900 dark:text-white mb-1">
+                <h3 className="text-xs font-semibold text-neutral-900 dark:text-white mb-1">
                   No matches for "{search}"
                 </h3>
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 max-w-xs mb-3">
@@ -536,7 +466,7 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
                       navigate(`/editor/${newId}`);
                       onClose();
                     }}
-                    className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Create "{search.endsWith('.md') ? search : `${search}.md`}"</span>
@@ -547,39 +477,17 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
           </div>
 
           {/* Palette Footer Status Bar */}
-          <div className="px-4 py-2 border-t border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/70 dark:bg-neutral-950/50 flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300/60 dark:border-neutral-700 font-mono text-[10px]">
-                  ↑↓
-                </kbd>
-                <span>Navigate</span>
-              </span>
+          <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-950/60 flex items-center justify-between text-[11px] font-mono text-neutral-400 shrink-0">
+            <div className="flex items-center gap-3">
+              <span>↑↓ Navigate</span>
               <span>•</span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300/60 dark:border-neutral-700 font-mono text-[10px]">
-                  ↵
-                </kbd>
-                <span>Select</span>
-              </span>
+              <span>↵ Select</span>
               <span>•</span>
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 rounded-md bg-neutral-200/60 dark:bg-neutral-800 border border-neutral-300/60 dark:border-neutral-700 font-mono text-[10px]">
-                  Esc
-                </kbd>
-                <span>Close</span>
-              </span>
+              <span>Esc Close</span>
             </div>
 
-            <div className="flex items-center gap-2">
-              {selectedAction && (
-                <div className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md border border-brand-500/20">
-                  <span>↵ {selectedAction.shortcut || 'Select'}</span>
-                </div>
-              )}
-              <span className="text-[11px] font-mono">
-                {filteredActions.length} item{filteredActions.length === 1 ? '' : 's'}
-              </span>
+            <div className="text-[11px] font-mono text-neutral-400">
+              {filteredActions.length} item{filteredActions.length === 1 ? '' : 's'}
             </div>
           </div>
         </div>

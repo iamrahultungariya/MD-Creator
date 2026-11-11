@@ -9,7 +9,6 @@ import { MimoShowcaseSection } from '../components/home/MimoShowcaseSection';
 import { BenchmarkSection } from '../components/home/BenchmarkSection';
 import { PricingSection } from '../components/home/PricingSection';
 import { FaqSection } from '../components/home/FaqSection';
-import { RoadmapSection } from '../components/home/RoadmapSection';
 import { FEATURE_FLAGS } from '../config/features';
 
 // Code-split heavy below-the-fold sections and interactive modals on-demand
@@ -87,9 +86,6 @@ export const HomePage: React.FC = () => {
 
         {/* Developer & Researcher FAQ Accordion */}
         <FaqSection />
-
-        {/* Dedicated Product Roadmap & What's New */}
-        <RoadmapSection />
 
         {/* 3-Column Minimal Verified Community Reviews */}
         <Suspense fallback={<div className="h-32" />}>
