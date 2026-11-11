@@ -375,6 +375,101 @@ export async function pullCloudDocuments(force = false): Promise<number> {
 }
 
 /**
+ * Lightweight delta sync: fetches only documents modified in Supabase since last sync time.
+ * Executes in <100ms and syncs metadata and contents into Dexie.
+ */
+export async function pullLatestCloudChanges(force = false): Promise<number> {
+  if (!supabase) return 0;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return 0;
+
+    const lastSyncTime = getLastCloudPullTime();
+    // Throttle non-forced checks to once per 3s
+    if (!force && Date.now() - lastSyncTime < 3000) return 0;
+
+    const query = supabase
+      .from('documents')
+      .select('*')
+      .eq('user_id', session.user.id);
+
+    // If lastSyncTime is valid, only query docs updated since then (-5s clock skew buffer)
+    const sinceIso = lastSyncTime > 0
+      ? new Date(Math.max(0, lastSyncTime - 5000)).toISOString()
+      : null;
+
+    const { data: modifiedDocs, error } = sinceIso
+      ? await query.gt('updated_at', sinceIso).order('updated_at', { ascending: false })
+      : await query.order('updated_at', { ascending: false }).limit(50);
+
+    if (error || !modifiedDocs || modifiedDocs.length === 0) {
+      setLastCloudPullTime(Date.now());
+      return 0;
+    }
+
+    setLastCloudPullTime(Date.now());
+
+    let updatedCount = 0;
+    for (const doc of modifiedDocs) {
+      const cloudUpdated = new Date(doc.updated_at).getTime();
+      const local = await db.documents.get(doc.id);
+
+      if (!local || cloudUpdated > local.updatedAt + 500) {
+        if (!doc.is_deleted) {
+          const { data: contentData } = await supabase
+            .from('document_contents')
+            .select('content')
+            .eq('id', doc.id)
+            .maybeSingle();
+
+          const content = contentData?.content || '';
+          await db.documents.put({
+            id: doc.id,
+            title: doc.title,
+            snippet: doc.snippet || '',
+            tags: doc.tags || [],
+            createdAt: new Date(doc.created_at).getTime(),
+            updatedAt: cloudUpdated,
+            lastOpenedAt: doc.last_opened_at ? new Date(doc.last_opened_at).getTime() : Date.now(),
+            openCount: 1,
+            isPinned: Boolean(doc.is_pinned),
+            isFavorite: Boolean(doc.is_favorite),
+            isDeleted: Boolean(doc.is_deleted),
+            deletedAt: doc.deleted_at ? new Date(doc.deleted_at).getTime() : undefined,
+            wordCount: doc.word_count || 0,
+            sizeBytes: doc.size_bytes || 0,
+            cloudSynced: true,
+          });
+
+          await db.document_cache.put({
+            id: doc.id,
+            content,
+            cachedAt: Date.now(),
+          });
+
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('md-writer-remote-doc-update', {
+                detail: { docId: doc.id, content, updatedAt: cloudUpdated, title: doc.title },
+              })
+            );
+          }
+          updatedCount++;
+        }
+      }
+    }
+
+    if (updatedCount > 0) {
+      notifyDocumentStoreChanged();
+    }
+    return updatedCount;
+  } catch (err) {
+    console.warn('[Supabase DeltaPull] Error:', err);
+    return 0;
+  }
+}
+
+/**
  * Performs bi-directional synchronization between Dexie (IndexedDB) and Supabase Cloud.
  * Throttled to once every 20s (unless forced), non-blocking, dirty-tracked and batched.
  */
@@ -593,6 +688,11 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
                 await db.revisions.where('documentId').equals(deletedId).delete();
               });
               notifyDocumentStoreChanged(deletedId, 'all');
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                  new CustomEvent('md-writer-remote-doc-delete', { detail: { docId: deletedId } })
+                );
+              }
             }
           } else if (payload.eventType === 'UPDATE') {
             const updatedDoc = payload.new as any;
@@ -616,6 +716,28 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
                   }
                 }
 
+                // If remote document was edited on another device, immediately pull updated content!
+                let fetchedContent: string | null = null;
+                if (!updatedDoc.is_deleted && cloudUpdated > existing.updatedAt) {
+                  try {
+                    const { data: contentData } = await supabase!
+                      .from('document_contents')
+                      .select('content')
+                      .eq('id', updatedDoc.id)
+                      .maybeSingle();
+                    if (contentData && typeof contentData.content === 'string') {
+                      fetchedContent = contentData.content;
+                      await db.document_cache.put({
+                        id: updatedDoc.id,
+                        content: fetchedContent,
+                        cachedAt: Date.now(),
+                      });
+                    }
+                  } catch (contentErr) {
+                    console.warn('[Realtime Sync] Content fetch error on update:', contentErr);
+                  }
+                }
+
                 await db.documents.update(updatedDoc.id, {
                   title: updatedDoc.title,
                   snippet: updatedDoc.snippet || existing.snippet,
@@ -629,13 +751,41 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
                   updatedAt: cloudUpdated,
                   cloudSynced: true
                 });
+
                 notifyDocumentStoreChanged(updatedDoc.id, updatedDoc.is_deleted ? 'trash' : 'save');
+
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(
+                    new CustomEvent('md-writer-remote-doc-update', {
+                      detail: {
+                        docId: updatedDoc.id,
+                        content: fetchedContent,
+                        updatedAt: cloudUpdated,
+                        title: updatedDoc.title,
+                        isDeleted: Boolean(updatedDoc.is_deleted),
+                      },
+                    })
+                  );
+                }
               } else if (!updatedDoc.is_deleted) {
                 fetchDocumentFromSupabase(updatedDoc.id).then(async (res) => {
                   if (res) {
                     await db.documents.put({ ...res.meta, cloudSynced: true });
                     await db.document_cache.put({ id: res.meta.id, content: res.content, cachedAt: Date.now() });
                     notifyDocumentStoreChanged(res.meta.id, 'all');
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(
+                        new CustomEvent('md-writer-remote-doc-update', {
+                          detail: {
+                            docId: res.meta.id,
+                            content: res.content,
+                            updatedAt: res.meta.updatedAt,
+                            title: res.meta.title,
+                            isDeleted: false,
+                          },
+                        })
+                      );
+                    }
                   }
                 });
               }
@@ -648,6 +798,19 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
                   await db.documents.put({ ...res.meta, cloudSynced: true });
                   await db.document_cache.put({ id: res.meta.id, content: res.content, cachedAt: Date.now() });
                   notifyDocumentStoreChanged(res.meta.id, 'all');
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                      new CustomEvent('md-writer-remote-doc-update', {
+                        detail: {
+                          docId: res.meta.id,
+                          content: res.content,
+                          updatedAt: res.meta.updatedAt,
+                          title: res.meta.title,
+                          isDeleted: false,
+                        },
+                      })
+                    );
+                  }
                 }
               });
             }

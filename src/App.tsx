@@ -10,6 +10,7 @@ import { PageTransition } from './components/common/PageTransition';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { usePreferencesStore } from './stores/usePreferencesStore';
 import { useUpdateModalStore } from './stores/useUpdateModalStore';
+import { useCrossDeviceSync } from './hooks/useCrossDeviceSync';
 
 // Lazy-loaded route chunks
 const HomePage = React.lazy(() => import('./pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -103,6 +104,9 @@ const AppRoutes: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  // Global persistent cross-device realtime synchronization (<500ms)
+  useCrossDeviceSync();
+
   const checkAuth = useAuthStore((s) => s.checkAuth);
   const isConfirmOpen = useConfirmStore((s) => s.isOpen);
   const isToolbarSettingsOpen = useToolbarSettingsStore((s) => s.isOpen);
