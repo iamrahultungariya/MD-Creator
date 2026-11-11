@@ -92,7 +92,7 @@ export async function exportDirectPdf(options: DirectPdfOptions): Promise<void> 
         fontEmbedCSS: '', // Avoid heavy recursive font re-embedding freeze
         backgroundColor: options.pdfTheme === 'dark' ? '#15111E' : '#ffffff',
         skipFonts: true,
-        filter: (node) => {
+        filter: (node: HTMLElement) => {
           if (
             node instanceof HTMLElement && 
             (node.classList.contains('pdf-page-indicator') || node.classList.contains('no-print'))
