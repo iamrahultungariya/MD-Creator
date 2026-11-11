@@ -23,7 +23,6 @@ import {
   syncDocumentPinToSupabase, 
   syncDocumentTrashToSupabase, 
   isSupabaseConfigured,
-  subscribeToUserDocumentChanges,
   supabase
 } from '../lib/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -100,36 +99,6 @@ export function usePaginatedDocuments({
   page = 1,
   pageSize = 24,
 }: UsePaginatedDocumentsOptions = {}) {
-  const user = useAuthStore((s) => s.user);
-
-  // Background cloud pull + Real-time sync + Window focus synchronization
-  useEffect(() => {
-    if (!isSupabaseConfigured()) return;
-    pullCloudDocuments().catch(console.warn);
-
-    // 1. Instant Realtime WebSocket subscription for cross-device changes (sub-second)
-    let unsubscribeRealtime = () => {};
-    if (user?.id) {
-      unsubscribeRealtime = subscribeToUserDocumentChanges(user.id);
-    }
-
-    // 2. Tab focus & visibility change listener: pull immediately when switching back to tab
-    const handleFocusSync = () => {
-      if (document.visibilityState === 'visible') {
-        pullCloudDocuments(true).catch(console.warn);
-      }
-    };
-
-    window.addEventListener('focus', handleFocusSync);
-    document.addEventListener('visibilitychange', handleFocusSync);
-
-    return () => {
-      unsubscribeRealtime();
-      window.removeEventListener('focus', handleFocusSync);
-      document.removeEventListener('visibilitychange', handleFocusSync);
-    };
-  }, [user?.id]);
-
   return useQuery({
     queryKey: ['documents', 'paginated', searchQuery, activeTag, showTrash, page, pageSize],
     staleTime: 30_000,
