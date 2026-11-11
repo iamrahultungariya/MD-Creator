@@ -49,6 +49,9 @@ const GeminiFixedToast = React.lazy(() =>
 const CrossDeviceDeletionModal = React.lazy(() =>
   import('./components/common/CrossDeviceDeletionModal').then((m) => ({ default: m.CrossDeviceDeletionModal }))
 );
+const AppUpdateBanner = React.lazy(() =>
+  import('./components/common/AppUpdateBanner').then((m) => ({ default: m.AppUpdateBanner }))
+);
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -234,6 +237,11 @@ export const App: React.FC = () => {
         {/* Cross-Device Remote Deletion Reconciliation Modal */}
         <Suspense fallback={null}>
           <CrossDeviceDeletionModal />
+        </Suspense>
+
+        {/* Instant App Update Banner with tactile progress animation */}
+        <Suspense fallback={null}>
+          <AppUpdateBanner />
         </Suspense>
 
         <AppRoutes />

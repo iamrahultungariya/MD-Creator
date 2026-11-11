@@ -9,6 +9,8 @@ import '@fontsource-variable/literata';
 import 'katex/dist/katex.min.css';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
+import { appUpdateService } from './services/appUpdateService';
+import { useUpdateModalStore } from './stores/useUpdateModalStore';
 
 // Suppress benign browser extension runtime errors and Workbox offline/CSP font cache misses
 if (typeof window !== 'undefined') {
@@ -51,17 +53,42 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Register PWA service worker during idle/load to protect FCP and TTI
+// Register PWA service worker with active update lifecycle & instantaneous focus check (<3s)
 if (typeof window !== 'undefined') {
-  if (typeof (window as any).requestIdleCallback === 'function') {
-    (window as any).requestIdleCallback(() => {
-      registerSW();
-    });
-  } else {
-    window.addEventListener('load', () => {
-      registerSW();
-    });
-  }
+  let updateSW: ((reloadPage?: boolean) => Promise<void>) | null = null;
+
+  updateSW = registerSW({
+    immediate: true,
+    onNeedRefresh() {
+      useUpdateModalStore.getState().setPendingAppUpdate('Latest');
+    },
+    onRegistered(registration) {
+      if (registration) {
+        appUpdateService.setRegistration(registration, updateSW);
+        // Initial instant check on start
+        appUpdateService.checkForAppUpdate(true);
+
+        // Instant update check whenever window/tab comes into focus
+        window.addEventListener('focus', () => {
+          appUpdateService.checkForAppUpdate();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            appUpdateService.checkForAppUpdate();
+          }
+        });
+
+        // Background heartbeat every 60 seconds
+        setInterval(() => {
+          appUpdateService.checkForAppUpdate();
+        }, 60000);
+      }
+    },
+    onRegisterError(error) {
+      console.warn('[PWA] Service worker registration failed:', error);
+    },
+  });
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

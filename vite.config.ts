@@ -1,8 +1,38 @@
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import fs from 'fs';
+
+function versionJsonPlugin(): Plugin {
+  return {
+    name: 'generate-version-json',
+    buildStart() {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
+        const versionData = {
+          version: pkg.version || '2.2.1',
+          builtAt: Date.now(),
+        };
+        const pubPath = path.resolve(__dirname, 'public/version.json');
+        fs.writeFileSync(pubPath, JSON.stringify(versionData, null, 2));
+      } catch (err) {
+        console.warn('[versionJsonPlugin] Failed to write version.json:', err);
+      }
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url && req.url.startsWith('/version.json')) {
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+        next();
+      });
+    }
+  };
+}
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +41,7 @@ export default defineConfig({
     host: true
   },
   plugins: [
+    versionJsonPlugin(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -53,7 +84,8 @@ export default defineConfig({
           '**/vendor-docx*',
           '**/vendor-katex*',
           '**/*KaTeX_*',
-          '**/*.map'
+          '**/*.map',
+          '**/version.json'
         ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
