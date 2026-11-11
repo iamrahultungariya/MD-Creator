@@ -1,18 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { InteractiveStudioShowcase } from './InteractiveStudioShowcase';
-import { InteractiveMarkdownSandbox } from './InteractiveMarkdownSandbox';
-import { WritingHoverTrigger } from './WritingHoverTrigger';
-import { useUpdateModalStore } from '../../stores/useUpdateModalStore';
-import { APP_VERSION_LABEL } from '../../config/version';
 
 interface HeroProps {
   onOpenCreateDoc?: () => void;
+  onOpenTemplates?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc }) => {
+export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates }) => {
   const navigate = useNavigate();
-  const { openUpdate } = useUpdateModalStore();
 
   const handleCreateDoc = () => {
     if (onOpenCreateDoc) {
@@ -22,79 +17,63 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc }) => {
     }
   };
 
-  return (
-    <section className="relative pt-10 pb-16 sm:pt-16 sm:pb-24 overflow-hidden text-center font-sans">
-      {/* ── SUBTLE GEOMETRIC BACKGROUND GRID (Zero ambient blur slop) ── */}
-      <div 
-        aria-hidden="true" 
-        className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[520px] -z-10 overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_15%,#000_70%,transparent_100%)]" />
-      </div>
+  const handleBrowseTemplates = () => {
+    if (onOpenTemplates) {
+      onOpenTemplates();
+    } else {
+      navigate('/?templates=open');
+    }
+  };
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        
-        {/* ── TOP RELEASE BADGE WITH CALM INDICATOR ── */}
-        <div 
-          className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs font-medium mb-6 select-none shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
-          onClick={openUpdate}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openUpdate(); }}
-        >
-          {/* Calm static indicator dot */}
-          <span className="inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          <span className="font-semibold text-brand-600 dark:text-brand-400">
-            {APP_VERSION_LABEL} Live
-          </span>
-          <span className="text-neutral-300 dark:text-neutral-700 font-light">•</span>
-          <span className="text-neutral-600 dark:text-neutral-300 hidden xs:inline">
-            Gemini 3.x Engine &amp; Intent Router
-          </span>
-          <span className="text-neutral-600 dark:text-neutral-300 xs:hidden">
-            Local-First
-          </span>
+  return (
+    <section className="relative pt-12 pb-14 sm:pt-20 sm:pb-18 overflow-hidden text-center">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        {/* Monospace kicker badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 font-mono text-xs mb-6 select-none">
+          <span>LOCAL-FIRST • ZERO TELEMETRY • GEMINI 3.X BYOK</span>
         </div>
 
-        {/* ── EDITORIAL HIGH-IMPACT HEADLINE ── */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-neutral-950 dark:text-white tracking-[-0.035em] leading-[1.12] max-w-4xl mx-auto mb-6">
-          A clean, distraction-free space <br className="hidden sm:inline" />
-          for your notes and <WritingHoverTrigger />.
+        {/* Headline */}
+        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.03em] text-neutral-950 dark:text-white leading-[1.12] mb-6">
+          The plain text studio built for focused writing.
         </h1>
 
-        {/* ── REFINED HUMAN-CENTRIC SUBTITLE WITH PSYCHOLOGICAL VALUE ── */}
+        {/* Subhead */}
         <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed mb-8">
-          Write with pure focus and zero lag. Start drafting immediately offline; sign in whenever you want encrypted multi-device cloud sync, automatic version snapshots, and real-time backups.
+          No account required. Your documents stay in your browser's private local storage.
+          Connect your own Google Gemini key for private, zero-markup AI editing.
         </p>
 
-        {/* ── TACTILE BESPOKE ACTION CTAS ── */}
-        <div className="flex flex-wrap items-center justify-center gap-3.5 mb-4">
+        {/* Actions */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
           <button
             onClick={handleCreateDoc}
-            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white px-7 py-3 rounded-xl font-semibold text-sm shadow-xs hover:shadow-sm transition-all cursor-pointer flex items-center justify-center"
+            className="bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-medium text-sm px-5 py-2.5 rounded transition-colors cursor-pointer"
           >
             Create Document
           </button>
-
           <button
-            onClick={() => navigate('/documents')}
-            className="w-full sm:w-auto bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800/90 active:translate-y-[1px] text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-800 px-5 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer flex items-center justify-center shadow-2xs hover:border-neutral-300 dark:hover:border-neutral-700"
+            onClick={handleBrowseTemplates}
+            className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium text-sm px-4 py-2.5 rounded active:translate-y-[1px] transition-colors cursor-pointer"
           >
-            <span>Open Documents</span>
+            Browse Templates
           </button>
         </div>
 
-        {/* Micro-guarantee label */}
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mb-12">
-          100% Local-First • Free Forever Core • Direct Google Gemini 3.x BYOK • Optional Cloud Backup
-        </p>
-
-        {/* ── LIVE INTERACTIVE MARKDOWN SANDBOX & STUDIO SHOWCASE ── */}
-        <div className="relative mx-auto max-w-5xl space-y-12">
-          <InteractiveMarkdownSandbox />
-          <InteractiveStudioShowcase />
+        {/* Plain text secondary link */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/documents')}
+            className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline-offset-4 hover:underline cursor-pointer"
+          >
+            Open Saved Documents
+          </button>
         </div>
 
+        {/* Typographic reassurance pill */}
+        <div className="inline-block text-xs font-mono text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800/80 rounded px-3 py-1 bg-neutral-50 dark:bg-neutral-900/60">
+          100% private • Works completely offline • Export directly to PDF, Word &amp; Markdown
+        </div>
       </div>
     </section>
   );
