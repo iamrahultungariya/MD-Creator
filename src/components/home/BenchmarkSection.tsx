@@ -7,7 +7,7 @@ interface BenchmarkRow {
   icon: React.ElementType;
   mdWriter: { text: string; status: 'highlight' | 'pass' };
   cloudSuites: { text: string; status: 'warn' | 'fail' };
-  pluginEditors: { text: string; status: 'neutral' | 'warn' };
+  pluginEditors: { text: string; status: 'pass' | 'neutral' | 'warn' };
   siloedWorkspaces: { text: string; status: 'warn' | 'fail' };
 }
 

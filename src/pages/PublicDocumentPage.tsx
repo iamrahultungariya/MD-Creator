@@ -11,7 +11,6 @@ import {
   Calendar, 
   Lock, 
   ShieldAlert, 
-  Sparkles,
   PenTool,
   Edit3,
   Layers,

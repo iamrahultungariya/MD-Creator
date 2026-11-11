@@ -10,7 +10,6 @@ import {
   History,
   FileX,
   Trash2,
-  Sparkles,
 } from 'lucide-react';
 import { useMimoStore, MimoAvatar } from '../../mimo';
 import { FEATURE_FLAGS } from '../../../config/features';

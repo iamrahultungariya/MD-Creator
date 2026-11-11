@@ -11,7 +11,6 @@ import {
   ShieldAlert, 
   CloudOff, 
   Trash2,
-  Sparkles,
   Loader2
 } from 'lucide-react';
 import { 

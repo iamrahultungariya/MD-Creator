@@ -86,7 +86,6 @@ interface EditorModalsContainerProps {
   onCloseLocalFolder?: () => void;
   onOpenLocalFolder?: () => void;
   onSelectLocalFile?: (fileHandle: FileSystemFileHandle, fileName: string, content: string) => void;
-  onToast?: (message: string) => void;
 }
 
 export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React.memo(({
@@ -137,7 +136,6 @@ export const EditorModalsContainer: React.FC<EditorModalsContainerProps> = React
   onCloseLocalFolder,
   onOpenLocalFolder,
   onSelectLocalFile,
-  onToast,
 }) => {
   return (
     <Suspense fallback={null}>

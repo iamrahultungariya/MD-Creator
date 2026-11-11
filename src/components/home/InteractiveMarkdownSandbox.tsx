@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Code2, Eye, CheckCircle2, Play, Copy, Check } from 'lucide-react';
+import { Sparkles, Code2, Eye, Copy, Check } from 'lucide-react';
 import { MarkdownPreview } from '../editor/MarkdownPreview';
 
 const INITIAL_SNIPPET = `# Quantum Wavefunction ✦
@@ -16,7 +16,6 @@ $$i\\hbar \\frac{\\partial}{\\partial t}\\Psi(\\mathbf{r},t) = \\hat{H}\\Psi(\\m
 
 export const InteractiveMarkdownSandbox: React.FC = () => {
   const [content, setContent] = useState(INITIAL_SNIPPET);
-  const [activeTab, setActiveTab] = useState<'both' | 'code' | 'preview'>('both');
   const [isCopied, setIsCopied] = useState(false);
   const [isPolishing, setIsPolishing] = useState(false);
 
