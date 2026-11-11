@@ -244,8 +244,9 @@ ${outlineHeader}`,
     pLower.includes('generate document');
 
   // Case 2.5: General Conceptual Questions (e.g. "What is Python?", "Explain async/await")
-  // Only triggered when prompt has NO relation to the active document and document is large (>300 LOC)
-  if (!forceFullScan && !selectedText && !isFullDocRequested && detectedIntent === 'GENERAL_QA' && totalDocLines > 300) {
+  // Triggered when prompt is conceptual with no explicit doc query request.
+  // Saves thousands of tokens by preventing unnecessary document content ingestion.
+  if (!forceFullScan && !selectedText && !isFullDocRequested && detectedIntent === 'GENERAL_QA') {
     const outlineStr =
       summary.headingsSummary.length > 0 ? `\nDocument Outline:\n${summary.headingsSummary.join('\n')}` : '';
     const keywordsStr =
