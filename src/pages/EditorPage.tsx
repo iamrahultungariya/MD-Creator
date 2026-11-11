@@ -556,7 +556,6 @@ export const EditorPage: React.FC = () => {
         onCloseLocalFolder={() => modals.setIsLocalFolderOpen(false)}
         onOpenLocalFolder={() => modals.setIsLocalFolderOpen(true)}
         onSelectLocalFile={handleSelectLocalFile}
-        onToast={showToast}
       />
 
       {/* Floating Quick Cloud Backup / Auth Modal */}
