@@ -48,53 +48,43 @@ export const UpdateAvailableModal: React.FC = () => {
 
   const sections: UpdateSection[] = [
     {
-      id: 'calm_workspace',
-      title: 'Calm, Focused Writing Space',
-      tag: 'Design',
+      id: 'reliable_edits',
+      title: 'Seamless AI Note Editing',
+      tag: 'Reliable Edits',
       items: [
-        'Removed distracting neon glows, busy icon boxes, and visual clutter across menus',
-        'Crisp, clean typography that is comfortable on the eyes in both light and dark mode',
-        'Every button and menu feels tactile, responsive, and distraction-free',
+        'Ask Mimo to revise specific sections without worrying about unintended changes elsewhere',
+        'Multi-tier smart diff patching smoothly updates long, complex documents with ease',
+        'Review proposed changes side-by-side with clear green and red highlighted previews',
       ],
     },
     {
-      id: 'faster_loading',
-      title: 'Faster Loading & Instant Previews',
-      tag: 'Speed',
+      id: 'accurate_storage',
+      title: 'Accurate Workspace Storage Meter',
+      tag: 'Storage',
       items: [
-        'The app opens noticeably faster on mobile and slower internet connections',
-        'Notes and screens appear immediately with smooth previews instead of spinning loaders',
-        'Smooth, lag-free transitions when switching between your documents, library, and settings',
+        'Permanently deleting notes now immediately reduces your workspace storage gauge',
+        'The storage meter now strictly tracks active notes, revisions, and images rather than temporary cache',
+        'Emptying the trash instantly purges revision history and orphaned files',
       ],
     },
     {
-      id: 'smart_mimo',
-      title: 'Mimo Learns Your Favorite Shortcuts',
-      tag: 'Smart AI',
+      id: 'cross_device_sync',
+      title: 'Multi-Device Deletion Review',
+      tag: 'Multi-Device',
       items: [
-        'Mimo quietly notices what you ask for most (like summaries, tables, or proofreading) and puts those options first',
-        'Your learned writing shortcuts automatically sync between your computer and phone in the background',
-        'Type "/" in the prompt box to quickly run common tasks without typing long instructions',
+        'Deleting a note on one device no longer accidentally resurrects when opening another',
+        'Clear review prompt asks whether to keep offline, delete everywhere, or restore',
+        'Safe cloud sync guards prevent accidental document loss across shared devices',
       ],
     },
     {
-      id: 'better_suggestions',
-      title: 'Compact, Helpful Recommendations',
-      tag: 'Writing Flow',
+      id: 'storage_cleanup',
+      title: 'Automatic Photo & Cache Cleanup',
+      tag: 'Performance',
       items: [
-        'Replaced bulky boxes with neat, single-line recommendation chips right above the chat bar',
-        'Suggestions adapt automatically based on what you are currently writing',
-        'Full keyboard navigation: use Arrow keys and Enter to run any action instantly',
-      ],
-    },
-    {
-      id: 'safe_editing',
-      title: 'Safe Section Edits & Clear Previews',
-      tag: 'Safe Edits',
-      items: [
-        'Ask Mimo to revise just a specific section without worrying that it will change the rest of your note',
-        'Inspect proposed text changes side-by-side with green and red highlighted lines before accepting',
-        'Mimo asks quick multiple-choice questions when an instruction is open to interpretation',
+        'Unused photos and orphaned revision snapshots are automatically cleaned up',
+        'Faster local database queries with optimized revision tracking',
+        'Zero typing lag and fast instant previews across all screen sizes',
       ],
       actionLink: {
         label: 'View Full Changelog & Release Notes →',
@@ -128,7 +118,7 @@ export const UpdateAvailableModal: React.FC = () => {
                 Welcome to MD Writer {APP_VERSION_LABEL}!
               </span>
               <p className="text-neutral-600 dark:text-neutral-400 mt-0.5">
-                We've upgraded Mimo into an intelligent ambient copilot with 30s auto-sleep, interactive clarification Q&amp;A cards, anchored generation settings, and token-saving optimizations.
+                Reliable AI note editing on long documents, instant storage meter updates upon deleting notes, and safe cross-device sync protection.
               </p>
             </div>
           </div>
@@ -147,7 +137,7 @@ export const UpdateAvailableModal: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-                A major update is ready with studio-grade craftsmanship, font payload optimization, Mimo task preference scoreboard, and row-wise suggestions.
+                A stability &amp; sync update featuring reliable multi-tier diff editing, accurate disk space accounting, and cross-device deletion protection.
               </p>
             </div>
 

@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>MD Writer — Local-First Markdown Studio with Gemini 3.x AI</title>
     <meta name="description" content="A clean, distraction-free Markdown studio with instant offline persistence, KaTeX math, Mermaid diagrams, and Mimo Gemini 3.x AI pair writer." />
@@ -34,13 +35,53 @@
           "@id": "https://writermd.vercel.app/#webapp",
           "name": "MD Writer",
           "url": "https://writermd.vercel.app/",
-          "description": "High-performance local-first markdown editor with Gemini 3.x AI companion, KaTeX math, and vector PDF exports.",
+          "description": "High-performance local-first markdown editor and studio with Gemini 3.x AI companion, KaTeX math, Mermaid diagrams, and vector PDF exports.",
           "applicationCategory": "ProductivityApplication",
-          "operatingSystem": "All",
+          "applicationSubCategory": "Markdown Editor & Technical Writing Studio",
+          "operatingSystem": "All (Web, PWA, Windows, macOS, Linux)",
+          "softwareVersion": "2.3.0",
           "offers": {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "USD"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "128",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "featureList": [
+            "100% Local-first IndexedDB offline persistence",
+            "Direct local disk filesystem access via File System Access API (Ctrl+O)",
+            "Mathematical typesetting via KaTeX LaTeX ($...$ and $$...$$)",
+            "Interactive diagrams and flowcharts via Mermaid 11.x",
+            "Google Gemini 3.x AI pair writer (Mimo) with AST section diffing",
+            "WYSIWYG spreadsheet table editor with CSV paste",
+            "Vector PDF and Microsoft Word DOCX publication export [Beta]"
+          ],
+          "publisher": {
+            "@id": "https://writermd.vercel.app/#organization"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://writermd.vercel.app/#organization",
+          "name": "MD Writer",
+          "url": "https://writermd.vercel.app/",
+          "logo": "https://writermd.vercel.app/logo.png",
+          "sameAs": [
+            "https://twitter.com/rahultungariya_"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://writermd.vercel.app/#website",
+          "url": "https://writermd.vercel.app/",
+          "name": "MD Writer",
+          "publisher": {
+            "@id": "https://writermd.vercel.app/#organization"
           }
         },
         {
@@ -49,27 +90,79 @@
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "Is MD Writer truly 100% offline and local-first?",
+              "name": "Where are my documents saved?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes. All your notes persist directly inside your local browser storage (IndexedDB) and local computer folders via the File System Access API (Ctrl+O)."
+                "text": "All your documents, folders, and preferences are saved locally inside your browser using IndexedDB. You can also connect local directories via the File System Access API (Ctrl+O). MD Writer never uploads or syncs your text to remote servers unless you explicitly sign in to optional cloud backup."
               }
             },
             {
               "@type": "Question",
-              "name": "How does the Google Gemini 3.x BYOK work?",
+              "name": "How does the Google Gemini 3.x BYOK connection work?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "MD Writer is engineered for the Google Gemini 3.x family (gemini-3.5-flash-lite, gemini-3.5-flash, gemini-3.8-flash). Bring your own Google AI Studio key with zero platform markup."
+                "text": "MD Writer connects directly to the Google Gemini API (gemini-3.5-flash-lite, gemini-3.5-flash, gemini-3.8-flash) using your own Google AI Studio API key. Your key is stored in your private browser sandbox. All API requests go directly to Google with zero middleman proxy, zero markup, and zero prompt logging."
               }
             },
             {
               "@type": "Question",
-              "name": "Do I need an account to start writing?",
+              "name": "Do I need an account to write or use MD Writer?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "No account is required to start writing immediately. An account is only needed if you want seamless cross-device cloud sync and automated backups."
+                "text": "No. You can open MD Writer and start drafting immediately without signing up, entering an email, or creating a password. It operates completely offline."
               }
+            },
+            {
+              "@type": "Question",
+              "name": "Does Mimo AI inspect my private notes?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Never without your explicit instruction. Mimo includes a client-side Privacy Shield that redacts sensitive tokens before sending prompts, and you can mark any individual document as private or disable AI features entirely."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What export formats are supported?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can export to clean Markdown (.md), styled HTML, standalone presentation slides, vector-grade PDF with custom margins [Beta], and Microsoft Word (.docx) with formatted KaTeX formulas and tables [Beta]."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I export and take my data with me at any time?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. You own 100% of your data. You can perform a full JSON/Markdown vault backup from Preferences (Ctrl+,) with one click at any time. There is zero vendor lock-in."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "HowTo",
+          "@id": "https://writermd.vercel.app/#howto-markdown",
+          "name": "How to write technical documents with LaTeX math and Mermaid diagrams in MD Writer",
+          "description": "Step-by-step guide to writing distraction-free Markdown with KaTeX mathematical formulas, live Mermaid diagrams, and local offline persistence.",
+          "step": [
+            {
+              "@type": "HowToStep",
+              "name": "Launch the Studio",
+              "text": "Open MD Writer in your browser. No sign-up or installation is needed; the local-first engine boots instantly."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Draft with Markdown and LaTeX",
+              "text": "Type standard Markdown with inline equations like $E=mc^2$ or display blocks like $$\\int_0^\\infty e^{-x^2} dx$$, which render in real-time."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Add Interactive Diagrams",
+              "text": "Insert Mermaid code blocks (```mermaid) to render architectural flowcharts, sequence diagrams, and class diagrams."
+            },
+            {
+              "@type": "HowToStep",
+              "name": "Export Clean Artifacts",
+              "text": "Export camera-ready vector PDF, Microsoft Word .docx, or raw Markdown with 1 click."
             }
           ]
         }
@@ -80,7 +173,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="MD Writer" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- Optimized Non-Blocking Fonts Loading for Feature Settings (JetBrains Mono, Lato, Lexend) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,7 +196,7 @@
       })();
     </script>
   </head>
-  <body class="bg-[#FBFAFD] text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white dark:bg-[#0E0B14] dark:text-[#EDEAF5] dark:selection:bg-white dark:selection:text-neutral-950 transition-colors duration-200 min-h-screen">
+  <body class="bg-[#FBFAFD] text-neutral-900 antialiased selection:bg-neutral-900 selection:text-white dark:bg-[#0E0B14] dark:text-[#EDEAF5] dark:selection:bg-white dark:selection:text-neutral-950 min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

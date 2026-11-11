@@ -151,22 +151,12 @@ export function useMimoChatStream({
     const isSummarize = pLower.includes('summarize') || pLower.includes('summary');
 
     // Determine if user has a valid personal or workspace API key
-    const envKey = (
-      (import.meta.env.VITE_GEMINI_API_KEY as string) ||
-      (import.meta.env.GEMINI_API_KEY as string) ||
-      ''
-    ).trim();
-    const hasActiveKey = Boolean(
-      userApiKey?.trim() ||
-      (envKey && envKey !== 'your_gemini_api_key_here' && envKey !== 'your-gemini-key')
-    );
-
     // Pre-flight quota check (0% deduction upfront; actual tokens deducted after completion).
-    // If the user has a live BYOK key or workspace key, skip demo quota restrictions.
+    // If the user has their personal BYOK key, skip demo quota restrictions.
     const userPersonalKey = useMimoStore.getState().quota.userApiKey?.trim();
-    const isUsingByok = Boolean(userPersonalKey || hasActiveKey);
+    const isUsingPersonalByok = Boolean(userPersonalKey);
 
-    if (!isUsingByok) {
+    if (!isUsingPersonalByok) {
       const preflightCheck = consumeCredit(0, isDocGen);
       if (!preflightCheck.allowed) {
         onToast(preflightCheck.reason || 'Daily AI capacity reached');
@@ -420,7 +410,7 @@ export function useMimoChatStream({
       }
 
       // Deduct proportional token-based credit only for shared demo users without personal keys
-      if (!isUsingByok) {
+      if (!isUsingPersonalByok) {
         const actualCostPercent = computeTaskCostPercent(
           result.tokensUsed,
           result.resolvedLevel,

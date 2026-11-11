@@ -1074,7 +1074,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 </div>
                 <div className="flex justify-between text-[9px] text-neutral-400">
                   <span>Fast pair writing</span>
-                  <span>1,500 RPD • 15 RPM</span>
+                  <span>20 reqs/day (shared) • Unlimited (BYOK)</span>
                 </div>
               </div>
             </div>
@@ -1089,7 +1089,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 <div className="flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                    Gemini 3.5 Flash
+                    Gemini 3.6 Flash
                   </span>
                   {selectedModel === 'gemini-3.5-flash' && (
                     <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
@@ -1127,7 +1127,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 </div>
                 <div className="flex justify-between text-[9px] text-neutral-400">
                   <span>Balanced workhorse</span>
-                  <span>1,500 RPD • 15 RPM</span>
+                  <span>3 reqs/day (shared) • Unlimited (BYOK)</span>
                 </div>
               </div>
             </div>

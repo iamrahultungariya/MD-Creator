@@ -116,6 +116,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
             FAQ
           </button>
           <button
+            onClick={() => navigate('/blog')}
+            className="hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer"
+          >
+            Blog
+          </button>
+          <button
             onClick={() => navigate('/documents')}
             className="hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer"
           >
@@ -144,14 +150,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
 
           {/* Theme Toggle */}
           <button
-            onClick={toggleTheme}
+            onClick={(e) => toggleTheme(e)}
             aria-label="Toggle theme"
-            className="w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer select-none active:scale-95"
           >
             {isDark ? (
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-4 h-4 text-amber-400 rotate-0 transition-transform duration-200" />
             ) : (
-              <Moon className="w-4 h-4 text-neutral-600" />
+              <Moon className="w-4 h-4 text-neutral-600 dark:text-neutral-400 rotate-0 transition-transform duration-200" />
             )}
           </button>
 

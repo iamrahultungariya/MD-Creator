@@ -16,25 +16,51 @@ export interface UserProfile {
 
 /**
  * Beta Phase Flag:
- * All users receive full, unrestricted Pro capabilities free while MD Writer is in Beta.
- * Linked to product maturity (until v1.0 launch) rather than hardcoded client emails.
+ * Set to false for standard production tiering.
+ * Specific features in beta (PDF Studio, Word DOCX) carry their own [Beta] indicators.
  */
-export const IS_BETA = true;
+export const IS_BETA = false;
 
-/** ISO timestamp for reward window. Configured via env. */
-export const PROMO_FREE_PRO_UNTIL: string =
-  import.meta.env.VITE_FREE_PRO_UNTIL || '2026-12-31T23:59:59.999Z';
+/** Optional promotional window expiry (ISO 8601). Configured via env if needed. */
+export const PROMO_FREE_PRO_UNTIL: string | null =
+  import.meta.env.VITE_FREE_PRO_UNTIL || null;
 
-/** Returns true while the Beta Phase or promotional window is active. */
+/** Returns true if an active global promotional reward window is configured. */
 export const isHolidayFreeProActive = (): boolean =>
-  IS_BETA || new Date() <= new Date(PROMO_FREE_PRO_UNTIL);
+  Boolean(PROMO_FREE_PRO_UNTIL && new Date() <= new Date(PROMO_FREE_PRO_UNTIL));
+
+/**
+ * Helper to check local pro activation (e.g. promo code or early-bird reservation unlock).
+ */
+export const isLocalProUnlocked = (): boolean => {
+  try {
+    return localStorage.getItem('md_writer_pro_tier_unlocked') === 'true';
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Grants or revokes local Pro capabilities.
+ */
+export const setLocalProUnlocked = (unlocked: boolean): void => {
+  try {
+    if (unlocked) {
+      localStorage.setItem('md_writer_pro_tier_unlocked', 'true');
+    } else {
+      localStorage.removeItem('md_writer_pro_tier_unlocked');
+    }
+  } catch {
+    // Ignore localStorage write errors
+  }
+};
 
 /**
  * Returns true if user has Pro privileges.
- * Derived solely from database subscription tier or active promotion.
+ * Derived from database subscription tier, active promotion, or local promo unlock.
  */
 export const isUserPro = (user?: UserProfile | null): boolean => {
-  if (IS_BETA) return true;
+  if (isHolidayFreeProActive() || isLocalProUnlocked()) return true;
   if (!user) return false;
   return user.subscriptionTier === 'pro' || user.subscriptionTier === 'team';
 };
@@ -66,9 +92,9 @@ interface AuthState {
 let authSubscription: { unsubscribe: () => void } | null = null;
 
 async function buildUserProfile(u: any): Promise<UserProfile> {
-  const isPromo = isHolidayFreeProActive();
+  const isPromo = isHolidayFreeProActive() || isLocalProUnlocked();
   let tier: 'free' | 'pro' | 'team' = isPromo ? 'pro' : 'free';
-  let proExpiresAt: string | null = isPromo ? PROMO_FREE_PRO_UNTIL : null;
+  let proExpiresAt: string | null = isHolidayFreeProActive() ? PROMO_FREE_PRO_UNTIL : null;
 
   if (isSupabaseConfigured() && supabase) {
     try {

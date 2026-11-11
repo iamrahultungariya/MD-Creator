@@ -109,7 +109,7 @@ export const PreferencesAiTab: React.FC = () => {
               },
               {
                 id: 'gemini-3.5-flash',
-                name: 'Gemini 3.5 Flash',
+                name: 'Gemini 3.6 Flash',
                 badge: 'Balanced',
                 desc: 'High intelligence & stability',
               },

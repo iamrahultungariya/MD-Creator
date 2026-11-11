@@ -112,55 +112,78 @@ export const MimoShowcaseSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Sleek Non-Destructive Diff Demonstration */}
-          <div className="lg:col-span-7 p-6 sm:p-7 rounded-2xl bg-neutral-950 text-neutral-100 border border-neutral-800 shadow-xs flex flex-col justify-between space-y-4 font-mono">
+          {/* Right Column: Sleek Non-Destructive Diff Demonstration (Dynamic Theme Adapted) */}
+          <div className="lg:col-span-7 p-6 sm:p-7 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xs flex flex-col justify-between space-y-4 font-mono transition-colors">
             {/* Diff Card Top Header with calm status indicator */}
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3 font-sans">
+            <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-3 font-sans">
               <div className="flex items-center gap-2">
                 <span className="inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                <span className="text-xs font-semibold text-white">Mimo Proposed Changes</span>
-                <span className="text-[10px] text-neutral-500 font-mono">Section: System Architecture</span>
+                <span className="text-xs font-semibold text-neutral-900 dark:text-white">Mimo Proposed Changes</span>
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">Section: System Architecture</span>
               </div>
               <div className="flex items-center gap-2 text-[11px]">
-                <span className="text-emerald-400 font-medium">+3 additions</span>
-                <span className="text-rose-400 font-medium">-2 removals</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">+3 additions</span>
+                <span className="text-rose-600 dark:text-rose-400 font-medium">-2 removals</span>
               </div>
             </div>
 
-            {/* Code Diff Display */}
-            <div className="space-y-1 text-xs leading-relaxed overflow-x-auto py-2 font-mono">
-              <div className="text-neutral-500 select-none text-[11px]">@@ -14,5 +14,6 @@ System Architecture</div>
-              <div className="text-neutral-400 select-none">&nbsp; ## 1. Storage &amp; Persistence</div>
-              <div className="bg-rose-950/40 text-rose-300 border-l-2 border-rose-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
-                <span className="select-none text-rose-500 font-bold">-</span>
-                <span>- Auto-upload every keystroke directly to remote server.</span>
+            {/* Code Diff Display (Dynamic Theme Adapted) */}
+            {demoDiffApplied ? (
+              <div className="space-y-1 text-xs leading-relaxed overflow-x-auto py-2 font-mono">
+                <div className="text-emerald-600 dark:text-emerald-400 select-none text-[11px] font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>@@ -14,6 +14,7 @@ System Architecture (Applied)</span>
+                </div>
+                <div className="text-neutral-600 dark:text-neutral-400 select-none">&nbsp; ## 1. Storage &amp; Persistence</div>
+                <div className="bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-emerald-600 dark:text-emerald-400 font-bold">✓</span>
+                  <span>Local storage with zero keystroke latency.</span>
+                </div>
+                <div className="bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-emerald-600 dark:text-emerald-400 font-bold">✓</span>
+                  <span>Instant multi-device sync with offline deletion recovery.</span>
+                </div>
+                <div className="bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-emerald-600 dark:text-emerald-400 font-bold">✓</span>
+                  <span>Private shields to exclude sensitive notes from AI scanning.</span>
+                </div>
+                <div className="text-neutral-600 dark:text-neutral-400 select-none">&nbsp; ## 2. Next Milestones</div>
               </div>
-              <div className="bg-rose-950/40 text-rose-300 border-l-2 border-rose-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
-                <span className="select-none text-rose-500 font-bold">-</span>
-                <span>- Lock documents behind mandatory account sign-up.</span>
+            ) : (
+              <div className="space-y-1 text-xs leading-relaxed overflow-x-auto py-2 font-mono">
+                <div className="text-neutral-500 dark:text-neutral-400 select-none text-[11px]">@@ -14,5 +14,6 @@ System Architecture</div>
+                <div className="text-neutral-600 dark:text-neutral-400 select-none">&nbsp; ## 1. Storage &amp; Persistence</div>
+                <div className="bg-rose-500/10 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-l-2 border-rose-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-rose-600 dark:text-rose-400 font-bold">-</span>
+                  <span>- Auto-upload every keystroke directly to remote server.</span>
+                </div>
+                <div className="bg-rose-500/10 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-l-2 border-rose-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-rose-600 dark:text-rose-400 font-bold">-</span>
+                  <span>- Lock documents behind mandatory account sign-up.</span>
+                </div>
+                <div className="bg-emerald-500/10 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-emerald-600 dark:text-emerald-400 font-bold">+</span>
+                  <span>+ Local storage with zero keystroke latency.</span>
+                </div>
+                <div className="bg-emerald-500/10 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-emerald-600 dark:text-emerald-400 font-bold">+</span>
+                  <span>+ Instant multi-device sync with offline deletion recovery.</span>
+                </div>
+                <div className="bg-emerald-500/10 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
+                  <span className="select-none text-emerald-600 dark:text-emerald-400 font-bold">+</span>
+                  <span>+ Private shields to exclude sensitive notes from AI scanning.</span>
+                </div>
+                <div className="text-neutral-600 dark:text-neutral-400 select-none">&nbsp; ## 2. Next Milestones</div>
               </div>
-              <div className="bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
-                <span className="select-none text-emerald-500 font-bold">+</span>
-                <span>+ Local storage with zero keystroke latency.</span>
-              </div>
-              <div className="bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
-                <span className="select-none text-emerald-500 font-bold">+</span>
-                <span>+ Instant multi-device sync with offline deletion recovery.</span>
-              </div>
-              <div className="bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 px-2.5 py-1 rounded-xs flex items-center gap-2">
-                <span className="select-none text-emerald-500 font-bold">+</span>
-                <span>+ Private shields to exclude sensitive notes from AI scanning.</span>
-              </div>
-              <div className="text-neutral-400 select-none">&nbsp; ## 2. Next Milestones</div>
-            </div>
+            )}
 
             {/* Interactive Action Bar */}
-            <div className="flex items-center justify-between pt-3 border-t border-neutral-800 font-sans">
-              <div className="text-xs text-neutral-400">
+            <div className="flex items-center justify-between pt-3 border-t border-neutral-200 dark:border-neutral-800 font-sans">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400">
                 {demoDiffApplied ? (
-                  <span className="text-emerald-400 font-medium flex items-center gap-1.5">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4" />
-                    Applied to document smoothly
+                    Applied to document cleanly
                   </span>
                 ) : (
                   <span>Click to test non-destructive review:</span>
@@ -171,7 +194,7 @@ export const MimoShowcaseSection: React.FC = () => {
                 {demoDiffApplied ? (
                   <button
                     onClick={() => setDemoDiffApplied(false)}
-                    className="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-300 text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px] flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px] flex items-center gap-1.5"
                   >
                     <Undo2 className="w-3.5 h-3.5" />
                     <span>Undo</span>
@@ -180,7 +203,7 @@ export const MimoShowcaseSection: React.FC = () => {
                   <>
                     <button
                       onClick={() => setDemoDiffApplied(false)}
-                      className="px-3 py-1.5 rounded-lg border border-neutral-700 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px]"
+                      className="px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white text-xs font-medium cursor-pointer transition-colors active:translate-y-[1px]"
                     >
                       Discard
                     </button>

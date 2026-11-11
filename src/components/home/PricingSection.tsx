@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
+import { useCheckoutModalStore } from '../../stores/useCheckoutModalStore';
+import { SubscriptionPlanId } from '../../services/paymentService';
 
 interface PricingTier {
   id: string;
@@ -87,11 +89,12 @@ export const PricingSection: React.FC = () => {
   const navigate = useNavigate();
   const [billingInterval, setBillingInterval] = useState<'annual' | 'monthly'>('annual');
 
-  const handleCta = (action: 'editor' | 'auth') => {
+  const handleCta = (action: 'editor' | 'auth', tierId: string) => {
     if (action === 'editor') {
       navigate('/editor');
     } else {
-      navigate('/auth');
+      const planId: SubscriptionPlanId = tierId === 'lifetime' ? 'lifetime' : 'pro_monthly';
+      useCheckoutModalStore.getState().openCheckout(planId);
     }
   };
 
@@ -199,7 +202,7 @@ export const PricingSection: React.FC = () => {
 
                 {/* Action CTA Button with Global rounded-xl Token */}
                 <button
-                  onClick={() => handleCta(tier.ctaAction)}
+                  onClick={() => handleCta(tier.ctaAction, tier.id)}
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold active:translate-y-[1px] transition-all cursor-pointer shadow-xs ${
                     tier.isFeatured
                       ? 'bg-brand-600 hover:bg-brand-700 text-white hover:shadow'

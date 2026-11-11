@@ -49,12 +49,18 @@ export const Footer: React.FC<FooterProps> = () => {
             >
               Documents
             </button>
-            <a
-              href="/#pricing"
+            <Link
+              to="/pricing"
               className="hover:text-neutral-950 dark:hover:text-white transition-colors"
             >
               Pricing
-            </a>
+            </Link>
+            <Link
+              to="/blog"
+              className="hover:text-neutral-950 dark:hover:text-white transition-colors"
+            >
+              Blog
+            </Link>
             <a
               href="/#benchmarks"
               className="hover:text-neutral-950 dark:hover:text-white transition-colors"
@@ -80,13 +86,18 @@ export const Footer: React.FC<FooterProps> = () => {
             >
               Feedback
             </Link>
-            <button
-              type="button"
-              onClick={() => setIsLegalOpen(true)}
-              className="hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer"
+            <Link
+              to="/privacy"
+              className="hover:text-neutral-950 dark:hover:text-white transition-colors"
             >
-              Privacy &amp; Terms
-            </button>
+              Privacy
+            </Link>
+            <Link
+              to="/terms"
+              className="hover:text-neutral-950 dark:hover:text-white transition-colors"
+            >
+              Terms
+            </Link>
           </nav>
         </div>
 

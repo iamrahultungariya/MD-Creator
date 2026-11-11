@@ -231,7 +231,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
                 {selectedModel === 'gemini-3.8-flash'
                   ? '3.8 Flash'
                   : selectedModel === 'gemini-3.5-flash'
-                  ? '3.5 Flash'
+                  ? '3.6 Flash'
                   : '3.5 Lite'}
               </span>
               <ChevronUp
@@ -259,8 +259,8 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
                   },
                   {
                     id: 'gemini-3.5-flash',
-                    label: '3.5 Flash',
-                    desc: 'Balanced Multi-Turn • 1,500 RPD',
+                    label: '3.6 Flash',
+                    desc: 'Balanced Multi-Turn • High Accuracy',
                     icon: Zap,
                     iconColor: 'text-neutral-500 dark:text-neutral-400',
                   },

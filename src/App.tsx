@@ -8,6 +8,7 @@ import { PageLoader } from './components/common/PageLoader';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { PageTransition } from './components/common/PageTransition';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { SeoManager } from './components/common/SeoManager';
 import { usePreferencesStore } from './stores/usePreferencesStore';
 import { useUpdateModalStore } from './stores/useUpdateModalStore';
 import { useCrossDeviceSync } from './hooks/useCrossDeviceSync';
@@ -21,8 +22,15 @@ const FeedbackPage = React.lazy(() => import('./pages/FeedbackPage').then((m) =>
 const PublicDocumentPage = React.lazy(() => import('./pages/PublicDocumentPage').then((m) => ({ default: m.PublicDocumentPage })));
 const AdminPage = React.lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
 const ChangelogPage = React.lazy(() => import('./pages/ChangelogPage').then((m) => ({ default: m.ChangelogPage })));
+const LegalPage = React.lazy(() => import('./pages/LegalPage').then((m) => ({ default: m.LegalPage })));
+const PricingPage = React.lazy(() => import('./pages/PricingPage').then((m) => ({ default: m.PricingPage })));
+const BlogPage = React.lazy(() => import('./pages/BlogPage').then((m) => ({ default: m.BlogPage })));
+const BlogPostPage = React.lazy(() => import('./pages/BlogPostPage').then((m) => ({ default: m.BlogPostPage })));
 
 // Lazy-loaded global utility modals
+const CheckoutModal = React.lazy(() =>
+  import('./components/checkout/CheckoutModal').then((m) => ({ default: m.CheckoutModal }))
+);
 const GlobalConfirmDialog = React.lazy(() =>
   import('./components/common/GlobalConfirmDialog').then((m) => ({ default: m.GlobalConfirmDialog }))
 );
@@ -88,9 +96,12 @@ const AppRoutes: React.FC = () => {
           <Route path="/studio" element={<Navigate to="/" replace />} />
           <Route path="/changelog" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><ChangelogPage /></Suspense></PageTransition>} />
           <Route path="/updates" element={<Navigate to="/changelog" replace />} />
+          <Route path="/privacy" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><LegalPage defaultTab="privacy" /></Suspense></PageTransition>} />
+          <Route path="/terms" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><LegalPage defaultTab="terms" /></Suspense></PageTransition>} />
+          <Route path="/pricing" element={<PageTransition><Suspense fallback={<PageLoader variant="home" />}><PricingPage /></Suspense></PageTransition>} />
+          <Route path="/blog" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><BlogPage /></Suspense></PageTransition>} />
+          <Route path="/blog/:slug" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><BlogPostPage /></Suspense></PageTransition>} />
           <Route path="/about" element={<Navigate to="/" replace />} />
-          <Route path="/pricing" element={<Navigate to="/" replace />} />
-          <Route path="/blog" element={<Navigate to="/" replace />} />
           <Route path="/features" element={<Navigate to="/" replace />} />
           <Route path="/settings" element={<Navigate to="/editor" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -182,6 +193,7 @@ export const App: React.FC = () => {
 
   return (
     <BrowserRouter>
+      <SeoManager />
       <ErrorBoundary>
         {/* Global Confirm Dialog */}
         {isConfirmOpen && (
@@ -238,6 +250,11 @@ export const App: React.FC = () => {
         {/* Instant App Update Banner with tactile progress animation */}
         <Suspense fallback={null}>
           <AppUpdateBanner />
+        </Suspense>
+
+        {/* Global Checkout / Early-Bird Upgrade Modal */}
+        <Suspense fallback={null}>
+          <CheckoutModal />
         </Suspense>
 
         <AppRoutes />

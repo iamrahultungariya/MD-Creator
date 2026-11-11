@@ -3,6 +3,11 @@ User-agent: *
 Allow: /
 Allow: /changelog
 Allow: /feedback
+Allow: /pricing
+Allow: /blog
+Allow: /blog/
+Allow: /privacy
+Allow: /terms
 Allow: /p/
 Disallow: /admin
 Disallow: /editor/
