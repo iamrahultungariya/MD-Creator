@@ -7,6 +7,7 @@ import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDn
 import { useMimoStore } from '../stores/useMimoStore';
 import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
 import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
+import { getIntentSystemInstruction } from './intentPromptService';
 
 export interface StreamCallbacks {
   onStreamReset?: () => void;
@@ -107,6 +108,35 @@ export function getModelForComplexity(level: 'LOW' | 'MEDIUM' | 'HIGH'): {
     displayLabel: 'Gemini 3.5 Flash-Lite (High Speed)',
     ttftTimeout: 18000,
   };
+}
+
+/**
+ * Resolves the optimal thinking token budget for Gemini 3.8 Flash.
+ * Clamps thinking tokens dynamically based on user intent and requested complexity:
+ * - DOC_TRANSFORM (edits, formatting, translation): 0 thinking tokens (instant 0ms response, zero token waste)
+ * - LOW complexity / Banter: 0
+ * - MEDIUM complexity / Summaries / Doc Queries: 512 tokens
+ * - HIGH complexity / Deep reasoning: 1024 tokens
+ * - Non-reasoning model tiers (Gemini 3.5 Flash / Flash-Lite): undefined
+ */
+export function resolveThinkingBudget(
+  intent: MimoIntentType,
+  level: ThinkingLevel,
+  modelId: string
+): number | undefined {
+  if (modelId !== 'gemini-3.8-flash') {
+    return undefined;
+  }
+  if (intent === 'DOC_TRANSFORM' || intent === 'CHAT_BANTER') {
+    return 0;
+  }
+  if (level === 'HIGH') {
+    return 1024;
+  }
+  if (level === 'MEDIUM') {
+    return 512;
+  }
+  return 0;
 }
 
 /**
@@ -781,24 +811,21 @@ export async function streamMimoResponse(options: {
     let firstTokenRecorded = false;
 
     try {
-      // thinkingConfig is configured for native deep reasoning on Gemini 3.8 Flash
+      // Dynamic thinking budget clamping to prevent token burn on straightforward tasks
       let thinkingConfig: Record<string, unknown> | undefined = undefined;
       let thinkingPromptGuidance = '';
+      const thinkingBudget = resolveThinkingBudget(intent, resolvedLevel, candidateModel.modelId);
 
       if (candidateModel.modelId === 'gemini-3.8-flash') {
-        if (showThinking) {
-          const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'high' : resolvedLevel === 'MEDIUM' ? 'medium' : 'low';
-          thinkingConfig = {
-            includeThoughts: true,
-            thinkingLevel: apiThinkingLevel,
-          };
-        } else {
-          // Explicit low level to save internal tokens when thinking block is hidden
-          thinkingConfig = {
-            includeThoughts: false,
-            thinkingLevel: 'low',
-          };
-        }
+        const hasBudget = typeof thinkingBudget === 'number';
+        const shouldIncludeThoughts = showThinking && (!hasBudget || thinkingBudget > 0);
+        const apiThinkingLevel = resolvedLevel === 'HIGH' ? 'high' : resolvedLevel === 'MEDIUM' ? 'medium' : 'low';
+        
+        thinkingConfig = {
+          includeThoughts: shouldIncludeThoughts,
+          thinkingLevel: apiThinkingLevel,
+          ...(hasBudget ? { thinkingBudget } : {}),
+        };
       } else {
         // For Gemini 3.5 Flash and 3.5 Flash-Lite:
         // Do NOT transfer or escalate to 3.8 Flash!
@@ -817,7 +844,14 @@ export async function streamMimoResponse(options: {
         prompt.toLowerCase().includes('chaos-to-clarity') ||
         prompt.toLowerCase().includes('brain-dump') ||
         prompt.toLowerCase().includes('chaos to clarity');
-      const compositeSystemInstruction = `${MIMO_SYSTEM_PROMPT}${
+
+      // Intent-specialized system instruction (60-120 tokens instead of ~1,000 monolithic prompt)
+      const baseSystemPrompt = getIntentSystemInstruction(intent, {
+        hasSelection: !!context.selectedText,
+        docTitle: context.docTitle,
+      });
+
+      const compositeSystemInstruction = `${baseSystemPrompt}${
         isChaosToClarity ? `\n\n${CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE}` : ''
       }\n\n${styleDnaLayer}${thinkingPromptGuidance}`;
 
