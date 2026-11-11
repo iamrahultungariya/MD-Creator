@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { supabase, isSupabaseConfigured, syncAllDocuments } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, syncAllDocuments, pullLatestCloudChanges } from '../lib/supabase';
+import { queryClient } from '../lib/queryClient';
 import { getDefaultAvatar } from '../components/auth/avatarPresets';
 
 export interface UserProfile {
@@ -62,6 +63,61 @@ interface AuthState {
   refreshProfile: () => Promise<void>;
 }
 
+let authSubscription: { unsubscribe: () => void } | null = null;
+
+async function buildUserProfile(u: any): Promise<UserProfile> {
+  const isPromo = isHolidayFreeProActive();
+  let tier: 'free' | 'pro' | 'team' = isPromo ? 'pro' : 'free';
+  let proExpiresAt: string | null = isPromo ? PROMO_FREE_PRO_UNTIL : null;
+
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('subscription_tier, pro_expires_at, display_name, avatar_url')
+        .eq('id', u.id)
+        .maybeSingle();
+
+      if (prof?.subscription_tier) {
+        tier = prof.subscription_tier;
+        proExpiresAt = prof.pro_expires_at || null;
+      }
+
+      return {
+        id: u.id,
+        email: u.email || '',
+        displayName:
+          prof?.display_name ||
+          u.user_metadata?.full_name ||
+          u.email?.split('@')[0] ||
+          'Writer',
+        avatarUrl:
+          localStorage.getItem('md_writer_custom_avatar') ||
+          prof?.avatar_url ||
+          u.user_metadata?.avatar_url ||
+          getAvatarUrl(u.email || 'writer'),
+        subscriptionTier: tier,
+        proExpiresAt,
+      };
+    } catch {}
+  }
+
+  return {
+    id: u.id,
+    email: u.email || '',
+    displayName:
+      u.user_metadata?.full_name ||
+      u.email?.split('@')[0] ||
+      'Writer',
+    avatarUrl:
+      localStorage.getItem('md_writer_custom_avatar') ||
+      u.user_metadata?.avatar_url ||
+      getAvatarUrl(u.email || 'writer'),
+    subscriptionTier: tier,
+    proExpiresAt,
+  };
+}
+
 // ─── Store implementation ─────────────────────────────────────────────────────
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -97,42 +153,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuth: async () => {
     // If Supabase is configured, check for an active server session
     if (isSupabaseConfigured() && supabase) {
+      // 1. Establish persistent onAuthStateChange subscription if not already active
+      if (!authSubscription) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+            if (session?.user) {
+              const profile = await buildUserProfile(session.user);
+              set({ user: profile, isLoading: false, error: null });
+              pullLatestCloudChanges(false).catch(() => {});
+            }
+          } else if (event === 'SIGNED_OUT') {
+            set({ user: null, isLoading: false, error: null });
+            queryClient.clear();
+          }
+        });
+        authSubscription = subscription;
+      }
+
+      // 2. Initial session restoration
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const u = session.user;
-          const isPromo = isHolidayFreeProActive();
-          let tier: 'free' | 'pro' | 'team' = isPromo ? 'pro' : 'free';
-          let proExpiresAt: string | null = isPromo ? PROMO_FREE_PRO_UNTIL : null;
-
-          // Fetch user profile from database
-          const { data: prof } = await supabase
-            .from('profiles')
-            .select('subscription_tier, pro_expires_at, display_name, avatar_url')
-            .eq('id', u.id)
-            .maybeSingle();
-
-          if (prof?.subscription_tier) {
-            tier = prof.subscription_tier;
-            proExpiresAt = prof.pro_expires_at || null;
-          }
-
-          const profile: UserProfile = {
-            id: u.id,
-            email: u.email || '',
-            displayName:
-              prof?.display_name ||
-              u.user_metadata?.full_name ||
-              u.email?.split('@')[0] ||
-              'Writer',
-            avatarUrl:
-              localStorage.getItem('md_writer_custom_avatar') ||
-              prof?.avatar_url ||
-              u.user_metadata?.avatar_url ||
-              getAvatarUrl(u.email || 'writer'),
-            subscriptionTier: tier,
-            proExpiresAt,
-          };
+          const profile = await buildUserProfile(session.user);
           set({ user: profile, isLoading: false });
           syncAllDocuments(true).catch(console.warn);
           return;
@@ -266,5 +308,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await supabase.auth.signOut().catch(console.warn);
     }
     set({ user: null, isLoading: false, error: null });
+    queryClient.clear();
   },
 }));

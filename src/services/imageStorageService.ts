@@ -192,3 +192,35 @@ export async function deleteStoredImage(id: string): Promise<void> {
     console.warn('[ImageStorage] Failed to delete image from Dexie:', err);
   }
 }
+
+/**
+ * Scans markdown for "image://(img_[a-z0-9_]+)" or local image IDs and replaces them
+ * with their optimized WebP Data URLs from Dexie IndexedDB or memory cache.
+ * Essential for publishing to public URLs, exporting, and cross-device document sharing.
+ */
+export async function inlineStoredImagesInMarkdown(markdown: string): Promise<string> {
+  if (!markdown || !markdown.includes('image://')) return markdown;
+
+  // Find all unique image references matching image://img_...
+  const matches = Array.from(markdown.matchAll(/image:\/\/(img_[a-z0-9_]+)/g));
+  if (matches.length === 0) return markdown;
+
+  const uniqueIds = Array.from(new Set(matches.map((m) => m[1])));
+  const resolvedMap = new Map<string, string>();
+
+  await Promise.all(
+    uniqueIds.map(async (imgId) => {
+      const dataUrl = await resolveImageSrc(`image://${imgId}`);
+      if (dataUrl && dataUrl.startsWith('data:')) {
+        resolvedMap.set(`image://${imgId}`, dataUrl);
+      }
+    })
+  );
+
+  let transformed = markdown;
+  for (const [shortUrl, dataUrl] of resolvedMap.entries()) {
+    transformed = transformed.split(shortUrl).join(dataUrl);
+  }
+
+  return transformed;
+}

@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { db, createRevisionSnapshot, saveDocument } from '../db';
+import { inlineStoredImagesInMarkdown } from './imageStorageService';
 
 export interface PublishOptions {
   slug?: string;
@@ -141,10 +142,13 @@ export async function publishDocument(
       updated_at: new Date().toISOString(),
     });
 
-    // 2. Ensure the document content exists in Supabase document_contents table
+    // 2. Inline any local image:// URIs to self-contained compressed Data URLs before publishing
+    const inlinedContent = await inlineStoredImagesInMarkdown(content);
+
+    // Ensure the document content exists in Supabase document_contents table
     await supabase.from('document_contents').upsert({
       id: docId,
-      content,
+      content: inlinedContent,
       updated_at: new Date().toISOString(),
     });
 
@@ -328,14 +332,34 @@ export async function getPublicDocumentBySlug(
 
     if (error || !data) {
       // Fallback query directly on published_documents if RPC doesn't have bundle fields yet
+      // SECURITY GUARD: Never query document_contents(content) upfront to prevent password bypass!
       const { data: directPub } = await supabase
         .from('published_documents')
-        .select('*, documents(title), document_contents(content)')
+        .select('id, document_id, slug, password_hash, published_at, updated_at, view_count, permission_mode, is_public, documents(title)')
         .eq('slug', cleanSlug)
         .eq('is_public', true)
         .maybeSingle();
 
       if (directPub) {
+        const isPasswordProtected = Boolean(directPub.password_hash);
+
+        // If password protected and no password provided, require password immediately WITHOUT exposing content!
+        if (isPasswordProtected && !providedPassword) {
+          return { status: 'password_required', doc: null };
+        }
+
+        // If password protected and password provided, verify password via RPC
+        if (isPasswordProtected) {
+          return { status: 'invalid_password', doc: null };
+        }
+
+        // Only query document_contents for public unpassworded documents
+        const { data: contentData } = await supabase
+          .from('document_contents')
+          .select('content')
+          .eq('id', directPub.document_id)
+          .maybeSingle();
+
         return {
           status: 'ok',
           doc: {
@@ -343,11 +367,11 @@ export async function getPublicDocumentBySlug(
             documentId: directPub.document_id,
             slug: directPub.slug,
             title: (directPub as any).documents?.title || 'Shared Document',
-            content: (directPub as any).document_contents?.content || '',
+            content: contentData?.content || '',
             publishedAt: directPub.published_at,
             updatedAt: directPub.updated_at,
             viewCount: directPub.view_count || 1,
-            isPasswordProtected: Boolean(directPub.password_hash),
+            isPasswordProtected: false,
             permissionMode: (directPub.permission_mode as 'view' | 'edit') || 'view',
             allowCopyMarkdown: true,
             showReadingStats: true,
@@ -419,7 +443,7 @@ export async function getPublishedBundle(
 
     const { data, error } = await supabase
       .from('published_documents')
-      .select('id, document_id, slug, is_public, permission_mode, bundle_slug, documents(title), document_contents(content)')
+      .select('id, document_id, slug, is_public, permission_mode, bundle_slug, password_hash, documents(title), document_contents(content)')
       .eq('bundle_slug', bundleSlug.trim().toLowerCase())
       .eq('is_public', true);
 
@@ -428,13 +452,14 @@ export async function getPublishedBundle(
     }
 
     const items: PublishedBundleItem[] = data.map((d: any) => {
-      const content = d.document_contents?.content || '';
+      // SECURITY: If individual item has password_hash, do not expose raw content in unauthenticated bundle view
+      const content = d.password_hash ? '' : (d.document_contents?.content || '');
       return {
         id: d.document_id,
         title: d.documents?.title || 'Document',
         slug: d.slug,
         content,
-        wordCount: content.trim().split(/\s+/).filter(Boolean).length,
+        wordCount: content ? content.trim().split(/\s+/).filter(Boolean).length : 0,
         permissionMode: d.permission_mode || 'view',
       };
     });
@@ -483,6 +508,16 @@ export async function submitPublicDocumentEdit(
         return { success: true };
       }
       return { success: false, error: rpcRes.error || 'Failed to submit changes.' };
+    }
+
+    // Fallback: If server RPC is unavailable, anonymous clients MUST NOT execute direct table writes
+    // (direct client updates bypass atomic snapshot creation and violate Supabase Row Level Security).
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: rpcErr?.message || 'Collaborative editing service is currently unavailable. Edits must be processed by server RPC.',
+      };
     }
 
     // 1. Fetch published document record

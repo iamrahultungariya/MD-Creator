@@ -14,6 +14,7 @@ import { syncDocumentToSupabase, deleteDocumentFromSupabase, isSupabaseConfigure
 import { markTombstoneResolved } from '../../../stores/useCrossDeviceConflictStore';
 import { useConfirm } from '../../../stores/useConfirmStore';
 import { MarkdownTemplate } from '../../../data/templates';
+import { inlineStoredImagesInMarkdown } from '../../../services/imageStorageService';
 import { CodeMirrorEditorHandle } from '../components/CodeMirrorEditor';
 import { RemoteConflictData } from '../components/EditorConflictBanner';
 
@@ -533,8 +534,9 @@ export function useEditorDocument({ routeDocId, onToast, textareaRef, editorRef 
   );
 
   // Export & Copy Helpers
-  const handleExportMd = useCallback(() => {
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const handleExportMd = useCallback(async () => {
+    const exportable = await inlineStoredImagesInMarkdown(content);
+    const blob = new Blob([exportable], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
