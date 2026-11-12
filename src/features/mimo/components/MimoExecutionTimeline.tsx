@@ -44,7 +44,7 @@ export const MimoExecutionTimeline: React.FC<MimoExecutionTimelineProps> = ({
           <span
             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
               isDone
-                ? 'bg-emerald-600 dark:bg-emerald-400'
+                ? 'bg-neutral-400 dark:bg-neutral-500'
                 : 'bg-neutral-900 dark:bg-neutral-100 animate-pulse'
             }`}
           />
@@ -86,7 +86,7 @@ export const MimoExecutionTimeline: React.FC<MimoExecutionTimelineProps> = ({
                   <span
                     className={`absolute -left-[19px] top-1.5 w-2 h-2 rounded-full transition-colors ${
                       isStepDone
-                        ? 'bg-emerald-500 ring-2 ring-emerald-500/20'
+                        ? 'bg-neutral-800 dark:bg-neutral-200 ring-1 ring-neutral-400/20'
                         : isStepActive
                         ? 'bg-neutral-900 dark:bg-white ring-2 ring-neutral-400/40 animate-pulse'
                         : 'bg-neutral-300 dark:bg-neutral-700'
