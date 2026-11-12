@@ -130,7 +130,47 @@ export function useMimoChatStream({
   const abortControllerRef = useRef<AbortController | null>(null);
   const startTimeRef = useRef<number>(0);
 
+  // RAF-batched text stream buffer to eliminate low-spec & mobile UI jank / reflow thrashing
+  const streamBufferRef = useRef<string>('');
+  const thoughtBufferRef = useRef<string>('');
+  const rafIdRef = useRef<number | null>(null);
+
+  const flushTextBuffer = () => {
+    if (rafIdRef.current !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+
+    const pendingText = streamBufferRef.current;
+    const pendingThought = thoughtBufferRef.current;
+
+    if (!pendingText && !pendingThought) return;
+
+    streamBufferRef.current = '';
+    thoughtBufferRef.current = '';
+
+    updateLastMessage((m) => ({
+      ...m,
+      ...(pendingText ? { text: (m.text || '') + pendingText } : {}),
+      ...(pendingThought ? { thoughtText: (m.thoughtText || '') + pendingThought } : {}),
+      mascotState: 'typing',
+    }));
+  };
+
+  const scheduleFlush = () => {
+    if (rafIdRef.current !== null) return;
+    if (typeof requestAnimationFrame === 'function') {
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        flushTextBuffer();
+      });
+    } else {
+      flushTextBuffer();
+    }
+  };
+
   const handleStop = () => {
+    flushTextBuffer();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -413,21 +453,12 @@ export function useMimoChatStream({
             }));
           },
           onThoughtChunk: (thoughtChunk) => {
-            setMascotState('thinking');
-            updateLastMessage((m) => ({
-              ...m,
-              thoughtText: (m.thoughtText || '') + thoughtChunk,
-              mascotState: 'thinking',
-            }));
+            thoughtBufferRef.current += thoughtChunk;
+            scheduleFlush();
           },
           onTextChunk: (textChunk) => {
-            setMascotState('typing');
-            touchMimoActivity();
-            updateLastMessage((m) => ({
-              ...m,
-              text: (m.text || '') + textChunk,
-              mascotState: 'typing',
-            }));
+            streamBufferRef.current += textChunk;
+            scheduleFlush();
           },
           onTokenVelocity: (tokPerSec) => {
             setActiveActivity((prev) =>
@@ -485,6 +516,9 @@ export function useMimoChatStream({
           },
         },
       });
+
+      // Synchronously flush any buffered tokens before finalizing message
+      flushTextBuffer();
 
       // If aborted via Stop button, handleStop already finalized the message
       if (result.aborted) {

@@ -151,7 +151,12 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
 
       {/* Rich Formatted Markdown Response Body */}
       {message.text && (
-        <div className="p-4 rounded-2xl rounded-tl-xs bg-neutral-50/90 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs leading-relaxed shadow-2xs space-y-2">
+        <div
+          className={`p-4 rounded-2xl rounded-tl-xs bg-neutral-50/90 dark:bg-neutral-900/70 border border-neutral-200/80 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs leading-relaxed shadow-2xs space-y-2 contain-content ${
+            isStreamingThis ? 'will-change-[contents]' : ''
+          }`}
+          style={{ contain: 'content' }}
+        >
           <ReactMarkdown
             remarkPlugins={STATIC_CHAT_REMARK_PLUGINS}
             rehypePlugins={STATIC_CHAT_REHYPE_PLUGINS}
