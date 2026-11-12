@@ -28,6 +28,7 @@ interface MimoChatMessageProps {
   onDiscardToolCall?: (toolCallId: string) => void;
   onUndoToolCall?: (toolCall: MimoToolCall) => void;
   onSubmitClarification?: (formattedPrompt: string, messageId: string, answers: any) => void;
+  onExecuteSuggestedAction?: (actionText: string) => void;
 }
 
 
@@ -47,6 +48,7 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
   onDiscardToolCall,
   onUndoToolCall,
   onSubmitClarification,
+  onExecuteSuggestedAction,
 }) => {
   const [copied, setCopied] = useState(false);
   const [copiedCodeIndex, setCopiedCodeIndex] = useState<number | null>(null);
@@ -389,6 +391,34 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
           onDiscard={() => onDiscardDiff?.(message.diffHunk?.id)}
         />
       )}
+
+      {/* Smart Next-Operation Suggestion Chips */}
+      {message.role === 'assistant' &&
+        message.suggestedActions &&
+        message.suggestedActions.length > 0 &&
+        !isStreamingThis && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-2">
+            {message.suggestedActions.map((action, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  if (onExecuteSuggestedAction) {
+                    onExecuteSuggestedAction(action);
+                  } else if (typeof window !== 'undefined') {
+                    window.dispatchEvent(
+                      new CustomEvent('md-writer-mimo-quick-prompt', { detail: { prompt: action } })
+                    );
+                  }
+                }}
+                className="group inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/15 text-purple-300 hover:text-purple-100 transition-colors cursor-pointer font-medium"
+              >
+                <span className="text-purple-400 group-hover:text-purple-300">✦</span>
+                <span>{action}</span>
+              </button>
+            ))}
+          </div>
+        )}
     </div>
   );
 };

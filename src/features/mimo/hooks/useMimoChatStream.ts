@@ -61,7 +61,7 @@ import {
   extractClarificationFromResponse,
   computeLineDiff,
 } from '../services/diffService';
-import { streamMimoResponse } from '../services/mimoGeminiService';
+import { streamMimoResponse, generateNextOperationSuggestions } from '../services/mimoGeminiService';
 import { telemetryService } from '../../../services/telemetryService';
 import { fetchPinnedDocReferences, formatPinnedDocsPromptLayer } from '../services/docPinningService';
 import { extractEpisodicBulletsLocally, shouldCompressEpisodicTurns } from '../services/episodicMemoryEngine';
@@ -637,6 +637,20 @@ export function useMimoChatStream({
           appendEpisodicSummary(docId, freshEpisodic);
         }
       }
+
+      // Asynchronously generate 2-3 smart next-operation suggestion chips via 3.5 Flash Lite
+      generateNextOperationSuggestions(promptToSend, cleanText || result.fullText, userApiKey)
+        .then((suggestions) => {
+          if (suggestions && suggestions.length > 0) {
+            updateLastMessage((m) => ({
+              ...m,
+              suggestedActions: suggestions,
+            }));
+          }
+        })
+        .catch((err) => {
+          console.debug('[Mimo Suggestions] Background generation error:', err);
+        });
     } catch (err: any) {
       console.error('Mimo execution failed', err);
       const errElapsed = Math.max(200, Date.now() - startTime);

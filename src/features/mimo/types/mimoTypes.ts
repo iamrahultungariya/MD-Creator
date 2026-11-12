@@ -126,6 +126,7 @@ export interface MimoMessage {
   intent?: MimoIntentType;
   hasSelectionContext?: boolean;
   mascotState?: MascotState;
+  suggestedActions?: string[];
 }
 
 export interface MimoModelUsageItem {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { ActivityTelemetry, MimoProtocolStepStatus } from '../types/mimoTypes';
+import { ActivityTelemetry } from '../types/mimoTypes';
 
 interface MimoExecutionTimelineProps {
   activity?: ActivityTelemetry;

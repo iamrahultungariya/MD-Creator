@@ -27,6 +27,7 @@ export interface DocumentMetadata {
   isDeleted?: boolean;
   deletedAt?: number;
   isAiExcluded?: boolean;
+  isLocalOnly?: boolean;
   cloudSynced?: boolean;
 }
 

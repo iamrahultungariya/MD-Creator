@@ -24,6 +24,9 @@ const KEY_VALUE_SECRET_REGEX = /\b(password|passwd|pin|secret|api_key|token|acce
 const TAGGED_PRIVATE_REGEX = /<private>([\s\S]*?)<\/private>/gi;
 const TAGGED_SECRET_REGEX = /<secret>([\s\S]*?)<\/secret>/gi;
 const SPOILER_PRIVATE_REGEX = /\|\|([\s\S]*?)\|\|/g;
+const TAGGED_PRIVATE_DETAIL_REGEX = /<privateDetail>([\s\S]*?)<\/privateDetail>/gi;
+const DIRECTIVE_PRIVATE_DETAIL_REGEX = /:::private-detail\s*([\s\S]*?):::/gi;
+const SLASH_PRIVATE_DETAIL_REGEX = /\/privateDetail\s*([\s\S]*?)\/endprivate/gi;
 
 export function sanitizeTextForAi(rawText: string): SanitizationResult {
   let sanitized = rawText;
@@ -51,6 +54,17 @@ export function sanitizeTextForAi(rawText: string): SanitizationResult {
   // 3. Inline double-pipe: ||secret||
   sanitized = sanitized.replace(SPOILER_PRIVATE_REGEX, (_match, inner) => {
     return replaceAndMap(_match, 'CONFIDENTIAL', inner);
+  });
+
+  // 3b. Custom <privateDetail> tags & :::private-detail directives (Excluded from AI scans)
+  sanitized = sanitized.replace(TAGGED_PRIVATE_DETAIL_REGEX, (_match, inner) => {
+    return replaceAndMap(_match, 'PRIVATE_DETAIL', inner);
+  });
+  sanitized = sanitized.replace(DIRECTIVE_PRIVATE_DETAIL_REGEX, (_match, inner) => {
+    return replaceAndMap(_match, 'PRIVATE_DETAIL', inner);
+  });
+  sanitized = sanitized.replace(SLASH_PRIVATE_DETAIL_REGEX, (_match, inner) => {
+    return replaceAndMap(_match, 'PRIVATE_DETAIL', inner);
   });
 
   // 4. Key-Value secrets (password, pin, etc.)

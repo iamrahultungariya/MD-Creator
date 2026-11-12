@@ -87,6 +87,11 @@ export async function isUserProForSync(): Promise<boolean> {
 export async function syncDocumentToSupabase(doc: DocumentMetadata, content: string): Promise<boolean> {
   if (!supabase) return false;
 
+  // If marked local-only, strictly bypass cloud push and keep private to device
+  if (doc.isLocalOnly || isDocumentLocalOnly(doc.id)) {
+    return true;
+  }
+
   return withTimeout(
     (async () => {
       try {
@@ -539,7 +544,7 @@ export async function syncAllDocuments(force = false): Promise<{ pulled: number;
 
     const docsToSync = localDocs.filter((d) => {
       if (d.id === 'doc-getting-started' && d.tags?.includes('Guide')) return false;
-      if (isDocumentLocalOnly(d.id)) return false;
+      if (d.isLocalOnly || isDocumentLocalOnly(d.id)) return false;
       if (conflictingIds.has(d.id)) return false; // Never push during deletion conflict
       if (d.isDeleted) return false;
 

@@ -8,3 +8,6 @@ Task 1.3: complete (Pro Studio 14-day free trial with strict calculation, days 1
 Task 2.1: complete (Mimo 3.5 Flash-Lite minimal thinking indicator with dropdown chevron and clean vertical timeline, tests: npx tsx --test tests/mimo/flashLiteProtocol.test.ts -> pass)
 Task 3.1: complete (RAF token batching buffer and CSS containment to eliminate mobile stream flicker, tests: npx tsx --test tests/mimo/smoothStreaming.test.ts -> pass)
 Task 4.1: complete (Web Crypto AES-GCM encrypted API key vault and eliminate automatic TTL health check probing, tests: npx tsx --test tests/mimo/apiKeySecurity.test.ts -> pass)
+Task 5.1: complete (privacy exclusion for <privateDetail> and slash command integration, tests: npx tsx --test tests/mimo/phase5Features.test.ts -> pass)
+Task 5.2: complete (isLocalOnly per-document flag preventing cloud sync push, tests: npx tsx --test tests/mimo/phase5Features.test.ts -> pass)
+Task 5.3: complete (smart next-operation suggestion chips via 3.5 Flash-Lite, tests: npx tsx --test tests/mimo/phase5Features.test.ts -> pass)

@@ -23,7 +23,7 @@ import { useMimoStore } from '../../stores/useMimoStore';
 import { useStyleDnaStore } from '../../stores/useStyleDnaStore';
 import { StyleTone, StyleFormatting } from '../../types/styleDnaTypes';
 import { MimoAvatar } from '../MimoAvatar';
-import { validateGeminiApiKey, fetchLiveGeminiHealthAndQuota, API_HEALTH_CHECK_TTL_MS } from '../../services/mimoGeminiService';
+import { validateGeminiApiKey, fetchLiveGeminiHealthAndQuota } from '../../services/mimoGeminiService';
 import { usePreferencesStore } from '../../../../stores/usePreferencesStore';
 
 interface MimoSettingsPopoverProps {

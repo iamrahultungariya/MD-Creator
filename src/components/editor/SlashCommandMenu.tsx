@@ -61,6 +61,15 @@ const ALL_COMMANDS: CommandItem[] = [
     category: 'Structure',
   },
   {
+    id: 'privateDetail',
+    title: 'Private Detail Block',
+    description: 'Exclude sensitive text from AI scans',
+    iconName: 'lock',
+    shortcut: '/privateDetail',
+    insertSnippet: '<privateDetail>\nConfidential details here (excluded from AI scans)\n</privateDetail>\n',
+    category: 'Rich Blocks',
+  },
+  {
     id: 'checklist',
     title: 'Task Checklist',
     description: 'Interactive todo checkboxes',

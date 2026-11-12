@@ -1519,3 +1519,64 @@ async function executeDocumentAwareOfflineAssistance(
     tokensUsed: 0,
   };
 }
+
+/**
+ * Generates 2-3 hyper-relevant next operations using Gemini 3.5 Flash-Lite.
+ * Suggests zero-friction, one-click follow-up actions for the user.
+ */
+export async function generateNextOperationSuggestions(
+  userPrompt: string,
+  assistantReply: string,
+  apiKey?: string
+): Promise<string[]> {
+  const fallbackSuggestions = [
+    'Apply to document',
+    'Summarize in bullet points',
+    'Elaborate further',
+  ];
+
+  if (!apiKey || !apiKey.trim() || apiKey.startsWith('enc:')) {
+    return fallbackSuggestions;
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: apiKey.trim() });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash-lite',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: `Given this user request and assistant answer, suggest exactly 2 or 3 short, concrete, actionable next operations the user might want to run next.
+Each suggestion must be an imperative action (e.g. "Apply to document", "Convert into comparison table", "Explain section 2", "Write unit test").
+Return ONLY a valid JSON array of strings, with no markdown code fences and no commentary.
+Example: ["Add test cases", "Convert to bullet points", "Elaborate section 1"]
+
+User Request: ${userPrompt.slice(0, 300)}
+Assistant Response: ${assistantReply.slice(0, 500)}`,
+            },
+          ],
+        },
+      ],
+      config: {
+        maxOutputTokens: 100,
+        temperature: 0.2,
+      },
+    });
+
+    const text = response.text?.trim() || '';
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.slice(0, 3).map((s) => String(s).trim()).filter(Boolean);
+      }
+    }
+    return fallbackSuggestions;
+  } catch (err) {
+    console.debug('[Mimo Suggestions] Failed to generate suggestions with 3.5 Flash Lite:', err);
+    return fallbackSuggestions;
+  }
+}
+

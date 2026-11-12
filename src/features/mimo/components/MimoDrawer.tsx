@@ -180,6 +180,7 @@ export const MimoDrawer: React.FC<MimoDrawerProps> = ({
                 onDiscardToolCall={handleDiscardToolCall}
                 onUndoToolCall={handleUndoToolCall}
                 onSubmitClarification={handleClarificationSubmit}
+                onExecuteSuggestedAction={handleSendPrompt}
               />
             ))
           )}
