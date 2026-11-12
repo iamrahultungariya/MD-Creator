@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ArrowRight } from 'lucide-react';
 import katex from 'katex';
 
-export type DemoMode = 'specs' | 'math' | 'mimo' | 'export';
+export type DemoMode = 'specs' | 'math' | 'mimo';
 
 interface StudioWorkspaceDemoProps {
   onOpenEditor?: () => void;
@@ -13,10 +13,14 @@ const MODES: { id: DemoMode; label: string }[] = [
   { id: 'specs', label: 'Technical Specs' },
   { id: 'math', label: 'KaTeX Math' },
   { id: 'mimo', label: 'Mimo AI Diff' },
-  { id: 'export', label: 'Print Preview' },
 ];
 
-const CODE_SNIPPETS: Record<DemoMode, string[]> = {
+const CODE_SNIPPETS: {
+  specs: string[];
+  math: string[];
+  mimoBefore: string[];
+  mimoAfter: string[];
+} = {
   specs: [
     '# Distributed Storage Spec v2.3',
     '',
@@ -43,33 +47,31 @@ const CODE_SNIPPETS: Record<DemoMode, string[]> = {
     'Qubit Superposition State:',
     '$$|\\Psi\\rangle = \\frac{1}{\\sqrt{2}}(|0\\rangle + |1\\rangle)$$',
   ],
-  mimo: [
+  mimoBefore: [
     '> Mimo Intent: "Optimize buffer allocation and avoid GC pauses"',
     '',
-    '// Before (High GC pressure):',
+    '// Original Routine (High GC churn):',
     '- const buffer = new Array(capacity).fill(null);',
     '- const dataView = parsePayload(buffer);',
     '',
-    '// After (Zero-copy native memory):',
+    '// Proposed Diff (Zero-copy native memory):',
     '+ const buffer = new Uint8Array(capacity);',
     '+ const dataView = new DataView(buffer.buffer);',
     '',
-    'Status: Ready for review',
+    'Status: Ready for review (Click Accept Diff below)',
   ],
-  export: [
-    '---',
-    'title: "Systems Architecture Report"',
-    'format: "camera-ready"',
-    'margins: "20mm"',
-    'dpi: 300',
-    '---',
+  mimoAfter: [
+    '# Buffer Allocation Routine',
     '',
-    '# Production Architecture Audit',
-    'Author: Engineering Team',
-    'Date: 2026-11-11',
+    '// Applied Diff: Zero-copy native memory',
+    'const buffer = new Uint8Array(capacity);',
+    'const dataView = new DataView(buffer.buffer);',
     '',
-    'MD Writer delivers vector-sharp PDF,',
-    'clean Word DOCX, and raw Markdown.',
+    'export function processIncomingPayload() {',
+    '  return dataView.getUint32(0, true);',
+    '}',
+    '',
+    'Status: Applied directly to document',
   ],
 };
 
@@ -81,6 +83,13 @@ export const StudioWorkspaceDemo: React.FC<StudioWorkspaceDemoProps> = ({ onOpen
   const [task2Checked, setTask2Checked] = useState(true);
   const [task3Checked, setTask3Checked] = useState(false);
   const [mimoAccepted, setMimoAccepted] = useState(false);
+
+  const getActiveCodeLines = () => {
+    if (activeTab === 'mimo') {
+      return mimoAccepted ? CODE_SNIPPETS.mimoAfter : CODE_SNIPPETS.mimoBefore;
+    }
+    return CODE_SNIPPETS[activeTab];
+  };
 
   const handleLaunch = () => {
     if (onOpenEditor) {
@@ -205,7 +214,7 @@ export const StudioWorkspaceDemo: React.FC<StudioWorkspaceDemoProps> = ({ onOpen
               <span>UTF-8</span>
             </div>
             <div className="space-y-1">
-              {CODE_SNIPPETS[activeTab].map((line, idx) => (
+              {getActiveCodeLines().map((line, idx) => (
                 <div key={idx} className="flex gap-3 leading-relaxed">
                   <span className="w-6 text-right text-neutral-400 dark:text-neutral-600 select-none text-[11px] tabular-nums">
                     {idx + 1}
@@ -316,24 +325,38 @@ export const StudioWorkspaceDemo: React.FC<StudioWorkspaceDemoProps> = ({ onOpen
 
             {/* Math Mode Preview */}
             {activeTab === 'math' && (
-              <div className="space-y-5 text-neutral-800 dark:text-neutral-200">
+              <div className="space-y-4 text-neutral-800 dark:text-neutral-200">
+                <h3 className="text-base font-semibold text-neutral-950 dark:text-white tracking-tight">
+                  Quantum State &amp; Electrodynamics
+                </h3>
+
                 <div>
-                  <h3 className="text-sm font-semibold text-neutral-950 dark:text-white mb-1.5">
-                    Faraday's Law of Induction
-                  </h3>
+                  <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                    Faraday's Law of Induction:
+                  </div>
                   <div
-                    className="p-3.5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 overflow-x-auto text-neutral-900 dark:text-neutral-100"
-                    dangerouslySetInnerHTML={renderMathFormula('\\nabla \\times \\mathbf{E} = -\\frac{\\partial \\mathbf{B}}{\\partial t}')}
+                    className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 overflow-x-auto text-neutral-900 dark:text-neutral-100"
+                    dangerouslySetInnerHTML={renderMathFormula(CODE_SNIPPETS.math[3].replace(/\$\$/g, ''))}
                   />
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-neutral-950 dark:text-white mb-1.5">
-                    Hamiltonian Energy Eigenstates
-                  </h3>
+                  <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                    Time-Independent Schrödinger Equation:
+                  </div>
                   <div
-                    className="p-3.5 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 overflow-x-auto text-neutral-900 dark:text-neutral-100"
-                    dangerouslySetInnerHTML={renderMathFormula('\\hat{H} |\\psi\\rangle = E |\\psi\\rangle')}
+                    className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 overflow-x-auto text-neutral-900 dark:text-neutral-100"
+                    dangerouslySetInnerHTML={renderMathFormula(CODE_SNIPPETS.math[6].replace(/\$\$/g, ''))}
+                  />
+                </div>
+
+                <div>
+                  <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+                    Qubit Superposition State:
+                  </div>
+                  <div
+                    className="p-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 overflow-x-auto text-neutral-900 dark:text-neutral-100"
+                    dangerouslySetInnerHTML={renderMathFormula(CODE_SNIPPETS.math[9].replace(/\$\$/g, ''))}
                   />
                 </div>
               </div>
@@ -362,12 +385,16 @@ export const StudioWorkspaceDemo: React.FC<StudioWorkspaceDemoProps> = ({ onOpen
                       </div>
                     </>
                   ) : (
-                    <div className="p-3.5 bg-neutral-50 dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 flex items-center justify-between">
-                      <span>const buffer = new Uint8Array(capacity);</span>
-                      <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
-                        <Check className="w-3.5 h-3.5" />
-                        Applied
-                      </span>
+                    <div className="p-4 bg-neutral-50 dark:bg-neutral-900/80 text-neutral-800 dark:text-neutral-200 space-y-2">
+                      <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                        <span className="text-neutral-500 font-sans text-xs">quantum_notes.md (Applied)</span>
+                        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                          <Check className="w-3.5 h-3.5" />
+                          Applied to Workspace
+                        </span>
+                      </div>
+                      <div className="text-neutral-900 dark:text-white font-medium">const buffer = new Uint8Array(capacity);</div>
+                      <div className="text-neutral-900 dark:text-white font-medium">const dataView = new DataView(buffer.buffer);</div>
                     </div>
                   )}
                 </div>
@@ -390,44 +417,6 @@ export const StudioWorkspaceDemo: React.FC<StudioWorkspaceDemoProps> = ({ onOpen
                   )}
                   <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
                     Direct BYOK API key execution
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Print Export Preview */}
-            {activeTab === 'export' && (
-              <div className="space-y-3">
-                <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 shadow-2xs font-serif text-xs leading-relaxed">
-                  <div className="border-b border-neutral-200 dark:border-neutral-800 pb-2 mb-3 flex items-center justify-between font-sans text-[10px] text-neutral-400 uppercase tracking-widest">
-                    <span>MD Writer • Camera-Ready Preview</span>
-                    <span>300 DPI</span>
-                  </div>
-                  <h4 className="text-sm font-semibold tracking-tight font-sans mb-1 text-neutral-950 dark:text-white">
-                    Production Architecture Audit
-                  </h4>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans mb-3">
-                    Engineering Team • 2026-11-11
-                  </p>
-                  <p className="text-neutral-700 dark:text-neutral-300">
-                    MD Writer produces vector-accurate PDF documents with embedded KaTeX formulas,
-                    styled tables, and pagination boundaries for publication.
-                  </p>
-                  <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between font-sans text-[10px] text-neutral-400">
-                    <span>Margins: 20mm</span>
-                    <span>Page 1 of 1</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleLaunch}
-                    className="px-3.5 py-1.5 rounded-lg bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-medium cursor-pointer shadow-xs"
-                  >
-                    Open in PDF Print Engine
-                  </button>
-                  <span className="text-[11px] text-neutral-400 font-mono">
-                    Zero remote server conversion
                   </span>
                 </div>
               </div>
