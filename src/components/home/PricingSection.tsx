@@ -57,7 +57,7 @@ const TIERS: PricingTier[] = [
       'Everything in Free Forever',
       'Lifetime license for all future v2.x & v3.x releases',
       'Encrypted multi-device cloud backup & sync',
-      'Unlimited delta version snapshots & rollback',
+      'Full delta version snapshots & rollback history',
       'Camera-ready Vector PDF studio export',
       'Clean Word DOCX conversion with equations',
     ],

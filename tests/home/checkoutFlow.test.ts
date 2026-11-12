@@ -71,4 +71,25 @@ describe('Locked-Plan Checkout Flow', () => {
     assert.ok(!modalCode.includes("setSelectedPlanId('lifetime')"), 'Must not let user switch between Lifetime and Pro inside modal');
     assert.ok(modalCode.includes("entryPlanGroup === 'pro'"), 'Pro interval toggle must only show when entryPlanGroup is pro');
   });
+
+  it('persists lifetime reservation and locks modal against repeated email prompts', async () => {
+    const modalCode = fs.readFileSync('src/components/checkout/CheckoutModal.tsx', 'utf-8');
+    const serviceCode = fs.readFileSync('src/services/paymentService.ts', 'utf-8');
+
+    // paymentService must provide reservation lookup functions
+    assert.ok(
+      serviceCode.includes('getSavedEarlyBirdReservation') || serviceCode.includes('checkEarlyBirdReservation'),
+      'paymentService must export function to check saved reservation'
+    );
+
+    // CheckoutModal must verify existing reservation on open and display locked state
+    assert.ok(
+      modalCode.includes('isExistingReservation') || modalCode.includes('savedReservation'),
+      'CheckoutModal must inspect existing reservations on modal open'
+    );
+    assert.ok(
+      modalCode.includes('Use a different email') || modalCode.includes('Change email'),
+      'CheckoutModal must allow switching email if already locked'
+    );
+  });
 });

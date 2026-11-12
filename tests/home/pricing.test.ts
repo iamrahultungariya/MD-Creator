@@ -52,4 +52,24 @@ describe('Pricing Matrix Architecture', () => {
       'PricingPage Pro Studio card must contain billing interval toggle'
     );
   });
+
+  it('eradicates the word "unlimited" across pricing, payment, and Mimo components', () => {
+    const filesToCheck = [
+      'src/components/home/PricingSection.tsx',
+      'src/pages/PricingPage.tsx',
+      'src/services/paymentService.ts',
+      'src/features/mimo/components/MimoPrivacyModal.tsx',
+      'src/features/mimo/components/drawer/MimoSettingsPopover.tsx',
+    ];
+
+    for (const filePath of filesToCheck) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const hasUnlimited = /\bunlimited\b/i.test(content);
+      assert.strictEqual(
+        hasUnlimited,
+        false,
+        `File ${filePath} must not contain the word "unlimited". Use professional terminology instead.`
+      );
+    }
+  });
 });

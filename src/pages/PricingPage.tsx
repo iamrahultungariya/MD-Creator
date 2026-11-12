@@ -23,7 +23,7 @@ const COMPARISON_FEATURES: FeatureRow[] = [
   { category: 'AI Intelligence', name: 'AST Section Surgeon & Non-destructive diffs', free: true, lifetime: true, pro: true },
   { category: 'AI Intelligence', name: 'Managed AI quota without personal GCP key', free: false, lifetime: false, pro: true },
   { category: 'Sync & Backup', name: 'Encrypted multi-device cloud synchronization', free: false, lifetime: true, pro: true },
-  { category: 'Sync & Backup', name: 'Unlimited delta version snapshots & diff viewer', free: false, lifetime: true, pro: true },
+  { category: 'Sync & Backup', name: 'Continuous delta version snapshots & diff viewer', free: false, lifetime: true, pro: true },
   { category: 'Publication Suite', name: 'Client-side HTML, Markdown & browser print', free: true, lifetime: true, pro: true },
   { category: 'Publication Suite', name: 'Camera-ready Vector PDF export [Beta]', free: false, lifetime: true, pro: true },
   { category: 'Publication Suite', name: 'Microsoft Word (.docx) with equations [Beta]', free: false, lifetime: true, pro: true },
@@ -171,7 +171,7 @@ export const PricingPage: React.FC = () => {
                 </li>
                 <li className="py-2 first:pt-0 last:pb-0">Lifetime license for all future v2.x and v3.x releases</li>
                 <li className="py-2 first:pt-0 last:pb-0">Encrypted multi-device cloud backup &amp; sync</li>
-                <li className="py-2 first:pt-0 last:pb-0">Unlimited delta version snapshots &amp; diff viewer</li>
+                <li className="py-2 first:pt-0 last:pb-0">Continuous delta version snapshots &amp; diff viewer</li>
                 <li className="py-2 first:pt-0 last:pb-0">Publication Vector PDF &amp; Word DOCX export [Beta]</li>
               </ul>
             </div>

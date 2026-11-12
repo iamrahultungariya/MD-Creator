@@ -53,7 +53,7 @@ export const MimoPrivacyModal: React.FC<MimoPrivacyModalProps> = ({
               <span>Processing &amp; BYOK</span>
             </div>
             <p className="text-[11px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-              Requests are processed securely via Google Gemini. Connect your personal free Gemini API key (BYOK) for direct client-to-Google communication and unlimited capacity.
+              Requests are processed securely via Google Gemini. Connect your personal free Gemini API key (BYOK) for direct client-to-Google communication and full provider quota.
             </p>
           </div>
         </div>

@@ -42,7 +42,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, PlanConfig> = {
     features: [
       'Lifetime license for all v2.x and v3.x releases',
       'Encrypted multi-device cloud backup & sync',
-      'Unlimited delta snapshots & rollback history',
+      'Continuous delta snapshots & rollback history',
       'Camera-ready Vector PDF & Word DOCX export',
     ],
   },
@@ -138,6 +138,7 @@ export async function reserveEarlyBirdSpot(
     const deduped = list.filter((item) => !(item.email === cleanEmail && item.planId === planId));
     deduped.push(reservation);
     localStorage.setItem('md_writer_early_bird_leads', JSON.stringify(deduped));
+    localStorage.setItem(`md_writer_locked_reservation_${planId}`, JSON.stringify(reservation));
   } catch {
     // Ignore localStorage unavailability in restricted environments
   }
@@ -170,6 +171,85 @@ export async function reserveEarlyBirdSpot(
     success: true,
     message: `Your ${plan.name} rate (${rateLabel}) is locked for ${cleanEmail}. We will send your activation link as soon as live checkout opens.`,
   };
+}
+
+/**
+ * Retrieves any saved early-bird reservation for a plan from localStorage.
+ */
+export function getSavedEarlyBirdReservation(
+  planId: SubscriptionPlanId = 'lifetime'
+): EarlyBirdReservation | null {
+  try {
+    const direct = localStorage.getItem(`md_writer_locked_reservation_${planId}`);
+    if (direct) {
+      return JSON.parse(direct) as EarlyBirdReservation;
+    }
+    const existingRaw = localStorage.getItem('md_writer_early_bird_leads');
+    if (existingRaw) {
+      const list: EarlyBirdReservation[] = JSON.parse(existingRaw);
+      const found = list.find((item) => item.planId === planId);
+      if (found) return found;
+    }
+  } catch {
+    // Ignore storage issues
+  }
+  return null;
+}
+
+/**
+ * Checks whether an email has already locked an early-bird spot (locally or in Supabase).
+ */
+export async function checkEarlyBirdReservation(
+  email: string,
+  planId: SubscriptionPlanId = 'lifetime'
+): Promise<{ isReserved: boolean; reservation?: EarlyBirdReservation }> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail) return { isReserved: false };
+
+  // Check local cache first
+  try {
+    const existingRaw = localStorage.getItem('md_writer_early_bird_leads');
+    if (existingRaw) {
+      const list: EarlyBirdReservation[] = JSON.parse(existingRaw);
+      const found = list.find((item) => item.email === cleanEmail && item.planId === planId);
+      if (found) return { isReserved: true, reservation: found };
+    }
+  } catch {}
+
+  // Check Supabase if configured
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('early_bird_reservations')
+        .select('id, email, plan_id, created_at')
+        .eq('email', cleanEmail)
+        .eq('plan_id', planId)
+        .maybeSingle();
+
+      if (!error && data) {
+        const res: EarlyBirdReservation = {
+          email: data.email,
+          planId: data.plan_id as SubscriptionPlanId,
+          timestamp: new Date(data.created_at).getTime(),
+          source: 'cloud_lookup',
+        };
+        return { isReserved: true, reservation: res };
+      }
+    } catch (err) {
+      console.warn('[paymentService] Could not check cloud reservation:', err);
+    }
+  }
+
+  return { isReserved: false };
+}
+
+/**
+ * Clears saved early-bird reservation from local storage so the user can enter another email.
+ */
+export function clearSavedEarlyBirdReservation(planId: SubscriptionPlanId = 'lifetime'): void {
+  try {
+    localStorage.removeItem(`md_writer_locked_reservation_${planId}`);
+  } catch {}
 }
 
 /**

@@ -1021,13 +1021,13 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   {
                     id: 'gemini-3.5-flash-lite',
                     label: 'Gemini 3.5 Flash-Lite',
-                    detail: userApiKey ? '5-step protocol · Unlimited BYOK' : '5-step protocol · 20/day shared',
+                    detail: userApiKey ? 'High velocity · Direct Provider Quota' : 'High velocity · 20/day shared',
                     cap: userApiKey ? 100 : 20,
                   },
                   {
                     id: 'gemini-3.5-flash',
                     label: 'Gemini 3.6 Flash',
-                    detail: userApiKey ? 'Balanced · Unlimited BYOK' : 'Balanced · 3/day shared',
+                    detail: userApiKey ? 'Balanced · Direct Provider Quota' : 'Balanced · 3/day shared',
                     cap: userApiKey ? 100 : 3,
                   },
                   {
@@ -1104,7 +1104,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 Monthly AI Doc Generator
               </span>
               <span className="text-[10.5px] font-mono text-neutral-600 dark:text-neutral-400 tabular-nums">
-                {userApiKey ? 'Unlimited' : `${monthlyDocGenCount} / 3`}
+                {userApiKey ? 'Direct BYOK' : `${monthlyDocGenCount} / 3`}
               </span>
             </div>
             {!userApiKey && (

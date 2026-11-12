@@ -58,6 +58,9 @@ const CrossDeviceDeletionModal = React.lazy(() =>
 const AppUpdateBanner = React.lazy(() =>
   import('./components/common/AppUpdateBanner').then((m) => ({ default: m.AppUpdateBanner }))
 );
+const TrialEndingBanner = React.lazy(() =>
+  import('./components/common/TrialEndingBanner').then((m) => ({ default: m.TrialEndingBanner }))
+);
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
@@ -255,6 +258,11 @@ export const App: React.FC = () => {
         {/* Global Checkout / Early-Bird Upgrade Modal */}
         <Suspense fallback={null}>
           <CheckoutModal />
+        </Suspense>
+
+        {/* Pro Studio 14-Day Free Trial Ending Daily Warning Banner (Days 12-14) */}
+        <Suspense fallback={null}>
+          <TrialEndingBanner />
         </Suspense>
 
         <AppRoutes />

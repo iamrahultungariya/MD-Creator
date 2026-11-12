@@ -6,7 +6,11 @@ import {
   SUBSCRIPTION_PLANS,
   reserveEarlyBirdSpot,
   redeemPromoCode,
+  getSavedEarlyBirdReservation,
+  clearSavedEarlyBirdReservation,
+  EarlyBirdReservation,
 } from '../../services/paymentService';
+import { activateProFreeTrial } from '../../services/trialService';
 
 export const CheckoutModal: React.FC = () => {
   const { isOpen, closeCheckout, selectedPlanId, entryPlanGroup, setSelectedPlanId } =
@@ -18,21 +22,36 @@ export const CheckoutModal: React.FC = () => {
   const [email, setEmail] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedReservation, setSavedReservation] = useState<EarlyBirdReservation | null>(null);
   const [reservationSuccess, setReservationSuccess] = useState<string | null>(null);
+  const [trialSuccess, setTrialSuccess] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync user email and reset transient state when dialog opens
+  // Sync user email, check saved lifetime reservation, and reset transient state when dialog opens
   useEffect(() => {
     if (!isOpen) return;
     setErrorMessage(null);
     setReservationSuccess(null);
+    setTrialSuccess(null);
     setPromoSuccess(null);
     setShowPromoInput(false);
+
     if (user?.email) {
       setEmail((prev) => prev || user.email);
     }
-  }, [isOpen, user?.email]);
+
+    if (entryPlanGroup === 'lifetime' || selectedPlanId === 'lifetime') {
+      const existing = getSavedEarlyBirdReservation('lifetime');
+      if (existing) {
+        setSavedReservation(existing);
+      } else {
+        setSavedReservation(null);
+      }
+    } else {
+      setSavedReservation(null);
+    }
+  }, [isOpen, user?.email, entryPlanGroup, selectedPlanId]);
 
   // Sync native <dialog> showModal() / close() with Zustand store
   useEffect(() => {
@@ -99,14 +118,33 @@ export const CheckoutModal: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await reserveEarlyBirdSpot(email, currentPlan.id);
-      if (res.success) {
-        setReservationSuccess(res.message);
+      if (entryPlanGroup === 'pro') {
+        const res = await activateProFreeTrial(email, currentPlan.id);
+        if (res.success) {
+          setTrialSuccess(res.message);
+        } else {
+          setErrorMessage(res.message);
+        }
       } else {
-        setErrorMessage(res.message);
+        const res = await reserveEarlyBirdSpot(email, currentPlan.id);
+        if (res.success) {
+          setReservationSuccess(res.message);
+          setSavedReservation({
+            email: email.trim().toLowerCase(),
+            planId: currentPlan.id,
+            timestamp: Date.now(),
+            source: 'checkout_modal_reservation',
+          });
+        } else {
+          setErrorMessage(res.message);
+        }
       }
     } catch {
-      setErrorMessage('Could not save your reservation. Please verify your connection and retry.');
+      setErrorMessage(
+        entryPlanGroup === 'pro'
+          ? 'Could not activate trial. Please verify your connection and retry.'
+          : 'Could not save your reservation. Please verify your connection and retry.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -146,10 +184,12 @@ export const CheckoutModal: React.FC = () => {
             id="checkout-dialog-title"
             className="text-sm font-semibold tracking-tight text-neutral-950 dark:text-white"
           >
-            {currentPlan.name}
+            {entryPlanGroup === 'pro' ? 'Pro Studio · 14-Day Free Trial' : currentPlan.name}
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            {currentPlan.tagline}
+            {entryPlanGroup === 'pro'
+              ? 'Zero charge today. Full access to cloud sync, continuous delta snapshots, and managed AI.'
+              : currentPlan.tagline}
           </p>
         </div>
 
@@ -256,13 +296,30 @@ export const CheckoutModal: React.FC = () => {
               Continue to Studio
             </button>
           </div>
-        ) : reservationSuccess ? (
+        ) : trialSuccess ? (
+          <div className="py-3 space-y-3">
+            <div className="text-sm font-semibold text-neutral-950 dark:text-white">
+              14-Day Free Trial Active
+            </div>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              {trialSuccess}
+            </p>
+            <button
+              type="button"
+              onClick={closeCheckout}
+              className="w-full py-2.5 px-4 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Continue to Studio
+            </button>
+          </div>
+        ) : (savedReservation || reservationSuccess) ? (
           <div className="py-3 space-y-3">
             <div className="text-sm font-semibold text-neutral-950 dark:text-white">
               Early-Bird Rate Locked
             </div>
             <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-              {reservationSuccess}
+              {reservationSuccess ||
+                `Your $49 early-bird spot is locked for ${savedReservation?.email}. When live checkout opens at launch, your activation link will be sent here with zero price increase.`}
             </p>
             <button
               type="button"
@@ -271,16 +328,31 @@ export const CheckoutModal: React.FC = () => {
             >
               Done
             </button>
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  clearSavedEarlyBirdReservation('lifetime');
+                  setSavedReservation(null);
+                  setReservationSuccess(null);
+                }}
+                className="text-[11px] text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-200 underline transition-colors cursor-pointer"
+              >
+                Use a different email
+              </button>
+            </div>
           </div>
         ) : !showPromoInput ? (
-          /* Primary Reservation Flow */
+          /* Primary Reservation / Trial Flow */
           <form onSubmit={handleReserve} className="space-y-4">
             <div>
               <label
                 htmlFor="checkout-email-input"
                 className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5"
               >
-                Email for activation link
+                {entryPlanGroup === 'pro'
+                  ? 'Email for trial confirmation'
+                  : 'Email for activation link'}
               </label>
               <input
                 id="checkout-email-input"
@@ -300,12 +372,10 @@ export const CheckoutModal: React.FC = () => {
               className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer active:translate-y-[1px] disabled:opacity-60"
             >
               {isSubmitting
-                ? 'Locking in rate...'
-                : currentPlan.id === 'lifetime'
-                ? 'Reserve Lifetime Rate ($49)'
-                : currentPlan.id === 'pro_annual'
-                ? 'Lock In Pro Rate ($6/mo)'
-                : 'Lock In Pro Rate ($8/mo)'}
+                ? (entryPlanGroup === 'pro' ? 'Activating trial...' : 'Locking in rate...')
+                : entryPlanGroup === 'pro'
+                ? 'Start 14-Day Free Trial'
+                : 'Reserve Lifetime Rate ($49)'}
             </button>
 
             <div className="text-center">
