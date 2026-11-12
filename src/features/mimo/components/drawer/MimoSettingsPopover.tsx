@@ -89,16 +89,6 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
     }
   };
 
-  useEffect(() => {
-    if (
-      activeTab === 'usage' &&
-      userApiKey &&
-      (!lastCheckedTimestamp || Date.now() - lastCheckedTimestamp > API_HEALTH_CHECK_TTL_MS)
-    ) {
-      handleFetchLiveUsage(false);
-    }
-  }, [activeTab, userApiKey, lastCheckedTimestamp]);
-
   // BYOK local state
   const [keyInput, setKeyInput] = useState('');
   const [showKeyText, setShowKeyText] = useState(false);

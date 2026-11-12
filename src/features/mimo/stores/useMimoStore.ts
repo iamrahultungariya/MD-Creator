@@ -10,6 +10,7 @@ import {
   ActivityTelemetry,
 } from '../types/mimoTypes';
 import { applyDiffHunkToDocument } from '../services/diffService';
+import { encryptApiKey, decryptApiKey } from '../services/apiKeyVault';
 
 interface MimoStoreState {
   isOpen: boolean;
@@ -301,15 +302,29 @@ export const useMimoStore = create<MimoStoreState>()(
         set({ episodicSummariesByDoc: next });
       },
 
-      setUserApiKey: (key) =>
+      setUserApiKey: (key) => {
+        const trimmed = key.trim();
         set((state) => ({
           quota: {
             ...state.quota,
-            userApiKey: key.trim(),
+            userApiKey: trimmed,
             hasAcceptedPrivacyNotice: true,
             dailyUsagePercent: 0,
           },
-        })),
+        }));
+
+        if (trimmed) {
+          encryptApiKey(trimmed).then((enc) => {
+            try {
+              localStorage.setItem('md_writer_secure_gemini_key', enc);
+            } catch {}
+          });
+        } else {
+          try {
+            localStorage.removeItem('md_writer_secure_gemini_key');
+          } catch {}
+        }
+      },
 
       setIsKeyModalOpen: (isKeyModalOpen) => set({ isKeyModalOpen }),
 
@@ -583,10 +598,34 @@ export const useMimoStore = create<MimoStoreState>()(
         }
         if (state) {
           state.webSearchEnabled = false;
+
+          // Rehydrate API key from encrypted vault without exposing plaintext in main store
+          try {
+            const encKey = localStorage.getItem('md_writer_secure_gemini_key');
+            if (encKey) {
+              decryptApiKey(encKey).then((plain) => {
+                if (plain) {
+                  useMimoStore.setState((s) => ({
+                    quota: { ...s.quota, userApiKey: plain },
+                  }));
+                }
+              });
+            } else if (state.quota?.userApiKey && !state.quota.userApiKey.startsWith('enc:')) {
+              encryptApiKey(state.quota.userApiKey).then((enc) => {
+                try {
+                  localStorage.setItem('md_writer_secure_gemini_key', enc);
+                } catch {}
+              });
+            }
+          } catch {}
         }
       },
       partialize: (state) => ({
-        quota: state.quota,
+        quota: {
+          ...state.quota,
+          // Never persist plaintext API key in the main store JSON
+          userApiKey: state.quota.userApiKey ? 'enc:vault-stored' : '',
+        },
         thinkingLevel: state.thinkingLevel,
         selectedModel: state.selectedModel,
         activeDocId: state.activeDocId,

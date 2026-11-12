@@ -7,3 +7,4 @@ Task 1.2: complete (persists lifetime reservation and locks modal against repeat
 Task 1.3: complete (Pro Studio 14-day free trial with strict calculation, days 12-14 warning notification once/day, and day 15 auto-deactivation, tests: npx tsx --test tests/services/trialService.test.ts -> pass, production build -> clean)
 Task 2.1: complete (Mimo 3.5 Flash-Lite minimal thinking indicator with dropdown chevron and clean vertical timeline, tests: npx tsx --test tests/mimo/flashLiteProtocol.test.ts -> pass)
 Task 3.1: complete (RAF token batching buffer and CSS containment to eliminate mobile stream flicker, tests: npx tsx --test tests/mimo/smoothStreaming.test.ts -> pass)
+Task 4.1: complete (Web Crypto AES-GCM encrypted API key vault and eliminate automatic TTL health check probing, tests: npx tsx --test tests/mimo/apiKeySecurity.test.ts -> pass)
