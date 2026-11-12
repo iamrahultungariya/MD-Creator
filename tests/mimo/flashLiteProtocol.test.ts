@@ -80,4 +80,33 @@ describe('Mimo 3.5 Flash-Lite Execution Protocol & Timeline', () => {
     assert.ok(usageSlice.includes('tabular-nums'), 'Usage metrics must use tabular-nums');
     assert.ok(popoverCode.includes('3.6 Flash'), 'Should maintain clean Gemini 3.6 Flash naming');
   });
+
+  it('renders minimal thinking indicator with dropdown chevron and vertical timeline (antislop)', () => {
+    const timelineCode = fs.readFileSync('src/features/mimo/components/MimoExecutionTimeline.tsx', 'utf-8');
+
+    // No technical "5-step protocol" jargon in user-facing copy
+    assert.ok(
+      !timelineCode.includes('5-step protocol complete'),
+      'Must not display raw "5-step protocol" jargon to the user'
+    );
+    assert.ok(
+      !timelineCode.includes('grid-cols-5'),
+      'Must not use 5-column horizontal grid; use clean vertical timeline'
+    );
+
+    // Down arrow chevron button
+    assert.ok(
+      timelineCode.includes('ChevronDown') || timelineCode.includes('chevron'),
+      'Must include dropdown chevron arrow'
+    );
+
+    // Vertical timeline rail / list
+    assert.ok(
+      timelineCode.includes('border-l') || timelineCode.includes('relative pl-'),
+      'Must render vertical timeline rail'
+    );
+
+    // Antislop R-02 compliance: No em dashes
+    assert.ok(!timelineCode.includes('—'), 'Must not contain em dashes');
+  });
 });

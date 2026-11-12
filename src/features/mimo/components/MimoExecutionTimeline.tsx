@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { ActivityTelemetry, MimoProtocolStepStatus } from '../types/mimoTypes';
 
 interface MimoExecutionTimelineProps {
@@ -6,10 +7,12 @@ interface MimoExecutionTimelineProps {
   isStreaming: boolean;
 }
 
-const STEP_MARKER: Record<MimoProtocolStepStatus, string> = {
-  pending: 'bg-neutral-300 dark:bg-neutral-700',
-  active: 'bg-neutral-900 dark:bg-white',
-  done: 'bg-emerald-600 dark:bg-emerald-400',
+const STEP_LABELS: Record<string, { label: string; detail: string }> = {
+  understand: { label: 'Understand', detail: 'Analyzing prompt and context' },
+  decompose: { label: 'Structure', detail: 'Planning structure and depth' },
+  develop: { label: 'Develop', detail: 'Drafting response' },
+  verify: { label: 'Verify', detail: 'Syntax and layout review' },
+  polish: { label: 'Polish', detail: 'Tone and formatting calibration' },
 };
 
 export const MimoExecutionTimeline: React.FC<MimoExecutionTimelineProps> = ({
@@ -17,86 +20,99 @@ export const MimoExecutionTimeline: React.FC<MimoExecutionTimelineProps> = ({
   isStreaming,
 }) => {
   const timeline = activity?.protocolTimeline;
-  const [expandedAfterDone, setExpandedAfterDone] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!timeline?.enabled) return null;
 
   const isDone = Boolean(activity?.isDone) && !isStreaming;
-  const isExpanded = !isDone || expandedAfterDone;
   const elapsedSeconds = activity?.metrics?.elapsedMs
     ? (activity.metrics.elapsedMs / 1000).toFixed(1)
     : null;
+
   const activeStep = timeline.steps.find((s) => s.status === 'active') ?? timeline.steps[0];
+  const activeLabel = STEP_LABELS[activeStep?.id]?.label || activeStep?.label || 'Thinking';
 
   return (
-    <div className="mb-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/50 text-xs">
+    <div className="mb-2.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-900/40 text-xs overflow-hidden transition-all duration-200">
       <button
         type="button"
-        onClick={() => isDone && setExpandedAfterDone((prev) => !prev)}
-        disabled={!isDone}
+        onClick={() => setIsExpanded((prev) => !prev)}
         aria-expanded={isExpanded}
-        className={`w-full px-3 py-1.5 flex items-center justify-between text-left ${
-          isDone ? 'cursor-pointer hover:bg-neutral-100/70 dark:hover:bg-neutral-800/40' : 'cursor-default'
-        } transition-colors`}
+        className="w-full px-3 py-1.5 flex items-center justify-between text-left hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer group"
       >
         <div className="flex items-center gap-2 min-w-0">
           <span
             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-              isDone ? 'bg-emerald-600 dark:bg-emerald-400' : 'bg-neutral-900 dark:bg-neutral-100'
+              isDone
+                ? 'bg-emerald-600 dark:bg-emerald-400'
+                : 'bg-neutral-900 dark:bg-neutral-100 animate-pulse'
             }`}
           />
-          <span className="font-medium text-neutral-800 dark:text-neutral-200 truncate">
+          <span className="font-medium text-neutral-700 dark:text-neutral-300 truncate">
             {isDone
-              ? timeline.summaryLabel || '5-step protocol complete'
-              : `${activeStep.label} — ${activeStep.detail}`}
+              ? elapsedSeconds
+                ? `Thought for ${elapsedSeconds}s`
+                : 'Thought complete'
+              : `${activeLabel}...`}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 text-[11px] text-neutral-500 dark:text-neutral-400 font-mono tabular-nums">
-          <span>{elapsedSeconds ? `${elapsedSeconds}s` : '3.5 Lite'}</span>
-          {isDone && (
-            <span className="text-[10px] font-sans text-neutral-400">
-              {isExpanded ? 'Hide' : 'Steps'}
+        <div className="flex items-center gap-1.5 shrink-0 text-neutral-400 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-colors">
+          {elapsedSeconds && !isDone && (
+            <span className="text-[11px] font-mono tabular-nums text-neutral-500">
+              {elapsedSeconds}s
             </span>
           )}
+          <ChevronDown
+            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+              isExpanded ? 'rotate-180' : ''
+            }`}
+          />
         </div>
       </button>
 
+      {/* Expanded Vertical Timeline Rail */}
       {isExpanded && (
-        <ol className="grid grid-cols-5 border-t border-neutral-200 dark:border-neutral-800 divide-x divide-neutral-200 dark:divide-neutral-800">
-          {timeline.steps.map((step, index) => {
-            const isStepDone = step.status === 'done';
-            const isStepActive = step.status === 'active';
-            return (
-              <li
-                key={step.id}
-                className={`px-2 py-1.5 min-w-0 transition-colors ${
-                  isStepActive
-                    ? 'bg-white dark:bg-neutral-950'
-                    : isStepDone
-                    ? 'bg-transparent'
-                    : 'opacity-55'
-                }`}
-                title={`${index + 1}. ${step.label}: ${step.detail}`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STEP_MARKER[step.status]}`} />
+        <div className="px-3 pb-2.5 pt-1 border-t border-neutral-200/60 dark:border-neutral-800/60">
+          <ol className="relative pl-3.5 border-l border-neutral-200 dark:border-neutral-800 my-1 space-y-2">
+            {timeline.steps.map((step) => {
+              const isStepDone = step.status === 'done';
+              const isStepActive = step.status === 'active';
+              const config = STEP_LABELS[step.id] || { label: step.label, detail: step.detail };
+
+              return (
+                <li key={step.id} className="relative">
+                  {/* Timeline Node Bullet */}
                   <span
-                    className={`text-[10.5px] truncate ${
-                      isStepActive
-                        ? 'font-semibold text-neutral-950 dark:text-white'
-                        : isStepDone
-                        ? 'font-medium text-neutral-700 dark:text-neutral-300'
-                        : 'text-neutral-500 dark:text-neutral-400'
+                    className={`absolute -left-[19px] top-1.5 w-2 h-2 rounded-full transition-colors ${
+                      isStepDone
+                        ? 'bg-emerald-500 ring-2 ring-emerald-500/20'
+                        : isStepActive
+                        ? 'bg-neutral-900 dark:bg-white ring-2 ring-neutral-400/40 animate-pulse'
+                        : 'bg-neutral-300 dark:bg-neutral-700'
                     }`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
+                  />
+                  <div className="flex items-baseline gap-1.5 min-w-0">
+                    <span
+                      className={`text-[11px] ${
+                        isStepActive
+                          ? 'font-semibold text-neutral-950 dark:text-white'
+                          : isStepDone
+                          ? 'font-medium text-neutral-700 dark:text-neutral-300'
+                          : 'text-neutral-400 dark:text-neutral-500'
+                      }`}
+                    >
+                      {config.label}
+                    </span>
+                    <span className="text-[10px] text-neutral-400 dark:text-neutral-500 truncate">
+                      · {config.detail}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       )}
     </div>
   );

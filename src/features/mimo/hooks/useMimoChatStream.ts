@@ -50,7 +50,7 @@ function advanceProtocolTimeline(
     steps: updatedSteps,
     summaryLabel:
       status === 'done' && targetIdx === PROTOCOL_STEP_DEFS.length - 1
-        ? '5-step protocol complete'
+        ? 'Thought complete'
         : activeDef.label,
   };
 }
