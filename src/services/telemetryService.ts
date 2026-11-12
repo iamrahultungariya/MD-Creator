@@ -191,24 +191,9 @@ class TelemetryService {
 
   private saveDailyMetrics(records: DailyMetricRecord[]): void {
     try {
-      // Keep up to 35 days
+      // Keep up to 35 days locally for instant offline charts
       const trimmed = records.slice(-35);
       localStorage.setItem(STORAGE_KEY_DAILY_METRICS, JSON.stringify(trimmed));
-
-      if (isSupabaseConfigured() && supabase && trimmed.length > 0) {
-        const today = trimmed[trimmed.length - 1];
-        Promise.resolve(
-          supabase
-            .from('daily_analytics')
-            .upsert({
-              date: today.date,
-              visitors: today.visitors,
-              active_writers: today.activeWriters,
-              total_session_seconds: today.totalSessionSeconds,
-              feature_usage: today.featureUsage,
-            })
-        ).catch(() => {});
-      }
     } catch {}
   }
 
@@ -236,11 +221,30 @@ class TelemetryService {
     this.saveSession();
   }
 
+  private syncTelemetryRpc(payload: {
+    visitors?: number;
+    activeWriters?: number;
+    sessionSeconds?: number;
+    feature?: TrackedFeature;
+  }): void {
+    if (!isSupabaseConfigured() || !supabase) return;
+    Promise.resolve(
+      supabase.rpc('record_daily_telemetry', {
+        p_date: getTodayDateString(),
+        p_visitors: payload.visitors || 0,
+        p_active_writers: payload.activeWriters || 0,
+        p_session_seconds: payload.sessionSeconds || 0,
+        p_feature: payload.feature || null,
+      })
+    ).catch(() => {});
+  }
+
   private incrementDailyVisitor(): void {
     const records = this.loadStoredDailyMetrics();
     const today = this.getOrCreateTodayRecord(records);
     today.visitors += 1;
     this.saveDailyMetrics(records);
+    this.syncTelemetryRpc({ visitors: 1 });
   }
 
   /**
@@ -255,6 +259,7 @@ class TelemetryService {
       const today = this.getOrCreateTodayRecord(records);
       today.activeWriters += 1;
       this.saveDailyMetrics(records);
+      this.syncTelemetryRpc({ activeWriters: 1 });
     }
   }
 
@@ -266,6 +271,7 @@ class TelemetryService {
     const today = this.getOrCreateTodayRecord(records);
     today.totalSessionSeconds += seconds;
     this.saveDailyMetrics(records);
+    this.syncTelemetryRpc({ sessionSeconds: seconds });
   }
 
   /**
@@ -277,6 +283,7 @@ class TelemetryService {
     
     today.featureUsage[feature] = (today.featureUsage[feature] || 0) + 1;
     this.saveDailyMetrics(records);
+    this.syncTelemetryRpc({ feature });
 
     // Record to live activity stream
     this.recordActivityEvent(feature, label);
@@ -373,6 +380,80 @@ class TelemetryService {
         category: 'export',
       },
     ];
+  }
+
+  /**
+   * Fetches aggregated daily telemetry rows from Supabase `daily_analytics`
+   * for Admin analytics views, falling back cleanly to local metrics.
+   */
+  public async fetchCloudDailyMetrics(days: number): Promise<DailyMetricRecord[]> {
+    const localFallback = this.getDailyMetrics(days);
+    if (!isSupabaseConfigured() || !supabase) return localFallback;
+
+    try {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - Math.max(1, days - 1));
+      const startIso = startDate.toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from('daily_analytics')
+        .select('date, visitors, active_writers, total_session_seconds, feature_usage')
+        .gte('date', startIso)
+        .order('date', { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        return localFallback;
+      }
+
+      const byDate = new Map<string, DailyMetricRecord>();
+      for (const item of localFallback) {
+        byDate.set(item.date, item);
+      }
+
+      for (const row of data) {
+        byDate.set(row.date, {
+          date: row.date,
+          visitors: Number(row.visitors) || 0,
+          activeWriters: Number(row.active_writers) || 0,
+          totalSessionSeconds: Number(row.total_session_seconds) || 0,
+          featureUsage: (row.feature_usage as Record<string, number>) || {},
+        });
+      }
+
+      return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date)).slice(-days);
+    } catch {
+      return localFallback;
+    }
+  }
+
+  /**
+   * Fetches live activity events from Supabase `activity_events`, with local fallback.
+   */
+  public async fetchCloudActivityFeed(limit = 30): Promise<ActivityEvent[]> {
+    const localFallback = this.getRecentActivityFeed();
+    if (!isSupabaseConfigured() || !supabase) return localFallback;
+
+    try {
+      const { data, error } = await supabase
+        .from('activity_events')
+        .select('id, timestamp, feature, label, category')
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+
+      if (error || !data || data.length === 0) {
+        return localFallback;
+      }
+
+      return data.map((row) => ({
+        id: row.id,
+        timestamp: row.timestamp,
+        feature: row.feature as TrackedFeature,
+        label: row.label,
+        category: row.category as ActivityEvent['category'],
+      }));
+    } catch {
+      return localFallback;
+    }
   }
 
   public destroy(): void {

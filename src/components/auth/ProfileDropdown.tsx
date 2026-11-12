@@ -7,8 +7,7 @@ import {
   ShieldCheck,
   FolderOpen,
   SlidersHorizontal,
-  Database,
-  Sparkles
+  Database
 } from 'lucide-react';
 import { useAuthStore, isUserPro } from '../../stores/useAuthStore';
 import { useCheckoutModalStore } from '../../stores/useCheckoutModalStore';
@@ -179,14 +178,11 @@ export const ProfileDropdown: React.FC = () => {
                   setIsOpen(false);
                   useCheckoutModalStore.getState().openCheckout('lifetime');
                 }}
-                className="w-full text-left px-3 py-2 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-700 dark:text-brand-300 flex items-center justify-between transition-colors cursor-pointer group"
+                className="w-full text-left px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800/70 text-neutral-900 dark:text-neutral-100 flex items-center justify-between transition-colors cursor-pointer"
               >
-                <div className="flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                  <span className="font-semibold">Upgrade to Pro</span>
-                </div>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/20 font-bold">
-                  $49 Deal
+                <span className="font-medium">Upgrade to Pro Studio</span>
+                <span className="text-[11px] font-mono tabular-nums text-neutral-600 dark:text-neutral-300">
+                  $49
                 </span>
               </button>
             )}

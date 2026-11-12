@@ -1,6 +1,59 @@
 import { useState, useRef } from 'react';
 import { useMimoStore, computeTaskCostPercent } from '../stores/useMimoStore';
-import { MimoActivityType, ActivityTelemetry } from '../types/mimoTypes';
+import {
+  MimoActivityType,
+  ActivityTelemetry,
+  MimoProtocolStepId,
+  MimoProtocolStep,
+  MimoProtocolTimeline,
+} from '../types/mimoTypes';
+
+const PROTOCOL_STEP_DEFS: Array<{ id: MimoProtocolStepId; label: string; detail: string }> = [
+  { id: 'understand', label: 'Understand', detail: 'Intent, scope & context' },
+  { id: 'decompose', label: 'Decompose', detail: 'Structure & section flow' },
+  { id: 'develop', label: 'Develop', detail: 'High-density drafting' },
+  { id: 'verify', label: 'Verify', detail: 'Accuracy & formatting audit' },
+  { id: 'polish', label: 'Polish', detail: 'Clarity & Markdown precision' },
+];
+
+function createInitialProtocolTimeline(): MimoProtocolTimeline {
+  return {
+    enabled: true,
+    currentStep: 'understand',
+    steps: PROTOCOL_STEP_DEFS.map((def, idx) => ({
+      id: def.id,
+      label: def.label,
+      detail: def.detail,
+      status: idx === 0 ? 'active' : 'pending',
+    })),
+  };
+}
+
+function advanceProtocolTimeline(
+  timeline: MimoProtocolTimeline,
+  targetStep: MimoProtocolStepId,
+  status: 'active' | 'done' = 'active'
+): MimoProtocolTimeline {
+  const targetIdx = PROTOCOL_STEP_DEFS.findIndex((s) => s.id === targetStep);
+  if (targetIdx === -1) return timeline;
+
+  const updatedSteps: MimoProtocolStep[] = timeline.steps.map((step, idx) => {
+    if (idx < targetIdx) return { ...step, status: 'done' };
+    if (idx === targetIdx) return { ...step, status };
+    return { ...step, status: 'pending' };
+  });
+
+  const activeDef = PROTOCOL_STEP_DEFS[targetIdx];
+  return {
+    ...timeline,
+    currentStep: targetStep,
+    steps: updatedSteps,
+    summaryLabel:
+      status === 'done' && targetIdx === PROTOCOL_STEP_DEFS.length - 1
+        ? '5-step protocol complete'
+        : activeDef.label,
+  };
+}
 import { prepareMimoContext } from '../services/contextEngine';
 import {
   extractDiffHunkFromResponse,
@@ -291,6 +344,10 @@ export function useMimoChatStream({
             ]
           : []),
       ],
+      protocolTimeline:
+        selectedModel === 'gemini-3.5-flash-lite'
+          ? createInitialProtocolTimeline()
+          : undefined,
       isDone: false,
     };
     setActiveActivity(initialActivity);
@@ -401,6 +458,31 @@ export function useMimoChatStream({
                 : m.activity,
             }));
           },
+          onProtocolStage: (stepId, status = 'active') => {
+            if (selectedModel !== 'gemini-3.5-flash-lite') return;
+            setActiveActivity((prev) =>
+              prev && prev.protocolTimeline
+                ? {
+                    ...prev,
+                    protocolTimeline: advanceProtocolTimeline(prev.protocolTimeline, stepId, status),
+                  }
+                : prev
+            );
+            updateLastMessage((m) => ({
+              ...m,
+              activity:
+                m.activity && m.activity.protocolTimeline
+                  ? {
+                      ...m.activity,
+                      protocolTimeline: advanceProtocolTimeline(
+                        m.activity.protocolTimeline,
+                        stepId,
+                        status
+                      ),
+                    }
+                  : m.activity,
+            }));
+          },
         },
       });
 
@@ -446,8 +528,12 @@ export function useMimoChatStream({
       }
 
       const elapsedMs = Math.max(200, Date.now() - startTime);
+      const finalizedTimeline = initialActivity.protocolTimeline
+        ? advanceProtocolTimeline(initialActivity.protocolTimeline, 'polish', 'done')
+        : undefined;
       const completedActivity: ActivityTelemetry = {
         ...initialActivity,
+        ...(finalizedTimeline ? { protocolTimeline: finalizedTimeline } : {}),
         isDone: true,
         metrics: {
           ...initialActivity.metrics,
@@ -466,6 +552,15 @@ export function useMimoChatStream({
         activity: m.activity
           ? {
               ...m.activity,
+              ...(m.activity.protocolTimeline
+                ? {
+                    protocolTimeline: advanceProtocolTimeline(
+                      m.activity.protocolTimeline,
+                      'polish',
+                      'done'
+                    ),
+                  }
+                : {}),
               isDone: true,
               metrics: {
                 ...m.activity.metrics,

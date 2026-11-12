@@ -17,9 +17,7 @@ import {
   AlertCircle,
   ChevronDown,
   BarChart3,
-  RefreshCw,
   Sparkles,
-  CheckCircle2,
 } from 'lucide-react';
 import { useMimoStore } from '../../stores/useMimoStore';
 import { useStyleDnaStore } from '../../stores/useStyleDnaStore';
@@ -365,7 +363,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
               >
                 <div className="flex items-center gap-1 text-[10.5px]">
                   <Zap className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span className="truncate">3.5 Flash</span>
+                  <span className="truncate">3.6 Flash</span>
                 </div>
                 <div className="text-[9px] text-neutral-500 dark:text-neutral-400 font-normal truncate">
                   Balanced
@@ -877,46 +875,38 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
         </div>
       )}
 
-      {/* Tab 4: Live Visual Usage & Quota Metrics */}
+      {/* Tab 4: Minimal Usage & Quota Telemetry */}
       {activeTab === 'usage' && (
-        <div className="p-3 space-y-2.5 max-h-[440px] overflow-y-auto">
-          {/* 1. Live Google AI Health & Status Banner */}
-          <div className="p-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {userApiKey ? (
-                  liveApiStatus === 'THROTTLED' ? (
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
-                    </span>
-                  ) : liveApiStatus === 'OFFLINE' ? (
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
-                    </span>
-                  ) : (
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                    </span>
-                  )
-                ) : (
-                  <span className="w-2.5 h-2.5 rounded-full bg-neutral-400" />
-                )}
-                <span className="font-semibold text-xs text-neutral-900 dark:text-neutral-100">
+        <div className="max-h-[440px] overflow-y-auto divide-y divide-neutral-200 dark:divide-neutral-800">
+          {/* 1. Connection & Health Strip */}
+          <div className="p-3.5 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className={`inline-block rounded-full h-2 w-2 shrink-0 ${
+                    userApiKey
+                      ? liveApiStatus === 'THROTTLED'
+                        ? 'bg-amber-500'
+                        : liveApiStatus === 'OFFLINE'
+                        ? 'bg-rose-500'
+                        : 'bg-emerald-500'
+                      : 'bg-neutral-400'
+                  }`}
+                />
+                <span className="font-semibold text-xs text-neutral-900 dark:text-neutral-100 truncate">
                   {userApiKey
                     ? liveApiStatus === 'THROTTLED'
-                      ? 'Rate Limit (Cooling Down)'
+                      ? 'Rate Limit Cooling Down'
                       : liveApiStatus === 'OFFLINE'
-                      ? 'Connection Error'
-                      : 'Google Gemini Online'
-                    : 'Free Shared Demo Tier'}
+                      ? 'API Offline'
+                      : 'Gemini API Connected'
+                    : 'Shared Demo Quota'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2 shrink-0">
                 {liveLatencyMs > 0 && (
-                  <span className="font-mono text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-200/90 dark:border-emerald-800/80 flex items-center gap-0.5">
-                    <Zap className="w-2.5 h-2.5" />
+                  <span className="font-mono text-[10.5px] text-neutral-600 dark:text-neutral-400 tabular-nums">
                     {liveLatencyMs}ms
                   </span>
                 )}
@@ -924,276 +914,197 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   type="button"
                   onClick={() => handleFetchLiveUsage(true)}
                   disabled={isFetchingLiveUsage || !userApiKey}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200/80 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-[10px] font-medium transition-colors disabled:opacity-40 cursor-pointer"
-                  title="Fetch live health & ping from Google AI"
+                  className="px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-[10.5px] font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 cursor-pointer"
+                  title="Ping Google Gemini API health"
                 >
-                  <RefreshCw className={`w-2.5 h-2.5 ${isFetchingLiveUsage ? 'animate-spin' : ''}`} />
-                  <span>{isFetchingLiveUsage ? 'Fetching...' : 'Fetch Live'}</span>
+                  {isFetchingLiveUsage ? 'Checking...' : 'Check Live'}
                 </button>
               </div>
             </div>
 
             {fetchSuccessMessage && (
-              <div className="px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/70 dark:border-emerald-800 text-[10.5px] text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 animate-in fade-in">
-                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>{fetchSuccessMessage}</span>
-              </div>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                {fetchSuccessMessage}
+              </p>
             )}
-
             {liveFetchError && (
-              <div className="px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-950/60 border border-rose-200/70 dark:border-rose-800 text-[10.5px] text-rose-800 dark:text-rose-300 flex items-center gap-1.5 animate-in fade-in">
-                <AlertCircle className="w-3 h-3 text-rose-600 dark:text-rose-400 shrink-0" />
-                <span className="truncate">{liveFetchError}</span>
-              </div>
+              <p className="text-[11px] text-rose-700 dark:text-rose-400 truncate">
+                {liveFetchError}
+              </p>
             )}
 
-            <div className="text-[10px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
-              <span>{userApiKey ? 'BYOK Personal Key Active' : 'Shared project demo quota'}</span>
+            <div className="flex items-center justify-between text-[10.5px] text-neutral-500 dark:text-neutral-400 tabular-nums">
+              <span>{userApiKey ? 'Personal BYOK Key' : 'Shared project demo tier'}</span>
               <span>
                 {lastCheckedTimestamp
                   ? `Checked ${Math.max(0, Math.round((Date.now() - lastCheckedTimestamp) / 60000))}m ago`
-                  : 'Ready to fetch'}
+                  : 'Ready'}
               </span>
             </div>
           </div>
 
-          {/* 2. Visual Metric Gauges (2x2 Grid) */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* KPI 1: Requests Today */}
-            <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs space-y-1">
-              <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 text-[10px] font-medium">
-                <span>Requests Today</span>
-                <BarChart3 className="w-3 h-3 text-neutral-400" />
+          {/* 2. Split KPI Readout */}
+          <div className="grid grid-cols-2 divide-x divide-neutral-200 dark:divide-neutral-800">
+            <div className="p-3.5 space-y-1.5">
+              <div className="text-[10.5px] font-medium text-neutral-500 dark:text-neutral-400">
+                Requests Today
               </div>
-              <div className="text-base font-bold text-neutral-900 dark:text-white">
-                {requestsToday}{' '}
-                <span className="text-[10px] font-normal text-neutral-500">
+              <div className="text-lg font-semibold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+                {requestsToday}
+                <span className="text-[11px] font-normal text-neutral-500 dark:text-neutral-400 ml-1">
                   / {userApiKey ? '1,500' : '45'}
                 </span>
               </div>
-              {/* Visual Progress Bar */}
-              <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+              <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-500 transition-all duration-300 rounded-full"
+                  className="h-full bg-neutral-900 dark:bg-neutral-100 transition-all duration-300 rounded-full"
                   style={{
-                    width: `${userApiKey ? Math.min(100, Math.max(3, (requestsToday / 1500) * 100)) : Math.min(100, Math.max(3, dailyUsagePercent))}%`,
+                    width: `${
+                      userApiKey
+                        ? Math.min(100, Math.max(2, (requestsToday / 1500) * 100))
+                        : Math.min(100, Math.max(2, dailyUsagePercent))
+                    }%`,
                   }}
                 />
               </div>
-              <span className="text-[9.5px] text-neutral-400 block truncate">
+              <p className="text-[10px] text-neutral-500 dark:text-neutral-400 tabular-nums">
                 {userApiKey
-                  ? '1,500 daily requests (RPD)'
-                  : `${Math.max(0, Math.round(100 - dailyUsagePercent))}% demo quota remaining`}
-              </span>
+                  ? `${Math.max(0, 1500 - requestsToday)} remaining`
+                  : `${Math.max(0, Math.round(100 - dailyUsagePercent))}% quota remaining`}
+              </p>
             </div>
 
-            {/* KPI 2: Tokens Consumed */}
-            <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs space-y-1">
-              <div className="flex items-center justify-between text-neutral-500 dark:text-neutral-400 text-[10px] font-medium">
-                <span>Tokens Consumed</span>
-                <Sparkles className="w-3 h-3 text-amber-500" />
+            <div className="p-3.5 space-y-1.5">
+              <div className="text-[10.5px] font-medium text-neutral-500 dark:text-neutral-400">
+                Tokens Consumed
               </div>
-              <div className="text-base font-bold text-neutral-900 dark:text-white">
-                {totalTokensToday > 1000 ? `${(totalTokensToday / 1000).toFixed(1)}k` : totalTokensToday}{' '}
-                <span className="text-[10px] font-normal text-neutral-500">tok</span>
+              <div className="text-lg font-semibold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+                {totalTokensToday >= 1000
+                  ? `${(totalTokensToday / 1000).toFixed(1)}k`
+                  : totalTokensToday}
+                <span className="text-[11px] font-normal text-neutral-500 dark:text-neutral-400 ml-1">
+                  tok
+                </span>
               </div>
-              {/* Segmented Token Bar */}
-              <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden flex">
+              <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden flex">
                 <div
-                  className="h-full bg-blue-500"
+                  className="h-full bg-neutral-900 dark:bg-neutral-100"
                   style={{
                     width: `${totalTokensToday > 0 ? (promptTokensToday / totalTokensToday) * 100 : 50}%`,
                   }}
                   title="Prompt tokens"
                 />
                 <div
-                  className="h-full bg-emerald-500"
+                  className="h-full bg-neutral-400 dark:bg-neutral-500"
                   style={{
                     width: `${totalTokensToday > 0 ? (candidatesTokensToday / totalTokensToday) * 100 : 50}%`,
                   }}
-                  title="Generation tokens"
+                  title="Output tokens"
                 />
               </div>
-              <span className="text-[9.5px] text-neutral-400 block truncate">
-                In: {promptTokensToday > 1000 ? `${(promptTokensToday / 1000).toFixed(1)}k` : promptTokensToday} • Out: {candidatesTokensToday > 1000 ? `${(candidatesTokensToday / 1000).toFixed(1)}k` : candidatesTokensToday}
-              </span>
+              <p className="text-[10px] text-neutral-500 dark:text-neutral-400 tabular-nums truncate">
+                In {promptTokensToday >= 1000 ? `${(promptTokensToday / 1000).toFixed(1)}k` : promptTokensToday} · Out{' '}
+                {candidatesTokensToday >= 1000 ? `${(candidatesTokensToday / 1000).toFixed(1)}k` : candidatesTokensToday}
+              </p>
             </div>
           </div>
 
-          {/* 3. Visual Model Fleet Cards (Gemini 3.x Family) */}
-          <div className="space-y-1.5 pt-1">
-            <span className="text-[10.5px] font-semibold text-neutral-700 dark:text-neutral-300 px-0.5">
-              Gemini 3.x Model Fleet & Usage
-            </span>
-
-            {/* Card: 3.5 Flash-Lite */}
-            <div className={`p-2.5 rounded-xl border transition-all ${
-              selectedModel === 'gemini-3.5-flash-lite'
-                ? 'border-neutral-900 dark:border-neutral-200 bg-white dark:bg-neutral-900 shadow-2xs'
-                : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                    Gemini 3.5 Flash-Lite
-                  </span>
-                  {selectedModel === 'gemini-3.5-flash-lite' && (
-                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      Active
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedModel('gemini-3.5-flash-lite');
-                    touchMimoActivity();
-                  }}
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
-                    selectedModel === 'gemini-3.5-flash-lite'
-                      ? 'text-neutral-400 cursor-default'
-                      : 'bg-neutral-200/70 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
-                  }`}
-                >
-                  {selectedModel === 'gemini-3.5-flash-lite' ? 'Selected' : 'Use'}
-                </button>
-              </div>
-              <div className="mt-1.5 space-y-1">
-                <div className="flex justify-between text-[10px] text-neutral-500">
-                  <span>Usage: {modelUsageToday['gemini-3.5-flash-lite']?.requests || 0} reqs</span>
-                  <span>{modelUsageToday['gemini-3.5-flash-lite']?.tokens || 0} tokens</span>
-                </div>
-                <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-amber-500 rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(100, Math.max(2, ((modelUsageToday['gemini-3.5-flash-lite']?.requests || 0) / 100) * 100))}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between text-[9px] text-neutral-400">
-                  <span>Fast pair writing</span>
-                  <span>20 reqs/day (shared) • Unlimited (BYOK)</span>
-                </div>
-              </div>
+          {/* 3. Model Fleet Breakdown */}
+          <div className="p-3.5 space-y-2.5">
+            <div className="text-[10.5px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              Model Fleet Today
             </div>
 
-            {/* Card: 3.5 Flash */}
-            <div className={`p-2.5 rounded-xl border transition-all ${
-              selectedModel === 'gemini-3.5-flash'
-                ? 'border-neutral-900 dark:border-neutral-200 bg-white dark:bg-neutral-900 shadow-2xs'
-                : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                    Gemini 3.6 Flash
-                  </span>
-                  {selectedModel === 'gemini-3.5-flash' && (
-                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      Active
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedModel('gemini-3.5-flash');
-                    touchMimoActivity();
-                  }}
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
-                    selectedModel === 'gemini-3.5-flash'
-                      ? 'text-neutral-400 cursor-default'
-                      : 'bg-neutral-200/70 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
-                  }`}
-                >
-                  {selectedModel === 'gemini-3.5-flash' ? 'Selected' : 'Use'}
-                </button>
-              </div>
-              <div className="mt-1.5 space-y-1">
-                <div className="flex justify-between text-[10px] text-neutral-500">
-                  <span>Usage: {modelUsageToday['gemini-3.5-flash']?.requests || 0} reqs</span>
-                  <span>{modelUsageToday['gemini-3.5-flash']?.tokens || 0} tokens</span>
-                </div>
-                <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(100, Math.max(2, ((modelUsageToday['gemini-3.5-flash']?.requests || 0) / 100) * 100))}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between text-[9px] text-neutral-400">
-                  <span>Balanced workhorse</span>
-                  <span>3 reqs/day (shared) • Unlimited (BYOK)</span>
-                </div>
-              </div>
-            </div>
+            <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
+              {(
+                [
+                  {
+                    id: 'gemini-3.5-flash-lite',
+                    label: 'Gemini 3.5 Flash-Lite',
+                    detail: userApiKey ? '5-step protocol · Unlimited BYOK' : '5-step protocol · 20/day shared',
+                    cap: userApiKey ? 100 : 20,
+                  },
+                  {
+                    id: 'gemini-3.5-flash',
+                    label: 'Gemini 3.6 Flash',
+                    detail: userApiKey ? 'Balanced · Unlimited BYOK' : 'Balanced · 3/day shared',
+                    cap: userApiKey ? 100 : 3,
+                  },
+                  {
+                    id: 'gemini-3.8-flash',
+                    label: 'Gemini 3.8 Flash',
+                    detail: 'Deep reasoning · 10 RPM',
+                    cap: 50,
+                  },
+                ] as const
+              ).map((model) => {
+                const isSelected = selectedModel === model.id;
+                const reqs = modelUsageToday[model.id]?.requests || 0;
+                const toks = modelUsageToday[model.id]?.tokens || 0;
+                const ratio = Math.min(100, reqs > 0 ? Math.max(4, (reqs / model.cap) * 100) : 0);
 
-            {/* Card: 3.8 Flash */}
-            <div className={`p-2.5 rounded-xl border transition-all ${
-              selectedModel === 'gemini-3.8-flash'
-                ? 'border-neutral-900 dark:border-neutral-200 bg-white dark:bg-neutral-900 shadow-2xs'
-                : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Brain className="w-3.5 h-3.5 text-indigo-500" />
-                  <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
-                    Gemini 3.8 Flash
-                  </span>
-                  {selectedModel === 'gemini-3.8-flash' && (
-                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                      Active
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedModel('gemini-3.8-flash');
-                    touchMimoActivity();
-                  }}
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded cursor-pointer transition-colors ${
-                    selectedModel === 'gemini-3.8-flash'
-                      ? 'text-neutral-400 cursor-default'
-                      : 'bg-neutral-200/70 hover:bg-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200'
-                  }`}
-                >
-                  {selectedModel === 'gemini-3.8-flash' ? 'Selected' : 'Use'}
-                </button>
-              </div>
-              <div className="mt-1.5 space-y-1">
-                <div className="flex justify-between text-[10px] text-neutral-500">
-                  <span>Usage: {modelUsageToday['gemini-3.8-flash']?.requests || 0} reqs</span>
-                  <span>{modelUsageToday['gemini-3.8-flash']?.tokens || 0} tokens</span>
-                </div>
-                <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-indigo-500 rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(100, Math.max(2, ((modelUsageToday['gemini-3.8-flash']?.requests || 0) / 100) * 100))}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between text-[9px] text-neutral-400">
-                  <span>Deep reasoning</span>
-                  <span>10 RPM • 250k TPM</span>
-                </div>
-              </div>
+                return (
+                  <div key={model.id} className="py-2.5 first:pt-0 last:pb-0 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium text-xs text-neutral-900 dark:text-neutral-100 truncate">
+                          {model.label}
+                        </span>
+                        {isSelected && (
+                          <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                            Active
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedModel(model.id);
+                          touchMimoActivity();
+                        }}
+                        disabled={isSelected}
+                        className={`text-[10.5px] font-medium px-2 py-0.5 rounded transition-colors ${
+                          isSelected
+                            ? 'text-neutral-400 dark:text-neutral-500 cursor-default'
+                            : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer'
+                        }`}
+                      >
+                        {isSelected ? 'Selected' : 'Use'}
+                      </button>
+                    </div>
+
+                    <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          isSelected
+                            ? 'bg-neutral-900 dark:bg-neutral-100'
+                            : 'bg-neutral-400 dark:bg-neutral-600'
+                        }`}
+                        style={{ width: `${ratio}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-neutral-500 dark:text-neutral-400 tabular-nums">
+                      <span>{model.detail}</span>
+                      <span>
+                        {reqs} req · {toks >= 1000 ? `${(toks / 1000).toFixed(1)}k` : toks} tok
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* 4. Monthly Document Generator Card */}
-          <div className="p-2.5 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/40 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-neutral-900 dark:text-neutral-100 text-xs">
+          {/* 4. Monthly Document Generator */}
+          <div className="p-3.5 space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-medium text-xs text-neutral-900 dark:text-neutral-100">
                 Monthly AI Doc Generator
               </span>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-neutral-100 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300">
-                {userApiKey ? 'Unlimited with Key' : `${monthlyDocGenCount}/3 Used`}
+              <span className="text-[10.5px] font-mono text-neutral-600 dark:text-neutral-400 tabular-nums">
+                {userApiKey ? 'Unlimited' : `${monthlyDocGenCount} / 3`}
               </span>
             </div>
             {!userApiKey && (
@@ -1201,16 +1112,18 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                 {[0, 1, 2].map((slotIdx) => (
                   <div
                     key={slotIdx}
-                    className={`h-1.5 rounded-full ${
-                      slotIdx < monthlyDocGenCount ? 'bg-neutral-400' : 'bg-emerald-500'
+                    className={`h-1 rounded-full ${
+                      slotIdx < monthlyDocGenCount
+                        ? 'bg-neutral-300 dark:bg-neutral-700'
+                        : 'bg-neutral-900 dark:bg-neutral-200'
                     }`}
                   />
                 ))}
               </div>
             )}
-            <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400">
+            <p className="text-[10.5px] text-neutral-500 dark:text-neutral-400 tabular-nums">
               {userApiKey
-                ? 'Full multi-chapter generation is unconstrained via your connected personal API key.'
+                ? 'Unconstrained multi-chapter generation with your connected key.'
                 : `${Math.max(0, 3 - monthlyDocGenCount)} generation(s) remaining this month on free demo.`}
             </p>
           </div>

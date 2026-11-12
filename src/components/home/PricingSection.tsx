@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
 import { useCheckoutModalStore } from '../../stores/useCheckoutModalStore';
 import { SubscriptionPlanId } from '../../services/paymentService';
 
 interface PricingTier {
-  id: string;
+  id: 'free' | 'lifetime' | 'pro';
   name: string;
   tagline: string;
   priceDisplay: {
@@ -24,20 +23,20 @@ const TIERS: PricingTier[] = [
   {
     id: 'free',
     name: 'Free Forever (BYOK)',
-    tagline: 'Pure distraction-free writing for developers, researchers, and students.',
+    tagline: 'Distraction-free local writing for developers, researchers, and students.',
     priceDisplay: {
       monthly: '$0',
       annual: '$0',
-      note: 'Free forever • No credit card',
+      note: 'Free forever · No credit card',
     },
     ctaText: 'Start Free',
     ctaAction: 'editor',
     features: [
-      '100% Local-first IndexedDB storage',
-      'Direct local folder access via File System API',
+      '100% local-first IndexedDB storage',
+      'Direct disk folder access via File System API',
       'GitHub Flavored Markdown & KaTeX equations',
-      'Direct BYOK Google Gemini 3.x key connection',
-      'Client-side HTML, Markdown & browser print export',
+      'Direct BYOK Google Gemini 3.x connection',
+      'Client-side HTML, Markdown & browser print',
       '15+ curated markdown blueprints',
     ],
   },
@@ -50,27 +49,27 @@ const TIERS: PricingTier[] = [
     priceDisplay: {
       monthly: '$49',
       annual: '$49',
-      note: 'One-time payment • Lifetime updates',
+      note: 'One-time payment · Lifetime updates',
     },
     ctaText: 'Get Lifetime Access',
     ctaAction: 'auth',
     features: [
       'Everything in Free Forever',
-      'Lifetime license for all future v2.x and v3.x releases',
+      'Lifetime license for all future v2.x & v3.x releases',
       'Encrypted multi-device cloud backup & sync',
       'Unlimited delta version snapshots & rollback',
-      'Camera-ready publication PDF studio export',
+      'Camera-ready Vector PDF studio export',
       'Clean Word DOCX conversion with equations',
     ],
   },
   {
     id: 'pro',
     name: 'Pro Studio',
-    tagline: 'Continuous cross-device sync and managed AI quota for teams and professionals.',
+    tagline: 'Continuous cross-device sync and managed AI quota without a personal key.',
     priceDisplay: {
       monthly: '$8',
       annual: '$6',
-      note: 'per month • billed annually or $8 monthly',
+      note: 'Billed annually ($72/yr) or $8 monthly',
     },
     ctaText: 'Start 14-Day Trial',
     ctaAction: 'auth',
@@ -80,7 +79,7 @@ const TIERS: PricingTier[] = [
       'Managed Gemini 3.x AI quota without personal GCP key',
       'Delta revision history & diff viewer',
       'Password-protected public sharing links',
-      'Priority email & Discord engineering support',
+      'Priority email & engineering support',
     ],
   },
 ];
@@ -89,19 +88,26 @@ export const PricingSection: React.FC = () => {
   const navigate = useNavigate();
   const [billingInterval, setBillingInterval] = useState<'annual' | 'monthly'>('annual');
 
-  const handleCta = (action: 'editor' | 'auth', tierId: string) => {
+  const handleCta = (action: 'editor' | 'auth', tierId: PricingTier['id']) => {
     if (action === 'editor') {
       navigate('/editor');
-    } else {
-      const planId: SubscriptionPlanId = tierId === 'lifetime' ? 'lifetime' : 'pro_monthly';
-      useCheckoutModalStore.getState().openCheckout(planId);
+      return;
     }
+
+    const planId: SubscriptionPlanId =
+      tierId === 'lifetime'
+        ? 'lifetime'
+        : billingInterval === 'annual'
+        ? 'pro_annual'
+        : 'pro_monthly';
+
+    useCheckoutModalStore.getState().openCheckout(planId);
   };
 
   return (
     <section id="pricing" className="py-16 sm:py-24 border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Section Header */}
+        {/* Section Header (Clean, zero global billing toggle) */}
         <div className="mb-12 max-w-2xl">
           <div className="font-mono text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-2">
             Pricing Architecture
@@ -110,38 +116,25 @@ export const PricingSection: React.FC = () => {
             Local core free forever. Pay for sync &amp; studio power.
           </h2>
           <p className="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Your local files and BYOK AI are never locked behind a paywall. Upgrade when you need encrypted multi-device sync and camera-ready exports.
+            Your local files and personal AI keys are never locked behind a paywall. Upgrade only when you want cloud sync and publication-grade exports.
           </p>
-
-          {/* Billing Interval Toggle with Global rounded-xl Container and rounded-lg Buttons */}
-          <div className="mt-6 inline-flex items-center p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 shadow-2xs">
-            <button
-              onClick={() => setBillingInterval('annual')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
-                billingInterval === 'annual'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
-              }`}
-            >
-              Annual (Save 25%)
-            </button>
-            <button
-              onClick={() => setBillingInterval('monthly')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
-                billingInterval === 'monthly'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
-              }`}
-            >
-              Monthly
-            </button>
-          </div>
         </div>
 
-        {/* 3 Pricing Cards with Global rounded-2xl Token */}
+        {/* 3 Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           {TIERS.map((tier) => {
-            const price = billingInterval === 'annual' ? tier.priceDisplay.annual : tier.priceDisplay.monthly;
+            const isPro = tier.id === 'pro';
+            const price = isPro
+              ? billingInterval === 'annual'
+                ? tier.priceDisplay.annual
+                : tier.priceDisplay.monthly
+              : tier.priceDisplay.monthly;
+
+            const priceNote = isPro
+              ? billingInterval === 'annual'
+                ? 'Billed annually ($72/yr) · Save 25%'
+                : 'Billed monthly · Cancel anytime'
+              : tier.priceDisplay.note;
 
             return (
               <div
@@ -153,55 +146,93 @@ export const PricingSection: React.FC = () => {
                 }`}
               >
                 <div>
-                  {/* Top Label & Featured Badge with rounded-full */}
-                  <div className="flex items-center justify-between mb-3 min-h-[22px]">
+                  {/* Top Label & Optional Badge */}
+                  <div className="flex items-center justify-between gap-2 mb-3 min-h-[22px]">
                     <span className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-semibold">
                       {tier.name}
                     </span>
                     {tier.featuredBadge && (
-                      <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 font-medium">
+                      <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 font-medium whitespace-nowrap">
                         {tier.featuredBadge}
                       </span>
                     )}
                   </div>
 
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[32px] leading-relaxed mb-6">
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[34px] leading-relaxed mb-5">
                     {tier.tagline}
                   </p>
 
-                  {/* Price */}
+                  {/* Price + Scoped Pro Interval Toggle */}
                   <div className="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-950 dark:text-white tabular-nums">
-                        {price}
-                      </span>
-                      {tier.id === 'pro' && (
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
-                          /month
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+                          {price}
                         </span>
+                        {isPro && (
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
+                            /mo
+                          </span>
+                        )}
+                      </div>
+
+                      {isPro && (
+                        <div
+                          role="group"
+                          aria-label="Pro Studio billing interval"
+                          className="inline-flex items-center p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 shrink-0"
+                        >
+                          <button
+                            type="button"
+                            aria-pressed={billingInterval === 'annual'}
+                            onClick={() => setBillingInterval('annual')}
+                            className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                              billingInterval === 'annual'
+                                ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
+                            }`}
+                          >
+                            Yearly -25%
+                          </button>
+                          <button
+                            type="button"
+                            aria-pressed={billingInterval === 'monthly'}
+                            onClick={() => setBillingInterval('monthly')}
+                            className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                              billingInterval === 'monthly'
+                                ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
+                            }`}
+                          >
+                            Monthly
+                          </button>
+                        </div>
                       )}
                     </div>
-                    <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 mt-1">
-                      {tier.priceDisplay.note}
+
+                    <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 mt-1.5 tabular-nums">
+                      {priceNote}
                     </div>
                   </div>
 
-                  {/* Feature List */}
-                  <div className="space-y-2.5 mb-8">
-                    <div className="text-[11px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold font-mono">
-                      Capabilities
+                  {/* Typographic Capability List (Zero Icons) */}
+                  <div className="mb-8">
+                    <div className="text-[11px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold font-mono mb-3">
+                      Included
                     </div>
-                    {tier.features.map((feature, fIdx) => (
-                      <div key={fIdx} className="flex items-start gap-2.5 text-xs text-neutral-700 dark:text-neutral-300">
-                        <Check className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{feature}</span>
-                      </div>
-                    ))}
+                    <ul className="divide-y divide-neutral-100 dark:divide-neutral-900 text-xs text-neutral-700 dark:text-neutral-300">
+                      {tier.features.map((feature, fIdx) => (
+                        <li key={fIdx} className="py-2 first:pt-0 last:pb-0 leading-snug">
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 
-                {/* Action CTA Button with Global rounded-xl Token */}
+                {/* Action CTA Button */}
                 <button
+                  type="button"
                   onClick={() => handleCta(tier.ctaAction, tier.id)}
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold active:translate-y-[1px] transition-all cursor-pointer shadow-xs ${
                     tier.isFeatured

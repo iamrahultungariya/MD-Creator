@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Check, 
-  ChevronRight, 
-  Minus
-} from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useCheckoutModalStore } from '../stores/useCheckoutModalStore';
 import { SubscriptionPlanId } from '../services/paymentService';
 
 interface FeatureRow {
   category: string;
   name: string;
-  free: boolean | string;
-  lifetime: boolean | string;
-  pro: boolean | string;
+  free: boolean;
+  lifetime: boolean;
+  pro: boolean;
 }
 
 const COMPARISON_FEATURES: FeatureRow[] = [
@@ -38,19 +34,26 @@ export const PricingPage: React.FC = () => {
   const navigate = useNavigate();
   const [billingInterval, setBillingInterval] = useState<'annual' | 'monthly'>('annual');
 
-  const handleCta = (action: 'editor' | 'auth', tierId: string) => {
+  const handleCta = (action: 'editor' | 'auth', tierId: 'free' | 'lifetime' | 'pro') => {
     if (action === 'editor') {
       navigate('/editor');
-    } else {
-      const planId: SubscriptionPlanId = tierId === 'lifetime' ? 'lifetime' : 'pro_monthly';
-      useCheckoutModalStore.getState().openCheckout(planId);
+      return;
     }
+
+    const planId: SubscriptionPlanId =
+      tierId === 'lifetime'
+        ? 'lifetime'
+        : billingInterval === 'annual'
+        ? 'pro_annual'
+        : 'pro_monthly';
+
+    useCheckoutModalStore.getState().openCheckout(planId);
   };
 
   return (
     <div className="min-h-screen bg-[#FBFAFD] dark:bg-[#0E0B14] text-neutral-900 dark:text-[#EDEAF5] font-sans transition-colors duration-200">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800">
+      {/* Top Header (Flat solid surface) */}
+      <header className="sticky top-0 z-40 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center gap-2 select-none group">
@@ -84,10 +87,10 @@ export const PricingPage: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        {/* Pricing Hero */}
+        {/* Pricing Hero (No global billing toggle) */}
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 font-mono text-xs select-none">
-            <span>ZERO SCARCITY • HONEST PRICING</span>
+          <div className="inline-flex items-center px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 font-mono text-xs select-none">
+            <span>ZERO SCARCITY · HONEST PRICING</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-[-0.03em] text-neutral-950 dark:text-white leading-tight">
             Local core free forever. Pay only for sync &amp; studio exports.
@@ -95,40 +98,9 @@ export const PricingPage: React.FC = () => {
           <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
             Your personal files, offline database, and Gemini BYOK never expire. Upgrade to Early-Bird Lifetime or Pro Studio when you need cloud sync and camera-ready exports.
           </p>
-
-          {/* Billing Interval Switcher */}
-          <div className="pt-4 flex items-center justify-center">
-            <div className="inline-flex items-center p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setBillingInterval('annual')}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
-                  billingInterval === 'annual'
-                    ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-              >
-                <span>Annual Billing</span>
-                <span className="ml-1.5 font-mono text-[10px] text-brand-600 dark:text-brand-400 font-bold">
-                  Save 25%
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setBillingInterval('monthly')}
-                className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
-                  billingInterval === 'monthly'
-                    ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-              >
-                Monthly Billing
-              </button>
-            </div>
-          </div>
         </div>
 
-        {/* 3 Tier Cards */}
+        {/* 3 Tier Cards (Zero Icons, Scoped Pro Toggle) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-20">
           {/* Card 1: Free Forever */}
           <div className="p-6 sm:p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 shadow-xs flex flex-col justify-between">
@@ -136,39 +108,30 @@ export const PricingPage: React.FC = () => {
               <div className="font-mono text-xs uppercase tracking-wider text-neutral-500 font-semibold mb-2">
                 Free Forever (BYOK)
               </div>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[32px] mb-6">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[34px] mb-6 leading-relaxed">
                 Pure distraction-free writing for developers, researchers, and students.
               </p>
               <div className="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-                <span className="text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-mono">
+                <span className="text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-mono tabular-nums">
                   $0
                 </span>
-                <div className="text-xs font-mono text-neutral-500 mt-1">Free forever • No credit card</div>
+                <div className="text-xs font-mono text-neutral-500 mt-1.5">
+                  Free forever · No credit card
+                </div>
               </div>
-              <ul className="space-y-2.5 text-xs text-neutral-700 dark:text-neutral-300 mb-8">
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>100% Local-first IndexedDB storage</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>File System API local disk folder access</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>GitHub Flavored Markdown &amp; KaTeX equations</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Direct BYOK Google Gemini 3.x key connection</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Client-side HTML, Markdown &amp; browser print</span>
-                </li>
+              <div className="text-[11px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold font-mono mb-3">
+                Included
+              </div>
+              <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/70 text-xs text-neutral-700 dark:text-neutral-300 mb-8">
+                <li className="py-2 first:pt-0 last:pb-0">100% Local-first IndexedDB storage</li>
+                <li className="py-2 first:pt-0 last:pb-0">File System API local disk folder access</li>
+                <li className="py-2 first:pt-0 last:pb-0">GitHub Flavored Markdown &amp; KaTeX equations</li>
+                <li className="py-2 first:pt-0 last:pb-0">Direct BYOK Google Gemini 3.x connection</li>
+                <li className="py-2 first:pt-0 last:pb-0">Client-side HTML, Markdown &amp; browser print</li>
               </ul>
             </div>
             <button
+              type="button"
               onClick={() => handleCta('editor', 'free')}
               className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
             >
@@ -178,49 +141,42 @@ export const PricingPage: React.FC = () => {
 
           {/* Card 2: Early-Bird Lifetime (Featured) */}
           <div className="p-6 sm:p-8 rounded-2xl border-2 border-brand-500/70 dark:border-brand-500/60 bg-white dark:bg-neutral-900 shadow-md flex flex-col justify-between relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-brand-600 text-white font-mono text-[10px] font-bold uppercase tracking-wider shadow-xs">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-brand-600 text-white font-mono text-[10px] font-bold uppercase tracking-wider shadow-xs whitespace-nowrap">
               Early-Bird Deal
             </div>
             <div>
               <div className="font-mono text-xs uppercase tracking-wider text-brand-600 dark:text-brand-400 font-semibold mb-2">
                 Early-Bird Lifetime
               </div>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[32px] mb-6">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[34px] mb-6 leading-relaxed">
                 Permanent access with lifetime updates for craft-focused writers.
               </p>
               <div className="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-mono">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-mono tabular-nums">
                     $49
                   </span>
                   <span className="text-xs text-neutral-500 font-mono">one-time</span>
                 </div>
-                <div className="text-xs font-mono text-neutral-500 mt-1">One-time payment • Lifetime updates</div>
+                <div className="text-xs font-mono text-neutral-500 mt-1.5">
+                  One-time payment · Lifetime updates
+                </div>
               </div>
-              <ul className="space-y-2.5 text-xs text-neutral-700 dark:text-neutral-300 mb-8">
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                  <span><strong>Everything in Free Forever</strong></span>
+              <div className="text-[11px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold font-mono mb-3">
+                Included
+              </div>
+              <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/70 text-xs text-neutral-700 dark:text-neutral-300 mb-8">
+                <li className="py-2 first:pt-0 last:pb-0 font-medium text-neutral-950 dark:text-white">
+                  Everything in Free Forever
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                  <span>Lifetime license for all future v2.x and v3.x releases</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                  <span>Encrypted multi-device cloud backup &amp; sync</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                  <span>Unlimited delta version snapshots &amp; diff viewer</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
-                  <span>Publication Vector PDF &amp; Word DOCX export [Beta]</span>
-                </li>
+                <li className="py-2 first:pt-0 last:pb-0">Lifetime license for all future v2.x and v3.x releases</li>
+                <li className="py-2 first:pt-0 last:pb-0">Encrypted multi-device cloud backup &amp; sync</li>
+                <li className="py-2 first:pt-0 last:pb-0">Unlimited delta version snapshots &amp; diff viewer</li>
+                <li className="py-2 first:pt-0 last:pb-0">Publication Vector PDF &amp; Word DOCX export [Beta]</li>
               </ul>
             </div>
             <button
+              type="button"
               onClick={() => handleCta('auth', 'lifetime')}
               className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-all cursor-pointer shadow-xs hover:shadow"
             >
@@ -234,44 +190,71 @@ export const PricingPage: React.FC = () => {
               <div className="font-mono text-xs uppercase tracking-wider text-neutral-500 font-semibold mb-2">
                 Pro Studio
               </div>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[32px] mb-6">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 min-h-[34px] mb-6 leading-relaxed">
                 Continuous cross-device sync and managed AI quota for professionals.
               </p>
               <div className="mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-mono">
-                    {billingInterval === 'annual' ? '$6' : '$8'}
-                  </span>
-                  <span className="text-xs text-neutral-500 font-mono">/month</span>
+                <div className="flex items-baseline justify-between gap-2">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-mono tabular-nums">
+                      {billingInterval === 'annual' ? '$6' : '$8'}
+                    </span>
+                    <span className="text-xs text-neutral-500 font-mono">/mo</span>
+                  </div>
+
+                  {/* Billing Interval Switcher Scoped Strictly Inside Pro Studio Card */}
+                  <div
+                    role="group"
+                    aria-label="Pro Studio billing interval"
+                    className="inline-flex items-center p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-950 shrink-0"
+                  >
+                    <button
+                      type="button"
+                      aria-pressed={billingInterval === 'annual'}
+                      onClick={() => setBillingInterval('annual')}
+                      className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                        billingInterval === 'annual'
+                          ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
+                    >
+                      Yearly -25%
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={billingInterval === 'monthly'}
+                      onClick={() => setBillingInterval('monthly')}
+                      className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                        billingInterval === 'monthly'
+                          ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                  </div>
                 </div>
-                <div className="text-xs font-mono text-neutral-500 mt-1">
-                  {billingInterval === 'annual' ? 'Billed annually ($72/yr)' : 'Billed monthly'}
+                <div className="text-xs font-mono text-neutral-500 mt-1.5 tabular-nums">
+                  {billingInterval === 'annual'
+                    ? 'Billed annually ($72/yr) · Save 25%'
+                    : 'Billed monthly · Cancel anytime'}
                 </div>
               </div>
-              <ul className="space-y-2.5 text-xs text-neutral-700 dark:text-neutral-300 mb-8">
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span><strong>Everything in Free Forever</strong></span>
+              <div className="text-[11px] uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold font-mono mb-3">
+                Included
+              </div>
+              <ul className="divide-y divide-neutral-100 dark:divide-neutral-800/70 text-xs text-neutral-700 dark:text-neutral-300 mb-8">
+                <li className="py-2 first:pt-0 last:pb-0 font-medium text-neutral-950 dark:text-white">
+                  Everything in Free Forever
                 </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Continuous encrypted cloud sync across devices</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Managed Gemini 3.x AI quota without personal GCP key</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Password-protected public sharing links</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Priority email &amp; Discord engineering support</span>
-                </li>
+                <li className="py-2 first:pt-0 last:pb-0">Continuous encrypted cloud sync across devices</li>
+                <li className="py-2 first:pt-0 last:pb-0">Managed Gemini 3.x AI quota without personal GCP key</li>
+                <li className="py-2 first:pt-0 last:pb-0">Password-protected public sharing links</li>
+                <li className="py-2 first:pt-0 last:pb-0">Priority email &amp; engineering support</li>
               </ul>
             </div>
             <button
+              type="button"
               onClick={() => handleCta('auth', 'pro')}
               className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
             >
@@ -280,7 +263,7 @@ export const PricingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Feature Comparison Matrix Table */}
+        {/* Feature Comparison Matrix Table (Plain-text status indicators, zero icon bloat) */}
         <div className="mb-20">
           <div className="mb-8">
             <h2 className="text-2xl font-bold tracking-tight text-neutral-950 dark:text-white">
@@ -298,7 +281,9 @@ export const PricingPage: React.FC = () => {
                   <th className="py-4 px-6 font-semibold text-neutral-700 dark:text-neutral-300">Feature</th>
                   <th className="py-4 px-6 font-semibold text-neutral-700 dark:text-neutral-300 text-center w-28 sm:w-36">Free ($0)</th>
                   <th className="py-4 px-6 font-semibold text-brand-600 dark:text-brand-400 text-center w-28 sm:w-36 bg-brand-500/5">Lifetime ($49)</th>
-                  <th className="py-4 px-6 font-semibold text-neutral-700 dark:text-neutral-300 text-center w-28 sm:w-36">Pro ($8/mo)</th>
+                  <th className="py-4 px-6 font-semibold text-neutral-700 dark:text-neutral-300 text-center w-28 sm:w-36 tabular-nums">
+                    {billingInterval === 'annual' ? 'Pro ($6/mo)' : 'Pro ($8/mo)'}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800/80">
@@ -307,25 +292,25 @@ export const PricingPage: React.FC = () => {
                     <td className="py-3.5 px-6 font-medium text-neutral-800 dark:text-neutral-200">
                       {feat.name}
                     </td>
-                    <td className="py-3.5 px-6 text-center">
-                      {feat.free === true ? (
-                        <Check className="w-4 h-4 text-emerald-500 mx-auto" />
+                    <td className="py-3.5 px-6 text-center font-mono text-xs">
+                      {feat.free ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold" aria-label="Included">✓</span>
                       ) : (
-                        <Minus className="w-4 h-4 text-neutral-300 dark:text-neutral-600 mx-auto" />
+                        <span className="text-neutral-400 dark:text-neutral-600" aria-label="Not included">—</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-6 text-center bg-brand-500/5 font-semibold text-brand-600 dark:text-brand-400">
-                      {feat.lifetime === true ? (
-                        <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 mx-auto" />
+                    <td className="py-3.5 px-6 text-center bg-brand-500/5 font-mono text-xs">
+                      {feat.lifetime ? (
+                        <span className="text-brand-600 dark:text-brand-400 font-semibold" aria-label="Included">✓</span>
                       ) : (
-                        <Minus className="w-4 h-4 text-neutral-300 dark:text-neutral-600 mx-auto" />
+                        <span className="text-neutral-400 dark:text-neutral-600" aria-label="Not included">—</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-6 text-center">
-                      {feat.pro === true ? (
-                        <Check className="w-4 h-4 text-emerald-500 mx-auto" />
+                    <td className="py-3.5 px-6 text-center font-mono text-xs">
+                      {feat.pro ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold" aria-label="Included">✓</span>
                       ) : (
-                        <Minus className="w-4 h-4 text-neutral-300 dark:text-neutral-600 mx-auto" />
+                        <span className="text-neutral-400 dark:text-neutral-600" aria-label="Not included">—</span>
                       )}
                     </td>
                   </tr>

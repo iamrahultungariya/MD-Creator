@@ -1,19 +1,20 @@
 import { GoogleGenAI } from '@google/genai';
-import { ThinkingLevel, MimoModelChoice, MimoMessage, MimoIntentType } from '../types/mimoTypes';
-import { resolveThinkingLevel, classifyUserIntent } from './promptRouter';
+import { ThinkingLevel, MimoModelChoice, MimoMessage, MimoIntentType, MimoProtocolStepId } from '../types/mimoTypes';
+import { resolveThinkingLevel, classifyUserIntent, resolveAdaptiveDepth } from './promptRouter';
 import { PreparedContext } from './contextEngine';
 import { sanitizeTextForAi } from './privacySanitizer';
 import { useStyleDnaStore, buildStyleDnaPromptLayer } from '../stores/useStyleDnaStore';
 import { useMimoStore } from '../stores/useMimoStore';
 import { buildTokenOptimizedHistory } from './episodicMemoryEngine';
 import { CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE, transformChaosLocally } from './chaosToClarityTransformer';
-import { getIntentSystemInstruction } from './intentPromptService';
+import { getIntentSystemInstruction, buildFlashLiteExecutionProtocolPrompt } from './intentPromptService';
 
 export interface StreamCallbacks {
   onStreamReset?: () => void;
   onThoughtChunk?: (thought: string) => void;
   onTextChunk?: (text: string) => void;
   onReasoningStep?: (step: string) => void;
+  onProtocolStage?: (step: MimoProtocolStepId, status?: 'active' | 'done') => void;
   onTokenVelocity?: (tokPerSec: number) => void;
   onModelResolved?: (modelLabel: string, level: string) => void;
 }
@@ -712,8 +713,8 @@ export async function streamMimoResponse(options: {
   const effectiveApiKey = (
     apiKey ||
     storeKey ||
-    (import.meta.env.VITE_GEMINI_API_KEY as string) ||
-    (import.meta.env.GEMINI_API_KEY as string) ||
+    (import.meta.env?.VITE_GEMINI_API_KEY as string) ||
+    (import.meta.env?.GEMINI_API_KEY as string) ||
     ''
   ).trim();
 
@@ -816,6 +817,11 @@ export async function streamMimoResponse(options: {
       let thinkingPromptGuidance = '';
       const thinkingBudget = resolveThinkingBudget(intent, resolvedLevel, candidateModel.modelId);
 
+      const isLiteProtocol = candidateModel.modelId === 'gemini-3.5-flash-lite';
+      if (isLiteProtocol) {
+        callbacks.onProtocolStage?.('understand', 'active');
+      }
+
       if (candidateModel.modelId === 'gemini-3.8-flash') {
         const hasBudget = typeof thinkingBudget === 'number';
         const shouldIncludeThoughts = showThinking && (!hasBudget || thinkingBudget > 0);
@@ -829,9 +835,8 @@ export async function streamMimoResponse(options: {
       } else {
         // For Gemini 3.5 Flash and 3.5 Flash-Lite:
         // Do NOT transfer or escalate to 3.8 Flash!
-        // Instead, inject the Global Thinking Provider guidance directive directly in systemInstruction:
-        // Ultra-lean (~60 tokens), no wrappers, top-level verification.
-        if (showThinking || thinkingLevel !== 'MINIMAL') {
+        // For Flash-Lite, the 5-step Execution Protocol drives silent quality rigor directly.
+        if (!isLiteProtocol && (showThinking || thinkingLevel !== 'MINIMAL')) {
           thinkingPromptGuidance = `\n\n${GLOBAL_THINKING_PROVIDER_GUIDANCE}`;
         }
         thinkingConfig = undefined;
@@ -845,11 +850,31 @@ export async function streamMimoResponse(options: {
         prompt.toLowerCase().includes('brain-dump') ||
         prompt.toLowerCase().includes('chaos to clarity');
 
-      // Intent-specialized system instruction (60-120 tokens instead of ~1,000 monolithic prompt)
-      const baseSystemPrompt = getIntentSystemInstruction(intent, {
-        hasSelection: !!context.selectedText,
-        docTitle: context.docTitle,
-      });
+      const adaptiveDepth = isLiteProtocol
+        ? resolveAdaptiveDepth({
+            query: prompt,
+            wordCount: prompt.trim().split(/\s+/).filter(Boolean).length,
+            hasSelection: !!context.selectedText,
+            intent,
+          })
+        : undefined;
+
+      if (isLiteProtocol) {
+        callbacks.onProtocolStage?.('decompose', 'active');
+      }
+
+      // Intent-specialized system instruction (Flash-Lite uses full silent 5-step Execution Protocol)
+      const baseSystemPrompt = isLiteProtocol
+        ? buildFlashLiteExecutionProtocolPrompt(intent, {
+            adaptiveDepth,
+            hasSelection: !!context.selectedText,
+            docTitle: context.docTitle,
+            isChaosToClarity,
+          })
+        : getIntentSystemInstruction(intent, {
+            hasSelection: !!context.selectedText,
+            docTitle: context.docTitle,
+          });
 
       const compositeSystemInstruction = `${baseSystemPrompt}${
         isChaosToClarity ? `\n\n${CHAOS_TO_CLARITY_SYSTEM_DIRECTIVE}` : ''
@@ -905,6 +930,9 @@ export async function streamMimoResponse(options: {
               firstTokenRecorded = true;
               const ttft = ((Date.now() - startTime) / 1000).toFixed(2);
               callbacks.onReasoningStep?.(`First token streamed in ${ttft}s`);
+              if (isLiteProtocol) {
+                callbacks.onProtocolStage?.('develop', 'active');
+              }
             }
 
             if ((part as any).thought) {
@@ -943,6 +971,10 @@ export async function streamMimoResponse(options: {
       }
 
       if (fullText.trim()) {
+        if (isLiteProtocol) {
+          callbacks.onProtocolStage?.('verify', 'active');
+          callbacks.onProtocolStage?.('polish', 'done');
+        }
         const restoredText = sanitizedContext.restore(sanitizedPrompt.restore(fullText));
         const outputTokensEst = Math.ceil((restoredText.length + thoughtText.length) / 4);
         const tokensUsed = totalTokensCount > 0 ? totalTokensCount : inputTokensEst + outputTokensEst;

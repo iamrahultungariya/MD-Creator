@@ -7,8 +7,8 @@ import {
   type RemoteDeletionConflict
 } from '../stores/useCrossDeviceConflictStore';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
 // Check if credentials are provided and not placeholders
 export const isSupabaseConfigured = (): boolean => {
@@ -114,6 +114,7 @@ export async function syncDocumentToSupabase(doc: DocumentMetadata, content: str
           tags: doc.tags || [],
           is_pinned: doc.isPinned || false,
           is_favorite: doc.isFavorite || false,
+          is_ai_excluded: Boolean(doc.isAiExcluded),
           is_deleted: doc.isDeleted || false,
           deleted_at: doc.deletedAt ? new Date(doc.deletedAt).toISOString() : null,
           word_count: doc.wordCount || 0,
@@ -360,6 +361,7 @@ export async function pullCloudDocuments(force = false): Promise<number> {
                 openCount: 1,
                 isPinned: Boolean(cloudDoc.is_pinned),
                 isFavorite: Boolean(cloudDoc.is_favorite),
+                isAiExcluded: Boolean(cloudDoc.is_ai_excluded),
                 isDeleted: Boolean(cloudDoc.is_deleted),
                 deletedAt: cloudDoc.deleted_at ? new Date(cloudDoc.deleted_at).getTime() : undefined,
                 wordCount: cloudDoc.word_count || 0,
@@ -453,6 +455,7 @@ export async function pullLatestCloudChanges(force = false): Promise<number> {
             openCount: 1,
             isPinned: Boolean(doc.is_pinned),
             isFavorite: Boolean(doc.is_favorite),
+            isAiExcluded: Boolean(doc.is_ai_excluded),
             isDeleted: Boolean(doc.is_deleted),
             deletedAt: doc.deleted_at ? new Date(doc.deleted_at).getTime() : undefined,
             wordCount: doc.word_count || 0,
@@ -607,6 +610,7 @@ export async function fetchDocumentFromSupabase(id: string): Promise<{ meta: Doc
       openCount: 1,
       isPinned: docData.is_pinned || false,
       isFavorite: docData.is_favorite || false,
+      isAiExcluded: Boolean(docData.is_ai_excluded),
       wordCount: docData.word_count || 0,
       sizeBytes: docData.size_bytes || 0
     };
@@ -763,6 +767,7 @@ export function subscribeToUserDocumentChanges(userId: string): () => void {
                   tags: updatedDoc.tags || existing.tags,
                   isPinned: Boolean(updatedDoc.is_pinned),
                   isFavorite: Boolean(updatedDoc.is_favorite),
+                  isAiExcluded: Boolean(updatedDoc.is_ai_excluded),
                   isDeleted: Boolean(updatedDoc.is_deleted),
                   deletedAt: updatedDoc.deleted_at ? new Date(updatedDoc.deleted_at).getTime() : undefined,
                   wordCount: updatedDoc.word_count || existing.wordCount,

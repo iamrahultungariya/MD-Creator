@@ -1,28 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  Check, 
-  Sparkles, 
-  CreditCard, 
-  Gift, 
-  ArrowRight, 
-  CheckCircle2, 
-  Loader2,
-  Lock
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 import { useCheckoutModalStore } from '../../stores/useCheckoutModalStore';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { 
-  SUBSCRIPTION_PLANS, 
-  reserveEarlyBirdSpot, 
-  redeemPromoCode 
+import {
+  SUBSCRIPTION_PLANS,
+  reserveEarlyBirdSpot,
+  redeemPromoCode,
 } from '../../services/paymentService';
 
 export const CheckoutModal: React.FC = () => {
-  const { isOpen, closeCheckout, selectedPlanId, setSelectedPlanId } = useCheckoutModalStore();
+  const { isOpen, closeCheckout, selectedPlanId, entryPlanGroup, setSelectedPlanId } =
+    useCheckoutModalStore();
   const { user } = useAuthStore();
 
-  const [activeTab, setActiveTab] = useState<'reserve' | 'promo'>('reserve');
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [showPromoInput, setShowPromoInput] = useState(false);
   const [email, setEmail] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,26 +22,76 @@ export const CheckoutModal: React.FC = () => {
   const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync user email when opened
-  useEffect(() => {
-    if (user?.email && !email) {
-      setEmail(user.email);
-    }
-  }, [user?.email, isOpen]);
-
-  // Handle ESC key
+  // Sync user email and reset transient state when dialog opens
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeCheckout();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, closeCheckout]);
+    setErrorMessage(null);
+    setReservationSuccess(null);
+    setPromoSuccess(null);
+    setShowPromoInput(false);
+    if (user?.email) {
+      setEmail((prev) => prev || user.email);
+    }
+  }, [isOpen, user?.email]);
 
-  if (!isOpen) return null;
+  // Sync native <dialog> showModal() / close() with Zustand store
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else if (dialog.open) {
+      dialog.close();
+    }
+  }, [isOpen]);
+
+  // Safari fallback for light-dismiss when closedby="any" is unsupported
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || 'closedBy' in HTMLDialogElement.prototype) return;
+
+    const isOutside = (e: PointerEvent) => {
+      const r = dialog.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+
+    let pressedOutside = false;
+    const onPointerDown = (e: PointerEvent) => {
+      pressedOutside = isOutside(e);
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      if (pressedOutside && isOutside(e)) {
+        dialog.close();
+      }
+      pressedOutside = false;
+    };
+
+    dialog.addEventListener('pointerdown', onPointerDown);
+    dialog.addEventListener('pointerup', onPointerUp);
+    return () => {
+      dialog.removeEventListener('pointerdown', onPointerDown);
+      dialog.removeEventListener('pointerup', onPointerUp);
+    };
+  }, []);
+
+  const handleDialogClose = () => {
+    const dialog = dialogRef.current;
+    if (dialog) {
+      dialog.returnValue = '';
+    }
+    if (isOpen) {
+      closeCheckout();
+    }
+  };
 
   const currentPlan = SUBSCRIPTION_PLANS[selectedPlanId] || SUBSCRIPTION_PLANS.lifetime;
+  const priceDisplay =
+    currentPlan.id === 'pro_annual' ? '$6' : `$${currentPlan.priceUSD}`;
+  const priceUnit =
+    currentPlan.id === 'lifetime' ? 'one-time' : '/mo';
 
   const handleReserve = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,14 +99,14 @@ export const CheckoutModal: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await reserveEarlyBirdSpot(email, selectedPlanId);
+      const res = await reserveEarlyBirdSpot(email, currentPlan.id);
       if (res.success) {
         setReservationSuccess(res.message);
       } else {
         setErrorMessage(res.message);
       }
     } catch {
-      setErrorMessage('Something went wrong. Please check your network and try again.');
+      setErrorMessage('Could not save your reservation. Please verify your connection and retry.');
     } finally {
       setIsSubmitting(false);
     }
@@ -83,310 +125,252 @@ export const CheckoutModal: React.FC = () => {
         setErrorMessage(res.message);
       }
     } catch {
-      setErrorMessage('Failed to validate promo code. Please try again.');
+      setErrorMessage('Failed to validate invite code. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto font-sans">
-      <div 
-        className="fixed inset-0" 
-        onClick={closeCheckout} 
-      />
-
-      <div 
-        className="relative w-full max-w-xl bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col text-neutral-900 dark:text-neutral-100 overflow-hidden z-10"
-        role="dialog"
-        aria-modal="true"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Top Header */}
-        <div className="p-5 sm:px-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-900/50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-neutral-950 dark:text-white leading-tight">
-                MD Writer Studio Upgrade
-              </h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Early-bird reservations &amp; invite code redemption
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={closeCheckout}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-            aria-label="Close modal"
+    <dialog
+      ref={dialogRef}
+      {...({ closedby: 'any' } as any)}
+      aria-labelledby="checkout-dialog-title"
+      onClose={handleDialogClose}
+      className="m-auto w-[calc(100%-1.5rem)] max-w-md rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 p-0 text-neutral-900 dark:text-neutral-100 shadow-2xl font-sans"
+    >
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-4">
+        <div>
+          <h2
+            id="checkout-dialog-title"
+            className="text-sm font-semibold tracking-tight text-neutral-950 dark:text-white"
           >
-            <X className="w-5 h-5" />
-          </button>
+            {currentPlan.name}
+          </h2>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+            {currentPlan.tagline}
+          </p>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto max-h-[75vh]">
-          {/* Plan Selector Pills */}
-          <div className="grid grid-cols-2 gap-2.5 p-1 bg-neutral-100 dark:bg-neutral-950 rounded-xl border border-neutral-200/80 dark:border-neutral-800">
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedPlanId('lifetime');
-                setReservationSuccess(null);
-                setErrorMessage(null);
-              }}
-              className={`p-3 rounded-lg text-left transition-all cursor-pointer relative ${
-                selectedPlanId === 'lifetime'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs uppercase tracking-wider font-mono">Lifetime</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold">
-                  $49
-                </span>
-              </div>
-              <div className="text-xs opacity-80 font-normal">Early-Bird Deal</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedPlanId('pro_monthly');
-                setReservationSuccess(null);
-                setErrorMessage(null);
-              }}
-              className={`p-3 rounded-lg text-left transition-all cursor-pointer relative ${
-                selectedPlanId === 'pro_monthly'
-                  ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-xs font-semibold'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs uppercase tracking-wider font-mono">Pro Studio</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-bold">
-                  $8/mo
-                </span>
-              </div>
-              <div className="text-xs opacity-80 font-normal">Monthly Plan</div>
-            </button>
-          </div>
-
-          {/* Selected Plan Details Card */}
-          <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 space-y-3">
-            <div className="flex items-baseline justify-between">
-              <div>
-                <h3 className="font-bold text-sm text-neutral-950 dark:text-white">
-                  {currentPlan.name}
-                </h3>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  {currentPlan.tagline}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-2xl font-bold text-neutral-950 dark:text-white font-mono">
-                  ${currentPlan.priceUSD}
-                </span>
-                <div className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
-                  {currentPlan.intervalText}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-neutral-200/60 dark:border-neutral-800 text-xs">
-              {currentPlan.features.map((feat, i) => (
-                <div key={i} className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300">
-                  <Check className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 shrink-0" />
-                  <span>{feat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Mode Switcher: Early-Bird Reservation vs Promo Code */}
-          <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('reserve');
-                setErrorMessage(null);
-              }}
-              className={`pb-2.5 font-medium border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'reserve'
-                  ? 'border-neutral-950 dark:border-white text-neutral-950 dark:text-white font-semibold'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-              }`}
-            >
-              <CreditCard className="w-3.5 h-3.5" />
-              <span>Reserve Early-Bird Spot</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('promo');
-                setErrorMessage(null);
-              }}
-              className={`pb-2.5 font-medium border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
-                activeTab === 'promo'
-                  ? 'border-neutral-950 dark:border-white text-neutral-950 dark:text-white font-semibold'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
-              }`}
-            >
-              <Gift className="w-3.5 h-3.5" />
-              <span>Redeem Promo / Invite Code</span>
-            </button>
-          </div>
-
-          {/* Error Banner */}
-          {errorMessage && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-center gap-2">
-              <span className="font-semibold">Notice:</span>
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Tab 1: Early-Bird Reservation */}
-          {activeTab === 'reserve' && (
-            <div className="space-y-4">
-              {reservationSuccess ? (
-                <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-bold text-sm text-neutral-950 dark:text-white">
-                    Early-Bird Spot Confirmed!
-                  </h4>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-md mx-auto">
-                    {reservationSuccess}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={closeCheckout}
-                    className="px-4 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold text-xs transition-opacity hover:opacity-90 cursor-pointer"
-                  >
-                    Continue Writing
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleReserve} className="space-y-3.5">
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                      Your Email Address
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="writer@example.com"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-xs sm:text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
-                    />
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
-                      No payment is charged today. We lock in your early-bird pricing and send your activation link when live checkout opens.
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:translate-y-[1px] disabled:opacity-60"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Reserving Spot...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Lock In ${currentPlan.priceUSD} Early-Bird Rate</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* Tab 2: Promo / Invite Code */}
-          {activeTab === 'promo' && (
-            <div className="space-y-4">
-              {promoSuccess ? (
-                <div className="p-5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-bold text-sm text-neutral-950 dark:text-white">
-                    Pro Studio Activated!
-                  </h4>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-md mx-auto">
-                    {promoSuccess}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={closeCheckout}
-                    className="px-4 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold text-xs transition-opacity hover:opacity-90 cursor-pointer"
-                  >
-                    Open Studio
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleRedeemPromo} className="space-y-3.5">
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                      Invite or Promo Code
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                      placeholder="e.g. EARLYBIRD, PRO2026, VIP"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-xs sm:text-sm font-mono text-neutral-950 dark:text-white uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all"
-                    />
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
-                      Beta testers and early contributors can apply their invitation code for instant Pro activation.
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 px-4 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:translate-y-[1px] disabled:opacity-60"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Validating Code...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Activate Pro Tier</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* Payment Infrastructure Disclaimer */}
-          <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200/70 dark:border-neutral-800/80 flex items-start gap-2.5 text-[11px] text-neutral-500 dark:text-neutral-400">
-            <Lock className="w-4 h-4 text-neutral-400 shrink-0 mt-0.5" />
-            <div className="leading-relaxed">
-              <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-                Payment Infrastructure Architecture:
-              </span>{' '}
-              Automated card checkout via Stripe and Razorpay is currently staged for launch. Reserving your spot locks in early-bird pricing with zero price inflation.
-            </div>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={closeCheckout}
+          aria-label="Close checkout"
+          className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer shrink-0"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
-    </div>
+
+      {/* Body */}
+      <div className="px-6 py-5 space-y-5">
+        {/* Locked Plan Summary Row (No Lifetime ↔ Pro switcher) */}
+        <div className="pb-5 border-b border-neutral-200 dark:border-neutral-800 space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-semibold tracking-tight text-neutral-950 dark:text-white tabular-nums">
+                {priceDisplay}
+              </span>
+              <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">
+                {priceUnit}
+              </span>
+            </div>
+
+            {entryPlanGroup === 'pro' && (
+              <div
+                role="group"
+                aria-label="Pro Studio billing interval"
+                className="inline-flex items-center p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900"
+              >
+                <button
+                  type="button"
+                  aria-pressed={selectedPlanId === 'pro_annual'}
+                  onClick={() => {
+                    setSelectedPlanId('pro_annual');
+                    setReservationSuccess(null);
+                    setErrorMessage(null);
+                  }}
+                  className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                    selectedPlanId === 'pro_annual'
+                      ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
+                  }`}
+                >
+                  Yearly -25%
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={selectedPlanId === 'pro_monthly'}
+                  onClick={() => {
+                    setSelectedPlanId('pro_monthly');
+                    setReservationSuccess(null);
+                    setErrorMessage(null);
+                  }}
+                  className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer whitespace-nowrap ${
+                    selectedPlanId === 'pro_monthly'
+                      ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
+                  }`}
+                >
+                  Monthly
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+            {currentPlan.intervalText}
+          </div>
+
+          <ul className="space-y-1 pt-1 text-xs text-neutral-600 dark:text-neutral-400">
+            {currentPlan.features.slice(0, 3).map((feat, idx) => (
+              <li key={idx} className="leading-snug">
+                · {feat}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Inline Error Notice */}
+        {errorMessage && (
+          <div className="px-3 py-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300">
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Confirmation States */}
+        {promoSuccess ? (
+          <div className="py-3 space-y-3">
+            <div className="text-sm font-semibold text-neutral-950 dark:text-white">
+              Pro Studio Activated
+            </div>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              {promoSuccess}
+            </p>
+            <button
+              type="button"
+              onClick={closeCheckout}
+              className="w-full py-2.5 px-4 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Continue to Studio
+            </button>
+          </div>
+        ) : reservationSuccess ? (
+          <div className="py-3 space-y-3">
+            <div className="text-sm font-semibold text-neutral-950 dark:text-white">
+              Early-Bird Rate Locked
+            </div>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+              {reservationSuccess}
+            </p>
+            <button
+              type="button"
+              onClick={closeCheckout}
+              className="w-full py-2.5 px-4 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        ) : !showPromoInput ? (
+          /* Primary Reservation Flow */
+          <form onSubmit={handleReserve} className="space-y-4">
+            <div>
+              <label
+                htmlFor="checkout-email-input"
+                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5"
+              >
+                Email for activation link
+              </label>
+              <input
+                id="checkout-email-input"
+                type="email"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@domain.com"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs sm:text-sm text-neutral-950 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-brand-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm transition-colors cursor-pointer active:translate-y-[1px] disabled:opacity-60"
+            >
+              {isSubmitting
+                ? 'Locking in rate...'
+                : currentPlan.id === 'lifetime'
+                ? 'Reserve Lifetime Rate ($49)'
+                : currentPlan.id === 'pro_annual'
+                ? 'Lock In Pro Rate ($6/mo)'
+                : 'Lock In Pro Rate ($8/mo)'}
+            </button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPromoInput(true);
+                  setErrorMessage(null);
+                }}
+                className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
+              >
+                Have an invite or promo code?
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Secondary Inline Promo Redemption */
+          <form onSubmit={handleRedeemPromo} className="space-y-4">
+            <div>
+              <label
+                htmlFor="checkout-promo-input"
+                className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5"
+              >
+                Invite or promo code
+              </label>
+              <input
+                id="checkout-promo-input"
+                type="text"
+                required
+                autoFocus
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="EARLYBIRD"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs sm:text-sm font-mono uppercase tracking-wider text-neutral-950 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-brand-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-2.5 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 font-semibold text-xs sm:text-sm transition-colors cursor-pointer active:translate-y-[1px] disabled:opacity-60"
+            >
+              {isSubmitting ? 'Validating...' : 'Apply Code'}
+            </button>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPromoInput(false);
+                  setErrorMessage(null);
+                }}
+                className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
+              >
+                Back to early-bird reservation
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Quiet Gateway Staging Footnote */}
+        <p className="pt-3 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+          Stripe and Razorpay checkout are staged for launch. Reserving locks your rate with zero charge today.
+        </p>
+      </div>
+    </dialog>
   );
 };

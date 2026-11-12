@@ -503,3 +503,47 @@ export function enhanceUserPrompt(rawPrompt: string): { enhanced: string; langua
     language: 'english',
   };
 }
+
+export type AdaptiveDepth = 'simple' | 'standard' | 'detailed' | 'comprehensive';
+
+/**
+ * Deterministically selects the appropriate Markdown response depth for Gemini 3.5 Flash-Lite
+ * so brief prompts stay concise and multi-part architectural/technical requests receive structured depth.
+ */
+export function resolveAdaptiveDepth(params: {
+  query: string;
+  wordCount?: number;
+  hasSelection?: boolean;
+  intent?: string;
+}): AdaptiveDepth {
+  const normalized = (params.query || '').toLowerCase();
+  const words = params.wordCount ?? (normalized.trim() ? normalized.trim().split(/\s+/).length : 0);
+
+  if (/\b(brief|briefly|tl;dr|tldr|one line|1 line|quick|short|only summarize)\b/.test(normalized)) {
+    return words <= 6 && !/\b(detailed|deep|comprehensive)\b/.test(normalized) ? 'simple' : 'standard';
+  }
+
+  if (
+    /\b(comprehensive|deep dive|exhaustive|end-to-end|architecture|specification|spec|comparison table|edge cases|trade-offs|tradeoffs|full guide|complete guide)\b/.test(
+      normalized
+    ) ||
+    words >= 35
+  ) {
+    return 'comprehensive';
+  }
+
+  if (
+    /\b(explain|step-by-step|steps|how to|migrate|migration|compare|breakdown|analyze|audit|plan|tutorial)\b/.test(
+      normalized
+    ) ||
+    (params.intent === 'CREATIVE_EXPANSION' && words >= 10)
+  ) {
+    return 'detailed';
+  }
+
+  if (params.intent === 'CHAT_BANTER' || (words <= 5 && !params.hasSelection && params.intent === 'GENERAL_QA')) {
+    return 'simple';
+  }
+
+  return 'standard';
+}

@@ -23,7 +23,7 @@ export const IS_BETA = false;
 
 /** Optional promotional window expiry (ISO 8601). Configured via env if needed. */
 export const PROMO_FREE_PRO_UNTIL: string | null =
-  import.meta.env.VITE_FREE_PRO_UNTIL || null;
+  import.meta.env?.VITE_FREE_PRO_UNTIL || null;
 
 /** Returns true if an active global promotional reward window is configured. */
 export const isHolidayFreeProActive = (): boolean =>

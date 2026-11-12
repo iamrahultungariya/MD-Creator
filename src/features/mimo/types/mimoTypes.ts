@@ -24,6 +24,23 @@ export type MimoIntentType =
   | 'CREATIVE_EXPANSION'
   | 'CHAT_BANTER';
 
+export type MimoProtocolStepId = 'understand' | 'decompose' | 'develop' | 'verify' | 'polish';
+export type MimoProtocolStepStatus = 'pending' | 'active' | 'done';
+
+export interface MimoProtocolStep {
+  id: MimoProtocolStepId;
+  label: string;
+  detail: string;
+  status: MimoProtocolStepStatus;
+}
+
+export interface MimoProtocolTimeline {
+  enabled: boolean;
+  currentStep: MimoProtocolStepId;
+  steps: MimoProtocolStep[];
+  summaryLabel?: string;
+}
+
 export interface ActivityTelemetry {
   type: MimoActivityType;
   title: string;
@@ -40,6 +57,7 @@ export interface ActivityTelemetry {
     elapsedMs: number;
   };
   reasoningSteps: string[];
+  protocolTimeline?: MimoProtocolTimeline;
   isDone: boolean;
   isStopped?: boolean;
 }

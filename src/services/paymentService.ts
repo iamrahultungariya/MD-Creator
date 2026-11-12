@@ -1,22 +1,27 @@
 /**
  * MD Writer — Payment & Subscription Service Base
- * 
- * Provides an extensible architectural foundation for monetization:
- * 1. Early-Bird Reservation & Lead Capture (zero-cost, no Stripe/Razorpay needed yet)
- * 2. Promo / Beta Access Code redemption
- * 3. Plug-and-play adapter hooks for Stripe and Razorpay Checkout
+ *
+ * Provides a clean, gateway-ready foundation for monetization:
+ * 1. Early-Bird Reservation & Lead Capture (persisted locally + via Supabase RPC)
+ * 2. Promo / Invite Code redemption (server-validated when signed in, local fallback offline)
+ * 3. Typed adapter hooks for future Stripe and Razorpay Checkout activation
  */
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { setLocalProUnlocked, useAuthStore } from '../stores/useAuthStore';
 
 export type SubscriptionPlanId = 'lifetime' | 'pro_monthly' | 'pro_annual';
+export type PaymentGatewayId = 'early_bird' | 'stripe' | 'razorpay';
 
 export interface PlanConfig {
   id: SubscriptionPlanId;
   name: string;
+  shortName: string;
   tagline: string;
   priceUSD: number;
+  amountCentsUSD: number;
+  amountPaiseINR: number;
+  billingInterval: 'one_time' | 'monthly' | 'annual';
   intervalText: string;
   badge?: string;
   features: string[];
@@ -25,45 +30,55 @@ export interface PlanConfig {
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanId, PlanConfig> = {
   lifetime: {
     id: 'lifetime',
-    name: 'Early-Bird Lifetime License',
-    tagline: 'Permanent access with lifetime updates for craft-focused writers.',
+    name: 'Early-Bird Lifetime',
+    shortName: 'Lifetime License',
+    tagline: 'Permanent Studio Pro access with lifetime updates.',
     priceUSD: 49,
-    intervalText: 'one-time payment • lifetime updates',
-    badge: 'Limited Early-Bird ($49)',
+    amountCentsUSD: 4900,
+    amountPaiseINR: 410000,
+    billingInterval: 'one_time',
+    intervalText: 'one-time payment · lifetime updates',
+    badge: 'Early-Bird Deal',
     features: [
-      'Lifetime license for all future v2.x and v3.x releases',
+      'Lifetime license for all v2.x and v3.x releases',
       'Encrypted multi-device cloud backup & sync',
-      'Unlimited delta version snapshots & rollback',
-      'Camera-ready publication PDF studio export [Beta]',
-      'Clean Word DOCX conversion with equations [Beta]',
-      'Zero subscription fees forever',
+      'Unlimited delta snapshots & rollback history',
+      'Camera-ready Vector PDF & Word DOCX export',
     ],
   },
   pro_monthly: {
     id: 'pro_monthly',
-    name: 'Pro Studio (Monthly)',
-    tagline: 'Continuous cross-device sync and managed AI quota for professionals.',
+    name: 'Pro Studio',
+    shortName: 'Pro Monthly',
+    tagline: 'Continuous cross-device sync and managed AI quota.',
     priceUSD: 8,
-    intervalText: 'per month • billed monthly',
+    amountCentsUSD: 800,
+    amountPaiseINR: 69900,
+    billingInterval: 'monthly',
+    intervalText: 'per month · billed monthly',
     features: [
-      'Encrypted cloud synchronization across all devices',
-      'Managed Gemini 3.x AI quota without personal GCP key',
-      'Delta revision history & visual diff viewer',
-      'Password-protected public sharing links',
-      'Priority email & Discord engineering support',
+      'Encrypted cloud sync across all devices',
+      'Managed Gemini 3.x AI quota without personal key',
+      'Delta revision history & password-protected sharing',
+      'Priority email & engineering support',
     ],
   },
   pro_annual: {
     id: 'pro_annual',
-    name: 'Pro Studio (Annual)',
-    tagline: 'Best value for year-round research and long-form writing.',
+    name: 'Pro Studio',
+    shortName: 'Pro Annual',
+    tagline: 'Continuous cross-device sync and managed AI quota.',
     priceUSD: 72, // $6/mo billed annually
-    intervalText: '$6/month • $72 billed annually (save 25%)',
+    amountCentsUSD: 7200,
+    amountPaiseINR: 599900,
+    billingInterval: 'annual',
+    intervalText: '$6/month · $72 billed annually',
     badge: 'Save 25%',
     features: [
-      'Everything in Pro Monthly',
-      'Early access to new Mimo AI experimental capabilities',
-      'Priority roadmap feature voting',
+      'Encrypted cloud sync across all devices',
+      'Managed Gemini 3.x AI quota without personal key',
+      'Delta revision history & password-protected sharing',
+      'Early access to experimental Mimo AI workflows',
     ],
   },
 };
@@ -81,6 +96,12 @@ export interface PromoRedemptionResult {
   grantedTier?: 'pro';
 }
 
+export interface GatewayCheckoutResult {
+  success: boolean;
+  status: 'staged' | 'redirect' | 'error';
+  message: string;
+}
+
 const VALID_PROMO_CODES = new Set([
   'EARLYBIRD',
   'PRO2026',
@@ -91,18 +112,19 @@ const VALID_PROMO_CODES = new Set([
 ]);
 
 /**
- * Stores early-bird lead reservation.
- * Saves to localStorage immediately and persists to Supabase feedbacks/leads table if available.
+ * Stores early-bird lead reservation locally and via Supabase `reserve_early_bird_spot` RPC.
  */
 export async function reserveEarlyBirdSpot(
   email: string,
-  planId: SubscriptionPlanId = 'lifetime'
+  planId: SubscriptionPlanId = 'lifetime',
+  preferredGateway: PaymentGatewayId = 'early_bird'
 ): Promise<{ success: boolean; message: string }> {
   const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+  if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
     return { success: false, message: 'Please enter a valid email address.' };
   }
 
+  const plan = SUBSCRIPTION_PLANS[planId] || SUBSCRIPTION_PLANS.lifetime;
   const reservation: EarlyBirdReservation = {
     email: cleanEmail,
     planId,
@@ -110,28 +132,26 @@ export async function reserveEarlyBirdSpot(
     source: 'checkout_modal_reservation',
   };
 
-  // 1. Cache reservation locally
   try {
     const existingRaw = localStorage.getItem('md_writer_early_bird_leads');
     const list: EarlyBirdReservation[] = existingRaw ? JSON.parse(existingRaw) : [];
-    list.push(reservation);
-    localStorage.setItem('md_writer_early_bird_leads', JSON.stringify(list));
-  } catch (err) {
-    console.warn('[paymentService] Failed to cache lead locally:', err);
+    const deduped = list.filter((item) => !(item.email === cleanEmail && item.planId === planId));
+    deduped.push(reservation);
+    localStorage.setItem('md_writer_early_bird_leads', JSON.stringify(deduped));
+  } catch {
+    // Ignore localStorage unavailability in restricted environments
   }
 
-  // 2. Submit to Supabase feedbacks table (category: early_bird_reservation) so admin can see it
   if (isSupabaseConfigured() && supabase) {
     try {
-      await supabase.from('feedbacks').insert({
-        rating: 5,
-        category: 'other',
-        message: `[EARLY-BIRD RESERVATION] Plan: ${planId} • Email: ${cleanEmail}`,
-        email: cleanEmail,
-        client_info: {
+      await supabase.rpc('reserve_early_bird_spot', {
+        p_email: cleanEmail,
+        p_plan_id: planId,
+        p_preferred_gateway: preferredGateway,
+        p_client_info: {
           planId,
           reservationTimestamp: reservation.timestamp,
-          userAgent: navigator.userAgent,
+          userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
         },
       });
     } catch (err) {
@@ -139,14 +159,22 @@ export async function reserveEarlyBirdSpot(
     }
   }
 
+  const rateLabel =
+    plan.id === 'lifetime'
+      ? `$${plan.priceUSD} one-time`
+      : plan.id === 'pro_annual'
+      ? '$6/month ($72/year)'
+      : '$8/month';
+
   return {
     success: true,
-    message: `Spot reserved! Your early-bird rate for ${SUBSCRIPTION_PLANS[planId].name} is locked in. We will email your activation link as soon as payments open!`,
+    message: `Your ${plan.name} rate (${rateLabel}) is locked for ${cleanEmail}. We will send your activation link as soon as live checkout opens.`,
   };
 }
 
 /**
- * Validates and redeems a promotional or beta tester invite code.
+ * Validates and redeems an invite or promotional code.
+ * Uses server-side `redeem_promo_code` RPC when signed in, falling back to local unlock for guests.
  */
 export async function redeemPromoCode(code: string): Promise<PromoRedemptionResult> {
   const clean = code.trim().toUpperCase();
@@ -155,11 +183,36 @@ export async function redeemPromoCode(code: string): Promise<PromoRedemptionResu
     return { success: false, message: 'Please enter an invite or promo code.' };
   }
 
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data, error } = await supabase.rpc('redeem_promo_code', { p_code: clean });
+        if (!error && data && typeof data === 'object') {
+          if ((data as any).success) {
+            setLocalProUnlocked(true);
+            await useAuthStore.getState().refreshProfile();
+            return {
+              success: true,
+              grantedTier: 'pro',
+              message:
+                (data as any).message ||
+                `Code "${clean}" applied. Pro Studio features are now active on your account.`,
+            };
+          }
+          if ((data as any).error) {
+            return { success: false, message: String((data as any).error) };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[paymentService] Promo RPC fallback:', err);
+    }
+  }
+
   if (VALID_PROMO_CODES.has(clean)) {
-    // Unlock Pro tier locally
     setLocalProUnlocked(true);
 
-    // Refresh profile state in useAuthStore
     const user = useAuthStore.getState().user;
     if (user) {
       useAuthStore.setState({
@@ -173,47 +226,46 @@ export async function redeemPromoCode(code: string): Promise<PromoRedemptionResu
     return {
       success: true,
       grantedTier: 'pro',
-      message: `Code "${clean}" applied successfully! Pro Studio features are now active on this browser.`,
+      message: `Code "${clean}" applied. Pro Studio features are now active on this browser.`,
     };
   }
 
   return {
     success: false,
-    message: 'Invalid or expired invite code. Please check for typos or join the early-bird list.',
+    message: 'Invalid or expired invite code. Please check for typos or reserve your early-bird spot.',
   };
 }
 
 /**
  * ─── FUTURE STRIPE ADAPTER (READY FOR ACTIVATION) ───
- * When you are ready to connect Stripe:
  * 1. Install '@stripe/stripe-js'
  * 2. Set VITE_STRIPE_PUBLISHABLE_KEY in .env
- * 3. Call your backend serverless endpoint (/api/create-checkout-session)
+ * 3. Point to serverless /api/create-checkout-session creating a payment_orders row
  */
 export async function initiateStripeCheckout(
   _planId: SubscriptionPlanId,
   _customerEmail?: string
-): Promise<{ success: boolean; message: string }> {
-  // Currently in pre-launch / lead collection phase
+): Promise<GatewayCheckoutResult> {
   return {
     success: false,
-    message: 'Card checkout via Stripe is opening soon. Reserve your spot above to lock in early-bird pricing!',
+    status: 'staged',
+    message: 'Stripe card checkout is staged for launch. Reserve above to lock in your rate today.',
   };
 }
 
 /**
  * ─── FUTURE RAZORPAY ADAPTER (READY FOR ACTIVATION) ───
- * When you are ready to connect Razorpay:
- * 1. Add Razorpay checkout.js script
+ * 1. Load Razorpay checkout.js script
  * 2. Set VITE_RAZORPAY_KEY_ID in .env
- * 3. Initialize Razorpay options with order ID
+ * 3. Create backend order via payment_orders and open Razorpay modal
  */
 export async function initiateRazorpayCheckout(
   _planId: SubscriptionPlanId,
   _customerEmail?: string
-): Promise<{ success: boolean; message: string }> {
+): Promise<GatewayCheckoutResult> {
   return {
     success: false,
-    message: 'Razorpay checkout is opening soon. Please reserve your spot above to lock in early-bird pricing!',
+    status: 'staged',
+    message: 'Razorpay UPI & card checkout is staged for launch. Reserve above to lock in your rate today.',
   };
 }

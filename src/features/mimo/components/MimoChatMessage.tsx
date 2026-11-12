@@ -14,6 +14,7 @@ import { MimoMessage, MimoToolCall } from '../types/mimoTypes';
 import { useMimoStore } from '../stores/useMimoStore';
 import { MimoAvatar } from './MimoAvatar';
 import { MimoThoughtBlock } from './MimoThoughtBlock';
+import { MimoExecutionTimeline } from './MimoExecutionTimeline';
 import { MimoDiffCard } from './MimoDiffCard';
 import { MimoToolCallCard } from './MimoToolCallCard';
 import { MimoClarificationCard } from './MimoClarificationCard';
@@ -132,13 +133,20 @@ export const MimoChatMessage: React.FC<MimoChatMessageProps> = ({
         )}
       </div>
 
-      {/* Unified Thought & Reasoning Block (Shown only when showThinking is enabled in settings) */}
-      {showThinking && (
-        <MimoThoughtBlock
+      {/* 3.5 Flash-Lite 5-Step Execution Timeline OR Unified Thought Block */}
+      {message.activity?.protocolTimeline ? (
+        <MimoExecutionTimeline
           activity={message.activity}
-          thoughtText={message.thoughtText}
           isStreaming={!message.text && (!message.activity || !message.activity.isDone)}
         />
+      ) : (
+        showThinking && (
+          <MimoThoughtBlock
+            activity={message.activity}
+            thoughtText={message.thoughtText}
+            isStreaming={!message.text && (!message.activity || !message.activity.isDone)}
+          />
+        )
       )}
 
       {/* Rich Formatted Markdown Response Body */}

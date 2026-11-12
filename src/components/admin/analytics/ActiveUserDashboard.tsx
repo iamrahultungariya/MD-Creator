@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   PenTool, 
@@ -18,7 +18,7 @@ import {
   Layers,
   Sparkles
 } from 'lucide-react';
-import { telemetryService, DailyMetricRecord, TrackedFeature } from '../../../services/telemetryService';
+import { telemetryService, DailyMetricRecord, ActivityEvent, TrackedFeature } from '../../../services/telemetryService';
 
 interface ActiveUserDashboardProps {
   onRefresh?: () => void;
@@ -30,14 +30,31 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
 
-  // Fetch telemetry records based on time range
-  const dailyMetrics = useMemo(() => {
-    return telemetryService.getDailyMetrics(timeRange);
-  }, [timeRange, refreshTick]);
+  const [dailyMetrics, setDailyMetrics] = useState<DailyMetricRecord[]>(() =>
+    telemetryService.getDailyMetrics(14)
+  );
+  const [recentFeed, setRecentFeed] = useState<ActivityEvent[]>(() =>
+    telemetryService.getRecentActivityFeed()
+  );
 
-  const recentFeed = useMemo(() => {
-    return telemetryService.getRecentActivityFeed();
-  }, [refreshTick]);
+  useEffect(() => {
+    let active = true;
+    setDailyMetrics(telemetryService.getDailyMetrics(timeRange));
+    setRecentFeed(telemetryService.getRecentActivityFeed());
+
+    Promise.all([
+      telemetryService.fetchCloudDailyMetrics(timeRange),
+      telemetryService.fetchCloudActivityFeed(30),
+    ]).then(([cloudMetrics, cloudFeed]) => {
+      if (!active) return;
+      setDailyMetrics(cloudMetrics);
+      setRecentFeed(cloudFeed);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [timeRange, refreshTick]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
