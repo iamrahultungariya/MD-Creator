@@ -10,7 +10,8 @@ import {
   Calendar, 
   Cpu, 
   Layers,
-  ChevronDown
+  ChevronDown,
+  CloudOff
 } from 'lucide-react';
 import { saveDocument } from '../../db';
 import { useAllDocumentTags } from '../../hooks/useDocuments';
@@ -143,6 +144,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [customTagInput, setCustomTagInput] = useState('');
   const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+  const [isLocalOnly, setIsLocalOnly] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Compute union of all displayable tags (presets + workspace tags + custom added tags)
@@ -164,6 +166,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
       setSelectedTags([initialTag]);
       setCustomTags(defaultFolderTag && !PRESET_TAGS.includes(defaultFolderTag) ? [defaultFolderTag] : []);
       setCustomTagInput('');
+      setIsLocalOnly(false);
       setIsTagsExpanded(Boolean(defaultFolderTag && defaultFolderTag !== 'All'));
       setTimeout(() => inputRef.current?.select(), 60);
     }
@@ -258,7 +261,8 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
         newId,
         finalTitle,
         content,
-        finalTags
+        finalTags,
+        isLocalOnly
       );
 
       onClose();
@@ -283,7 +287,8 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
         newId,
         `Untitled Note ${dateStr}.md`,
         '# Untitled Note\n\n',
-        ['Drafts']
+        ['Drafts'],
+        isLocalOnly
       );
       onClose();
       navigate(`/editor/${newId}`);
@@ -485,6 +490,27 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Cloud Sync vs Local-Only Storage Toggle */}
+          <div className="pt-2.5 border-t border-neutral-100 dark:border-neutral-800/80">
+            <label className="flex items-start justify-between gap-3 p-3 rounded-xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/60 dark:hover:bg-neutral-800/40 transition-colors cursor-pointer select-none">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                  <CloudOff className="w-3.5 h-3.5 text-neutral-500" />
+                  <span>Keep Local Only (Disable Cloud Sync)</span>
+                </div>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  This document will remain strictly in this browser storage and never sync to Supabase cloud.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={isLocalOnly}
+                onChange={(e) => setIsLocalOnly(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-neutral-300 dark:border-neutral-700 text-brand-600 focus:ring-brand-500 cursor-pointer"
+              />
+            </label>
           </div>
         </form>
 

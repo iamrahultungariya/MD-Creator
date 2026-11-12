@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check, Pencil } from 'lucide-react';
-import { DocumentMetadata } from '../../db';
+import { FileText, Copy, Pin, Trash2, RotateCcw, Clock, MoreVertical, Check, Pencil, Cloud, CloudOff } from 'lucide-react';
+import { DocumentMetadata, setDocumentLocalOnly } from '../../db';
 import { formatRelativeTime } from '../../utils/dateUtils';
 
 export interface DocumentListItemProps {
@@ -155,6 +155,12 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
                 <span>Pinned</span>
               </span>
             )}
+            {doc.isLocalOnly && currentTab === 'active' && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md text-[10px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700 shrink-0 font-sans">
+                <CloudOff className="w-2.5 h-2.5" />
+                <span>Local Only</span>
+              </span>
+            )}
           </div>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate max-w-lg mt-0.5">
             {doc.snippet || 'Start writing with Markdown...'}
@@ -175,6 +181,21 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
         >
           {currentTab === 'active' ? (
             <>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await setDocumentLocalOnly(doc.id, !doc.isLocalOnly);
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  doc.isLocalOnly
+                    ? 'text-amber-500 hover:bg-amber-500/10'
+                    : 'text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60'
+                }`}
+                title={doc.isLocalOnly ? 'Local Only (Paused cloud sync). Click to enable sync.' : 'Cloud Synced. Click to make Local Only.'}
+              >
+                {doc.isLocalOnly ? <CloudOff className="w-4 h-4" /> : <Cloud className="w-4 h-4" />}
+              </button>
               <button
                 type="button"
                 onClick={(e) => {
@@ -265,6 +286,28 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
             >
               {currentTab === 'active' ? (
                 <div className="flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      setIsMobileMenuOpen(false);
+                      await setDocumentLocalOnly(doc.id, !doc.isLocalOnly);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                  >
+                    {doc.isLocalOnly ? (
+                      <>
+                        <Cloud className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Enable Cloud Sync</span>
+                      </>
+                    ) : (
+                      <>
+                        <CloudOff className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Make Local Only</span>
+                      </>
+                    )}
+                  </button>
+
                   <button
                     type="button"
                     onClick={(e) => {

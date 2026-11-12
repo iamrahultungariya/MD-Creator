@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { fastCountWords } from '../utils/textCounters';
 import { queryClient } from '../lib/queryClient';
+import { markDocLocalOnly, removeDocLocalOnly } from '../stores/useCrossDeviceConflictStore';
 import { 
   compressText, 
   decompressText, 
@@ -264,11 +265,25 @@ export function notifyDocumentStoreChanged(docId?: string, scope: InvalidationSc
 /**
  * Saves full document content: caches it in Dexie and updates metadata snippet.
  */
-export async function saveDocument(id: string, title: string, content: string, tags: string[] = []): Promise<void> {
+export async function saveDocument(
+  id: string,
+  title: string,
+  content: string,
+  tags: string[] = [],
+  isLocalOnly?: boolean
+): Promise<void> {
   const now = Date.now();
   const snippet = extractSnippet(content);
   const wordCount = countWords(content);
   const sizeBytes = new Blob([content]).size;
+
+  if (isLocalOnly !== undefined) {
+    if (isLocalOnly) {
+      markDocLocalOnly(id);
+    } else {
+      removeDocLocalOnly(id);
+    }
+  }
 
   await db.transaction('rw', db.documents, db.document_cache, async () => {
     // 1. Cache full content
@@ -287,7 +302,8 @@ export async function saveDocument(id: string, title: string, content: string, t
         tags: tags.length ? tags : existing.tags,
         updatedAt: now,
         wordCount,
-        sizeBytes
+        sizeBytes,
+        ...(isLocalOnly !== undefined ? { isLocalOnly } : {})
       });
     } else {
       await db.documents.put({
@@ -300,6 +316,7 @@ export async function saveDocument(id: string, title: string, content: string, t
         openCount: 1,
         isPinned: false,
         isFavorite: false,
+        isLocalOnly: Boolean(isLocalOnly),
         cloudSynced: false,
         wordCount,
         sizeBytes
@@ -308,6 +325,27 @@ export async function saveDocument(id: string, title: string, content: string, t
   });
 
   notifyDocumentStoreChanged(id, 'save');
+}
+
+/**
+ * Sets or unsets a document as local-only (bypasses cloud sync).
+ */
+export async function setDocumentLocalOnly(id: string, isLocalOnly: boolean): Promise<void> {
+  const existing = await db.documents.get(id);
+  if (!existing) return;
+
+  if (isLocalOnly) {
+    markDocLocalOnly(id);
+  } else {
+    removeDocLocalOnly(id);
+  }
+
+  await db.documents.update(id, {
+    isLocalOnly,
+    updatedAt: Date.now()
+  });
+
+  notifyDocumentStoreChanged(id, 'update');
 }
 
 /**

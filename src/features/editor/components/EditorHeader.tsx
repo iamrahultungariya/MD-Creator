@@ -13,9 +13,11 @@ import {
   FolderTree,
   Printer,
   Check,
+  Cloud,
+  CloudOff,
 } from 'lucide-react';
 import { ViewMode } from '../types';
-import { DocumentMetadata } from '../../../db';
+import { DocumentMetadata, setDocumentLocalOnly } from '../../../db';
 import { PwaInstallButton } from '../../../components/common/PwaInstallButton';
 import { EditorMobileOverflowMenu } from './EditorMobileOverflowMenu';
 import { EditorToolsMenu } from './EditorToolsMenu';
@@ -139,6 +141,17 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
     return opt.mode === viewMode;
   };
 
+  const handleToggleLocalOnly = async () => {
+    if (!docMetadata) return;
+    const newLocalOnly = !docMetadata.isLocalOnly;
+    await setDocumentLocalOnly(docMetadata.id, newLocalOnly);
+    onToast?.(
+      newLocalOnly
+        ? 'Document set to Local Only (Cloud sync paused)'
+        : 'Cloud Sync enabled for this document'
+    );
+  };
+
   // Save Indicator Element
   const renderSaveIndicator = (showText = false) => {
     if (isOffline) {
@@ -205,12 +218,32 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
             <div className="flex items-center gap-2 text-xs font-sans shrink-0 pl-1 font-medium">
               {renderSaveIndicator(true)}
               {user?.id ? (
-                <div 
-                  className="hidden md:flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 font-sans"
-                  title={`Cloud backup active: ${user.email}`}
+                <button
+                  type="button"
+                  onClick={handleToggleLocalOnly}
+                  className={`hidden md:flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors font-sans cursor-pointer ${
+                    docMetadata?.isLocalOnly
+                      ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/20'
+                      : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20'
+                  }`}
+                  title={
+                    docMetadata?.isLocalOnly
+                      ? 'Local Only (Cloud sync paused). Click to enable cloud sync.'
+                      : `Cloud Synced to ${user.email}. Click to make Local Only.`
+                  }
                 >
-                  <span>Synced</span>
-                </div>
+                  {docMetadata?.isLocalOnly ? (
+                    <>
+                      <CloudOff className="w-3 h-3" />
+                      <span>Local Only</span>
+                    </>
+                  ) : (
+                    <>
+                      <Cloud className="w-3 h-3" />
+                      <span>Cloud Synced</span>
+                    </>
+                  )}
+                </button>
               ) : (
                 <button
                   type="button"
@@ -369,6 +402,35 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
                     <div className="px-3 py-1.5 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500 font-sans">
                       File Operations
                     </div>
+
+                    {docMetadata && user?.id && (
+                      <button
+                        onClick={() => {
+                          setIsFilesMenuOpen(false);
+                          handleToggleLocalOnly();
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-neutral-700 dark:text-neutral-300 cursor-pointer group transition-colors font-sans"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {docMetadata.isLocalOnly ? (
+                            <CloudOff className="w-4 h-4 text-amber-500 shrink-0" />
+                          ) : (
+                            <Cloud className="w-4 h-4 text-emerald-500 shrink-0" />
+                          )}
+                          <div>
+                            <div className="font-semibold text-neutral-900 dark:text-white">
+                              {docMetadata.isLocalOnly ? 'Enable Cloud Sync' : 'Make Local Only'}
+                            </div>
+                            <div className="text-[10px] text-neutral-500">
+                              {docMetadata.isLocalOnly ? 'Sync to Supabase cloud' : 'Keep private on this device'}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-medium text-neutral-400">
+                          {docMetadata.isLocalOnly ? 'Local' : 'Cloud'}
+                        </span>
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
