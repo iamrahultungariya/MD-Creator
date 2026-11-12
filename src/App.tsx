@@ -64,27 +64,21 @@ const TrialEndingBanner = React.lazy(() =>
 
 const AppRoutes: React.FC = () => {
   const location = useLocation();
-  const isEditor = location.pathname.startsWith('/editor');
 
-  // STRICT REQUIREMENT: Zero animations on editor typing canvas (0ms typing latency)
-  if (isEditor) {
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={<PageLoader variant="editor" />}>
-          <Routes location={location} key="editor-routes">
-            <Route path="/editor" element={<EditorPage />} />
-            <Route path="/editor/:id" element={<EditorPage />} />
-          </Routes>
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
+  // Scroll to top on page navigation except when staying within the editor
+  useEffect(() => {
+    if (!location.pathname.startsWith('/editor')) {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   return (
     <ErrorBoundary>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<PageTransition><Suspense fallback={<PageLoader variant="home" />}><HomePage /></Suspense></PageTransition>} />
+          <Route path="/editor" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><EditorPage /></Suspense></PageTransition>} />
+          <Route path="/editor/:id" element={<PageTransition><Suspense fallback={<PageLoader variant="editor" />}><EditorPage /></Suspense></PageTransition>} />
           <Route path="/documents" element={<PageTransition><Suspense fallback={<PageLoader variant="documents" />}><DocumentsPage /></Suspense></PageTransition>} />
           <Route path="/feedback" element={<PageTransition><Suspense fallback={<PageLoader variant="feedback" />}><FeedbackPage /></Suspense></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Suspense fallback={<PageLoader variant="auth" />}><AuthPage /></Suspense></PageTransition>} />

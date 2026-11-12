@@ -58,6 +58,7 @@ interface EditorHeaderProps {
   onOpenAuth?: () => void;
   mobileTab?: 'edit' | 'preview';
   onSelectMobileTab?: (tab: 'edit' | 'preview') => void;
+  onToast?: (message: string) => void;
 }
 
 interface ModeOptionItem {
@@ -110,6 +111,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = React.memo(({
   onOpenAuth,
   mobileTab: _mobileTab = 'edit',
   onSelectMobileTab: _onSelectMobileTab,
+  onToast,
 }) => {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);

@@ -345,7 +345,7 @@ export async function setDocumentLocalOnly(id: string, isLocalOnly: boolean): Pr
     updatedAt: Date.now()
   });
 
-  notifyDocumentStoreChanged(id, 'update');
+  notifyDocumentStoreChanged(id, 'save');
 }
 
 /**
