@@ -159,7 +159,7 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-colors duration-150 shadow-2xs cursor-pointer disabled:opacity-50"
             >
               {isSubmitting
                 ? 'Saving...'

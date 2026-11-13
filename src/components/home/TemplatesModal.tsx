@@ -161,7 +161,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                 <div
                   key={template.id}
                   onClick={() => setSelectedTemplateId(template.id)}
-                  className={`p-3 rounded-lg border text-left cursor-pointer transition-all ${
+                  className={`p-3 rounded-lg border text-left cursor-pointer transition-[border-color,background-color] duration-150 ${
                     isSelected
                       ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/20 shadow-2xs'
                       : 'border-neutral-200/80 dark:border-neutral-800/80 hover:bg-neutral-50 dark:hover:bg-neutral-900/60'
@@ -214,7 +214,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   <button
                     onClick={() => handleApplyTemplate(activeTemplate)}
                     disabled={isCreating}
-                    className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs transition-colors duration-150 shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {isCreating ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

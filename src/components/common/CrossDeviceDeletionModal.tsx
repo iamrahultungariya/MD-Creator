@@ -212,7 +212,7 @@ export const CrossDeviceDeletionModal: React.FC<CrossDeviceDeletionModalProps> =
               return (
                 <div
                   key={item.id}
-                  className={`p-3 rounded-lg border transition-all text-xs flex items-center justify-between gap-3 ${
+                  className={`p-3 rounded-lg border transition-[border-color,background-color] duration-150 text-xs flex items-center justify-between gap-3 ${
                     isChecked
                       ? 'border-neutral-300 dark:border-neutral-700 bg-neutral-50/70 dark:bg-neutral-800/50'
                       : 'border-neutral-200/70 dark:border-neutral-800/60 bg-white dark:bg-neutral-900/40 opacity-75'
@@ -275,7 +275,7 @@ export const CrossDeviceDeletionModal: React.FC<CrossDeviceDeletionModalProps> =
               type="button"
               onClick={handleSyncDeletions}
               disabled={isProcessing}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 font-semibold text-xs transition-colors duration-150 shadow-xs cursor-pointer disabled:opacity-50"
             >
               <Trash2 className="w-3.5 h-3.5 text-rose-500 dark:text-rose-600" />
               <span>Sync Deletions ({selectedIds.size || conflicts.length})</span>

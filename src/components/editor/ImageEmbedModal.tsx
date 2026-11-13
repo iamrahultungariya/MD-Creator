@@ -10,6 +10,7 @@ import {
   Loader2, 
   AlertCircle
 } from 'lucide-react';
+import { ModalPortal } from '../common/ModalPortal';
 import { optimizeImage, formatBytes, CompressionResult } from '../../utils/imageCompressor';
 import { storeDataUrlImage } from '../../services/imageStorageService';
 
@@ -168,9 +169,10 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
     : Boolean(imageUrl.trim());
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -217,7 +219,7 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('upload')}
-                className={`pb-2.5 px-4 text-xs font-bold transition-all flex items-center gap-1.5 border-b-2 cursor-pointer ${
+                className={`pb-2.5 px-4 text-xs font-bold transition-colors duration-150 flex items-center gap-1.5 border-b-2 cursor-pointer ${
                   activeTab === 'upload'
                     ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                     : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -233,7 +235,7 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('url')}
-                className={`pb-2.5 px-4 text-xs font-bold transition-all flex items-center gap-1.5 border-b-2 cursor-pointer ${
+                className={`pb-2.5 px-4 text-xs font-bold transition-colors duration-150 flex items-center gap-1.5 border-b-2 cursor-pointer ${
                   activeTab === 'url'
                     ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                     : 'border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -263,7 +265,7 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
                       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                       onDragLeave={() => setIsDragOver(false)}
                       onDrop={handleDrop}
-                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors duration-150 ${
                         isDragOver
                           ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/20'
                           : 'border-neutral-300 dark:border-neutral-700 hover:border-brand-400 dark:hover:border-brand-500 hover:bg-neutral-50/60 dark:hover:bg-neutral-800/30'
@@ -449,7 +451,7 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
                   type="button"
                   onClick={handleInsert}
                   disabled={!canInsert}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs ${
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors duration-150 flex items-center gap-1.5 shadow-2xs ${
                     canInsert
                       ? 'bg-brand-600 hover:bg-brand-700 text-white cursor-pointer'
                       : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed'
@@ -464,5 +466,6 @@ export const ImageEmbedModal: React.FC<ImageEmbedModalProps> = ({
         </div>
       )}
     </AnimatePresence>
-  );
+  </ModalPortal>
+);
 };

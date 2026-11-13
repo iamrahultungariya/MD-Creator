@@ -12,6 +12,7 @@ import {
 import { executePdfPrint, exportDirectPdf } from '../services/pdfPrintService';
 import { PdfExportSidebar } from './PdfExportSidebar';
 import { PdfExportPreview } from './PdfExportPreview';
+import { ModalPortal } from '../../../components/common/ModalPortal';
 
 export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
   isOpen,
@@ -175,13 +176,12 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isOpen, onClose, handlePrintPdf, handleDirectDownload]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      data-pdf-studio-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden animate-in fade-in duration-200 font-sans"
-    >
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div
+        data-pdf-studio-modal="true"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden animate-in fade-in duration-200 font-sans"
+      >
       <div className="w-full h-full max-w-[1550px] max-h-screen sm:max-h-[96vh] m-0 sm:m-4 bg-white dark:bg-neutral-900 border-0 sm:border border-neutral-200 dark:border-neutral-800 rounded-none sm:rounded-xl shadow-2xl flex flex-col overflow-hidden min-h-0 font-sans">
         {/* Studio Top Navigation Bar */}
         <div data-pdf-studio-navbar="true" className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-900 shrink-0">
@@ -239,7 +239,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               type="button"
               onClick={handlePrintPdf}
               disabled={isDownloading}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold shadow-2xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold shadow-2xs transition-colors duration-150 flex items-center gap-1.5 sm:gap-2 cursor-pointer disabled:cursor-not-allowed"
               title="Print Document or Save as Vector PDF (Ctrl+P / Cmd+P)"
             >
               <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
@@ -252,7 +252,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
               type="button"
               onClick={handleDirectDownload}
               disabled={isDownloading}
-              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-neutral-800 transition-all hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-[#2A2338] disabled:opacity-50 text-neutral-800 dark:text-neutral-200 text-xs font-semibold border border-neutral-200 dark:border-neutral-800 transition-colors duration-150 hidden md:flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               title="Direct File Download (Ctrl+S / Cmd+S)"
             >
               {isDownloading ? (
@@ -286,7 +286,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
             <button
               type="button"
               onClick={() => setMobileTab('preview')}
-              className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                 mobileTab === 'preview'
                   ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-bold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -298,7 +298,7 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
             <button
               type="button"
               onClick={() => setMobileTab('settings')}
-              className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-lg flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                 mobileTab === 'settings'
                   ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-bold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -398,5 +398,6 @@ export const ExportPdfModal: React.FC<ExportPdfModalProps> = ({
         </div>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 };

@@ -124,7 +124,7 @@ export const PreferencesAiTab: React.FC = () => {
                 key={m.id}
                 type="button"
                 onClick={() => setSelectedGeminiModel(m.id as any)}
-                className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-2.5 rounded-lg border text-left transition-colors duration-150 cursor-pointer ${
                   selectedGeminiModel === m.id
                     ? 'border-emerald-500 bg-emerald-500/10 text-neutral-900 dark:text-white font-medium'
                     : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-600 dark:text-neutral-400'

@@ -133,7 +133,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
           tabIndex={0}
           onClick={handleClick}
           onKeyDown={handleKeyDown}
-          className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/60 hover:border-brand-500/50 hover:bg-neutral-100/90 dark:hover:bg-neutral-800/80 font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 shadow-2xs select-none cursor-pointer transition-all ${className}`}
+          className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/60 hover:border-brand-500/50 hover:bg-neutral-100/90 dark:hover:bg-neutral-800/80 font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 shadow-2xs select-none cursor-pointer transition-colors duration-150 ${className}`}
           title={`Storage usage: ${usedMb} MB of ${SOFT_LIMIT_MB} MB`}
         >
           <svg className="w-4 h-4 -rotate-90 shrink-0" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
-              className="transition-all duration-500 ease-out"
+              className="transition-[stroke-dashoffset] duration-500 ease-out"
             />
           </svg>
           <span className="font-semibold text-neutral-900 dark:text-neutral-200">
@@ -195,7 +195,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
-                className="transition-all duration-500 ease-out"
+                className="transition-[stroke-dashoffset] duration-500 ease-out"
               />
             </svg>
           </div>
@@ -215,7 +215,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
           tabIndex={0}
           onClick={handleClick}
           onKeyDown={handleKeyDown}
-          className={`p-3.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/40 hover:border-brand-500/50 hover:bg-neutral-100/70 dark:hover:bg-neutral-850/60 font-sans text-xs space-y-3 select-none cursor-pointer transition-all group ${className}`}
+          className={`p-3.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/40 hover:border-brand-500/50 hover:bg-neutral-100/70 dark:hover:bg-neutral-850/60 font-sans text-xs space-y-3 select-none cursor-pointer transition-[border-color,background-color] duration-150 group ${className}`}
           title={`Storage usage: ${usedMb} MB of ${SOFT_LIMIT_MB} MB`}
         >
           <div className="flex items-center justify-between gap-3">
@@ -241,7 +241,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
                     strokeLinecap="round"
-                    className="transition-all duration-500 ease-out"
+                    className="transition-[stroke-dashoffset] duration-500 ease-out"
                   />
                 </svg>
                 <span className="absolute text-[9px] font-bold text-neutral-800 dark:text-neutral-200 font-sans">
@@ -269,7 +269,7 @@ export const StorageLimitRing: React.FC<StorageLimitRingProps> = ({
 
           <div className="w-full bg-neutral-200/80 dark:bg-neutral-800 rounded-md h-1.5 overflow-hidden">
             <div
-              className="h-full rounded-sm transition-all duration-500 ease-out"
+              className="h-full rounded-sm transition-[width] duration-500 ease-out"
               style={{ width: `${percent}%`, backgroundColor: ringColor }}
             />
           </div>

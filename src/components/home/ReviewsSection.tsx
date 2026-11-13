@@ -228,7 +228,7 @@ export const ReviewsSection: React.FC = () => {
             {marqueeItems.map((item, idx) => (
               <div
                 key={`${item.id}-${idx}`}
-                className="w-[300px] sm:w-[350px] shrink-0 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/60 hover:bg-white dark:hover:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 flex flex-col justify-between space-y-4 shadow-2xs transition-all text-left select-none font-sans"
+                className="w-[300px] sm:w-[350px] shrink-0 p-5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-900/60 hover:bg-white dark:hover:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 flex flex-col justify-between space-y-4 shadow-2xs transition-[border-color,background-color] duration-150 text-left select-none font-sans"
               >
                 {/* Rating Stars & Relatable Quote */}
                 <div className="space-y-2.5">

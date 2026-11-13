@@ -172,7 +172,7 @@ export const MimoIntroModal: React.FC = () => {
           </button>
           <button
             onClick={handleOpenEditor}
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] shadow-xs transition-all cursor-pointer"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] shadow-xs transition-colors duration-150 cursor-pointer"
           >
             Open Document to Try
           </button>

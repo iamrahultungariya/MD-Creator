@@ -81,7 +81,7 @@ export const ProfileDropdown: React.FC = () => {
       {/* Profile Trigger Button in Navbar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-all cursor-pointer border border-neutral-200/80 dark:border-neutral-700 select-none group"
+        className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors duration-150 cursor-pointer border border-neutral-200/80 dark:border-neutral-700 select-none group"
       >
         <img
           src={user.avatarUrl}
@@ -242,7 +242,7 @@ export const ProfileDropdown: React.FC = () => {
             </div>
             <div className="w-full bg-neutral-200/80 dark:bg-neutral-800 rounded-full h-1 overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-300"
+                className="h-full rounded-full transition-[width] duration-300"
                 style={{
                   width: `${Math.min(100, Math.max(storage.percent, 2))}%`,
                   backgroundColor: storage.percent > 90 ? '#f43f5e' : storage.percent > 75 ? '#f59e0b' : '#8257F5'

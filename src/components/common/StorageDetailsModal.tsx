@@ -431,7 +431,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   strokeLinecap="round"
-                  className="transition-all duration-700 ease-out"
+                  className="transition-[stroke-dashoffset] duration-700 ease-out"
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center text-center">
@@ -455,7 +455,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
               {/* Progress bar */}
               <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-md h-2 overflow-hidden">
                 <div
-                  className="h-full rounded-sm transition-all duration-500 ease-out"
+                  className="h-full rounded-sm transition-[width] duration-500 ease-out"
                   style={{ width: `${percent}%`, backgroundColor: gaugeColor }}
                 />
               </div>
@@ -646,7 +646,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
                 type="button"
                 onClick={handleExportBackup}
                 disabled={isExporting}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 font-semibold text-xs transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-950 font-semibold text-xs transition-colors duration-150 shadow-xs cursor-pointer disabled:opacity-50"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>{isExporting ? 'Exporting...' : 'Export Backup (.json)'}</span>
@@ -657,7 +657,7 @@ export const StorageDetailsModal: React.FC<StorageDetailsModalProps> = ({
                   type="button"
                   onClick={handleEmptyTrash}
                   disabled={isPurgingTrash}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/40 font-semibold text-xs transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/40 font-semibold text-xs transition-colors duration-150 cursor-pointer disabled:opacity-50"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>{isPurgingTrash ? 'Purging...' : `Empty Trash (${breakdown.trashedCount})`}</span>

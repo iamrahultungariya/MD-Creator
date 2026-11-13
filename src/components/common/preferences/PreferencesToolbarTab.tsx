@@ -51,7 +51,7 @@ export const PreferencesToolbarTab: React.FC = () => {
                   enableAction(action.id);
                 }
               }}
-              className={`p-2.5 rounded-lg border flex items-center justify-between text-left transition-all cursor-pointer ${
+              className={`p-2.5 rounded-lg border flex items-center justify-between text-left transition-colors duration-150 cursor-pointer ${
                 isEnabled
                   ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 text-neutral-950 dark:text-white shadow-xs font-medium'
                   : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900/40 text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'

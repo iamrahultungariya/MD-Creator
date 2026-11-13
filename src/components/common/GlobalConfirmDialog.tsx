@@ -10,6 +10,7 @@ import {
   X 
 } from 'lucide-react';
 import { useConfirmStore, ConfirmVariant, ConfirmIcon } from '../../stores/useConfirmStore';
+import { ModalPortal } from './ModalPortal';
 
 export const GlobalConfirmDialog: React.FC = () => {
   const isOpen = useConfirmStore((s) => s.isOpen);
@@ -103,85 +104,87 @@ export const GlobalConfirmDialog: React.FC = () => {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto font-sans"
-          role="dialog"
-          aria-modal="true"
-        >
-          {/* Backdrop Blur Layer */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.16 }}
-            onClick={handleCancel}
-            className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-xs"
-          />
-
-          {/* Dialog Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 4 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 380 }}
-            className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden p-6 z-10 font-sans"
+    <ModalPortal isOpen={isOpen} onClose={handleCancel}>
+      <AnimatePresence>
+        {isOpen && (
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto font-sans"
+            role="dialog"
+            aria-modal="true"
           >
-            {/* Close button in top right */}
-            <button
+            {/* Backdrop Blur Layer */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
               onClick={handleCancel}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
-              title="Close (Esc)"
+              className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-xs"
+            />
+
+            {/* Dialog Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 4 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 380 }}
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden p-6 z-10 font-sans"
             >
-              <X className="w-4 h-4" />
-            </button>
-
-            {/* Content Area */}
-            <div className="flex items-start gap-3.5">
-              {renderIcon(options.variant, options.icon)}
-
-              <div className="flex-1 min-w-0 pr-4">
-                <h3 className="font-bold text-base text-neutral-950 dark:text-white tracking-tight leading-snug">
-                  {options.title || 'Confirm Action'}
-                </h3>
-                <div className="text-xs text-neutral-600 dark:text-neutral-400 mt-1.5 leading-relaxed">
-                  {options.message}
-                </div>
-
-                {options.description && (
-                  <div className="mt-2.5 p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-start gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-neutral-400" />
-                    <span>{options.description}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-6 flex items-center justify-end gap-2.5 pt-4 border-t border-neutral-100 dark:border-neutral-800/80">
+              {/* Close button in top right */}
               <button
-                ref={cancelBtnRef}
-                type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all cursor-pointer border border-neutral-200 dark:border-neutral-700 shadow-2xs"
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                title="Close (Esc)"
               >
-                {options.cancelText || 'Cancel'}
+                <X className="w-4 h-4" />
               </button>
 
-              <button
-                ref={confirmBtnRef}
-                type="button"
-                onClick={handleConfirm}
-                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${getConfirmButtonClasses(options.variant)}`}
-              >
-                {options.confirmText || 'Confirm'}
-              </button>
-            </div>
+              {/* Content Area */}
+              <div className="flex items-start gap-3.5">
+                {renderIcon(options.variant, options.icon)}
 
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+                <div className="flex-1 min-w-0 pr-4">
+                  <h3 className="font-bold text-base text-neutral-950 dark:text-white tracking-tight leading-snug">
+                    {options.title || 'Confirm Action'}
+                  </h3>
+                  <div className="text-xs text-neutral-600 dark:text-neutral-400 mt-1.5 leading-relaxed">
+                    {options.message}
+                  </div>
+
+                  {options.description && (
+                    <div className="mt-2.5 p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-100 dark:border-neutral-800 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-start gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-neutral-400" />
+                      <span>{options.description}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex items-center justify-end gap-2.5 pt-4 border-t border-neutral-100 dark:border-neutral-800/80">
+                <button
+                  ref={cancelBtnRef}
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 py-2 rounded-lg text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-150 cursor-pointer border border-neutral-200 dark:border-neutral-700 shadow-2xs"
+                >
+                  {options.cancelText || 'Cancel'}
+                </button>
+
+                <button
+                  ref={confirmBtnRef}
+                  type="button"
+                  onClick={handleConfirm}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold transition-colors duration-150 cursor-pointer ${getConfirmButtonClasses(options.variant)}`}
+                >
+                  {options.confirmText || 'Confirm'}
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </ModalPortal>
   );
 };

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useToolbarSettingsStore, ALL_TOOLBAR_ACTIONS } from '../../stores/useToolbarSettingsStore';
 import { ACTION_ICON_MAP } from '../../features/editor/components/FloatingFormattingDock';
+import { ModalPortal } from '../common/ModalPortal';
 
 export const ToolbarSettingsModal: React.FC = () => {
   const navigate = useNavigate();
@@ -55,10 +56,9 @@ export const ToolbarSettingsModal: React.FC = () => {
     setDragOverIndex(null);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
+    <ModalPortal isOpen={isOpen} onClose={closeSettings}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
       <div 
         className="w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
       >
@@ -101,7 +101,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
-                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing transition-all ${
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 cursor-grab active:cursor-grabbing transition-colors duration-150 ${
                   draggedIndex === idx 
                     ? 'opacity-40 scale-90 ring-2 ring-brand-500' 
                     : dragOverIndex === idx 
@@ -130,7 +130,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                 onDragOver={(e) => isEnabled && handleDragOver(e, activeIndex)}
                 onDrop={(e) => isEnabled && handleDrop(e, activeIndex)}
                 onDragEnd={handleDragEnd}
-                className={`p-2.5 sm:p-3 rounded-lg border transition-all flex items-center justify-between gap-2.5 ${
+                className={`p-2.5 sm:p-3 rounded-lg border transition-colors duration-150 flex items-center justify-between gap-2.5 ${
                   isEnabled
                     ? draggedIndex === activeIndex
                       ? 'border-brand-400 bg-brand-50/40 dark:bg-brand-950/20 opacity-60 scale-98'
@@ -214,7 +214,7 @@ export const ToolbarSettingsModal: React.FC = () => {
                   {/* Toggle Button */}
                   <button
                     onClick={() => toggleAction(action.id)}
-                    className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer font-sans ${
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors duration-150 cursor-pointer font-sans ${
                       isEnabled
                         ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-2xs'
                         : 'border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -259,12 +259,13 @@ export const ToolbarSettingsModal: React.FC = () => {
 
           <button
             onClick={closeSettings}
-            className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs"
+            className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-colors duration-150 cursor-pointer shadow-2xs"
           >
             Save &amp; Close
           </button>
         </div>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 };

@@ -13,6 +13,7 @@ import { useConfirm } from '../../stores/useConfirmStore';
 import { APP_VERSION_LABEL } from '../../config/version';
 import { DiffViewer } from '../common/DiffViewer';
 import { CheckpointsListSkeleton } from '../common/PageLoader';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface RevisionHistoryModalProps {
   isOpen: boolean;
@@ -91,7 +92,8 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150">
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150">
       <div 
         className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[85vh] text-neutral-900 dark:text-neutral-100 font-sans"
         role="dialog"
@@ -171,7 +173,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
                   <button
                     key={rev.id || idx}
                     onClick={() => setSelectedRevision(rev)}
-                    className={`w-full text-left p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
+                    className={`w-full text-left p-3 rounded-xl border transition-colors duration-150 cursor-pointer flex flex-col gap-1.5 ${
                       isSelected
                         ? 'bg-white dark:bg-[#1e1b29] border-brand-500 shadow-xs ring-1 ring-brand-500/30'
                         : 'bg-white/60 dark:bg-neutral-900/60 border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
@@ -224,7 +226,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setViewType('diff')}
-                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-md transition-colors duration-150 cursor-pointer ${
                           viewType === 'diff'
                             ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-xs font-semibold'
                             : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -235,7 +237,7 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setViewType('raw')}
-                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-md transition-colors duration-150 cursor-pointer ${
                           viewType === 'raw'
                             ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-xs font-semibold'
                             : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -302,5 +304,6 @@ export const RevisionHistoryModal: React.FC<RevisionHistoryModalProps> = ({
 
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 };

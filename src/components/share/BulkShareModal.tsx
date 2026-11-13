@@ -222,7 +222,7 @@ export const BulkShareModal: React.FC<BulkShareModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setPermissionMode('view')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                      className={`p-3 rounded-2xl border text-left transition-colors duration-150 cursor-pointer flex flex-col gap-1 ${
                         permissionMode === 'view'
                           ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-1 ring-brand-500/30'
                           : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100'
@@ -240,7 +240,7 @@ export const BulkShareModal: React.FC<BulkShareModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setPermissionMode('edit')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                      className={`p-3 rounded-2xl border text-left transition-colors duration-150 cursor-pointer flex flex-col gap-1 ${
                         permissionMode === 'edit'
                           ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40 ring-1 ring-indigo-500/30'
                           : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100'
@@ -329,7 +329,7 @@ export const BulkShareModal: React.FC<BulkShareModalProps> = ({
                   type="button"
                   disabled={isSubmitting || selectedDocs.length === 0}
                   onClick={handlePublish}
-                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-xs transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

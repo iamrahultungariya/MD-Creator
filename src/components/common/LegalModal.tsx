@@ -112,7 +112,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800/80 p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('privacy')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                 activeTab === 'privacy'
                   ? 'bg-white text-neutral-950 dark:bg-neutral-900 dark:text-white shadow-2xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -122,7 +122,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('terms')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                 activeTab === 'terms'
                   ? 'bg-white text-neutral-950 dark:bg-neutral-900 dark:text-white shadow-2xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -352,7 +352,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition-all cursor-pointer shadow-xs active:translate-y-[1px]"
+              className="flex-1 sm:flex-none px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs active:translate-y-[1px]"
             >
               I Understand &amp; Agree
             </button>

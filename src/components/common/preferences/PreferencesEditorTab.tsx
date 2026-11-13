@@ -60,7 +60,7 @@ export const PreferencesEditorTab: React.FC = () => {
                 key={f.id}
                 type="button"
                 onClick={() => setFontFamily(f.id)}
-                className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                className={`p-2.5 rounded-lg border text-left transition-colors duration-150 cursor-pointer ${
                   isSelected
                     ? 'border-[#8257F5] bg-[#8257F5]/5 dark:bg-[#8257F5]/10 text-neutral-950 dark:text-white shadow-xs ring-1 ring-[#8257F5]/30'
                     : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-700'
@@ -95,7 +95,7 @@ export const PreferencesEditorTab: React.FC = () => {
                 key={sz}
                 type="button"
                 onClick={() => setFontSize(sz)}
-                className={`px-2 py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer ${
+                className={`px-2 py-1 rounded text-xs font-mono font-medium transition-colors duration-150 cursor-pointer ${
                   fontSize === sz
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white font-bold shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
@@ -119,7 +119,7 @@ export const PreferencesEditorTab: React.FC = () => {
                 key={lh.id}
                 type="button"
                 onClick={() => setLineHeight(lh.id)}
-                className={`px-2 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
+                className={`px-2 py-1 rounded text-xs font-medium transition-colors duration-150 cursor-pointer ${
                   lineHeight === lh.id
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white font-bold shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
@@ -143,7 +143,7 @@ export const PreferencesEditorTab: React.FC = () => {
                 key={sz}
                 type="button"
                 onClick={() => setTabSize(sz as 2 | 4)}
-                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-colors duration-150 cursor-pointer ${
                   tabSize === sz
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white font-bold shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
@@ -165,7 +165,7 @@ export const PreferencesEditorTab: React.FC = () => {
             <button
               type="button"
               onClick={() => setKeymapMode('default')}
-              className={`px-3 py-1 rounded text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors duration-150 cursor-pointer ${
                 keymapMode === 'default'
                   ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white font-bold shadow-xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'
@@ -176,7 +176,7 @@ export const PreferencesEditorTab: React.FC = () => {
             <button
               type="button"
               onClick={() => setKeymapMode('vim')}
-              className={`px-3 py-1 rounded text-xs font-mono font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded text-xs font-mono font-medium transition-colors duration-150 cursor-pointer ${
                 keymapMode === 'vim'
                   ? 'bg-white dark:bg-neutral-900 text-brand-600 dark:text-brand-400 font-bold shadow-xs'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white'

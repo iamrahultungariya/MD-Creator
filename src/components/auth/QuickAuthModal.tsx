@@ -205,7 +205,7 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
                     setMode('signup');
                     setFormError(null);
                   }}
-                  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${
                     mode === 'signup'
                       ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs font-semibold'
                       : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -219,7 +219,7 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
                     setMode('signin');
                     setFormError(null);
                   }}
-                  className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  className={`flex-1 py-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${
                     mode === 'signin'
                       ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs font-semibold'
                       : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -259,7 +259,7 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Alex"
-                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 text-neutral-950 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-all"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 text-neutral-950 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-colors duration-150"
                       />
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 text-neutral-950 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-all"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 text-neutral-950 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-colors duration-150"
                     />
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 text-neutral-950 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-all"
+                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/60 text-neutral-950 dark:text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 transition-colors duration-150"
                     />
                     <button
                       type="button"

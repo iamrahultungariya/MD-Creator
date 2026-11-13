@@ -10,6 +10,7 @@ import {
   Columns, 
   Rows 
 } from 'lucide-react';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface TableBuilderModalProps {
   isOpen: boolean;
@@ -103,7 +104,8 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
       <div 
         data-table-builder="true"
         className="w-full max-w-3xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
@@ -270,7 +272,7 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
           <button
             type="button"
             onClick={handleInsert}
-            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-2xs transition-colors duration-150 flex items-center gap-1.5 cursor-pointer"
           >
             <Check className="w-4 h-4" />
             <span>Insert Table into Document</span>
@@ -278,5 +280,6 @@ export const TableBuilderModal: React.FC<TableBuilderModalProps> = ({
         </div>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 };

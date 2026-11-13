@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import { ModalPortal } from '../common/ModalPortal';
 import { KATEX_FORMULAS, KatexFormula, FormulaCategory } from '../../data/katexFormulas';
 
 interface KatexFormulaModalProps {
@@ -246,17 +247,16 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
     [onInsertFormula, onClose, handleCopyLatex]
   );
 
-  if (!isOpen) return null;
-
   const previewResult = renderFormulaHtml(builderInput);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-6 overflow-hidden animate-in fade-in duration-150 select-none font-sans"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-6 overflow-hidden animate-in fade-in duration-150 select-none font-sans"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
       <div className="w-full max-w-4xl max-h-[92vh] bg-white dark:bg-[#141415] border border-neutral-200/90 dark:border-neutral-800/80 rounded-xl shadow-2xl flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100 font-sans">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-950/50 shrink-0">
@@ -285,7 +285,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('builder')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors duration-150 cursor-pointer ${
                   activeTab === 'builder'
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -297,7 +297,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('library')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors duration-150 cursor-pointer ${
                   activeTab === 'library'
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -411,7 +411,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
                     key={`${item.latex}-${idx}`}
                     type="button"
                     onClick={() => handleInsertPaletteItem(item.latex)}
-                    className="p-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 hover:border-brand-500/60 hover:bg-brand-50/30 dark:hover:bg-brand-950/30 text-xs font-mono flex flex-col items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs group"
+                    className="p-2 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 hover:border-brand-500/60 hover:bg-brand-50/30 dark:hover:bg-brand-950/30 text-xs font-mono flex flex-col items-center justify-center gap-1 transition-colors duration-150 cursor-pointer shadow-2xs group"
                     title={`Insert ${item.latex}`}
                   >
                     <span className="font-semibold text-neutral-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400">
@@ -447,7 +447,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleInsertBuilder(false)}
-                  className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-98 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+                  className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-98 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors duration-150"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Insert into Document ($$)</span>
@@ -480,7 +480,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors duration-150 cursor-pointer ${
                       selectedCategory === cat.id
                         ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-2xs'
                         : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -500,7 +500,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
                 return (
                   <div
                     key={formula.id}
-                    className="group p-4 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-950/40 hover:bg-white dark:hover:bg-neutral-900 transition-all shadow-2xs hover:border-brand-500/40 flex flex-col justify-between gap-2.5"
+                    className="group p-4 rounded-xl border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-950/40 hover:bg-white dark:hover:bg-neutral-900 transition-colors duration-150 shadow-2xs hover:border-brand-500/40 flex flex-col justify-between gap-2.5"
                   >
                     {/* Card Top Title & Badge */}
                     <div>
@@ -562,7 +562,7 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
                       {onInsertFormula && (
                         <button
                           onClick={() => handleInsertLibrary(formula)}
-                          className="py-1.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-all"
+                          className="py-1.5 px-4 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs transition-colors duration-150"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>Insert</span>
@@ -593,5 +593,6 @@ export const KatexFormulaModal: React.FC<KatexFormulaModalProps> = ({
         </div>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 };

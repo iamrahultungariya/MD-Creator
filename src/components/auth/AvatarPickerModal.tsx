@@ -118,7 +118,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
               <button
                 key={preset.id}
                 onClick={() => setSelectedId(preset.id)}
-                className={`group p-3 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center gap-2 relative ${
+                className={`group p-3 rounded-lg border text-center transition-[border-color,background-color] duration-150 cursor-pointer flex flex-col items-center gap-2 relative ${
                   isSelected
                     ? 'border-brand-500 bg-brand-500/10 ring-2 ring-brand-500/30'
                     : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-100/50 dark:hover:bg-neutral-800/50'
@@ -165,7 +165,7 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({ isOpen, on
 
           <button
             onClick={handleApply}
-            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer flex items-center gap-1.5 active:translate-y-[1px]"
+            className="px-4 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm transition-colors duration-150 cursor-pointer flex items-center gap-1.5 active:translate-y-[1px]"
           >
             <Check className="w-3.5 h-3.5" />
             <span>Apply Avatar</span>

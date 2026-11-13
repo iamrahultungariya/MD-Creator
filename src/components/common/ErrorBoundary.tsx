@@ -122,7 +122,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
               <button
                 onClick={this.handleReload}
-                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:translate-y-[1px]"
+                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors duration-150 cursor-pointer shadow-xs active:translate-y-[1px]"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reload App</span>

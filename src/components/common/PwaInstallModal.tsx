@@ -140,7 +140,7 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({ isOpen, onClos
             <button
               onClick={handleInstallClick}
               disabled={isInstalling}
-              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition-colors duration-150 flex items-center justify-center gap-2 shadow-2xs cursor-pointer disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
               <span>

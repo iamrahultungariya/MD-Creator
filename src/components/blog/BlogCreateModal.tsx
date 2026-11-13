@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, PenTool, Sparkles, ShieldCheck } from 'lucide-react';
 import { BlogCategory } from '../../data/blogArticles';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface BlogCreateModalProps {
   isOpen: boolean;
@@ -39,10 +40,9 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
   newContent,
   setNewContent,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-neutral-950/70 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-neutral-950/70 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
       <div 
         className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150 font-sans"
         onClick={(e) => e.stopPropagation()}
@@ -99,7 +99,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
               placeholder="e.g., Building a High-Performance Markdown Pipeline"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs sm:text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs sm:text-sm text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
             />
           </div>
 
@@ -114,7 +114,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
                 placeholder="Your Name"
                 value={newAuthorName}
                 onChange={(e) => setNewAuthorName(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-all"
+                className="w-full px-3.5 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
               />
             </div>
             <div>
@@ -126,7 +126,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
                 placeholder="e.g. Software Engineer"
                 value={newAuthorRole}
                 onChange={(e) => setNewAuthorRole(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-all"
+                className="w-full px-3.5 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
               />
             </div>
             <div>
@@ -136,7 +136,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
               <select
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value as BlogCategory)}
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
               >
                 <option value="Engineering">Engineering</option>
                 <option value="Productivity">Productivity</option>
@@ -157,7 +157,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
               placeholder="A concise 1-2 sentence description of your article..."
               value={newExcerpt}
               onChange={(e) => setNewExcerpt(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-all resize-none"
+              className="w-full px-3.5 py-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150 resize-none"
             />
           </div>
 
@@ -172,7 +172,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
               placeholder={`# Write your story in Markdown...\n\nUse headings, **bold**, lists, or \`code blocks\`.\n\nAll formatting will render seamlessly!`}
               value={newContent}
               onChange={(e) => setNewContent(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 font-mono text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 font-mono text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
             />
           </div>
 
@@ -186,7 +186,7 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all cursor-pointer shadow-2xs flex items-center gap-1.5"
+              className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-colors duration-150 cursor-pointer shadow-2xs flex items-center gap-1.5"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Submit for Review</span>
@@ -195,5 +195,6 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
         </form>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 };
