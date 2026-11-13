@@ -7,6 +7,7 @@ import {
   X, 
   Printer
 } from 'lucide-react';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -61,8 +62,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Soft Backdrop */}
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Soft Backdrop */}
       <div 
         onClick={onClose}
         className="absolute inset-0 bg-neutral-950/40 backdrop-blur-xs animate-in fade-in duration-200"
@@ -255,5 +257,6 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         </div>
       </div>
     </div>
+  </ModalPortal>
   );
 };

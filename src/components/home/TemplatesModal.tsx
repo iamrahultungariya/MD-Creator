@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { MARKDOWN_TEMPLATES, MarkdownTemplate } from '../../data/templates';
 import { useCreateDocument } from '../../hooks/useDocuments';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface TemplatesModalProps {
   isOpen: boolean;
@@ -91,13 +92,14 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs select-none font-sans">
-      <div 
-        className="fixed inset-0" 
-        onClick={onClose} 
-      />
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs select-none font-sans">
+        <div 
+          className="fixed inset-0" 
+          onClick={onClose} 
+        />
 
-      <div className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden z-10 flex flex-col max-h-[85vh] font-sans">
+        <div className="relative w-full max-w-4xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200/90 dark:border-neutral-800 shadow-2xl overflow-hidden z-10 flex flex-col max-h-[85vh] font-sans">
         {/* Header */}
         <div className="px-6 py-4 border-b border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-900/40">
           <div>
@@ -288,5 +290,6 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
         </AnimatePresence>
       </div>
     </div>
+  </ModalPortal>
   );
 };

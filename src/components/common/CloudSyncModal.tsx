@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { syncAllDocuments, isSupabaseConfigured } from '../../lib/supabase';
 import { db } from '../../db';
+import { ModalPortal } from './ModalPortal';
 
 interface CloudSyncModalProps {
   isOpen: boolean;
@@ -87,10 +88,11 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm font-sans select-none animate-in fade-in duration-200"
-      onClick={onClose}
-    >
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm font-sans select-none animate-in fade-in duration-200"
+        onClick={onClose}
+      >
       <div
         className="relative w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-2xl overflow-hidden font-sans text-neutral-900 dark:text-neutral-100"
         role="dialog"
@@ -275,5 +277,6 @@ export const CloudSyncModal: React.FC<CloudSyncModalProps> = ({
         </div>
       </div>
     </div>
+  </ModalPortal>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, FileText, Plus, Pin, Clock, X, Upload, FolderTree } from 'lucide-react';
 import { useDocuments, useCreateDocument } from '../../hooks/useDocuments';
 import { saveDocument } from '../../db';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface DocumentSwitcherModalProps {
   isOpen: boolean;
@@ -86,11 +87,12 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
-      <div 
-        className="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh] font-sans"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs animate-in fade-in duration-150 font-sans" onClick={onClose}>
+        <div 
+          className="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-2xl overflow-hidden flex flex-col max-h-[80vh] font-sans"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Search Header */}
         <div className="p-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-2.5 bg-neutral-50/50 dark:bg-neutral-950/40 font-sans">
           <Search className="w-4 h-4 text-neutral-400 ml-1" />
@@ -222,5 +224,6 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
 
       </div>
     </div>
+  </ModalPortal>
   );
 };

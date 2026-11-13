@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { APP_VERSION_LABEL } from '../../config/version';
+import { ModalPortal } from '../common/ModalPortal';
 
 interface QuickAuthModalProps {
   isOpen: boolean;
@@ -91,13 +92,14 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150">
-      <div 
-        className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[92vh] text-neutral-900 dark:text-neutral-100 font-sans"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Account & Cloud Sync"
-      >
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/50 backdrop-blur-sm select-none font-sans animate-in fade-in duration-150">
+        <div 
+          className="w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl shadow-[0_24px_70px_-12px_rgba(0,0,0,0.35)] dark:shadow-[0_30px_90px_-15px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[92vh] text-neutral-900 dark:text-neutral-100 font-sans"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Account & Cloud Sync"
+        >
 
         {/* Window Titlebar Header (Follows App Design Language) */}
         <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between bg-neutral-50/70 dark:bg-neutral-800 shrink-0">
@@ -341,5 +343,6 @@ export const QuickAuthModal: React.FC<QuickAuthModalProps> = ({
 
       </div>
     </div>
+  </ModalPortal>
   );
 };

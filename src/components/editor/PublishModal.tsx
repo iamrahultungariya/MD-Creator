@@ -23,6 +23,7 @@ import {
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { QuickAuthModal } from '../auth/QuickAuthModal';
+import { ModalPortal } from '../common/ModalPortal';
 import { telemetryService } from '../../services/telemetryService';
 
 interface PublishModalProps {
@@ -144,8 +145,9 @@ export const PublishModal: React.FC<PublishModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none font-sans">
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 text-neutral-800 dark:text-neutral-200 font-sans">
+    <ModalPortal isOpen={isOpen} onClose={onClose}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs select-none font-sans">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150 text-neutral-800 dark:text-neutral-200 font-sans">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800 font-sans">
           <div className="flex items-center gap-2.5">
@@ -405,5 +407,6 @@ export const PublishModal: React.FC<PublishModalProps> = ({
         onSuccess={() => handlePublish()}
       />
     </div>
+  </ModalPortal>
   );
 };
