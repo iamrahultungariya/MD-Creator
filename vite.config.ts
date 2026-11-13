@@ -90,12 +90,12 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
-            urlPattern: /.*(vendor-(mermaid|pdf|docx|genai|katex)|KaTeX_).*\.(js|woff2|woff|ttf)$/,
+            urlPattern: /.*(vendor-(mermaid|pdf|docx|genai|katex|codemirror-vim|codemirror-languages)|KaTeX_).*\.(js|woff2|woff|ttf)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'heavy-dynamic-chunks',
               expiration: {
-                maxEntries: 40,
+                maxEntries: 120,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
             },
@@ -152,6 +152,12 @@ export default defineConfig({
             }
             if ((id.includes('/node_modules/katex/') || id.includes('\\node_modules\\katex\\')) && !id.endsWith('.css')) {
               return 'vendor-katex';
+            }
+            if (id.includes('@replit/codemirror-vim')) {
+              return 'vendor-codemirror-vim';
+            }
+            if (id.includes('@codemirror/language-data')) {
+              return 'vendor-codemirror-languages';
             }
             if (id.includes('@codemirror') || id.includes('codemirror')) {
               return 'vendor-codemirror';

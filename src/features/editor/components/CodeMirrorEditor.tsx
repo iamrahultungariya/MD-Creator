@@ -15,7 +15,6 @@ import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
-import { vim, getCM } from '@replit/codemirror-vim';
 import { useThemeStore } from '../../../stores/useThemeStore';
 import { usePreferencesStore } from '../../../stores/usePreferencesStore';
 import { getThemeExtensions } from '../utils/codeMirrorThemes';
@@ -391,7 +390,7 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
       extensions: [
         slashKeymap,
         Prec.high(keymap.of(createTableKeybindings())),
-        vimCompartment.current.of(keymapMode === 'vim' ? [vim()] : []),
+        vimCompartment.current.of([]),
         focusDimmingCompartment.current.of(createFocusDimmingExtension(focusMode || typewriterMode)),
         history(),
         bracketMatching(),
@@ -423,20 +422,6 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
 
     if (typewriterMode && view.dom) {
       view.dom.classList.add('cm-typewriter-mode');
-    }
-
-    if (keymapMode === 'vim') {
-      const cm = getCM(view);
-      if (cm) {
-        const handleVimMode = (data: { mode: string }) => {
-          const m = data.mode?.toUpperCase();
-          if (m === 'NORMAL' || m === 'INSERT' || m === 'VISUAL' || m === 'REPLACE') {
-            onVimModeChangeRef.current?.(m as any);
-          }
-        };
-        cm.on('vim-mode-change', handleVimMode);
-        onVimModeChangeRef.current?.('NORMAL');
-      }
     }
 
     // Attach scroll listener to scrollDOM for high-performance sync scrolling
@@ -554,34 +539,48 @@ export const CodeMirrorEditor: React.FC<CodeMirrorEditorProps> = ({
     });
   }, [showLineNumbers, prefLineNumbers]);
 
-  // Dynamically toggle Vim mode
+  // Dynamically toggle Vim mode (on-demand code splitting)
   useEffect(() => {
     if (!viewRef.current) return;
-    viewRef.current.dispatch({
-      effects: vimCompartment.current.reconfigure(keymapMode === 'vim' ? [vim()] : []),
-    });
 
+    let isCancelled = false;
     let attachedCm: any = null;
     let modeHandler: ((data: { mode: string }) => void) | null = null;
 
     if (keymapMode === 'vim') {
-      const cm = getCM(viewRef.current);
-      if (cm) {
-        attachedCm = cm;
-        modeHandler = (data: { mode: string }) => {
-          const m = data.mode?.toUpperCase();
-          if (m === 'NORMAL' || m === 'INSERT' || m === 'VISUAL' || m === 'REPLACE') {
-            onVimModeChangeRef.current?.(m as any);
+      import('@replit/codemirror-vim')
+        .then(({ vim, getCM }) => {
+          if (isCancelled || !viewRef.current) return;
+
+          viewRef.current.dispatch({
+            effects: vimCompartment.current.reconfigure([vim()]),
+          });
+
+          const cm = getCM(viewRef.current);
+          if (cm) {
+            attachedCm = cm;
+            modeHandler = (data: { mode: string }) => {
+              const m = data.mode?.toUpperCase();
+              if (m === 'NORMAL' || m === 'INSERT' || m === 'VISUAL' || m === 'REPLACE') {
+                onVimModeChangeRef.current?.(m as any);
+              }
+            };
+            cm.on('vim-mode-change', modeHandler);
+            onVimModeChangeRef.current?.('NORMAL');
           }
-        };
-        cm.on('vim-mode-change', modeHandler);
-        onVimModeChangeRef.current?.('NORMAL');
-      }
+        })
+        .catch((err) => {
+          console.warn('Failed to load Vim mode extension:', err);
+        });
     } else {
+      viewRef.current.dispatch({
+        effects: vimCompartment.current.reconfigure([]),
+      });
       onVimModeChangeRef.current?.(undefined as any);
     }
 
     return () => {
+      isCancelled = true;
       if (attachedCm && modeHandler) {
         try {
           attachedCm.off('vim-mode-change', modeHandler);

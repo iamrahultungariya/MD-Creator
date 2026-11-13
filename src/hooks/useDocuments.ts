@@ -99,6 +99,7 @@ export function usePaginatedDocuments({
   return useQuery({
     queryKey: ['documents', 'paginated', searchQuery, activeTag, showTrash, page, pageSize],
     staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<PaginatedDocumentsResult> => {
       const sortedDocs = await getFilteredAndSortedDocuments(searchQuery, activeTag, showTrash);
@@ -123,6 +124,7 @@ export function useDocuments(searchQuery = '', activeTag = 'All', showTrash = fa
   return useQuery({
     queryKey: ['documents', searchQuery, activeTag, showTrash],
     staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
     queryFn: async (): Promise<DocumentMetadata[]> => {
       return await getFilteredAndSortedDocuments(searchQuery, activeTag, showTrash);
@@ -134,6 +136,7 @@ export function useActiveDocumentCount() {
   return useQuery({
     queryKey: ['active-document-count'],
     staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       return await db.documents.filter(d => !d.isDeleted).count();
     }
@@ -144,6 +147,7 @@ export function useTrashCount() {
   return useQuery({
     queryKey: ['trash-count'],
     staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       return await db.documents.filter(d => Boolean(d.isDeleted)).count();
     }
@@ -154,6 +158,7 @@ export function useAllDocumentTags() {
   return useQuery({
     queryKey: ['all-document-tags'],
     staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       const docs = await db.documents.filter(d => !d.isDeleted).toArray();
       const tags = Array.from(new Set(docs.flatMap(d => d.tags || []))).filter(Boolean);
@@ -168,6 +173,7 @@ export function useAllDocumentTags() {
 export function useDocumentContent(id: string | null | undefined) {
   return useQuery({
     queryKey: ['document-content', id],
+    gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       if (!id) return '';
       return await getDocumentContent(id);
@@ -180,6 +186,7 @@ export function useStorageStats() {
   return useQuery({
     queryKey: ['storage-stats'],
     staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       return await getStorageStats();
     }
