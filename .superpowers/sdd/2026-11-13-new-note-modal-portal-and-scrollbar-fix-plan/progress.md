@@ -2,4 +2,4 @@
 
 Task 1: complete
 Task 2: complete
-Task 3: pending
+Task 3: complete
