@@ -1,0 +1,33 @@
+---
+description: Enforce high-taste frontend design systems, eliminate AI slop, and obey the 35 UI/UX laws.
+globs: ["*.tsx", "*.jsx", "*.html", "*.css", "*.vue", "*.svelte"]
+---
+
+# Production UI Architect Rules
+
+When authoring or modifying user interfaces:
+
+1. **Design System & Surface Physics:**
+   - Dark mode base: `#09090B` canvas, `#111113` surface, `#18181B` elevated controls.
+   - 1px hairline borders: `border-white/[0.07]`.
+   - Top specular elevation: `shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]`.
+   - Nested border radius formula: `R_outer = R_inner + Padding`.
+
+2. **Optical Typography:**
+   - Display (>32px): `tracking-[-0.035em] leading-[1.08]`.
+   - Body (14-16px): `max-w-[65ch] leading-[1.6]`.
+   - Monospace Metadata: `font-mono text-xs uppercase tracking-wider`.
+   - Mandatory `tabular-nums` on all numbers, timers, prices, and metrics.
+
+3. **Motion Physics:**
+   - Ban `transition-all`. Cap hover transitions at 120ms–180ms (`duration-150 ease-out`).
+   - Framer Motion spring presets: `stiffness: 400, damping: 30` (snappy popovers/dialogs).
+
+4. **Edge State Completeness:**
+   - Always implement: Loading Skeleton (`animate-pulse bg-white/[0.04]`), Error with retry CTA, Actionable Empty State, and `truncate min-w-0` on flex items.
+
+5. **Reference Playbooks:**
+   - See `SKILL.md` for full orchestration.
+   - See `references/banned-replacements-matrix.md` for exact token swaps.
+   - See `references/layouts-2026.md` for the 6 modern layout templates.
+   - See `references/ux-laws-handbook.md` for the 35 UI/UX laws.
