@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import {
   Search,
   FileText,
@@ -20,10 +21,14 @@ import { db, DocumentMetadata, createNewDocument } from '../../db';
 import { useThemeStore } from '../../stores/useThemeStore';
 import { usePreferencesStore } from '../../stores/usePreferencesStore';
 import { StorageDetailsModal } from './StorageDetailsModal';
+import { ModalPortal } from './ModalPortal';
+import { CommandPaletteTrigger, CommandPaletteOriginRect } from '../../hooks/useCommandPalette';
 
 interface CommandPaletteModalProps {
   isOpen: boolean;
   onClose: () => void;
+  triggerType?: CommandPaletteTrigger;
+  originRect?: CommandPaletteOriginRect | null;
   onOpenPdfStudio?: () => void;
 }
 
@@ -42,6 +47,8 @@ interface PaletteAction {
 export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
   isOpen,
   onClose,
+  triggerType = 'keyboard',
+  originRect = null,
   onOpenPdfStudio,
 }) => {
   const navigate = useNavigate();
@@ -329,22 +336,115 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     [filteredActions, selectedIndex, search, navigate, onClose]
   );
 
-  if (!isOpen) return null;
+  // Calculate transform origin for click trigger (Gooey morph expansion)
+  const transformOriginStyle = useMemo(() => {
+    if (triggerType === 'click' && originRect) {
+      const x = originRect.x + originRect.width / 2;
+      const y = originRect.y + originRect.height / 2;
+      return `${x}px ${y}px`;
+    }
+    return 'top center';
+  }, [triggerType, originRect]);
+
+  // Click variant: Gooey bloom expansion from search button
+  const clickAnimationVariants: Variants = {
+    initial: {
+      opacity: 0,
+      scale: 0.15,
+      borderRadius: 48,
+      filter: 'blur(10px)',
+    },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      borderRadius: 16,
+      filter: 'blur(0px)',
+      transition: {
+        type: 'spring',
+        damping: 24,
+        stiffness: 340,
+        mass: 0.75,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.15,
+      borderRadius: 48,
+      filter: 'blur(8px)',
+      transition: {
+        duration: 0.2,
+        ease: [0.32, 0, 0.67, 0],
+      },
+    },
+  };
+
+  // Keyboard shortcut variant: Smooth slide down from top of page
+  const keyboardAnimationVariants: Variants = {
+    initial: {
+      opacity: 0,
+      y: -44,
+      scale: 0.96,
+      filter: 'blur(4px)',
+    },
+    animate: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: 'blur(0px)',
+      transition: {
+        type: 'spring',
+        damping: 28,
+        stiffness: 380,
+        mass: 0.7,
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: -36,
+      scale: 0.97,
+      filter: 'blur(4px)',
+      transition: {
+        duration: 0.18,
+        ease: [0.32, 0, 0.67, 0],
+      },
+    },
+  };
+
+  const selectedVariants = triggerType === 'click' ? clickAnimationVariants : keyboardAnimationVariants;
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 bg-black/40 select-none font-sans"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-      >
-        <div
-          className="w-full max-w-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-neutral-900 dark:text-neutral-100 font-sans"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Command Palette"
-        >
+      <ModalPortal isOpen={isOpen} onClose={onClose}>
+        <AnimatePresence>
+          {isOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-start justify-center pt-14 sm:pt-24 px-3 sm:px-4 select-none font-sans"
+              role="presentation"
+            >
+              {/* Backdrop Blur Layer with smooth fade */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={onClose}
+                className="fixed inset-0 bg-black/45 dark:bg-black/65 backdrop-blur-xs cursor-pointer"
+              />
+
+              {/* Command Palette Card (Dynamic Animated Container) */}
+              <motion.div
+                key={triggerType}
+                style={{ transformOrigin: transformOriginStyle }}
+                variants={selectedVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="relative w-full max-w-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-neutral-900 dark:text-neutral-100 font-sans z-10"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Command Palette"
+                onClick={(e) => e.stopPropagation()}
+              >
           {/* Mimo-Inspired Clean Search Bar Header */}
           <div className="px-4 py-3.5 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-3 bg-white dark:bg-neutral-900 shrink-0">
             <Search className="w-4 h-4 text-neutral-400 shrink-0" />
@@ -490,8 +590,11 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
               {filteredActions.length} item{filteredActions.length === 1 ? '' : 's'}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
+    )}
+  </AnimatePresence>
+</ModalPortal>
 
       {/* Storage Breakdown Sub-modal if triggered */}
       {isStorageModalOpen && (

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface ModalPortalProps {
@@ -110,7 +110,19 @@ export const ModalPortal: React.FC<ModalPortalProps> = ({
     };
   }, [isOpen, trapFocus]);
 
-  if (!isOpen || typeof document === 'undefined') return null;
+  // Keep portal mounted during exit animations (260ms grace window)
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+    } else {
+      const timer = setTimeout(() => setShouldRender(false), 260);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!shouldRender || typeof document === 'undefined') return null;
 
   return createPortal(
     <div ref={containerRef} data-modal-portal="true" className="contents">

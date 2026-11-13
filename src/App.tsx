@@ -199,12 +199,15 @@ export const App: React.FC = () => {
           </Suspense>
         )}
 
-        {/* Command Palette Modal */}
-        {cmd.isOpen && (
-          <Suspense fallback={null}>
-            <CommandPaletteModal isOpen={cmd.isOpen} onClose={cmd.closePalette} />
-          </Suspense>
-        )}
+        {/* Command Palette Modal with Adaptive Origin & Keyboard Transitions */}
+        <Suspense fallback={null}>
+          <CommandPaletteModal
+            isOpen={cmd.isOpen}
+            onClose={cmd.closePalette}
+            triggerType={cmd.triggerType}
+            originRect={cmd.originRect}
+          />
+        </Suspense>
 
         {/* Floating Toolbar Settings Modal */}
         {isToolbarSettingsOpen && (

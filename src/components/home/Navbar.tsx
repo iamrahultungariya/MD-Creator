@@ -55,9 +55,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
     }
   };
 
-  const triggerCommandPalette = () => {
+  const triggerCommandPalette = (e?: React.MouseEvent) => {
+    let originRect: { x: number; y: number; width: number; height: number } | undefined;
+    if (e && e.currentTarget instanceof HTMLElement) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      originRect = {
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
     window.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, metaKey: true, bubbles: true })
+      new CustomEvent('open-command-palette', {
+        detail: {
+          trigger: 'click',
+          originRect,
+        },
+      })
     );
   };
 
@@ -133,7 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Quick search indicator */}
           <button
-            onClick={triggerCommandPalette}
+            onClick={(e) => triggerCommandPalette(e)}
             aria-label="Open command palette"
             className="hidden sm:inline-flex items-center gap-2 px-2.5 py-1 text-xs font-mono text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors cursor-pointer"
           >
@@ -251,9 +266,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenTemplates, onOpenFeatures:
           </div>
           <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between">
             <button
-              onClick={() => {
+              onClick={(e) => {
                 setIsMobileMenuOpen(false);
-                triggerCommandPalette();
+                triggerCommandPalette(e);
               }}
               className="text-xs font-mono text-neutral-500 flex items-center gap-1.5 py-1"
             >
