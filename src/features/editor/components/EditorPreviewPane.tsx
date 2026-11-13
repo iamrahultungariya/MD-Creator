@@ -68,7 +68,7 @@ export const EditorPreviewPane: React.FC<EditorPreviewPaneProps> = ({
 
       {/* Rendered Document Canvas */}
       <div
-        className={`flex-1 transition-all duration-150 break-words min-h-0 max-w-full ${
+        className={`flex-1 break-words min-h-0 max-w-full ${
           viewMode === 'read'
             ? `px-3.5 sm:px-8 md:px-10 pb-20 sm:pb-28 ${readerWidthClass} ${readerFontClass} ${readerSizeClass}`
             : 'p-4 sm:p-8 md:p-10'

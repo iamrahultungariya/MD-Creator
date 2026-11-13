@@ -119,7 +119,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               onClose();
               onOpenPdfStudio();
             }}
-            className="w-full text-left p-3 rounded-lg border border-brand-500/20 bg-brand-50/20 dark:bg-brand-950/15 hover:bg-brand-50/50 dark:hover:bg-brand-950/30 transition-all flex items-center justify-between group cursor-pointer"
+            className="w-full text-left p-3 rounded-lg border border-brand-500/20 bg-brand-50/20 dark:bg-brand-950/15 hover:bg-brand-50/50 dark:hover:bg-brand-950/30 transition-colors duration-150 flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-brand-600 text-white flex items-center justify-center shadow-2xs shrink-0">
@@ -151,7 +151,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               onClose();
               onExportMd();
             }}
-            className="w-full text-left p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-all flex items-center justify-between group cursor-pointer"
+            className="w-full text-left p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-colors duration-150 flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center shadow-2xs shrink-0">
@@ -183,7 +183,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               onClose();
               onExportDocx();
             }}
-            className="w-full text-left p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-all flex items-center justify-between group cursor-pointer"
+            className="w-full text-left p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-colors duration-150 flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-brand-600 text-white flex items-center justify-center shadow-2xs shrink-0">
@@ -215,7 +215,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               onClose();
               onCopyMarkdown();
             }}
-            className="w-full text-left p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-all flex items-center justify-between group cursor-pointer"
+            className="w-full text-left p-3 rounded-lg border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-colors duration-150 flex items-center justify-between group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-2xs shrink-0">

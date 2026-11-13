@@ -52,7 +52,7 @@ export const EditorToolsMenu: React.FC<EditorToolsMenuProps> = ({
           onBeforeOpen?.();
           setIsOpen((prev) => !prev);
         }}
-        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs font-sans ${
+        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors duration-150 cursor-pointer shadow-2xs font-sans ${
           isOpen
             ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-transparent shadow-xs'
             : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'

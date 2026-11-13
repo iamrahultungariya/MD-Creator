@@ -102,7 +102,7 @@ export const MimoDocPinSelector: React.FC<MimoDocPinSelectorProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search documents by title, tags, or content..."
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-transparent focus:border-emerald-500/50 focus:bg-white dark:focus:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none transition-all"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-neutral-100 dark:bg-neutral-800/80 border border-transparent focus:border-emerald-500/50 focus:bg-white dark:focus:bg-neutral-800 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none transition-colors duration-150"
               autoFocus
             />
             {searchQuery && (
@@ -151,7 +151,7 @@ export const MimoDocPinSelector: React.FC<MimoDocPinSelectorProps> = ({
                 <div
                   key={doc.id}
                   onClick={() => handleTogglePin(doc.id)}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all ${
+                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-colors duration-150 ${
                     isPinned
                       ? 'border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 text-neutral-900 dark:text-neutral-100 shadow-2xs'
                       : 'border-neutral-200/70 dark:border-neutral-800/80 bg-neutral-50/40 dark:bg-neutral-900/40 hover:bg-neutral-100/70 dark:hover:bg-neutral-800/60'
@@ -192,7 +192,7 @@ export const MimoDocPinSelector: React.FC<MimoDocPinSelectorProps> = ({
                       e.stopPropagation();
                       handleTogglePin(doc.id);
                     }}
-                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                    className={`shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-medium flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                       isPinned
                         ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-neutral-950 shadow-2xs'
                         : 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'

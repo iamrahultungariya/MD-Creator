@@ -115,7 +115,7 @@ export const DocumentsFilterToolbar: React.FC<DocumentsFilterToolbarProps> = Rea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Filter notes by title or content..."
-          className="w-full pl-9 pr-9 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-sans text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+          className="w-full pl-9 pr-9 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs font-sans text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors duration-150"
         />
         {inputValue ? (
           <button

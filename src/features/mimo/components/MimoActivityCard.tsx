@@ -48,7 +48,7 @@ export const MimoActivityCard: React.FC<MimoActivityCardProps> = ({ activity }) 
     : '';
 
   return (
-    <div className="w-full my-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs overflow-hidden text-xs font-sans transition-all">
+    <div className="w-full my-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xs overflow-hidden text-xs font-sans">
       {/* Activity Top Header */}
       <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-900/50">
         <div className="flex items-center gap-2.5 min-w-0">

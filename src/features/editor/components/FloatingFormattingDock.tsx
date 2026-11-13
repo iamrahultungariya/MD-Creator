@@ -130,7 +130,7 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
         top: `${coords.top}px`,
         transform: `translate(-50%, ${coords.placement === 'bottom' ? '0%' : '-100%'})`,
       }}
-      className={`z-40 transition-all duration-200 ease-out select-none ${
+      className={`z-40 transition-[opacity,transform] duration-150 ease-out select-none ${
         shouldShow
           ? 'opacity-100 scale-100 pointer-events-auto'
           : 'opacity-0 scale-95 pointer-events-none'
@@ -153,7 +153,7 @@ export const FloatingFormattingDock: React.FC<FloatingFormattingDockProps> = ({
               }}
               title={act.tooltip}
               aria-label={act.tooltip}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-brand-950/40 active:scale-95 transition-all cursor-pointer shrink-0 font-sans"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-brand-50/80 dark:hover:bg-brand-950/40 active:scale-95 transition-colors duration-150 cursor-pointer shrink-0 font-sans"
             >
               {act.icon}
             </button>

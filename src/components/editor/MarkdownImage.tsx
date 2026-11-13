@@ -156,7 +156,7 @@ export const MarkdownImage: React.FC<MarkdownImageProps> = ({
             const file = e.dataTransfer.files?.[0];
             if (file) handleLocalFileSelect(file);
           }}
-          className={`relative p-6 sm:p-7 rounded-2xl border-2 border-dashed transition-all text-center flex flex-col items-center justify-center gap-3.5 backdrop-blur-xs ${
+          className={`relative p-6 sm:p-7 rounded-2xl border-2 border-dashed transition-colors duration-150 text-center flex flex-col items-center justify-center gap-3.5 backdrop-blur-xs ${
             isDraggingOver 
               ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/30 ring-4 ring-brand-500/10' 
               : 'border-neutral-300 dark:border-neutral-700 bg-neutral-50/70 dark:bg-neutral-900/50 hover:border-neutral-400 dark:hover:border-neutral-600 shadow-xs'
@@ -195,7 +195,7 @@ export const MarkdownImage: React.FC<MarkdownImageProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="mt-1 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
+            className="mt-1 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 text-xs font-bold transition-colors duration-150 shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
           >
             <ImageIcon className="w-3.5 h-3.5" />
             <span>Choose Image File to Embed</span>
@@ -221,7 +221,7 @@ export const MarkdownImage: React.FC<MarkdownImageProps> = ({
   return (
     <figure className="my-6 block max-w-full group">
       {/* Outer framing card */}
-      <div className="relative rounded-2xl border border-neutral-200/80 dark:border-neutral-800/90 bg-neutral-50/60 dark:bg-neutral-900/50 p-1.5 sm:p-2 shadow-xs hover:shadow-xl dark:hover:shadow-black/50 transition-all duration-300 backdrop-blur-xs overflow-hidden">
+      <div className="relative rounded-2xl border border-neutral-200/80 dark:border-neutral-800/90 bg-neutral-50/60 dark:bg-neutral-900/50 p-1.5 sm:p-2 shadow-xs hover:shadow-xl dark:hover:shadow-black/50 transition-shadow duration-200 backdrop-blur-xs overflow-hidden">
         
         {/* Inner Media Canvas */}
         <div className="relative overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center min-h-[140px]">
@@ -243,7 +243,7 @@ export const MarkdownImage: React.FC<MarkdownImageProps> = ({
           />
 
           {/* Floating Glassmorphism Quick Action Toolbar on Hover */}
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center gap-1 bg-neutral-950/80 dark:bg-neutral-900/90 backdrop-blur-md px-2 py-1 rounded-xl border border-white/10 shadow-xl text-white text-xs select-none pointer-events-auto">
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1 bg-neutral-950/80 dark:bg-neutral-900/90 backdrop-blur-md px-2 py-1 rounded-xl border border-white/10 shadow-xl text-white text-xs select-none pointer-events-auto">
             <button
               type="button"
               onClick={() => onOpenLightbox({ src: resolvedSrc, alt, title })}

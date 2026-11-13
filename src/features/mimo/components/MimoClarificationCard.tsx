@@ -158,7 +158,7 @@ export const MimoClarificationCard: React.FC<MimoClarificationCardProps> = ({
                       type="button"
                       disabled={isSubmitted}
                       onClick={() => handleSelectOption(q.id, opt, isMulti)}
-                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs transition-all flex items-center justify-between cursor-pointer ${
+                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs transition-colors duration-150 flex items-center justify-between cursor-pointer ${
                         isSelected
                           ? 'border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-950 font-medium shadow-2xs'
                           : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800/80 hover:border-neutral-300 dark:hover:border-neutral-700'
@@ -207,7 +207,7 @@ export const MimoClarificationCard: React.FC<MimoClarificationCardProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={!hasAnySelection}
-            className="px-3.5 py-1.5 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-950 text-xs font-semibold cursor-pointer hover:opacity-90 active:scale-98 transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3.5 py-1.5 rounded-lg bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-950 text-xs font-semibold cursor-pointer hover:opacity-90 active:scale-98 transition-colors duration-150 flex items-center gap-1.5 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>Continue &amp; Generate</span>
             <Send className="w-3 h-3" />

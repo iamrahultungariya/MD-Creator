@@ -220,7 +220,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="px-3 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs hover:opacity-90 active:scale-95 transition-all shrink-0 font-sans"
+                  className="px-3 py-2 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs hover:opacity-90 active:scale-95 transition-colors duration-150 shrink-0 font-sans"
                 >
                   {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{isCopied ? 'Copied' : 'Copy'}</span>
@@ -238,7 +238,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 value={customSlug}
                 onChange={(e) => setCustomSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
                 placeholder="my-article-slug"
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white font-sans text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                className="w-full px-3 py-2 rounded-lg border border-neutral-200/90 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white font-sans text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors duration-150"
               />
             </div>
 
@@ -251,7 +251,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setPermissionMode('view')}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-0.5 ${
+                  className={`p-2.5 rounded-xl border text-left transition-colors duration-150 cursor-pointer flex flex-col gap-0.5 ${
                     permissionMode === 'view'
                       ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-1 ring-brand-500/30 font-semibold'
                       : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100'
@@ -267,7 +267,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setPermissionMode('edit')}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-0.5 ${
+                  className={`p-2.5 rounded-xl border text-left transition-colors duration-150 cursor-pointer flex flex-col gap-0.5 ${
                     permissionMode === 'edit'
                       ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40 ring-1 ring-indigo-500/30 font-semibold'
                       : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 hover:bg-neutral-100'
@@ -305,7 +305,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter secret passphrase for viewers..."
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 font-sans transition-all"
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-900 dark:text-white text-xs focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 font-sans transition-colors duration-150"
                 />
               )}
             </div>
@@ -350,7 +350,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                     type="button"
                     onClick={handlePublish}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95 font-sans"
+                    className="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors duration-150 active:scale-95 font-sans"
                   >
                     {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Update Live Page</span>
@@ -387,7 +387,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
                     type="button"
                     onClick={handlePublish}
                     disabled={isSubmitting}
-                    className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95 font-sans"
+                    className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors duration-150 active:scale-95 font-sans"
                   >
                     {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <Globe className="w-3.5 h-3.5" />

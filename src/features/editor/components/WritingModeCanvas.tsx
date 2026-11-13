@@ -395,7 +395,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
       />
 
       {/* Integrated Document Title Header */}
-      <div className="w-full max-w-4xl mx-auto px-4 sm:px-12 md:px-16 pt-6 sm:pt-10 pb-2 sm:pb-3 shrink-0 transition-all duration-200">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-12 md:px-16 pt-6 sm:pt-10 pb-2 sm:pb-3 shrink-0">
         <input
           ref={titleInputRef}
           type="text"
@@ -419,7 +419,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
       {/* CodeMirror 6 Virtualized Document Writing Area */}
       <div 
         onPointerDown={notifyUserActivity}
-        className="flex-1 min-h-0 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative transition-all duration-200"
+        className="flex-1 min-h-0 w-full max-w-4xl mx-auto px-2 sm:px-10 md:px-14 pb-24 overflow-hidden relative"
       >
         <CodeMirrorEditor
           value={content}
@@ -455,7 +455,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
 
       {/* Floating Ambient Writer Dock (Bottom Subtle Squarish Dock) */}
       <div 
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-300 pointer-events-auto ${
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-200 pointer-events-auto ${
           !isToolbarVisible ? 'opacity-85 hover:opacity-100' : 'opacity-100'
         }`}
       >
@@ -506,7 +506,7 @@ export const WritingModeCanvas: React.FC<WritingModeCanvasProps> = ({
           {onOpenSprintPopover && (
             <button
               onClick={onOpenSprintPopover}
-              className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-sans font-medium transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-sans font-medium transition-colors duration-150 cursor-pointer ${
                 isSprintActive
                   ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/70 dark:border-amber-800/70 font-semibold animate-pulse'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'

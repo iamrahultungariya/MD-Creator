@@ -136,7 +136,7 @@ const XProfileCard: React.FC<{
 
         <button
           onClick={onOpen}
-          className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+          className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors duration-150 shadow-sm cursor-pointer shrink-0"
         >
           <span>Visit Profile</span>
           <span className="text-[13px] leading-none">→</span>
@@ -227,7 +227,7 @@ const InstagramProfileCard: React.FC<{
 
         <button
           onClick={onOpen}
-          className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white text-[13px] font-semibold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer"
+          className="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white text-[13px] font-semibold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors duration-150 shadow-sm cursor-pointer"
         >
           <span>Visit Profile</span>
           <span className="text-[14px] leading-none">→</span>
@@ -312,7 +312,7 @@ const YouTubeCard: React.FC<{
 
           <button
             onClick={onOpen}
-            className="bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+            className="bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors duration-150 shadow-sm cursor-pointer shrink-0"
           >
             <span>Watch Video</span>
             <span className="text-[13px] leading-none">→</span>
@@ -381,7 +381,7 @@ const YouTubeCard: React.FC<{
 
         <button
           onClick={onOpen}
-          className="bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+          className="bg-red-600 hover:bg-red-700 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors duration-150 shadow-sm cursor-pointer shrink-0"
         >
           <span>Visit Channel</span>
           <span className="text-[13px] leading-none">→</span>
@@ -459,7 +459,7 @@ const GenericWebCard: React.FC<{
 
         <button
           onClick={onOpen}
-          className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+          className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-[12px] font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors duration-150 shadow-sm cursor-pointer shrink-0"
         >
           <span>Visit Site</span>
           <span className="text-[13px] leading-none">→</span>
@@ -537,7 +537,7 @@ export const LinkHoverCard: React.FC<LinkHoverCardProps> = ({
         width: `${CARD_WIDTH}px`,
         zIndex: 99999,
       }}
-      className="rounded-3xl bg-white dark:bg-[#18181c] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in zoom-in-95 duration-150 transition-all pointer-events-auto"
+      className="rounded-3xl bg-white dark:bg-[#18181c] border border-neutral-200/90 dark:border-neutral-800/90 shadow-2xl overflow-hidden text-neutral-900 dark:text-neutral-100 select-none animate-in fade-in zoom-in-95 duration-150 transition-colors pointer-events-auto"
     >
       {/* Offline Status Badge */}
       {data?.isOfflineFallback && (

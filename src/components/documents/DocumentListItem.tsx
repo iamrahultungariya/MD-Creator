@@ -88,7 +88,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
               e.stopPropagation();
               onToggleSelect?.(doc.id);
             }}
-            className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+            className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors duration-150 cursor-pointer ${
               isSelected
                 ? 'bg-brand-600 border-brand-600 text-white shadow-2xs'
                 : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 text-transparent'
@@ -98,7 +98,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
           </div>
         ) : (
           <div
-            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 group-hover:scale-105 ${
+            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-[colors,transform] duration-150 group-hover:scale-105 ${
               currentTab === 'trash'
                 ? 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'
                 : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-950 shadow-xs'
@@ -177,7 +177,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
 
         {/* Desktop Action Buttons: Reveal on hover with crisp transitions */}
         <div
-          className="hidden sm:flex items-center gap-1 transition-all duration-150 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
+          className="hidden sm:flex items-center gap-1 transition-opacity duration-150 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto"
         >
           {currentTab === 'active' ? (
             <>
@@ -219,7 +219,7 @@ export const DocumentListItem: React.FC<DocumentListItemProps> = React.memo(({
               <button
                 type="button"
                 onClick={(e) => onTogglePin(e, doc.id)}
-                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`p-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${
                   doc.isPinned
                     ? 'text-amber-500 dark:text-amber-400 hover:bg-amber-500/10'
                     : 'text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60'

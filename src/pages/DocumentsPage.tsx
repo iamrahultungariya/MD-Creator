@@ -13,7 +13,8 @@ import {
   X,
   Cloud,
   CheckSquare,
-  MoreHorizontal
+  MoreHorizontal,
+  RotateCcw
 } from 'lucide-react';
 import { Navbar } from '../components/home/Navbar';
 import { DocumentGridCard } from '../components/documents/DocumentGridCard';
@@ -78,6 +79,7 @@ export const DocumentsPage: React.FC = () => {
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isLocalFolderOpen, setIsLocalFolderOpen] = useState(false);
   const [cloneToast, setCloneToast] = useState<{ title: string; id: string } | null>(null);
+  const [undoDeleteToast, setUndoDeleteToast] = useState<{ id: string; title: string } | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isBulkShareOpen, setIsBulkShareOpen] = useState(false);
@@ -168,6 +170,14 @@ export const DocumentsPage: React.FC = () => {
     }
   }, [cloneToast]);
 
+  // Auto-dismiss deferred undo delete toast (5-second grace window)
+  useEffect(() => {
+    if (undoDeleteToast) {
+      const timer = setTimeout(() => setUndoDeleteToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [undoDeleteToast]);
+
   const handleCreateNew = () => {
     setIsCreateModalOpen(true);
   };
@@ -231,6 +241,12 @@ export const DocumentsPage: React.FC = () => {
     restoreMutate(id);
   }, [restoreMutate]);
 
+  const handleUndoDelete = useCallback(() => {
+    if (!undoDeleteToast) return;
+    restoreMutate(undoDeleteToast.id);
+    setUndoDeleteToast(null);
+  }, [undoDeleteToast, restoreMutate]);
+
   const renameMutate = renameDocMutation.mutate;
   const handleRename = useCallback((id: string, newTitle: string) => {
     renameMutate({ id, newTitle });
@@ -275,6 +291,7 @@ export const DocumentsPage: React.FC = () => {
       });
       if (confirmed) {
         deleteMutate({ id, permanent: false });
+        setUndoDeleteToast({ id, title });
       }
     } else {
       const confirmed = await confirm({
@@ -774,6 +791,38 @@ export const DocumentsPage: React.FC = () => {
             <button
               onClick={() => setCloneToast(null)}
               className="p-1 hover:opacity-75 transition-opacity cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 5-Second Deferred Undo Delete Toast (Peak-End Rule & Error Prevention) */}
+      <AnimatePresence>
+        {undoDeleteToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed bottom-6 left-6 z-50 bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-neutral-800 dark:border-neutral-200 text-xs font-sans"
+          >
+            <Trash2 className="w-4 h-4 text-amber-400 dark:text-amber-600 shrink-0" />
+            <span className="truncate max-w-xs">
+              Moved <strong>"{undoDeleteToast.title}"</strong> to Recycle Bin
+            </span>
+            <button
+              onClick={handleUndoDelete}
+              className="ml-1 px-2.5 py-1 rounded-lg bg-white/20 dark:bg-black/10 hover:bg-white/30 dark:hover:bg-black/20 font-bold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Undo
+            </button>
+            <button
+              onClick={() => setUndoDeleteToast(null)}
+              className="p-1 hover:opacity-75 transition-opacity cursor-pointer shrink-0"
+              aria-label="Dismiss undo toast"
             >
               <X className="w-3.5 h-3.5" />
             </button>

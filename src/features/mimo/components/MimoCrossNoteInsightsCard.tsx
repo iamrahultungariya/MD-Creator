@@ -51,7 +51,7 @@ export const MimoCrossNoteInsightsCard: React.FC<MimoCrossNoteInsightsCardProps>
         {findings.map((finding) => (
           <div
             key={finding.id}
-            className={`p-2.5 rounded-xl border text-left text-xs space-y-1.5 transition-all ${
+            className={`p-2.5 rounded-xl border text-left text-xs space-y-1.5 transition-colors duration-150 ${
               finding.type === 'fact_check'
                 ? 'border-amber-500/40 bg-amber-50/60 dark:bg-amber-950/20'
                 : 'border-neutral-200/80 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/70'

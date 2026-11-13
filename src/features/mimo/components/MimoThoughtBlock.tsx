@@ -158,7 +158,7 @@ export const MimoThoughtBlock: React.FC<MimoThoughtBlockProps> = ({
   // ── 2. COMPLETED / SETTLED REASONING ACCORDION (Clean & Space-Efficient) ──
   return (
     <div className="w-full my-1.5 select-text font-sans">
-      <div className="rounded-lg border border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300 overflow-hidden transition-all">
+      <div className="rounded-lg border border-neutral-200/70 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 text-neutral-700 dark:text-neutral-300 overflow-hidden">
         {/* Compact Summary Header */}
         <button
           type="button"

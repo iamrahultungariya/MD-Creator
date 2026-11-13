@@ -215,7 +215,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
                 touchMimoActivity();
                 setIsModelMenuOpen(!isModelMenuOpen);
               }}
-              className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                 isModelMenuOpen
                   ? 'border-neutral-900 dark:border-white bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
                   : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800'
@@ -315,7 +315,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
                   touchMimoActivity();
                   setIsThinkingMenuOpen(!isThinkingMenuOpen);
                 }}
-                className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                   isThinkingMenuOpen
                     ? 'border-neutral-900 dark:border-white bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
                     : 'border-neutral-200/80 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800'
@@ -382,7 +382,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
               touchMimoActivity();
               setIsPinModalOpen(true);
             }}
-            className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-all ${
+            className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-colors duration-150 ${
               pinnedDocIds.length > 0
                 ? 'border-emerald-500/50 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300'
                 : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'
@@ -406,7 +406,7 @@ export const MimoInputDock: React.FC<MimoInputDockProps> = ({
                 touchMimoActivity();
                 setIsSettingsOpen(!isSettingsOpen);
               }}
-              className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
+              className={`px-2 py-1 rounded-md border text-[11px] font-medium flex items-center gap-1.5 cursor-pointer transition-colors duration-150 ${
                 isSettingsOpen || showThinking
                   ? 'border-neutral-400 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs'
                   : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white'

@@ -162,7 +162,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('outline')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                   activeTab === 'outline'
                     ? 'bg-brand-600 text-white shadow-2xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -182,7 +182,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('stats')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                   activeTab === 'stats'
                     ? 'bg-brand-600 text-white shadow-2xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -195,7 +195,7 @@ export const DocumentDrawer: React.FC<DocumentDrawerProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('info')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                   activeTab === 'info'
                     ? 'bg-brand-600 text-white shadow-2xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'

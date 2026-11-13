@@ -59,7 +59,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onInsertBold}
-          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
+          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-colors duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer font-sans"
           title="Bold (**text**)"
         >
           <Bold className="w-4 h-4" />
@@ -72,7 +72,7 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={onInsertHighlight}
-            className="p-2.5 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
+            className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 active:scale-95 transition-colors duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer font-sans"
             title="Highlight (==text==)"
           >
             <Highlighter className="w-4 h-4" />
@@ -80,47 +80,47 @@ export const MobileEditorToolbar: React.FC<MobileEditorToolbarProps> = ({
           </button>
         )}
 
-        {/* 2. Link */}
+        {/* 3. Link */}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onInsertLink}
-          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
+          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-colors duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer font-sans"
           title="Insert Link"
         >
           <Link2 className="w-4 h-4" />
           <span className="text-[9px] font-bold">Link</span>
         </button>
 
-        {/* 3. Image */}
+        {/* 4. Image */}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onOpenImageModal}
-          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
+          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-colors duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer font-sans"
           title="Embed Image"
         >
           <ImageIcon className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
           <span className="text-[9px] font-bold">Image</span>
         </button>
 
-        {/* 4. Slash Commands Trigger */}
+        {/* 5. Slash Commands Trigger */}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onTriggerSlash}
-          className="w-8 h-8 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-sans font-bold active:scale-95 transition-all flex items-center justify-center shadow-xs cursor-pointer"
+          className="min-w-[44px] min-h-[44px] rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-sans font-bold active:scale-95 transition-colors duration-150 flex items-center justify-center shadow-xs cursor-pointer"
           title="Slash Commands (/)"
         >
           <span className="text-sm font-bold">/</span>
         </button>
 
-        {/* 5. More Overflow */}
+        {/* 6. More Overflow */}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setIsOverflowOpen(true)}
-          className="p-2.5 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-all flex flex-col items-center gap-0.5 cursor-pointer font-sans"
+          className="min-w-[44px] min-h-[44px] p-2 rounded-lg text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 active:scale-95 transition-colors duration-150 flex flex-col items-center justify-center gap-0.5 cursor-pointer font-sans"
           title="More Tools"
         >
           <MoreHorizontal className="w-4 h-4" />

@@ -327,7 +327,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
           <div className="inline-flex rounded-lg bg-neutral-200/80 dark:bg-neutral-800 p-0.5 text-xs font-sans font-medium">
             <button
               onClick={() => setMobileTab('edit')}
-              className={`px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                 mobileTab === 'edit'
                   ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-semibold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -338,7 +338,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
             </button>
             <button
               onClick={() => setMobileTab('preview')}
-              className={`px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-md flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                 mobileTab === 'preview'
                   ? 'bg-white dark:bg-neutral-700 text-neutral-950 dark:text-white shadow-xs font-semibold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -387,7 +387,7 @@ export const EditorWorkspace: React.FC<EditorWorkspaceProps> = React.memo(({
                       return next;
                     });
                   }}
-                  className={`px-2.5 py-1 rounded-md border text-xs font-sans font-medium flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs ${
+                  className={`px-2.5 py-1 rounded-md border text-xs font-sans font-medium flex items-center gap-1.5 cursor-pointer transition-colors duration-150 shadow-2xs ${
                     isSyncScrollEnabled
                       ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border-brand-200 dark:border-brand-800/80 font-semibold'
                       : 'bg-white dark:bg-neutral-800/80 text-neutral-500 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700 hover:text-neutral-900 dark:hover:text-white'

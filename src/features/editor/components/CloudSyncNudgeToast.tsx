@@ -81,7 +81,7 @@ export const CloudSyncNudgeToast: React.FC<CloudSyncNudgeToastProps> = ({
           <div className="flex items-center gap-2 mt-3">
             <button
               onClick={handleConnect}
-              className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+              className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-colors duration-150 cursor-pointer flex items-center gap-1 shadow-2xs"
             >
               <span>Back Up to Cloud</span>
               <ArrowRight className="w-3 h-3" />

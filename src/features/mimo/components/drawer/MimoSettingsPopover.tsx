@@ -241,7 +241,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
             touchMimoActivity();
             setActiveTab('controls');
           }}
-          className={`flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1.5 transition-colors duration-150 cursor-pointer ${
             activeTab === 'controls'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/80 dark:border-neutral-700'
               : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -257,7 +257,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
             touchMimoActivity();
             setActiveTab('byok');
           }}
-          className={`flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+          className={`flex-1 py-1.5 px-2 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1.5 transition-colors duration-150 cursor-pointer relative ${
             activeTab === 'byok'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/80 dark:border-neutral-700'
               : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -276,7 +276,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
             touchMimoActivity();
             setActiveTab('style');
           }}
-          className={`flex-1 py-1.5 px-1.5 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-1.5 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-colors duration-150 cursor-pointer ${
             activeTab === 'style'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/80 dark:border-neutral-700'
               : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -292,7 +292,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
             touchMimoActivity();
             setActiveTab('usage');
           }}
-          className={`flex-1 py-1.5 px-1.5 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-1.5 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition-colors duration-150 cursor-pointer ${
             activeTab === 'usage'
               ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-2xs border border-neutral-200/80 dark:border-neutral-700'
               : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -324,7 +324,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   touchMimoActivity();
                   setSelectedModel('gemini-3.8-flash');
                 }}
-                className={`py-1.5 px-1.5 rounded-lg text-left transition-all cursor-pointer border ${
+                className={`py-1.5 px-1.5 rounded-lg text-left transition-colors duration-150 cursor-pointer border ${
                   selectedModel === 'gemini-3.8-flash'
                     ? 'border-neutral-400 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold shadow-2xs'
                     : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
@@ -345,7 +345,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   touchMimoActivity();
                   setSelectedModel('gemini-3.5-flash');
                 }}
-                className={`py-1.5 px-1.5 rounded-lg text-left transition-all cursor-pointer border ${
+                className={`py-1.5 px-1.5 rounded-lg text-left transition-colors duration-150 cursor-pointer border ${
                   selectedModel === 'gemini-3.5-flash'
                     ? 'border-neutral-400 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold shadow-2xs'
                     : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
@@ -366,7 +366,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                   touchMimoActivity();
                   setSelectedModel('gemini-3.5-flash-lite');
                 }}
-                className={`py-1.5 px-1.5 rounded-lg text-left transition-all cursor-pointer border ${
+                className={`py-1.5 px-1.5 rounded-lg text-left transition-colors duration-150 cursor-pointer border ${
                   selectedModel === 'gemini-3.5-flash-lite'
                     ? 'border-neutral-400 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold shadow-2xs'
                     : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/60'
@@ -447,7 +447,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                       touchMimoActivity();
                       setThinkingLevel(lvl);
                     }}
-                    className={`py-1 rounded-md text-center font-medium transition-all cursor-pointer ${
+                    className={`py-1 rounded-md text-center font-medium transition-colors duration-150 cursor-pointer ${
                       thinkingLevel === lvl
                         ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white font-semibold shadow-2xs'
                         : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
@@ -614,7 +614,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
                       type="button"
                       onClick={handleSaveApiKey}
                       disabled={!keyInput.trim() || isValidatingKey}
-                      className="px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white font-semibold text-xs shadow-2xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                      className="px-3.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white font-semibold text-xs shadow-2xs transition-colors duration-150 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
                     >
                       {isValidatingKey ? (
                         <>
@@ -947,7 +947,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
               </div>
               <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-neutral-900 dark:bg-neutral-100 transition-all duration-300 rounded-full"
+                  className="h-full bg-neutral-900 dark:bg-neutral-100 transition-[width] duration-300 rounded-full"
                   style={{
                     width: `${
                       userApiKey
@@ -1066,7 +1066,7 @@ export const MimoSettingsPopover: React.FC<MimoSettingsPopoverProps> = ({ isOpen
 
                     <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${
+                        className={`h-full rounded-full transition-[width] duration-300 ${
                           isSelected
                             ? 'bg-neutral-900 dark:bg-neutral-100'
                             : 'bg-neutral-400 dark:bg-neutral-600'

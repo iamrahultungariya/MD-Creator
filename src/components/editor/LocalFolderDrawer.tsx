@@ -277,7 +277,7 @@ export const LocalFolderDrawer: React.FC<LocalFolderDrawerProps> = ({
             </div>
             <button
               onClick={handlePickFolder}
-              className="px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-2xs cursor-pointer transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs inline-flex items-center gap-2 shadow-2xs cursor-pointer transition-colors duration-150 active:scale-95"
             >
               <FolderOpen className="w-4 h-4" />
               <span>Choose Local Folder</span>

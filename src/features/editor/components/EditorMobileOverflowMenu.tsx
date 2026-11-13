@@ -62,7 +62,7 @@ export const EditorMobileOverflowMenu: React.FC<EditorMobileOverflowMenuProps> =
           onBeforeOpen?.();
           setIsOpen((prev) => !prev);
         }}
-        className={`min-h-[44px] min-w-[44px] p-2.5 rounded-lg border flex items-center justify-center transition-all cursor-pointer shadow-2xs font-sans ${
+        className={`min-h-[44px] min-w-[44px] p-2.5 rounded-lg border flex items-center justify-center transition-colors duration-150 cursor-pointer shadow-2xs font-sans ${
           isOpen
             ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-transparent shadow-xs'
             : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'

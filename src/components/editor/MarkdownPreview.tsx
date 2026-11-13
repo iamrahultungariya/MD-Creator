@@ -128,7 +128,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             const plainText = extractTextFromReactNode(children);
             const id = toHeadingSlug(plainText);
             return (
-              <h1 id={id} data-heading="true" data-heading-text={plainText} className="text-2xl sm:text-3xl font-black text-inherit mt-6 mb-3 tracking-tight pb-1.5 border-b border-current/15 scroll-mt-6 transition-all duration-300">
+              <h1 id={id} data-heading="true" data-heading-text={plainText} className="text-2xl sm:text-3xl font-black text-inherit mt-6 mb-3 tracking-tight pb-1.5 border-b border-current/15 scroll-mt-6">
                 {replaceRichIconsInReactNode(children)}
               </h1>
             );
@@ -137,7 +137,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             const plainText = extractTextFromReactNode(children);
             const id = toHeadingSlug(plainText);
             return (
-              <h2 id={id} data-heading="true" data-heading-text={plainText} className="text-xl sm:text-2xl font-bold text-inherit mt-5 mb-2.5 tracking-tight scroll-mt-6 transition-all duration-300">
+              <h2 id={id} data-heading="true" data-heading-text={plainText} className="text-xl sm:text-2xl font-bold text-inherit mt-5 mb-2.5 tracking-tight scroll-mt-6">
                 {replaceRichIconsInReactNode(children)}
               </h2>
             );
@@ -146,7 +146,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             const plainText = extractTextFromReactNode(children);
             const id = toHeadingSlug(plainText);
             return (
-              <h3 id={id} data-heading="true" data-heading-text={plainText} className="text-lg font-bold text-inherit mt-4 mb-2 scroll-mt-6 transition-all duration-300">
+              <h3 id={id} data-heading="true" data-heading-text={plainText} className="text-lg font-bold text-inherit mt-4 mb-2 scroll-mt-6">
                 {replaceRichIconsInReactNode(children)}
               </h3>
             );
@@ -155,7 +155,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             const plainText = extractTextFromReactNode(children);
             const id = toHeadingSlug(plainText);
             return (
-              <h4 id={id} data-heading="true" data-heading-text={plainText} className="text-base font-semibold text-inherit mt-3 mb-1.5 scroll-mt-6 transition-all duration-300">
+              <h4 id={id} data-heading="true" data-heading-text={plainText} className="text-base font-semibold text-inherit mt-3 mb-1.5 scroll-mt-6">
                 {replaceRichIconsInReactNode(children)}
               </h4>
             );
@@ -164,7 +164,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             const plainText = extractTextFromReactNode(children);
             const id = toHeadingSlug(plainText);
             return (
-              <h5 id={id} data-heading="true" data-heading-text={plainText} className="text-sm font-semibold text-inherit mt-2.5 mb-1 scroll-mt-6 transition-all duration-300">
+              <h5 id={id} data-heading="true" data-heading-text={plainText} className="text-sm font-semibold text-inherit mt-2.5 mb-1 scroll-mt-6">
                 {replaceRichIconsInReactNode(children)}
               </h5>
             );
@@ -173,7 +173,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
             const plainText = extractTextFromReactNode(children);
             const id = toHeadingSlug(plainText);
             return (
-              <h6 id={id} data-heading="true" data-heading-text={plainText} className="text-xs font-semibold text-inherit opacity-75 uppercase tracking-wider mt-2 mb-1 scroll-mt-6 transition-all duration-300">
+              <h6 id={id} data-heading="true" data-heading-text={plainText} className="text-xs font-semibold text-inherit opacity-75 uppercase tracking-wider mt-2 mb-1 scroll-mt-6">
                 {replaceRichIconsInReactNode(children)}
               </h6>
             );
@@ -251,7 +251,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
 
               return (
                 <div 
-                  className={`my-4 p-4 rounded-r-2xl shadow-xs transition-all ${themeStyles.container}`}
+                  className={`my-4 p-4 rounded-r-2xl shadow-xs transition-colors duration-150 ${themeStyles.container}`}
                 >
                   <div className="flex items-center gap-2 mb-2 select-none">
                     <div 
@@ -301,7 +301,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = React.memo(({ con
           // Collapsible Accordion (details & summary)
           details: ({ children, ...props }: any) => (
             <details 
-              className="my-3.5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 overflow-hidden transition-all group open:bg-white dark:open:bg-neutral-900 shadow-2xs"
+              className="my-3.5 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/40 overflow-hidden transition-colors duration-150 group open:bg-white dark:open:bg-neutral-900 shadow-2xs"
               {...props}
             >
               {children}

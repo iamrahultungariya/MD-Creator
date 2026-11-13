@@ -143,7 +143,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`p-2.5 rounded-lg border flex items-center justify-between transition-all cursor-pointer font-sans ${t.bg} ${t.border} ${t.text} ${
+                  className={`p-2.5 rounded-lg border flex items-center justify-between transition-colors duration-150 cursor-pointer font-sans ${t.bg} ${t.border} ${t.text} ${
                     isSelected ? 'ring-2 ring-brand-500 dark:ring-brand-400 shadow-xs font-bold' : 'opacity-85 hover:opacity-100 hover:scale-[1.02]'
                   }`}
                 >
@@ -170,7 +170,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={f.id}
                   onClick={() => setFontFamily(f.id)}
-                  className={`py-1.5 px-2 rounded-md text-xs transition-all cursor-pointer text-center ${f.fontClass} ${
+                  className={`py-1.5 px-2 rounded-md text-xs transition-colors duration-150 cursor-pointer text-center ${f.fontClass} ${
                     isSelected
                       ? 'bg-white dark:bg-neutral-900 text-brand-600 dark:text-brand-400 font-bold shadow-xs border border-neutral-200/60 dark:border-neutral-700/60'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -210,7 +210,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={s.id}
                   onClick={() => setFontSize(s.id)}
-                  className={`w-7 h-7 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center justify-center ${
+                  className={`w-7 h-7 rounded-md text-[11px] font-medium transition-colors duration-150 cursor-pointer flex items-center justify-center ${
                     fontSize === s.id
                       ? 'bg-brand-500 text-white font-bold shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700'
@@ -249,7 +249,7 @@ export const ReaderAppearancePopover: React.FC<ReaderAppearancePopoverProps> = (
                 <button
                   key={w.id}
                   onClick={() => setColumnWidth(w.id)}
-                  className={`py-2 px-1.5 rounded-md transition-all cursor-pointer text-center flex flex-col items-center justify-center ${
+                  className={`py-2 px-1.5 rounded-md transition-colors duration-150 cursor-pointer text-center flex flex-col items-center justify-center ${
                     isSelected
                       ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white font-medium'

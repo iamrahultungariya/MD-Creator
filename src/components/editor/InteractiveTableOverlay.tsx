@@ -227,7 +227,7 @@ export const InteractiveTableOverlay: React.FC<InteractiveTableOverlayProps> = (
       {/* Floating Notion-style Quick Table Action Toolbar */}
       {isEditable && onTableChange && (
         <div 
-          className={`absolute -top-3.5 right-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-900/90 dark:bg-neutral-800/90 backdrop-blur-md text-white text-[11px] shadow-lg border border-neutral-700/60 transition-all duration-150 select-none ${
+          className={`absolute -top-3.5 right-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-900/90 dark:bg-neutral-800/90 backdrop-blur-md text-white text-[11px] shadow-lg border border-neutral-700/60 transition-[opacity,transform] duration-150 select-none ${
             isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
           }`}
         >

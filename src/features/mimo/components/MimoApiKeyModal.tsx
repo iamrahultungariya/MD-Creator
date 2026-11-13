@@ -179,7 +179,7 @@ export const MimoApiKeyModal: React.FC<MimoApiKeyModalProps> = ({ isOpen, onClos
                 </div>
                 <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    className="h-full bg-emerald-500 rounded-full transition-[width] duration-200"
                     style={{ width: `${Math.min(100, Math.max(3, (requestsToday / 1500) * 100))}%` }}
                   />
                 </div>

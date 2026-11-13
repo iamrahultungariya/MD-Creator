@@ -33,7 +33,7 @@ export const MimoExecutionTimeline: React.FC<MimoExecutionTimelineProps> = ({
   const activeLabel = STEP_LABELS[activeStep?.id]?.label || activeStep?.label || 'Thinking';
 
   return (
-    <div className="mb-2.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-900/40 text-xs overflow-hidden transition-all duration-200">
+    <div className="mb-2.5 rounded-lg border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50/60 dark:bg-neutral-900/40 text-xs overflow-hidden">
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}

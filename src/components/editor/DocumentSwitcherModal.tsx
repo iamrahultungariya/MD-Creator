@@ -170,7 +170,7 @@ export const DocumentSwitcherModal: React.FC<DocumentSwitcherModalProps> = ({
                   key={doc.id}
                   onClick={() => handleSelectDoc(doc.id)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full text-left p-2.5 rounded-lg flex items-center justify-between transition-all cursor-pointer font-sans ${
+                  className={`w-full text-left p-2.5 rounded-lg flex items-center justify-between transition-colors duration-150 cursor-pointer font-sans ${
                     isSelected
                       ? 'bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-white'
                       : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50 text-neutral-700 dark:text-neutral-300'

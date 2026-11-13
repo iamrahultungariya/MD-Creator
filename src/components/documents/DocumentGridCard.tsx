@@ -95,7 +95,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                   e.stopPropagation();
                   onToggleSelect?.(doc.id);
                 }}
-                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors duration-150 cursor-pointer ${
                   isSelected
                     ? 'bg-brand-600 border-brand-600 text-white shadow-2xs'
                     : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 text-transparent'
@@ -178,7 +178,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
 
             {/* Desktop Action Buttons: Reveal on hover with smooth fade & slide */}
             <div
-              className="hidden sm:flex items-center gap-1 transition-all duration-150 opacity-0 translate-y-1 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
+              className="hidden sm:flex items-center gap-1 transition-[opacity,transform] duration-150 opacity-0 translate-y-1 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
             >
               {currentTab === 'active' ? (
                 <>
@@ -220,7 +220,7 @@ export const DocumentGridCard: React.FC<DocumentGridCardProps> = React.memo(({
                   <button
                     type="button"
                     onClick={(e) => onTogglePin(e, doc.id)}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`p-1.5 rounded-lg transition-colors duration-150 cursor-pointer ${
                       doc.isPinned
                         ? 'text-amber-500 dark:text-amber-400 hover:bg-amber-500/10'
                         : 'text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800'

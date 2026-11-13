@@ -146,7 +146,7 @@ export const MimoDiffCard: React.FC<MimoDiffCardProps> = ({ hunk, onApply, onDis
           <button
             type="button"
             onClick={onApply}
-            className="px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:hover:bg-neutral-200 dark:text-neutral-950 text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs hover:shadow-xs"
+            className="px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-neutral-100 dark:hover:bg-neutral-200 dark:text-neutral-950 text-xs font-semibold cursor-pointer transition-colors duration-150 flex items-center gap-1.5 shadow-2xs hover:shadow-xs"
           >
             <Check className="w-3.5 h-3.5" />
             <span>Apply Changes</span>

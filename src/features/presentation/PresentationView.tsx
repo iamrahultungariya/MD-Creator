@@ -302,7 +302,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 pointer-events-auto">
           <button
             onClick={onExit}
-            className="px-3 py-1.5 min-h-[38px] rounded-lg bg-black/70 hover:bg-black/90 text-white backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md border border-white/10 transition-all active:scale-95 font-sans"
+            className="px-3 py-1.5 min-h-[38px] rounded-lg bg-black/70 hover:bg-black/90 text-white backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md border border-white/10 transition-colors duration-150 active:scale-95 font-sans"
             title="Exit Presentation Deck (Esc)"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -312,7 +312,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
           <button
             onClick={() => setShowHelp((prev) => !prev)}
-            className="hidden sm:flex p-2 rounded-lg bg-black/70 hover:bg-black/90 text-white/80 hover:text-white backdrop-blur-md cursor-pointer border border-white/10 transition-all active:scale-95"
+            className="hidden sm:flex p-2 rounded-lg bg-black/70 hover:bg-black/90 text-white/80 hover:text-white backdrop-blur-md cursor-pointer border border-white/10 transition-colors duration-150 active:scale-95"
             title="Keyboard Shortcuts (?)"
           >
             <HelpCircle className="w-3.5 h-3.5" />
@@ -340,7 +340,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       {/* Main Slide Stage */}
       <div className="flex-1 flex items-center justify-center p-2.5 sm:p-8 md:p-14 pt-14 pb-20 sm:pt-16 sm:pb-24 overflow-hidden w-full">
         <div 
-          className={`w-full max-w-5xl rounded-xl sm:rounded-2xl p-4 sm:p-10 md:p-16 shadow-2xl transition-all duration-300 border flex flex-col justify-start sm:justify-center h-full max-h-[calc(100dvh-7.5rem)] sm:max-h-[82vh] overflow-y-auto overscroll-contain select-text font-sans ${currentTheme.card} ${currentTheme.border}`}
+          className={`w-full max-w-5xl rounded-xl sm:rounded-2xl p-4 sm:p-10 md:p-16 shadow-2xl transition-colors duration-200 border flex flex-col justify-start sm:justify-center h-full max-h-[calc(100dvh-7.5rem)] sm:max-h-[82vh] overflow-y-auto overscroll-contain select-text font-sans ${currentTheme.card} ${currentTheme.border}`}
         >
           <div className={`prose prose-sm sm:prose-base md:prose-lg lg:prose-xl max-w-none text-inherit leading-relaxed font-sans ${currentTheme.prose}`}>
             <MarkdownPreview content={currentSlide.body} className="text-inherit" />
@@ -352,7 +352,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       <button
         onClick={prevSlide}
         disabled={currentSlideIndex === 0}
-        className={`fixed left-1.5 sm:left-4 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-3 rounded-xl bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl active:scale-95 disabled:opacity-0 disabled:pointer-events-none ${
+        className={`fixed left-1.5 sm:left-4 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-3 rounded-xl bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-[opacity,transform] duration-150 cursor-pointer border border-white/10 shadow-xl active:scale-95 disabled:opacity-0 disabled:pointer-events-none ${
           currentSlideIndex === 0 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-80 sm:opacity-70 sm:hover:opacity-100 hover:scale-105' : 'opacity-0 pointer-events-none'
         }`}
         title="Previous Slide (← / Backspace)"
@@ -364,7 +364,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       <button
         onClick={nextSlide}
         disabled={currentSlideIndex === totalSlides - 1}
-        className={`fixed right-1.5 sm:right-4 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-3 rounded-xl bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-all cursor-pointer border border-white/10 shadow-xl active:scale-95 disabled:opacity-0 disabled:pointer-events-none ${
+        className={`fixed right-1.5 sm:right-4 top-1/2 -translate-y-1/2 z-40 p-2 sm:p-3 rounded-xl bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition-[opacity,transform] duration-150 cursor-pointer border border-white/10 shadow-xl active:scale-95 disabled:opacity-0 disabled:pointer-events-none ${
           currentSlideIndex === totalSlides - 1 ? 'opacity-0 pointer-events-none' : isHudVisible ? 'opacity-80 sm:opacity-70 sm:hover:opacity-100 hover:scale-105' : 'opacity-0 pointer-events-none'
         }`}
         title="Next Slide (→ / Space / Enter)"
@@ -447,7 +447,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             <button
               onClick={prevSlide}
               disabled={currentSlideIndex === 0}
-              className="p-1 sm:p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all active:scale-95"
+              className="p-1 sm:p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors duration-150 active:scale-95"
               title="Previous Slide"
               aria-label="Previous Slide"
             >
@@ -459,7 +459,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             <button
               onClick={nextSlide}
               disabled={currentSlideIndex === totalSlides - 1}
-              className="p-1 sm:p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-all active:scale-95"
+              className="p-1 sm:p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition-colors duration-150 active:scale-95"
               title="Next Slide"
               aria-label="Next Slide"
             >
@@ -493,7 +493,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           {/* Mobile Theme Toggle Button (cycles theme on tap) */}
           <button
             onClick={cycleTheme}
-            className="sm:hidden p-1 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all shrink-0"
+            className="sm:hidden p-1 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-colors duration-150 shrink-0"
             title={`Current theme: ${theme} (Tap to cycle)`}
             aria-label="Cycle presentation theme"
           >
@@ -507,7 +507,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
               <button
                 key={t}
                 onClick={() => setTheme(t)}
-                className={`w-4 h-4 rounded-md border transition-all cursor-pointer ${
+                className={`w-4 h-4 rounded-md border transition-colors duration-150 cursor-pointer ${
                   t === 'dark' ? 'bg-[#0c0d12] border-neutral-600' :
                   t === 'paper' ? 'bg-[#f8f6f2] border-neutral-400' :
                   t === 'sepia' ? 'bg-[#f6ebd7] border-amber-400' :
@@ -523,7 +523,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           {/* Speaker Notes Toggle */}
           <button
             onClick={() => setIsNotesOpen((prev) => !prev)}
-            className={`p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg cursor-pointer transition-all shrink-0 ${
+            className={`p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg cursor-pointer transition-colors duration-150 shrink-0 ${
               isNotesOpen ? 'bg-amber-500 text-neutral-950 font-bold shadow-xs' : 'hover:bg-white/10 text-neutral-300 hover:text-white'
             }`}
             title="Toggle Speaker Notes (N)"
@@ -535,7 +535,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-all shrink-0"
+            className="p-1.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg hover:bg-white/10 text-neutral-300 hover:text-white cursor-pointer transition-colors duration-150 shrink-0"
             title="Toggle Fullscreen (F)"
             aria-label="Toggle Fullscreen"
           >
@@ -547,7 +547,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       {/* Bottom Progress Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-1 bg-black/20 z-40">
         <div
-          className="h-full bg-brand-500 dark:bg-brand-400 transition-all duration-300 ease-out"
+          className="h-full bg-brand-500 dark:bg-brand-400 transition-[width] duration-300 ease-out"
           style={{ width: `${progressPercent}%` }}
         />
       </div>

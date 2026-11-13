@@ -108,7 +108,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
           <button
             type="button"
             onClick={() => onChangePdfTheme('light')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 cursor-pointer ${
               pdfTheme === 'light'
                 ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -120,7 +120,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
           <button
             type="button"
             onClick={() => onChangePdfTheme('dark')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 cursor-pointer ${
               pdfTheme === 'dark'
                 ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-xs font-bold'
                 : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -151,7 +151,7 @@ export const PdfExportSidebar: React.FC<PdfExportSidebarProps> = React.memo(({
                 key={item.id}
                 type="button"
                 onClick={() => onSelectPreset(item.id as PdfPreset)}
-                className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                className={`p-3 rounded-xl border text-left transition-colors duration-150 cursor-pointer ${
                   isSelected
                     ? 'border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-950 shadow-md font-semibold'
                     : 'border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 text-neutral-700 dark:text-neutral-300'

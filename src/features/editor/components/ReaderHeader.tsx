@@ -147,7 +147,7 @@ export const ReaderHeader: React.FC<ReaderHeaderProps> = ({
       {/* 2.5px Reading Progress Line at Top */}
       <div className={`absolute top-0 left-0 right-0 h-[2.5px] pointer-events-none overflow-hidden ${themeStyles.progressTrack}`}>
         <div 
-          className={`h-full transition-all duration-150 ease-out ${themeStyles.progressFill}`}
+          className={`h-full transition-[width] duration-150 ease-out ${themeStyles.progressFill}`}
           style={{ width: `${readingProgress}%` }}
         />
       </div>

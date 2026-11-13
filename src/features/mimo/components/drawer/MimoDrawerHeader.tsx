@@ -55,7 +55,7 @@ export const MimoDrawerHeader: React.FC<MimoDrawerHeaderProps> = ({
 
         <button
           onClick={onClearMessages}
-          className="p-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition-colors duration-150 cursor-pointer"
           title="Clear chat history"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -63,7 +63,7 @@ export const MimoDrawerHeader: React.FC<MimoDrawerHeaderProps> = ({
 
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg text-neutral-500 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200/80 dark:hover:bg-neutral-800 transition-all cursor-pointer ml-0.5"
+          className="p-1.5 rounded-lg text-neutral-500 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-200/80 dark:hover:bg-neutral-800 transition-colors duration-150 cursor-pointer ml-0.5"
           title="Close (Ctrl+J)"
         >
           <X className="w-4 h-4" />

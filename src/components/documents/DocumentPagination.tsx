@@ -123,7 +123,7 @@ export const DocumentPagination: React.FC<DocumentPaginationProps> = React.memo(
                 type="button"
                 onClick={() => onPageChange(item)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-brand-600 text-white shadow-xs font-bold'
                     : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-transparent'
@@ -155,7 +155,7 @@ export const DocumentPagination: React.FC<DocumentPaginationProps> = React.memo(
               key={opt}
               type="button"
               onClick={() => onPageSizeChange(opt)}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
+              className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors duration-150 cursor-pointer ${
                 pageSize === opt
                   ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs'
                   : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
