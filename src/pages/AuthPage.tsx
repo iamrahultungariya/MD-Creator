@@ -164,7 +164,7 @@ export const AuthPage: React.FC = () => {
                   setMode('signup');
                   setFormError(null);
                 }}
-                className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 py-2 rounded-lg transition-colors duration-150 cursor-pointer ${
                   mode === 'signup'
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs font-bold'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -178,7 +178,7 @@ export const AuthPage: React.FC = () => {
                   setMode('signin');
                   setFormError(null);
                 }}
-                className={`flex-1 py-2 rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 py-2 rounded-lg transition-colors duration-150 cursor-pointer ${
                   mode === 'signin'
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs font-bold'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -211,7 +211,7 @@ export const AuthPage: React.FC = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Alex"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors duration-150"
                     />
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export const AuthPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="author@journal.org"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors duration-150"
                   />
                 </div>
               </div>
@@ -246,7 +246,7 @@ export const AuthPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                    className="w-full pl-10 pr-11 py-2.5 rounded-xl border border-neutral-200/90 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors duration-150"
                   />
                   <button
                     type="button"
@@ -261,7 +261,7 @@ export const AuthPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+                className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold text-xs shadow-xs transition-colors duration-150 cursor-pointer flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>

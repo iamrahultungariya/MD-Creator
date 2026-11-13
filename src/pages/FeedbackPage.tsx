@@ -223,7 +223,7 @@ export const FeedbackPage: React.FC = () => {
                       <div
                         key={cat.id}
                         onClick={() => setCategory(cat.id)}
-                        className={`p-3.5 rounded-lg border cursor-pointer transition-all flex items-start gap-3 ${
+                        className={`p-3.5 rounded-lg border cursor-pointer transition-colors duration-150 flex items-start gap-3 ${
                           isSelected
                             ? 'border-brand-500 bg-brand-50/50 dark:bg-brand-950/40 shadow-xs ring-1 ring-brand-500'
                             : 'border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900/60'
@@ -259,7 +259,7 @@ export const FeedbackPage: React.FC = () => {
                         key={s.id}
                         type="button"
                         onClick={() => setSentiment(s.id)}
-                        className={`flex-1 min-w-[76px] py-2 px-2.5 rounded-lg border transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                        className={`flex-1 min-w-[76px] py-2 px-2.5 rounded-lg border transition-colors duration-150 flex flex-col items-center gap-1 cursor-pointer ${
                           isSelected
                             ? 'border-brand-600 bg-brand-600 text-white shadow-xs'
                             : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300'
@@ -389,7 +389,7 @@ export const FeedbackPage: React.FC = () => {
                       key={opt.id}
                       type="button"
                       onClick={() => setWillingnessToPay(willingnessToPay === opt.id ? '' : opt.id)}
-                      className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-lg border text-left transition-colors duration-150 cursor-pointer ${
                         willingnessToPay === opt.id
                           ? 'border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold shadow-xs ring-1 ring-brand-500'
                           : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
@@ -432,7 +432,7 @@ export const FeedbackPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white text-xs font-bold shadow-xs hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-xs font-bold shadow-xs transition-colors duration-150 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -480,7 +480,7 @@ export const FeedbackPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/editor')}
-                  className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                  className="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-xs font-bold shadow-xs transition-colors duration-150 cursor-pointer"
                 >
                   Open Editor
                 </button>

@@ -436,7 +436,7 @@ disabled={isVerifyingPassword}
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${currentTheme.bg} ${currentTheme.text}`}>
       {/* Top Reading Progress Bar */}
       <div 
-        className="fixed top-0 left-0 right-0 h-0.5 bg-brand-600 z-50 transition-all duration-75 pointer-events-none"
+        className="fixed top-0 left-0 right-0 h-0.5 bg-brand-600 z-50 transition-[width] duration-75 pointer-events-none"
         style={{ width: `${readingProgress}%` }}
       />
 
@@ -484,7 +484,7 @@ disabled={isVerifyingPassword}
               <button
                 type="button"
                 onClick={() => setMobileTab('edit')}
-                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs ${
+                className={`px-2.5 py-1 rounded-md transition-colors duration-150 cursor-pointer text-xs ${
                   mobileTab === 'edit'
                     ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white font-bold shadow-xs'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -495,7 +495,7 @@ disabled={isVerifyingPassword}
               <button
                 type="button"
                 onClick={() => setMobileTab('preview')}
-                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer text-xs ${
+                className={`px-2.5 py-1 rounded-md transition-colors duration-150 cursor-pointer text-xs ${
                   mobileTab === 'preview'
                     ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white font-bold shadow-xs'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
@@ -530,7 +530,7 @@ disabled={isVerifyingPassword}
           {/* Copy Markdown */}
           <button
             onClick={handleCopyMarkdown}
-            className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs ${
+            className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors duration-150 shadow-2xs ${
               isCopied
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 ring-1 ring-emerald-500/30'
                 : 'border-current/15 hover:bg-current/5 font-medium'
@@ -564,7 +564,7 @@ disabled={isVerifyingPassword}
             <button
               key={bDoc.id}
               onClick={() => handleSelectBundleDoc(bDoc.id)}
-              className={`px-3 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer text-xs font-medium ${
+              className={`px-3 py-1 rounded-lg whitespace-nowrap transition-colors duration-150 cursor-pointer text-xs font-medium ${
                 activeBundleDocId === bDoc.id
                   ? 'bg-brand-600 text-white font-bold shadow-2xs'
                   : 'bg-white dark:bg-neutral-800 border border-neutral-200/80 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50'
@@ -677,7 +677,7 @@ disabled={isVerifyingPassword}
                 type="button"
                 disabled={isSubmittingEdit || editableContent === originalContent}
                 onClick={handleSubmitEdits}
-                className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:translate-y-[1px]"
+                className="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors duration-150 active:translate-y-[1px]"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{isSubmittingEdit ? 'Submitting...' : 'Submit Changes'}</span>

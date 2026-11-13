@@ -48,13 +48,13 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates }) 
         <div className="flex flex-wrap items-center justify-center gap-3.5 mb-6">
           <button
             onClick={handleCreateDoc}
-            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-semibold text-sm px-7 py-3 rounded-xl transition-all cursor-pointer shadow-xs hover:shadow"
+            className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-semibold text-sm px-7 py-3 rounded-xl transition-colors duration-150 cursor-pointer shadow-xs hover:shadow"
           >
             Create Document
           </button>
           <button
             onClick={handleBrowseTemplates}
-            className="w-full sm:w-auto border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium text-sm px-5 py-3 rounded-xl active:translate-y-[1px] transition-all cursor-pointer shadow-2xs"
+            className="w-full sm:w-auto border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium text-sm px-5 py-3 rounded-xl active:translate-y-[1px] transition-colors duration-150 cursor-pointer shadow-2xs"
           >
             Browse Templates
           </button>

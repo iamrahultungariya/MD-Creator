@@ -133,7 +133,7 @@ export const PricingPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleCta('editor', 'free')}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.98] transition-colors duration-150 cursor-pointer shadow-xs"
             >
               Start Free
             </button>
@@ -178,7 +178,7 @@ export const PricingPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleCta('auth', 'lifetime')}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white transition-all cursor-pointer shadow-xs hover:shadow"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white transition-colors duration-150 cursor-pointer shadow-xs"
             >
               Get Lifetime Access ($49)
             </button>
@@ -256,7 +256,7 @@ export const PricingPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleCta('auth', 'pro')}
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all cursor-pointer shadow-xs"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.98] transition-colors duration-150 cursor-pointer shadow-xs"
             >
               Start 14-Day Trial
             </button>

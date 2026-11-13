@@ -102,11 +102,18 @@ export const DocumentsPage: React.FC = () => {
         setIsMoreActionsOpen(false);
       }
     };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMoreActionsOpen(false);
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isMoreActionsOpen]);
 
@@ -449,7 +456,7 @@ export const DocumentsPage: React.FC = () => {
                   setIsBatchMode(true);
                 }
               }}
-              className={`justify-center px-3 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+              className={`justify-center px-3 py-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-colors duration-150 cursor-pointer shadow-2xs ${
                 isBatchMode
                   ? 'bg-brand-500/15 border-brand-500/40 text-brand-600 dark:text-brand-400 font-bold ring-1 ring-brand-500/30'
                   : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
@@ -542,7 +549,7 @@ export const DocumentsPage: React.FC = () => {
             <button
               type="button"
               onClick={handleCreateNew}
-              className="justify-center px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="justify-center px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors duration-150 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Note</span>
@@ -558,7 +565,7 @@ export const DocumentsPage: React.FC = () => {
               setActiveTag('All'); 
               setCurrentPage(1);
             }}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors duration-150 cursor-pointer ${
               currentTab === 'active'
                 ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-2xs font-semibold'
                 : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
@@ -577,7 +584,7 @@ export const DocumentsPage: React.FC = () => {
               setActiveTag('All'); 
               setCurrentPage(1);
             }}
-            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors duration-150 cursor-pointer ${
               currentTab === 'trash'
                 ? 'bg-white dark:bg-neutral-800 text-red-600 dark:text-red-400 shadow-2xs font-semibold'
                 : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
@@ -651,7 +658,7 @@ export const DocumentsPage: React.FC = () => {
             {currentTab === 'active' && (
               <button
                 onClick={handleCreateNew}
-                className="px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 active:translate-y-[1px] text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                className="px-5 py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-colors duration-150"
               >
                 <Plus className="w-4 h-4" />
                 <span>Create Document</span>

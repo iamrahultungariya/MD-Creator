@@ -136,7 +136,7 @@ export const BlogPage: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors duration-150 cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-semibold shadow-2xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -155,7 +155,7 @@ export const BlogPage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search articles..."
-              className="w-full pl-9 pr-3.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition-all placeholder:text-neutral-400"
+              className="w-full pl-9 pr-3.5 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors duration-150 placeholder:text-neutral-400"
             />
           </div>
         </div>
@@ -164,7 +164,7 @@ export const BlogPage: React.FC = () => {
         {featuredArticle && !searchQuery && selectedCategory === 'All' && (
           <div 
             onClick={() => navigate(`/blog/${featuredArticle.slug || featuredArticle.id}`)}
-            className="mb-12 p-6 sm:p-10 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 shadow-xs hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-pointer group"
+            className="mb-12 p-6 sm:p-10 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 shadow-xs hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 transition-[box-shadow,border-color] duration-150 cursor-pointer group"
           >
             <div className="flex items-center gap-2.5 mb-4">
               <span className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 px-2.5 py-0.5 rounded-md bg-brand-500/10 border border-brand-500/20">
@@ -222,7 +222,7 @@ export const BlogPage: React.FC = () => {
               <article
                 key={article.id}
                 onClick={() => navigate(`/blog/${article.slug || article.id}`)}
-                className="p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/40 shadow-xs hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-pointer flex flex-col justify-between group"
+                className="p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/40 shadow-xs hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 transition-[box-shadow,border-color] duration-150 cursor-pointer flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3 text-xs">
@@ -270,7 +270,7 @@ export const BlogPage: React.FC = () => {
           <div className="pt-2">
             <Link
               to="/editor"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-all active:translate-y-[1px]"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors duration-150 active:translate-y-[1px]"
             >
               <span>Launch Studio Editor</span>
               <ArrowRight className="w-4 h-4" />

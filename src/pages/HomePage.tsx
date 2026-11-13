@@ -105,7 +105,7 @@ export const HomePage: React.FC = () => {
             <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-xs hover:shadow transition-all flex items-center justify-center cursor-pointer font-sans"
+                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-semibold text-sm shadow-xs transition-colors duration-150 flex items-center justify-center cursor-pointer font-sans"
               >
                 Create Document
               </button>

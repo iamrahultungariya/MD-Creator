@@ -213,7 +213,7 @@ export const ChangelogPage: React.FC = () => {
               <article
                 key={release.version}
                 id={`release-${release.version}`}
-                className="scroll-mt-24 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 p-6 sm:p-8 space-y-6 shadow-2xs transition-all"
+                className="scroll-mt-24 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 p-6 sm:p-8 space-y-6 shadow-2xs transition-colors duration-150"
               >
                 {/* Release Header */}
                 <header className="space-y-3">

@@ -118,7 +118,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ defaultTab = 'privacy' }) 
             <div className="flex items-center gap-1">
               <button
                 onClick={() => handleTabChange('privacy')}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                   activeTab === 'privacy'
                     ? 'bg-white text-neutral-950 dark:bg-neutral-800 dark:text-white shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
@@ -128,7 +128,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ defaultTab = 'privacy' }) 
               </button>
               <button
                 onClick={() => handleTabChange('terms')}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                   activeTab === 'terms'
                     ? 'bg-white text-neutral-950 dark:bg-neutral-800 dark:text-white shadow-xs'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'

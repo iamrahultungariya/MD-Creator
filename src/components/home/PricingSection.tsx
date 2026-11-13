@@ -234,7 +234,7 @@ export const PricingSection: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleCta(tier.ctaAction, tier.id)}
-                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold active:translate-y-[1px] transition-all cursor-pointer shadow-xs ${
+                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold active:translate-y-[1px] transition-colors duration-150 cursor-pointer shadow-xs ${
                     tier.isFeatured
                       ? 'bg-brand-600 hover:bg-brand-700 text-white hover:shadow'
                       : 'border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'
