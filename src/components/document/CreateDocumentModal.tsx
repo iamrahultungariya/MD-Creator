@@ -218,6 +218,98 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = React.mem
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const handleAddCustomTag = (e?: React.KeyboardEvent | React.MouseEvent) => {
+    if (e && 'key' in e && e.key !== 'Enter' && e.key !== ',') return;
+    if (e) e.preventDefault();
+
+    const trimmed = customTagInput.trim().replace(/^#+/, '').replace(/,+$/, '');
+    if (trimmed) {
+      if (!selectedTags.includes(trimmed)) {
+        setSelectedTags((prev) => [...prev, trimmed]);
+      }
+      if (!customTags.includes(trimmed)) {
+        setCustomTags((prev) => [...prev, trimmed]);
+      }
+      setCustomTagInput('');
+    }
+  };
+
+  const handleCreate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      let finalTitle = title.trim() || 'Untitled Note';
+      if (!finalTitle.toLowerCase().endsWith('.md')) {
+        finalTitle = `${finalTitle}.md`;
+      }
+
+      // Auto-commit any pending custom tag typed in the input
+      let finalTags = [...selectedTags];
+      const pendingTag = customTagInput.trim().replace(/^#+/, '').replace(/,+$/, '');
+      if (pendingTag && !finalTags.includes(pendingTag)) {
+        finalTags.push(pendingTag);
+      }
+      if (finalTags.length === 0) {
+        finalTags = ['Drafts'];
+      }
+
+      const content = resolveTemplateContent(selectedTemplateId);
+
+      const newId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `doc_${crypto.randomUUID()}`
+        : `doc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      await saveDocument(
+        newId,
+        finalTitle,
+        content,
+        finalTags,
+        isLocalOnly
+      );
+
+      onClose();
+      navigate(`/editor/${newId}`);
+    } catch (err) {
+      console.error('Failed to create new document:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleInstantBlank = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const newId = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? `doc_${crypto.randomUUID()}`
+        : `doc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      await saveDocument(
+        newId,
+        `Untitled Note ${dateStr}.md`,
+        '# Untitled Note\n\n',
+        ['Drafts'],
+        isLocalOnly
+      );
+      onClose();
+      navigate(`/editor/${newId}`);
+    } catch (err) {
+      console.error('Failed to create instant blank document:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (typeof document === 'undefined') return null;
 
   return createPortal(
