@@ -24,11 +24,15 @@ const TemplatesModal = React.lazy(() =>
 const CreateDocumentModal = React.lazy(() =>
   import('../components/document/CreateDocumentModal').then((m) => ({ default: m.CreateDocumentModal }))
 );
+const VideoPreviewModal = React.lazy(() =>
+  import('../components/video/VideoPreviewModal').then((m) => ({ default: m.VideoPreviewModal }))
+);
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isTeaserOpen, setIsTeaserOpen] = useState(false);
 
   // Global listener for Templates modal trigger and URL query param
   useEffect(() => {
@@ -65,6 +69,7 @@ export const HomePage: React.FC = () => {
         <Hero 
           onOpenCreateDoc={() => setIsCreateModalOpen(true)}
           onOpenTemplates={() => setIsTemplatesOpen(true)}
+          onWatchTeaser={() => setIsTeaserOpen(true)}
         />
 
         {/* Interactive Dual-Pane Studio Workspace Console */}
@@ -147,6 +152,16 @@ export const HomePage: React.FC = () => {
           <CreateDocumentModal
             isOpen={isCreateModalOpen}
             onClose={() => setIsCreateModalOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Interactive Motionimo Video Preview Modal */}
+      {isTeaserOpen && (
+        <Suspense fallback={null}>
+          <VideoPreviewModal
+            isOpen={isTeaserOpen}
+            onClose={() => setIsTeaserOpen(false)}
           />
         </Suspense>
       )}
