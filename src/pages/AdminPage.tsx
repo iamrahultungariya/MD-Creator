@@ -345,6 +345,9 @@ export const AdminPage: React.FC = () => {
             article={previewArticle}
             onClose={() => setPreviewArticle(null)}
             MarkdownPreview={MarkdownPreview}
+            onApprove={handleApproveBlog}
+            onReject={handleRejectBlog}
+            onUnpublish={handleUnpublishBlog}
           />
         )}
 

@@ -1,18 +1,26 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Check, RotateCcw, ExternalLink } from 'lucide-react';
 import { Article } from '../../data/blogArticles';
 
 interface BlogReaderModalProps {
   article: Article | null;
   onClose: () => void;
   MarkdownPreview: React.ComponentType<{ content: string }>;
+  onApprove?: (articleId: string) => Promise<void>;
+  onReject?: (articleId: string) => Promise<void>;
+  onUnpublish?: (articleId: string) => Promise<void>;
 }
 
 export const BlogReaderModal: React.FC<BlogReaderModalProps> = ({
   article,
   onClose,
   MarkdownPreview,
+  onApprove,
+  onReject,
+  onUnpublish,
 }) => {
+  const [isActionPending, setIsActionPending] = useState(false);
+
   if (!article) return null;
 
   return (
@@ -70,6 +78,98 @@ export const BlogReaderModal: React.FC<BlogReaderModalProps> = ({
             <React.Suspense fallback={<div className="py-10 text-center text-xs text-neutral-400">Rendering article...</div>}>
               <MarkdownPreview content={article.content} />
             </React.Suspense>
+          </div>
+        </div>
+
+        {/* Modal Footer Editorial Action Toolbar */}
+        <div className="p-4 sm:px-8 border-t border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3 bg-neutral-50/70 dark:bg-neutral-950/70 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-neutral-500 font-mono">
+              Status: <strong className="text-neutral-800 dark:text-neutral-200 capitalize">{article.status || 'draft'}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {article.status !== 'published' && onApprove && (
+              <button
+                type="button"
+                disabled={isActionPending}
+                onClick={async () => {
+                  setIsActionPending(true);
+                  try {
+                    await onApprove(article.id);
+                    onClose();
+                  } finally {
+                    setIsActionPending(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>{isActionPending ? 'Publishing...' : 'Approve & Publish Live'}</span>
+              </button>
+            )}
+
+            {article.status === 'pending' && onReject && (
+              <button
+                type="button"
+                disabled={isActionPending}
+                onClick={async () => {
+                  setIsActionPending(true);
+                  try {
+                    await onReject(article.id);
+                    onClose();
+                  } finally {
+                    setIsActionPending(false);
+                  }
+                }}
+                className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-rose-950/70 text-rose-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Reject</span>
+              </button>
+            )}
+
+            {article.status === 'published' && (
+              <>
+                {onUnpublish && (
+                  <button
+                    type="button"
+                    disabled={isActionPending}
+                    onClick={async () => {
+                      setIsActionPending(true);
+                      try {
+                        await onUnpublish(article.id);
+                        onClose();
+                      } finally {
+                        setIsActionPending(false);
+                      }
+                    }}
+                    className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-amber-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Unpublish</span>
+                  </button>
+                )}
+                <a
+                  href={`/blog/${article.slug || article.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white font-medium text-xs flex items-center gap-1.5 transition-colors border border-neutral-700/60"
+                >
+                  <span>View Public Page</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+                </a>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-semibold text-xs transition-colors cursor-pointer"
+            >
+              Close
+            </button>
           </div>
         </div>
       </div>
