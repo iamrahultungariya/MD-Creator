@@ -12,7 +12,8 @@ import {
   DollarSign, 
   CheckCircle2, 
   ChevronDown,
-  Archive
+  Archive,
+  Check
 } from 'lucide-react';
 import { FeedbackItem, FeedbackStatus, FeedbackCategory, FeedbackPriority } from '../../types/admin';
 import { useConfirm } from '../../stores/useConfirmStore';
@@ -34,6 +35,8 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
   const [priorityFilter, setPriorityFilter] = useState<'all' | FeedbackPriority>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const confirm = useConfirm();
 
   const { newCount, inReviewCount, resolvedCount, archivedCount } = useMemo(() => {
@@ -64,6 +67,51 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
       return matchesStatus && matchesCategory && matchesPriority && matchesSearch;
     });
   }, [feedbacks, statusFilter, categoryFilter, priorityFilter, searchQuery]);
+
+  const toggleSelectFeedback = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllVisible = () => {
+    if (selectedIds.size === filteredFeedbacks.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredFeedbacks.map((f) => f.id)));
+    }
+  };
+
+  const handleBulkResolve = async () => {
+    const idsToResolve = Array.from(selectedIds);
+    if (idsToResolve.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      for (const id of idsToResolve) {
+        await onUpdateStatus(id, 'resolved');
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    const idsToArchive = Array.from(selectedIds);
+    if (idsToArchive.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      for (const id of idsToArchive) {
+        await onUpdateStatus(id, 'archived');
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
 
   const handleStatusChange = async (id: string, newStatus: FeedbackStatus) => {
     try {
@@ -258,7 +306,55 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
         >
           Archived ({archivedCount})
         </button>
+
+        {filteredFeedbacks.length > 0 && (
+          <button
+            type="button"
+            onClick={handleSelectAllVisible}
+            className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white shrink-0"
+          >
+            {selectedIds.size === filteredFeedbacks.length ? 'Deselect All' : 'Select All'}
+          </button>
+        )}
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-white">
+              {selectedIds.size} of {filteredFeedbacks.length} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-neutral-400 hover:text-white underline cursor-pointer ml-1"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleBulkResolve}
+              disabled={isBulkProcessing}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>{isBulkProcessing ? 'Resolving...' : `Mark Selected Resolved (${selectedIds.size})`}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkArchive}
+              disabled={isBulkProcessing}
+              className="px-3.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+            >
+              <Archive className="w-3.5 h-3.5 text-neutral-400" />
+              <span>Archive Selected</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Feedback Feed */}
       {filteredFeedbacks.length === 0 ? (
@@ -278,45 +374,58 @@ export const AdminFeedbackTab: React.FC<AdminFeedbackTabProps> = ({
             const CatIcon = catConfig.icon;
             const isExpanded = expandedId === fb.id;
             const isBusy = processingId === fb.id;
+            const isSelected = selectedIds.has(fb.id);
 
             return (
               <div
                 key={fb.id}
                 className={`p-5 rounded-3xl border transition-all ${
-                  fb.status === 'new'
+                  isSelected
+                    ? 'bg-brand-950/20 border-brand-500 ring-1 ring-brand-500/50'
+                    : fb.status === 'new'
                     ? 'bg-neutral-900/90 border-rose-500/40 shadow-lg shadow-rose-500/5'
                     : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
                 }`}
               >
                 {/* Header Row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* Category */}
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${catConfig.badge}`}>
-                      <CatIcon className="w-3 h-3" />
-                      <span>{catConfig.label}</span>
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelectFeedback(fb.id)}
+                      className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 bg-neutral-950 border-neutral-700 cursor-pointer shrink-0"
+                      title="Select for bulk triage"
+                    />
 
-                    {/* Priority */}
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${getPriorityBadge(fb.priority)}`}>
-                      {fb.priority}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Category */}
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${catConfig.badge}`}>
+                        <CatIcon className="w-3 h-3" />
+                        <span>{catConfig.label}</span>
+                      </span>
 
-                    {/* Sentiment */}
-                    <span className="text-base" title={`Sentiment: ${fb.sentiment}`}>
-                      {getSentimentIcon(fb.sentiment)}
-                    </span>
+                      {/* Priority */}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${getPriorityBadge(fb.priority)}`}>
+                        {fb.priority}
+                      </span>
 
-                    <span className="text-xs text-neutral-500">•</span>
-                    <span className="text-xs text-neutral-400">
-                      {new Date(fb.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
+                      {/* Sentiment */}
+                      <span className="text-base" title={`Sentiment: ${fb.sentiment}`}>
+                        {getSentimentIcon(fb.sentiment)}
+                      </span>
+
+                      <span className="text-xs text-neutral-500">•</span>
+                      <span className="text-xs text-neutral-400">
+                        {new Date(fb.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Status Dropdown */}
