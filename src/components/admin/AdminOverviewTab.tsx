@@ -35,7 +35,7 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-black text-white tracking-tight mb-1">
-          Moderation &amp; Telemetry Command Center
+          Admin &amp; Moderation Overview
         </h2>
         <p className="text-xs text-neutral-400">
           Live user activity metrics and pending editorial queues across MD Writer.
@@ -56,9 +56,6 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
               <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
                 Live User Activity &amp; Feature Adoption Telemetry
               </h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                New
-              </span>
             </div>
             <p className="text-xs text-neutral-400 mt-0.5">
               Track daily visitors, active writers (DAU), average writing duration, and most clicked features.
@@ -98,7 +95,7 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
           {pendingArticles.length === 0 ? (
             <div className="py-6 text-center space-y-2 rounded-2xl bg-neutral-950/40 border border-neutral-800/60">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" />
-              <p className="text-xs font-semibold text-neutral-300">All Clear — No Pending Submissions</p>
+              <p className="text-xs font-semibold text-neutral-300">All Clear: No Pending Submissions</p>
               <p className="text-[11px] text-neutral-500 max-w-xs mx-auto">
                 Articles submitted by community writers will appear here for editorial review.
               </p>
@@ -146,7 +143,7 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
           {pendingReviews.length === 0 ? (
             <div className="py-6 text-center space-y-2 rounded-2xl bg-neutral-950/40 border border-neutral-800/60">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" />
-              <p className="text-xs font-semibold text-neutral-300">All Clear — No Pending Reviews</p>
+              <p className="text-xs font-semibold text-neutral-300">All Clear: No Pending Reviews</p>
               <p className="text-[11px] text-neutral-500 max-w-xs mx-auto">
                 User reviews submitted from the public site will queue here for approval.
               </p>

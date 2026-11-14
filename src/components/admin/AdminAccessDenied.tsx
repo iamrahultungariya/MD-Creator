@@ -30,9 +30,6 @@ export const AdminAccessDenied: React.FC<AdminAccessDeniedProps> = ({
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 sm:p-6 text-neutral-100">
       <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        {/* Glowing backdrop accent */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
         <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-6 mx-auto">
           <ShieldAlert className="w-7 h-7" />
         </div>
