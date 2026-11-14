@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "npx tsx --test tests/home/*.test.ts tests/mimo/*.test.ts tests/admin/*.test.ts"
+    "test": "npx tsx --test tests/home/*.test.ts tests/mimo/*.test.ts tests/admin/*.test.ts tests/feedback/*.test.ts"
   },
   "overrides": {
     "katex": "^0.18.5"
