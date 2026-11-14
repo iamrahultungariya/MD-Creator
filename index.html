@@ -14,7 +14,10 @@
     <meta property="og:url" content="https://writermd.vercel.app/" />
     <meta property="og:title" content="MD Writer — Local-First Markdown Studio with Gemini 3.x AI" />
     <meta property="og:description" content="A clean, distraction-free Markdown studio with instant offline persistence, KaTeX math, Mermaid diagrams, and Mimo Gemini 3.x AI pair writer." />
-    <meta property="og:image" content="https://writermd.vercel.app/logo.png" />
+    <meta property="og:image" content="https://writermd.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="MD Writer — Local-First Markdown Studio with AI" />
     <meta property="og:site_name" content="MD Writer" />
 
     <!-- Twitter Card Metadata -->
@@ -23,7 +26,10 @@
     <meta name="twitter:creator" content="@rahultungariya_" />
     <meta name="twitter:title" content="MD Writer — Local-First Markdown Studio with Gemini 3.x AI" />
     <meta name="twitter:description" content="A clean, distraction-free Markdown studio with instant offline persistence, KaTeX math, Mermaid diagrams, and Mimo Gemini 3.x AI pair writer." />
-    <meta name="twitter:image" content="https://writermd.vercel.app/logo.png" />
+    <meta name="twitter:image" content="https://writermd.vercel.app/og-image.png" />
+    <meta name="twitter:image:alt" content="MD Writer — Local-First Markdown Studio with AI" />
+    <!-- Robots directive -->
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
 
     <!-- Schema.org Structured Data (AEO & Search Rich Snippets) -->
     <script type="application/ld+json">
@@ -45,13 +51,6 @@
             "price": "0",
             "priceCurrency": "USD"
           },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "reviewCount": "128",
-            "bestRating": "5",
-            "worstRating": "1"
-          },
           "featureList": [
             "100% Local-first IndexedDB offline persistence",
             "Direct local disk filesystem access via File System Access API (Ctrl+O)",
@@ -66,11 +65,27 @@
           }
         },
         {
-          "@type": "Organization",
+          "@type": ["Organization", "Person"],
           "@id": "https://writermd.vercel.app/#organization",
           "name": "MD Writer",
           "url": "https://writermd.vercel.app/",
-          "logo": "https://writermd.vercel.app/logo.png",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://writermd.vercel.app/logo.png",
+            "width": 512,
+            "height": 512
+          },
+          "founder": {
+            "@type": "Person",
+            "@id": "https://writermd.vercel.app/#founder",
+            "name": "Rahul Tungariya",
+            "jobTitle": "Founder & Lead Architect",
+            "url": "https://twitter.com/rahultungariya_",
+            "sameAs": [
+              "https://twitter.com/rahultungariya_",
+              "https://github.com/rahultungariya"
+            ]
+          },
           "sameAs": [
             "https://twitter.com/rahultungariya_"
           ]
@@ -80,6 +95,10 @@
           "@id": "https://writermd.vercel.app/#website",
           "url": "https://writermd.vercel.app/",
           "name": "MD Writer",
+          "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": ["h1", "h2", ".hero-description", ".faq-answer"]
+          },
           "publisher": {
             "@id": "https://writermd.vercel.app/#organization"
           }
@@ -93,23 +112,23 @@
               "name": "Where are my documents saved?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "All your documents, folders, and preferences are saved locally inside your browser using IndexedDB. You can also connect local directories via the File System Access API (Ctrl+O). MD Writer never uploads or syncs your text to remote servers unless you explicitly sign in to optional cloud backup."
+                "text": "Documents are saved locally in your browser's IndexedDB. No server upload unless you sign in for optional cloud backup."
               }
             },
             {
               "@type": "Question",
-              "name": "How does the Google Gemini 3.x BYOK connection work?",
+              "name": "How does the Google Gemini AI connection work?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "MD Writer connects directly to the Google Gemini API (gemini-3.5-flash-lite, gemini-3.5-flash, gemini-3.8-flash) using your own Google AI Studio API key. Your key is stored in your private browser sandbox. All API requests go directly to Google with zero middleman proxy, zero markup, and zero prompt logging."
+                "text": "MD Writer connects directly to Google Gemini API using your own API key. Zero middleman proxy, zero prompt logging, zero markup."
               }
             },
             {
               "@type": "Question",
-              "name": "Do I need an account to write or use MD Writer?",
+              "name": "Do I need an account to use MD Writer?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "No. You can open MD Writer and start drafting immediately without signing up, entering an email, or creating a password. It operates completely offline."
+                "text": "No account needed. Open MD Writer and start writing instantly — fully offline, no sign-up required."
               }
             },
             {
@@ -117,23 +136,23 @@
               "name": "Does Mimo AI inspect my private notes?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Never without your explicit instruction. Mimo includes a client-side Privacy Shield that redacts sensitive tokens before sending prompts, and you can mark any individual document as private or disable AI features entirely."
+                "text": "Never. A client-side Privacy Shield redacts sensitive data before any AI prompt. You can also mark docs as private or disable AI entirely."
               }
             },
             {
               "@type": "Question",
-              "name": "What export formats are supported?",
+              "name": "What export formats does MD Writer support?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "You can export to clean Markdown (.md), styled HTML, standalone presentation slides, vector-grade PDF with custom margins [Beta], and Microsoft Word (.docx) with formatted KaTeX formulas and tables [Beta]."
+                "text": "Export to Markdown (.md), styled HTML, presentation slides, vector PDF [Beta], and Microsoft Word .docx [Beta]."
               }
             },
             {
               "@type": "Question",
-              "name": "Can I export and take my data with me at any time?",
+              "name": "Can I export and take my data with me?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes. You own 100% of your data. You can perform a full JSON/Markdown vault backup from Preferences (Ctrl+,) with one click at any time. There is zero vendor lock-in."
+                "text": "Yes. Full JSON/Markdown vault backup in one click from Preferences (Ctrl+,). Zero vendor lock-in."
               }
             }
           ]

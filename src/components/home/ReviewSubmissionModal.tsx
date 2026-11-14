@@ -68,7 +68,9 @@ export const ReviewSubmissionModal: React.FC<ReviewSubmissionModalProps> = ({
               {isEditing ? 'Review Updated!' : 'Thank You for Your Review!'}
             </h3>
             <p className="text-xs text-neutral-500 max-w-sm mx-auto leading-relaxed">
-              Your feedback has been saved and updated on the community showcase.
+              {isEditing
+                ? 'Your review has been resubmitted for approval. It will appear on the community showcase once reviewed by our team.'
+                : 'Thank you! Your review has been submitted and will appear after a quick review by our team.'}
             </p>
           </div>
         ) : (

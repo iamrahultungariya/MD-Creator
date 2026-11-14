@@ -65,9 +65,9 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
 
   // ── Calculated KPIs ──────────────────────────────────────────────────────────
   const todayRecord = dailyMetrics[dailyMetrics.length - 1] || {
-    visitors: 1,
+    visitors: 0,
     activeWriters: 0,
-    totalSessionSeconds: 120,
+    totalSessionSeconds: 0,
     featureUsage: {},
   };
 
@@ -121,22 +121,26 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
       { id: 'web_publish', name: 'Web Publishing', icon: Share2, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
     ];
 
-    const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0) || 1;
+    const totalFeatureUses = Object.values(totals).reduce((a, b) => a + b, 0);
+    const grandTotal = totalFeatureUses || 1;
 
-    return featureDefinitions
-      .map((f) => {
-        const count = totals[f.id] || 0;
-        const percentage = Math.round((count / grandTotal) * 100);
-        return {
-          ...f,
-          count,
-          percentage,
-        };
-      })
-      .sort((a, b) => b.count - a.count);
+    return {
+      totalFeatureUses,
+      list: featureDefinitions
+        .map((f) => {
+          const count = totals[f.id] || 0;
+          const percentage = totalFeatureUses > 0 ? Math.round((count / grandTotal) * 100) : 0;
+          return {
+            ...f,
+            count,
+            percentage,
+          };
+        })
+        .sort((a, b) => b.count - a.count),
+    };
   }, [dailyMetrics]);
 
-  const topFeature = aggregatedFeatures[0] || { name: 'PDF Export', percentage: 38 };
+  const topFeature = aggregatedFeatures.totalFeatureUses > 0 ? aggregatedFeatures.list[0] : null;
 
   // ── SVG Chart Calculations ───────────────────────────────────────────────────
   const chartHeight = 180;
@@ -307,18 +311,18 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
               <Zap className="w-5 h-5" />
             </div>
             <span className="text-[11px] font-mono text-neutral-400">
-              {topFeature.percentage}% of Actions
+              {topFeature ? `${topFeature.percentage}% of Actions` : 'Awaiting Data'}
             </span>
           </div>
           <div>
             <div className="text-2xl font-extrabold text-white tracking-tight truncate">
-              {topFeature.name}
+              {topFeature ? topFeature.name : 'No actions yet'}
             </div>
             <div className="text-xs font-semibold text-neutral-300 mt-0.5">
               Most Used Feature
             </div>
             <p className="text-[11px] text-neutral-400 mt-1">
-              Top action taken across active sessions
+              {topFeature ? 'Top action taken across active sessions' : 'Feature clicks will track automatically'}
             </p>
           </div>
         </div>
@@ -459,6 +463,18 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
               </div>
             </div>
           )}
+
+          {/* Zero traffic overlay */}
+          {totalPeriodVisitors === 0 && totalPeriodWriters === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="px-4 py-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-center space-y-1 backdrop-blur-xs">
+                <p className="text-xs font-semibold text-neutral-300">Awaiting Visitor Activity</p>
+                <p className="text-[11px] text-neutral-500 max-w-xs">
+                  Real anonymous visits and writing metrics will appear dynamically as users launch MD Writer.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -480,33 +496,43 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
           </div>
 
           <div className="space-y-3 pt-2">
-            {aggregatedFeatures.map((feat) => {
-              const Icon = feat.icon;
-              return (
-                <div key={feat.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1 rounded-lg ${feat.bg} ${feat.color}`}>
-                        <Icon className="w-3.5 h-3.5" />
+            {aggregatedFeatures.totalFeatureUses === 0 ? (
+              <div className="py-10 text-center space-y-2">
+                <Layers className="w-8 h-8 text-neutral-600 mx-auto" />
+                <p className="text-xs text-neutral-400 font-medium">No feature usage recorded yet</p>
+                <p className="text-[11px] text-neutral-500 max-w-xs mx-auto">
+                  Features such as PDF export, table builders, and slash commands will appear here as users engage with them.
+                </p>
+              </div>
+            ) : (
+              aggregatedFeatures.list.map((feat) => {
+                const Icon = feat.icon;
+                return (
+                  <div key={feat.id} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1 rounded-lg ${feat.bg} ${feat.color}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-semibold text-neutral-200">{feat.name}</span>
                       </div>
-                      <span className="font-semibold text-neutral-200">{feat.name}</span>
+                      <div className="flex items-center gap-2 text-neutral-400 font-mono">
+                        <span>{feat.count} uses</span>
+                        <span className="font-bold text-white">({feat.percentage}%)</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-neutral-400 font-mono">
-                      <span>{feat.count} uses</span>
-                      <span className="font-bold text-white">({feat.percentage}%)</span>
-                    </div>
-                  </div>
 
-                  {/* Progress Bar Meter */}
-                  <div className="w-full h-2 rounded-full bg-neutral-950 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-500"
-                      style={{ width: `${Math.max(4, feat.percentage)}%` }}
-                    />
+                    {/* Progress Bar Meter */}
+                    <div className="w-full h-2 rounded-full bg-neutral-950 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-500"
+                        style={{ width: `${Math.max(4, feat.percentage)}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -523,22 +549,32 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
           </div>
 
           <div className="space-y-3 flex-1 overflow-y-auto max-h-96 pr-1">
-            {recentFeed.map((ev) => (
-              <div
-                key={ev.id}
-                className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800/80 flex items-start gap-3 text-xs"
-              >
-                <div className="w-2 h-2 rounded-full bg-brand-400 mt-1.5 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-neutral-200 font-medium leading-snug">
-                    {ev.label}
-                  </p>
-                  <span className="text-[10px] text-neutral-500 font-mono">
-                    {new Date(ev.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
+            {recentFeed.length === 0 ? (
+              <div className="py-12 text-center space-y-2">
+                <Activity className="w-8 h-8 text-neutral-600 mx-auto" />
+                <p className="text-xs text-neutral-400 font-medium">No activity recorded yet</p>
+                <p className="text-[11px] text-neutral-500 max-w-[200px] mx-auto">
+                  Live user interactions (exports, writing, tools) will stream here in real time.
+                </p>
               </div>
-            ))}
+            ) : (
+              recentFeed.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800/80 flex items-start gap-3 text-xs"
+                >
+                  <div className="w-2 h-2 rounded-full bg-brand-400 mt-1.5 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-neutral-200 font-medium leading-snug">
+                      {ev.label}
+                    </p>
+                    <span className="text-[10px] text-neutral-500 font-mono">
+                      {new Date(ev.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

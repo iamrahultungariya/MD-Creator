@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 interface RouteMeta {
   title: string;
@@ -58,6 +59,47 @@ const DEFAULT_ORIGIN = 'https://writermd.vercel.app';
 
 export const SeoManager: React.FC = () => {
   const location = useLocation();
+
+  // Dynamic AggregateRating sync from Supabase approved community reviews
+  useEffect(() => {
+    if (!isSupabaseConfigured() || !supabase) return;
+    const client = supabase;
+
+    async function syncAggregateRating() {
+      try {
+        const { data, count } = await client
+          .from('community_reviews')
+          .select('rating', { count: 'exact' })
+          .eq('status', 'approved');
+
+        if (!data || !count || count === 0) return;
+        const avg = (data.reduce((s: number, r: { rating?: number }) => s + Number(r.rating || 5), 0) / count).toFixed(1);
+
+        const ldJson = document.querySelector('script[type="application/ld+json"]');
+        if (ldJson) {
+          try {
+            const schema = JSON.parse(ldJson.textContent || '{}');
+            const graph = schema['@graph'] || (Array.isArray(schema) ? schema : [schema]);
+            const webapp = graph.find(
+              (n: any) => n['@type'] === 'WebApplication' || n['@type'] === 'SoftwareApplication'
+            );
+            if (webapp) {
+              webapp.aggregateRating = {
+                '@type': 'AggregateRating',
+                ratingValue: avg,
+                reviewCount: String(count),
+                bestRating: '5',
+                worstRating: '1',
+              };
+              ldJson.textContent = JSON.stringify(schema, null, 2);
+            }
+          } catch {}
+        }
+      } catch {}
+    }
+
+    syncAggregateRating();
+  }, []);
 
   useEffect(() => {
     // 1. Determine clean path without trailing slash (except root)

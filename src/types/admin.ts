@@ -44,6 +44,8 @@ export interface AdminStats {
   totalFeedback: number;
   newFeedback: number;
   criticalFeedback: number;
+  oldestPendingBlogAt?: string | null;
+  oldestPendingReviewAt?: string | null;
 }
 
 export interface AdminFilterState {

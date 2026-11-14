@@ -130,7 +130,7 @@ class TelemetryService {
   }
 
   /**
-   * Load daily metrics records (seeded with realistic past 14 days if fresh)
+   * Load daily metrics records (factual past N days with no fake sine-wave baseline)
    */
   public getDailyMetrics(daysCount = 14): DailyMetricRecord[] {
     const raw = this.loadStoredDailyMetrics();
@@ -149,30 +149,20 @@ class TelemetryService {
       if (dateMap.has(dStr)) {
         result.push(dateMap.get(dStr)!);
       } else {
-        // Fallback realistic baseline data for initial aesthetic display
+        // Honest data: if today, use real in-memory session stats; if past days with no records, 0s
         const isToday = dStr === todayStr;
-        const baseVisitors = isToday ? (this.currentSession.pageViews || 1) : Math.floor(18 + Math.sin(i * 1.5) * 8);
-        const baseWriters = isToday ? (this.currentSession.hasWritten ? 1 : 0) : Math.floor(baseVisitors * 0.65);
-        const baseSeconds = isToday ? 180 : Math.floor(baseWriters * (720 + Math.random() * 400));
+        const baseVisitors = isToday ? (this.currentSession.pageViews || 1) : 0;
+        const baseWriters = isToday ? (this.currentSession.hasWritten ? 1 : 0) : 0;
+        const baseSeconds = isToday ? 0 : 0;
 
-        const placeholder: DailyMetricRecord = {
+        const emptyRecord: DailyMetricRecord = {
           date: dStr,
-          visitors: Math.max(1, baseVisitors),
-          activeWriters: Math.max(0, baseWriters),
-          totalSessionSeconds: Math.max(120, baseSeconds),
-          featureUsage: {
-            pdf_export: Math.floor(baseWriters * 0.5),
-            docx_export: Math.floor(baseWriters * 0.35),
-            md_export: Math.floor(baseWriters * 0.4),
-            slash_commands: Math.floor(baseWriters * 0.8),
-            presentation_deck: Math.floor(baseWriters * 0.25),
-            table_builder: Math.floor(baseWriters * 0.3),
-            katex_math: Math.floor(baseWriters * 0.2),
-            mermaid_diagram: Math.floor(baseWriters * 0.15),
-            focus_sprint: Math.floor(baseWriters * 0.2),
-          },
+          visitors: baseVisitors,
+          activeWriters: baseWriters,
+          totalSessionSeconds: baseSeconds,
+          featureUsage: {},
         };
-        result.push(placeholder);
+        result.push(emptyRecord);
       }
     }
 
@@ -349,37 +339,8 @@ class TelemetryService {
       }
     } catch {}
 
-    // Baseline friendly placeholder events
-    return [
-      {
-        id: 'seed_1',
-        timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-        feature: 'pdf_export',
-        label: 'Exported document as formatted PDF',
-        category: 'export',
-      },
-      {
-        id: 'seed_2',
-        timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-        feature: 'slash_commands',
-        label: 'Inserted table via / slash command',
-        category: 'tool',
-      },
-      {
-        id: 'seed_3',
-        timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-        feature: 'presentation_deck',
-        label: 'Presented notes in slide deck mode',
-        category: 'view',
-      },
-      {
-        id: 'seed_4',
-        timestamp: new Date(Date.now() - 1000 * 60 * 48).toISOString(),
-        feature: 'docx_export',
-        label: 'Exported Word (.docx) document',
-        category: 'export',
-      },
-    ];
+    // No stored activity events yet — return empty array rather than fake placeholders
+    return [];
   }
 
   /**

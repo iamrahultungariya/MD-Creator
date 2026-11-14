@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BookOpen, MessageSquare, Activity, ArrowRight } from 'lucide-react';
+import { BookOpen, MessageSquare, Activity, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { AdminStats, Article, UserReview, AdminTab } from '../../types/admin';
 import { AdminStatsCards } from './AdminStatsCards';
 
@@ -96,9 +96,13 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
           </div>
 
           {pendingArticles.length === 0 ? (
-            <p className="text-xs text-neutral-500 py-4 text-center">
-              ✨ No blog submissions waiting for review.
-            </p>
+            <div className="py-6 text-center space-y-2 rounded-2xl bg-neutral-950/40 border border-neutral-800/60">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" />
+              <p className="text-xs font-semibold text-neutral-300">All Clear — No Pending Submissions</p>
+              <p className="text-[11px] text-neutral-500 max-w-xs mx-auto">
+                Articles submitted by community writers will appear here for editorial review.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2.5">
               {pendingArticles.map((art) => (
@@ -140,9 +144,13 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
           </div>
 
           {pendingReviews.length === 0 ? (
-            <p className="text-xs text-neutral-500 py-4 text-center">
-              ✨ No pending reviews waiting for moderation.
-            </p>
+            <div className="py-6 text-center space-y-2 rounded-2xl bg-neutral-950/40 border border-neutral-800/60">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" />
+              <p className="text-xs font-semibold text-neutral-300">All Clear — No Pending Reviews</p>
+              <p className="text-[11px] text-neutral-500 max-w-xs mx-auto">
+                User reviews submitted from the public site will queue here for approval.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2.5">
               {pendingReviews.map((rev) => (

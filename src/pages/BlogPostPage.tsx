@@ -114,7 +114,9 @@ export const BlogPostPage: React.FC = () => {
       '@type': 'TechArticle',
       headline: article.title,
       description: article.excerpt,
-      datePublished: article.date,
+      datePublished: article.submittedAt
+        ? new Date(article.submittedAt).toISOString()
+        : new Date(article.date).toISOString(),
       author: {
         '@type': 'Person',
         name: article.author.name,
@@ -129,9 +131,29 @@ export const BlogPostPage: React.FC = () => {
     });
     document.head.appendChild(schemaScript);
 
+    // BreadcrumbList for rich results & AEO path clarity
+    const breadcrumbScript = document.createElement('script');
+    breadcrumbScript.type = 'application/ld+json';
+    breadcrumbScript.id = 'breadcrumb-structured-data';
+    breadcrumbScript.innerHTML = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://writermd.vercel.app/' },
+        { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://writermd.vercel.app/blog' },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: article.title,
+          item: `https://writermd.vercel.app/blog/${article.slug || article.id}`,
+        },
+      ],
+    });
+    document.head.appendChild(breadcrumbScript);
+
     return () => {
-      const existing = document.getElementById('article-structured-data');
-      if (existing) existing.remove();
+      document.getElementById('article-structured-data')?.remove();
+      document.getElementById('breadcrumb-structured-data')?.remove();
     };
   }, [article]);
 

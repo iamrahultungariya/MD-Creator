@@ -4,10 +4,9 @@ import { useNavigate } from 'react-router-dom';
 interface HeroProps {
   onOpenCreateDoc?: () => void;
   onOpenTemplates?: () => void;
-  onWatchTeaser?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates, onWatchTeaser }) => {
+export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates }) => {
   const navigate = useNavigate();
 
   const handleCreateDoc = () => {
@@ -59,14 +58,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenCreateDoc, onOpenTemplates, on
           >
             Browse Templates
           </button>
-          {onWatchTeaser && (
-            <button
-              onClick={onWatchTeaser}
-              className="w-full sm:w-auto border border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 font-medium text-sm px-5 py-3 rounded-xl active:translate-y-[1px] transition-colors duration-150 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>Watch Teaser (60fps)</span>
-            </button>
-          )}
         </div>
 
         {/* Plain text secondary link */}

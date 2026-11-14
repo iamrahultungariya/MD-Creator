@@ -1,7 +1,8 @@
-import React from 'react';
-import { X, PenTool, Sparkles, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, PenTool, Sparkles, ShieldCheck, Eye, Edit3 } from 'lucide-react';
 import { BlogCategory } from '../../data/blogArticles';
 import { ModalPortal } from '../common/ModalPortal';
+import { MarkdownPreview } from '../editor/MarkdownPreview';
 
 interface BlogCreateModalProps {
   isOpen: boolean;
@@ -40,6 +41,8 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
   newContent,
   setNewContent,
 }) => {
+  const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
+
   return (
     <ModalPortal isOpen={isOpen} onClose={onClose}>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-neutral-950/70 backdrop-blur-xs animate-in fade-in duration-150 font-sans">
@@ -161,19 +164,58 @@ export const BlogCreateModal: React.FC<BlogCreateModalProps> = ({
             />
           </div>
 
-          {/* Markdown Content */}
+          {/* Markdown Content with Live Preview Tab */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-              Markdown Content *
-            </label>
-            <textarea
-              rows={8}
-              required
-              placeholder={`# Write your story in Markdown...\n\nUse headings, **bold**, lists, or \`code blocks\`.\n\nAll formatting will render seamlessly!`}
-              value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 font-mono text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
-            />
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300">
+                Markdown Content *
+              </label>
+              <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('write')}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
+                    activeTab === 'write'
+                      ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-2xs'
+                      : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                  }`}
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>Write</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('preview')}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
+                    activeTab === 'preview'
+                      ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-2xs'
+                      : 'text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200'
+                  }`}
+                >
+                  <Eye className="w-3 h-3" />
+                  <span>Preview</span>
+                </button>
+              </div>
+            </div>
+
+            {activeTab === 'write' ? (
+              <textarea
+                rows={8}
+                required
+                placeholder={`# Write your story in Markdown...\n\nUse headings, **bold**, lists, or \`code blocks\`.\n\nAll formatting will render seamlessly!`}
+                value={newContent}
+                onChange={(e) => setNewContent(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 font-mono text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:border-brand-500 transition-colors duration-150"
+              />
+            ) : (
+              <div className="w-full min-h-[160px] max-h-[250px] overflow-y-auto p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/60 text-xs">
+                {newContent.trim() ? (
+                  <MarkdownPreview content={newContent} />
+                ) : (
+                  <p className="text-neutral-400 italic">No content to preview yet. Switch back to Write tab to begin drafting.</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-neutral-100 dark:border-neutral-800">

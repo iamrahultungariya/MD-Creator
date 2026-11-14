@@ -15,6 +15,7 @@ export const BlogPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<'All' | BlogCategory>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [articles, setArticles] = useState<Article[]>(DEFAULT_ARTICLES);
+  const [isLoadingArticles, setIsLoadingArticles] = useState(false);
 
   // Fetch published community/admin articles from Supabase if connected
   useEffect(() => {
@@ -22,6 +23,7 @@ export const BlogPage: React.FC = () => {
     const client = supabase;
 
     const fetchArticles = async () => {
+      setIsLoadingArticles(true);
       try {
         const { data } = await client
           .from('blog_articles')
@@ -60,6 +62,8 @@ export const BlogPage: React.FC = () => {
         }
       } catch {
         // Fall back to static DEFAULT_ARTICLES
+      } finally {
+        setIsLoadingArticles(false);
       }
     };
 
@@ -211,10 +215,22 @@ export const BlogPage: React.FC = () => {
         )}
 
         {/* Regular Articles Grid */}
-        {filteredArticles.length === 0 ? (
+        {filteredArticles.length === 0 && !isLoadingArticles ? (
           <div className="text-center py-20 text-neutral-500 dark:text-neutral-400">
             <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No articles found matching &quot;{searchQuery}&quot;.</p>
+          </div>
+        ) : isLoadingArticles ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/40 space-y-3 animate-pulse">
+                <div className="h-3 w-16 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                <div className="h-5 w-full bg-neutral-200 dark:bg-neutral-700 rounded" />
+                <div className="h-5 w-4/5 bg-neutral-200 dark:bg-neutral-700 rounded" />
+                <div className="h-3 w-full bg-neutral-100 dark:bg-neutral-800 rounded" />
+                <div className="h-3 w-3/4 bg-neutral-100 dark:bg-neutral-800 rounded" />
+              </div>
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

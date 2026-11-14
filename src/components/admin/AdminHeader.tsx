@@ -21,6 +21,7 @@ interface AdminHeaderProps {
   onRefresh: () => void;
   isDevBypass: boolean;
   onDisableDevBypass?: () => void;
+  lastRefreshedAt?: Date | null;
 }
 
 export const AdminHeader: React.FC<AdminHeaderProps> = ({
@@ -31,6 +32,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   onRefresh,
   isDevBypass,
   onDisableDevBypass,
+  lastRefreshedAt,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -103,6 +105,13 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
         {/* Right Tools & User Info */}
         <div className="flex items-center gap-2.5 self-end md:self-auto">
+          {/* Refresh Timestamp Feedback */}
+          {lastRefreshedAt && (
+            <span className="hidden lg:inline text-[11px] text-neutral-400 font-mono">
+              Synced {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+
           {/* Refresh Button */}
           <button
             onClick={onRefresh}

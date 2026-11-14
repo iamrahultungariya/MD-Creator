@@ -36,6 +36,8 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [ratingFilter, setRatingFilter] = useState<number | 'all'>('all');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const confirm = useConfirm();
 
   const { pendingCount, approvedCount, rejectedCount } = useMemo(() => {
@@ -64,6 +66,59 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
       return matchesStatus && matchesRating && matchesSearch;
     });
   }, [reviews, statusFilter, ratingFilter, searchQuery]);
+
+  const toggleSelectReview = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllVisible = () => {
+    if (selectedIds.size === filteredReviews.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredReviews.map((r) => r.id)));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    const idsToApprove = Array.from(selectedIds);
+    if (idsToApprove.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      for (const id of idsToApprove) {
+        await onApprove(id);
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    const idsToReject = Array.from(selectedIds);
+    if (idsToReject.length === 0) return;
+    const ok = await confirm({
+      title: 'Reject Selected Reviews',
+      message: `Are you sure you want to mark ${idsToReject.length} selected reviews as rejected?`,
+      variant: 'danger',
+      confirmText: 'Reject Selected',
+    });
+    if (!ok) return;
+
+    setIsBulkProcessing(true);
+    try {
+      for (const id of idsToReject) {
+        await onReject(id);
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
 
   const handleAction = async (action: () => Promise<void>, id: string) => {
     try {
@@ -164,7 +219,51 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
         >
           Rejected ({rejectedCount})
         </button>
+
+        {filteredReviews.length > 0 && (
+          <button
+            onClick={handleSelectAllVisible}
+            className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white shrink-0"
+          >
+            {selectedIds.size === filteredReviews.length ? 'Deselect All' : 'Select All'}
+          </button>
+        )}
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-white">
+              {selectedIds.size} of {filteredReviews.length} selected
+            </span>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-neutral-400 hover:text-white underline cursor-pointer ml-1"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBulkApprove}
+              disabled={isBulkProcessing}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>{isBulkProcessing ? 'Approving...' : `Approve Selected (${selectedIds.size})`}</span>
+            </button>
+            <button
+              onClick={handleBulkReject}
+              disabled={isBulkProcessing}
+              className="px-3.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-rose-950/80 text-rose-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Reject Selected</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Reviews Feed */}
       {filteredReviews.length === 0 ? (
@@ -184,12 +283,15 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
             const isPending = rev.status === 'pending';
             const isApproved = rev.status === 'approved';
             const isRejected = rev.status === 'rejected';
+            const isSelected = selectedIds.has(rev.id);
 
             return (
               <div
                 key={rev.id}
                 className={`p-5 rounded-3xl border flex flex-col justify-between transition-all ${
-                  isPending
+                  isSelected
+                    ? 'bg-brand-950/30 border-brand-500 ring-1 ring-brand-500/50'
+                    : isPending
                     ? 'bg-neutral-900/90 border-amber-500/40 shadow-lg shadow-amber-500/5'
                     : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
                 }`}
@@ -198,6 +300,14 @@ export const AdminReviewsTab: React.FC<AdminReviewsTabProps> = ({
                   {/* Top Row: User Avatar & Status */}
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3">
+                      {/* Selection Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectReview(rev.id)}
+                        className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 bg-neutral-950 border-neutral-700 cursor-pointer"
+                        title="Select for bulk moderation"
+                      />
                       <div className="w-10 h-10 rounded-2xl bg-neutral-800 border border-neutral-700 text-neutral-200 flex items-center justify-center font-bold text-sm uppercase">
                         {rev.name.charAt(0) || 'U'}
                       </div>

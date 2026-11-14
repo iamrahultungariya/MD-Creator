@@ -160,29 +160,59 @@ export const ReviewsSection: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const reviewPayload: UserReview = {
-        id: myReview?.id || `rev-${Date.now()}`,
-        user_id: myReview?.user_id || 'anonymous',
+      const isEditing = Boolean(myReview?.id);
+
+      const basePayload = {
         name: authorName.trim(),
         role: authorRole.trim() || 'Markdown Writer',
         rating,
         content: reviewText.trim(),
         date: new Date().toISOString().split('T')[0],
-        verified: true,
-        status: 'approved',
+        verified: false,
+        status: 'pending' as const,
       };
 
+      let savedReview: UserReview;
+
       if (supabase) {
-        await supabase.from('community_reviews').upsert(reviewPayload);
+        if (isEditing && myReview?.id) {
+          // Edit: update existing row, back to pending for re-moderation
+          const { data, error } = await supabase
+            .from('community_reviews')
+            .update({ ...basePayload, user_id: myReview.user_id || 'anonymous' })
+            .eq('id', myReview.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+          savedReview = data as UserReview;
+        } else {
+          // New submission: insert, let Supabase generate UUID
+          const { data, error } = await supabase
+            .from('community_reviews')
+            .insert({ ...basePayload, user_id: 'anonymous' })
+            .select()
+            .single();
+
+          if (error) throw error;
+          savedReview = data as UserReview;
+        }
+      } else {
+        // Offline fallback: keep local record as pending
+        savedReview = {
+          id: myReview?.id || `local-${Date.now()}`,
+          user_id: myReview?.user_id || 'anonymous',
+          ...basePayload,
+        };
       }
 
-      saveUserSubmittedReview(reviewPayload);
-      setMyReview(reviewPayload);
+      saveUserSubmittedReview(savedReview);
+      setMyReview(savedReview);
       setSubmitSuccess(true);
       setTimeout(() => {
         setIsModalOpen(false);
         setSubmitSuccess(false);
-      }, 1500);
+      }, 2500);
     } catch (err) {
       console.error('Failed to submit review:', err);
     } finally {

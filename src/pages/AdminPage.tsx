@@ -93,6 +93,10 @@ export const AdminPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  // Promise-wrapped confirm so hooks can receive it as an async callback
+  const confirmAction = (message: string): Promise<boolean> =>
+    Promise.resolve(window.confirm(message));
+
   // Authorize User
   useEffect(() => {
     let isMounted = true;
@@ -159,6 +163,7 @@ export const AdminPage: React.FC = () => {
     feedbacks,
     stats,
     isRefreshing,
+    lastRefreshedAt,
     loadAdminData,
     handleApproveBlog,
     handleRejectBlog,
@@ -178,6 +183,7 @@ export const AdminPage: React.FC = () => {
     userId: user?.id,
     userDisplayName: user?.displayName,
     showToast,
+    confirmAction,
   });
 
   const onSubmitCreateBlog = async (e: React.FormEvent) => {
@@ -233,6 +239,7 @@ export const AdminPage: React.FC = () => {
         setActiveTab={setActiveTab}
         stats={stats}
         isRefreshing={isRefreshing}
+        lastRefreshedAt={lastRefreshedAt}
         onRefresh={loadAdminData}
         isDevBypass={isDevBypass}
         onDisableDevBypass={handleDisableDevBypass}

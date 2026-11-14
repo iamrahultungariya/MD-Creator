@@ -7,8 +7,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "video:dev": "remotion preview src/video/index.ts",
-    "video:render": "remotion render src/video/index.ts MDWriterTeaserLandscape out/md-writer-teaser.mp4",
     "test": "npx tsx --test tests/home/*.test.ts tests/mimo/*.test.ts"
   },
   "overrides": {
@@ -60,20 +58,16 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@remotion/cli": "^4.0.543",
-    "@remotion/player": "^4.0.543",
-    "@remotion/tailwind": "^4.0.543",
     "@tailwindcss/vite": "^4.0.12",
     "@types/katex": "^0.16.8",
     "@types/node": "^22.13.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
-    "remotion": "^4.0.543",
     "tailwindcss": "^4.0.12",
-    "tsx": "^4.19.3",
     "typescript": "~5.7.3",
     "vite": "^6.2.1",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "tsx": "^4.19.3"
   }
 }

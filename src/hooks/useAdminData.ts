@@ -19,6 +19,7 @@ interface UseAdminDataProps {
   userId?: string | null;
   userDisplayName?: string | null;
   showToast: (msg: string) => void;
+  confirmAction?: (message: string) => Promise<boolean>;
 }
 
 export function useAdminData({
@@ -26,11 +27,13 @@ export function useAdminData({
   userId,
   userDisplayName,
   showToast,
+  confirmAction,
 }: UseAdminDataProps) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
 
   // Load All Admin Data (Blogs, Reviews, Feedbacks)
   const loadAdminData = useCallback(async () => {
@@ -131,6 +134,7 @@ export function useAdminData({
       console.warn('[AdminData] Error loading data from Supabase:', err);
     } finally {
       setIsRefreshing(false);
+      setLastRefreshedAt(new Date());
     }
   }, []);
 
@@ -140,27 +144,67 @@ export function useAdminData({
     }
   }, [isAdmin, loadAdminData]);
 
+  // Realtime Supabase Channel Subscription for Live Admin Updates
+  useEffect(() => {
+    if (!isAdmin || !supabase) return;
+    const client = supabase;
+
+    const channel = client
+      .channel('admin-live-moderation')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'community_reviews' },
+        () => {
+          loadAdminData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'blog_articles' },
+        () => {
+          loadAdminData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'feedbacks' },
+        () => {
+          loadAdminData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [isAdmin, loadAdminData]);
+
   // Derived Stats
   const stats: AdminStats = useMemo(() => {
-    const pendingBlogs = articles.filter((a) => a.status === 'pending').length;
+    const pendingBlogList = articles.filter((a) => a.status === 'pending');
     const publishedBlogs = articles.filter((a) => a.status === 'published').length;
-    const pendingReviews = reviews.filter((r) => r.status === 'pending').length;
+    const pendingReviewList = reviews.filter((r) => r.status === 'pending');
     const approvedReviews = reviews.filter((r) => r.status === 'approved').length;
     const newFeedback = feedbacks.filter((f) => f.status === 'new').length;
     const criticalFeedback = feedbacks.filter(
       (f) => f.priority === 'critical' && f.status !== 'resolved'
     ).length;
 
+    const oldestPendingBlog = pendingBlogList.length > 0 ? pendingBlogList[pendingBlogList.length - 1] : null;
+    const oldestPendingReview = pendingReviewList.length > 0 ? pendingReviewList[pendingReviewList.length - 1] : null;
+
     return {
       totalBlogs: articles.length,
-      pendingBlogs,
+      pendingBlogs: pendingBlogList.length,
       publishedBlogs,
       totalReviews: reviews.length,
-      pendingReviews,
+      pendingReviews: pendingReviewList.length,
       approvedReviews,
       totalFeedback: feedbacks.length,
       newFeedback,
       criticalFeedback,
+      oldestPendingBlogAt: oldestPendingBlog?.submittedAt || oldestPendingBlog?.date || null,
+      oldestPendingReviewAt: oldestPendingReview?.date || null,
     };
   }, [articles, reviews, feedbacks]);
 
@@ -348,7 +392,10 @@ export function useAdminData({
 
 
   const handleDeleteReview = async (reviewId: string) => {
-    if (!window.confirm('Delete this user review record permanently?')) {
+    const ok = confirmAction
+      ? await confirmAction('Delete this user review record permanently?')
+      : window.confirm('Delete this user review record permanently?');
+    if (!ok) {
       return;
     }
 
@@ -416,7 +463,10 @@ export function useAdminData({
   };
 
   const handleDeleteFeedback = async (id: string) => {
-    if (!window.confirm('Delete this feedback entry?')) {
+    const ok = confirmAction
+      ? await confirmAction('Delete this feedback entry?')
+      : window.confirm('Delete this feedback entry?');
+    if (!ok) {
       return;
     }
 
@@ -526,6 +576,7 @@ export function useAdminData({
     feedbacks,
     stats,
     isRefreshing,
+    lastRefreshedAt,
     loadAdminData,
     handleApproveBlog,
     handleRejectBlog,

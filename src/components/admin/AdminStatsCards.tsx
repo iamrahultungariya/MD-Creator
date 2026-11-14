@@ -17,6 +17,18 @@ interface AdminStatsCardsProps {
   onOpenCreateBlog?: () => void;
 }
 
+function formatRelativeTime(dateStr?: string | null): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  const diffSec = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (diffSec < 60) return 'Just now';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  const days = Math.floor(diffSec / 86400);
+  return `${days}d ago`;
+}
+
 export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
   stats,
   onNavigateTab,
@@ -57,7 +69,11 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
             Pending Blog Articles
           </div>
           <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
-            <span>Awaiting live publishing</span>
+            <span>
+              {stats.pendingBlogs > 0 && stats.oldestPendingBlogAt
+                ? `Oldest: ${formatRelativeTime(stats.oldestPendingBlogAt)}`
+                : 'Awaiting live publishing'}
+            </span>
             <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 transition-all" />
           </p>
         </div>
@@ -90,7 +106,11 @@ export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
             Pending Reviews
           </div>
           <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
-            <span>Awaiting homepage feature</span>
+            <span>
+              {stats.pendingReviews > 0 && stats.oldestPendingReviewAt
+                ? `Oldest: ${formatRelativeTime(stats.oldestPendingReviewAt)}`
+                : 'Awaiting homepage feature'}
+            </span>
             <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-brand-400 transition-all" />
           </p>
         </div>
