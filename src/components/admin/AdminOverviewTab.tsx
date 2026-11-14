@@ -163,12 +163,12 @@ export const AdminOverviewTab: React.FC<AdminOverviewTabProps> = ({
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 text-neutral-400 mb-1">
-                      <span className="font-semibold text-neutral-200">{rev.author_name}</span>
+                      <span className="font-semibold text-neutral-200">{rev.name}</span>
                       <span className="text-neutral-500">•</span>
                       <span className="text-amber-400 font-mono text-[11px]">{'★'.repeat(rev.rating)}</span>
                     </div>
                     <p className="text-[11px] text-neutral-400 line-clamp-1">
-                      {rev.comment}
+                      {rev.content}
                     </p>
                   </div>
 
