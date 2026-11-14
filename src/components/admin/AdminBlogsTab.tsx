@@ -41,6 +41,8 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'published' | 'rejected'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'All' | BlogCategory>('All');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const confirm = useConfirm();
 
   const { pendingCount, publishedCount, rejectedCount } = useMemo(() => {
@@ -69,6 +71,59 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
       return matchesStatus && matchesCategory && matchesSearch;
     });
   }, [articles, statusFilter, categoryFilter, searchQuery]);
+
+  const toggleSelectArticle = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllVisible = () => {
+    if (selectedIds.size === filteredArticles.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredArticles.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    const idsToApprove = Array.from(selectedIds);
+    if (idsToApprove.length === 0) return;
+    setIsBulkProcessing(true);
+    try {
+      for (const id of idsToApprove) {
+        await onApprove(id);
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    const idsToReject = Array.from(selectedIds);
+    if (idsToReject.length === 0) return;
+    const ok = await confirm({
+      title: 'Reject Selected Articles',
+      message: `Are you sure you want to mark ${idsToReject.length} selected articles as rejected?`,
+      variant: 'danger',
+      confirmText: 'Reject Selected',
+    });
+    if (!ok) return;
+
+    setIsBulkProcessing(true);
+    try {
+      for (const id of idsToReject) {
+        await onReject(id);
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
 
   const handleAction = async (action: () => Promise<void>, id: string) => {
     try {
@@ -178,7 +233,55 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
         >
           Rejected ({rejectedCount})
         </button>
+
+        {filteredArticles.length > 0 && (
+          <button
+            type="button"
+            onClick={handleSelectAllVisible}
+            className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white shrink-0"
+          >
+            {selectedIds.size === filteredArticles.length ? 'Deselect All' : 'Select All'}
+          </button>
+        )}
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-white">
+              {selectedIds.size} of {filteredArticles.length} selected
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs text-neutral-400 hover:text-white underline cursor-pointer ml-1"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleBulkApprove}
+              disabled={isBulkProcessing}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>{isBulkProcessing ? 'Publishing...' : `Approve Selected (${selectedIds.size})`}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkReject}
+              disabled={isBulkProcessing}
+              className="px-3.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-rose-950/80 text-rose-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Reject Selected</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Articles Feed */}
       {filteredArticles.length === 0 ? (
@@ -198,21 +301,33 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
             const isPending = article.status === 'pending';
             const isPublished = article.status === 'published';
             const isRejected = article.status === 'rejected';
+            const isSelected = selectedIds.has(article.id);
 
             return (
               <div
                 key={article.id}
                 className={`p-5 rounded-3xl border transition-all ${
-                  isPending
+                  isSelected
+                    ? 'bg-brand-950/20 border-brand-500 ring-1 ring-brand-500/50'
+                    : isPending
                     ? 'bg-neutral-900/90 border-amber-500/40 shadow-lg shadow-amber-500/5'
                     : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                   
-                  {/* Article Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelectArticle(article.id)}
+                      className="w-4 h-4 mt-1 rounded text-brand-600 focus:ring-brand-500 bg-neutral-950 border-neutral-700 cursor-pointer shrink-0"
+                      title="Select for bulk moderation"
+                    />
+
+                    {/* Article Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                       {/* Status Badge */}
                       {isPending && (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
@@ -270,6 +385,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
                         ({article.author.role})
                       </span>
                     </div>
+                  </div>
                   </div>
 
                   {/* Actions Column */}
