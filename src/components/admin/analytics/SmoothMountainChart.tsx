@@ -6,6 +6,8 @@ export interface Point {
   y: number;
 }
 
+export type CohortFilterMode = 'all' | 'new' | 'returning' | 'active';
+
 /**
  * Converts discrete data points into a smooth Catmull-Rom cubic Bezier SVG path
  * providing flowing, natural mountain ridges instead of sharp linear zig-zags.
@@ -64,6 +66,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
   onHoverRecord,
 }) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [activeCohort, setActiveCohort] = useState<CohortFilterMode>('all');
 
   const baselineY = height - 28;
   const chartTopPadding = 24;
@@ -139,222 +142,276 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
     return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  // Cohort visibility and opacity factors
+  const isAll = activeCohort === 'all';
+  const showNew = isAll || activeCohort === 'new';
+  const showReturning = isAll || activeCohort === 'returning';
+  const showActive = isAll || activeCohort === 'active';
+
   return (
-    <div className="relative w-full select-none">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-56 sm:h-64 overflow-visible"
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
-      >
-        <defs>
-          {/* Sky Gradient for New Visitors */}
-          <linearGradient id="skyMountainGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.32" />
-            <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.08" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
-          </linearGradient>
+    <div className="space-y-3 font-sans">
+      {/* Zero-Icon Cohort Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="text-[11px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+          Cohort Spline Filter:
+        </div>
 
-          {/* Indigo Gradient for Returning Users */}
-          <linearGradient id="indigoMountainGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.28" />
-            <stop offset="60%" stopColor="#818cf8" stopOpacity="0.06" />
-            <stop offset="100%" stopColor="#818cf8" stopOpacity="0.0" />
-          </linearGradient>
+        <div className="flex items-center gap-1.5 p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 text-[11px] font-mono">
+          <button
+            type="button"
+            onClick={() => setActiveCohort('all')}
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+              activeCohort === 'all'
+                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-bold shadow-2xs'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+            }`}
+          >
+            ALL COHORTS
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCohort('new')}
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+              activeCohort === 'new'
+                ? 'bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 font-bold border border-sky-300 dark:border-sky-800'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+            }`}
+          >
+            NEW VISITORS
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCohort('returning')}
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+              activeCohort === 'returning'
+                ? 'bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold border border-indigo-300 dark:border-indigo-800'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+            }`}
+          >
+            RETURNING
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveCohort('active')}
+            className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+              activeCohort === 'active'
+                ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
+            }`}
+          >
+            ACTIVE WRITERS
+          </button>
+        </div>
+      </div>
 
-          {/* Emerald Gradient for Active Writers */}
-          <linearGradient id="emeraldMountainGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#34d399" stopOpacity="0.45" />
-            <stop offset="65%" stopColor="#34d399" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#34d399" stopOpacity="0.0" />
-          </linearGradient>
-        </defs>
-
-        {/* Horizontal Baseline & Subdued Grid lines */}
-        {[0, 0.33, 0.66, 1].map((pct, i) => {
-          const y = baselineY - pct * (baselineY - chartTopPadding);
-          return (
-            <line
-              key={i}
-              x1={horizontalPadding - 10}
-              y1={y}
-              x2={width - horizontalPadding + 10}
-              y2={y}
-              stroke="#262626"
-              strokeDasharray="3 3"
-              strokeWidth="0.8"
-            />
-          );
-        })}
-
-        {/* 1. Mountain Layer: Returning Users (Back Ridge) */}
-        {returningPaths.areaPath && (
-          <path d={returningPaths.areaPath} fill="url(#indigoMountainGrad)" />
-        )}
-        {returningPaths.linePath && (
-          <path
-            d={returningPaths.linePath}
-            fill="none"
-            stroke="#818cf8"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.85"
-          />
-        )}
-
-        {/* 2. Mountain Layer: New Visitors (Mid Ridge) */}
-        {newVisitorPaths.areaPath && (
-          <path d={newVisitorPaths.areaPath} fill="url(#skyMountainGrad)" />
-        )}
-        {newVisitorPaths.linePath && (
-          <path
-            d={newVisitorPaths.linePath}
-            fill="none"
-            stroke="#38bdf8"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.9"
-          />
-        )}
-
-        {/* 3. Mountain Layer: Active Writers DAU (Front Ridge) */}
-        {activeWriterPaths.areaPath && (
-          <path d={activeWriterPaths.areaPath} fill="url(#emeraldMountainGrad)" />
-        )}
-        {activeWriterPaths.linePath && (
-          <path
-            d={activeWriterPaths.linePath}
-            fill="none"
-            stroke="#34d399"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {/* X-Axis Date Labels (Every other date or start/middle/end to maintain clarity) */}
-        {data.map((d, i) => {
-          const shouldShowLabel =
-            data.length <= 10 ||
-            i === 0 ||
-            i === data.length - 1 ||
-            i % Math.ceil(data.length / 7) === 0;
-
-          if (!shouldShowLabel) return null;
-          const x = getX(i);
-
-          return (
-            <text
-              key={d.date}
-              x={x}
-              y={height - 8}
-              textAnchor="middle"
-              className="fill-neutral-500 text-[10px] font-mono tracking-tight"
-            >
-              {formatShortDate(d.date)}
-            </text>
-          );
-        })}
-
-        {/* Active Inspection Crosshair */}
-        {hoverIndex !== null && activeRecord && (
-          <g className="transition-all duration-100">
-            <line
-              x1={getX(hoverIndex)}
-              y1={chartTopPadding - 6}
-              x2={getX(hoverIndex)}
-              y2={baselineY}
-              stroke="#525252"
-              strokeDasharray="2 2"
-              strokeWidth="1"
-            />
-
-            {/* Returning Users Dot */}
-            <circle
-              cx={returningPoints[hoverIndex]?.x}
-              cy={returningPoints[hoverIndex]?.y}
-              r="4"
-              fill="#818cf8"
-              className="ring-2 ring-neutral-950"
-            />
-
-            {/* New Visitors Dot */}
-            <circle
-              cx={newVisitorPoints[hoverIndex]?.x}
-              cy={newVisitorPoints[hoverIndex]?.y}
-              r="4.5"
-              fill="#38bdf8"
-              className="ring-2 ring-neutral-950"
-            />
-
-            {/* Active Writers Dot */}
-            <circle
-              cx={activeWriterPoints[hoverIndex]?.x}
-              cy={activeWriterPoints[hoverIndex]?.y}
-              r="5"
-              fill="#34d399"
-              className="ring-2 ring-neutral-950"
-            />
-          </g>
-        )}
-      </svg>
-
-      {/* Sleek Floating Crosshair Tooltip (Mimo Drawer Aesthetic) */}
-      {hoverIndex !== null && activeRecord && (
-        <div
-          className="absolute z-20 pointer-events-none transition-all duration-75"
-          style={{
-            left: `${(getX(hoverIndex) / width) * 100}%`,
-            top: '0px',
-            transform: getX(hoverIndex) > width * 0.7 ? 'translateX(-105%)' : 'translateX(10px)',
-          }}
+      <div className="relative w-full select-none">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-56 sm:h-64 overflow-visible"
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
         >
-          <div className="p-3 rounded-xl bg-neutral-950/95 border border-neutral-800 text-neutral-100 shadow-xl backdrop-blur-md min-w-[170px] space-y-2">
-            <div className="flex items-center justify-between border-b border-neutral-800/80 pb-1.5">
-              <span className="text-xs font-semibold text-white">
-                {formatShortDate(activeRecord.date)}
-              </span>
-              <span className="text-[10px] font-mono text-neutral-400">
-                {activeRecord.visitors} Total
-              </span>
-            </div>
+          <defs>
+            {/* Sky Gradient for New Visitors */}
+            <linearGradient id="skyMountainGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity={activeCohort === 'new' ? '0.45' : '0.24'} />
+              <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
+            </linearGradient>
 
-            <div className="space-y-1 text-[11px] font-mono">
-              <div className="flex items-center justify-between text-sky-300">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-sky-400" />
-                  <span>New Visitors</span>
+            {/* Indigo Gradient for Returning Users */}
+            <linearGradient id="indigoMountainGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#818cf8" stopOpacity={activeCohort === 'returning' ? '0.42' : '0.22'} />
+              <stop offset="60%" stopColor="#818cf8" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#818cf8" stopOpacity="0.0" />
+            </linearGradient>
+
+            {/* Emerald Gradient for Active Writers */}
+            <linearGradient id="emeraldMountainGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34d399" stopOpacity={activeCohort === 'active' ? '0.5' : '0.35'} />
+              <stop offset="65%" stopColor="#34d399" stopOpacity="0.09" />
+              <stop offset="100%" stopColor="#34d399" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          {/* Horizontal Baseline & Subdued Grid lines */}
+          {[0, 0.33, 0.66, 1].map((pct, i) => {
+            const y = baselineY - pct * (baselineY - chartTopPadding);
+            return (
+              <line
+                key={i}
+                x1={horizontalPadding - 10}
+                y1={y}
+                x2={width - horizontalPadding + 10}
+                y2={y}
+                className="stroke-neutral-200 dark:stroke-neutral-800"
+                strokeDasharray="3 3"
+                strokeWidth="0.8"
+              />
+            );
+          })}
+
+          {/* 1. Mountain Layer: Returning Users (Back Ridge) */}
+          {showReturning && returningPaths.areaPath && (
+            <path d={returningPaths.areaPath} fill="url(#indigoMountainGrad)" />
+          )}
+          {showReturning && returningPaths.linePath && (
+            <path
+              d={returningPaths.linePath}
+              fill="none"
+              stroke="#818cf8"
+              strokeWidth={activeCohort === 'returning' ? '2.4' : '1.8'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={activeCohort === 'returning' ? '1' : isAll ? '0.85' : '0.2'}
+            />
+          )}
+
+          {/* 2. Mountain Layer: New Visitors (Mid Ridge) */}
+          {showNew && newVisitorPaths.areaPath && (
+            <path d={newVisitorPaths.areaPath} fill="url(#skyMountainGrad)" />
+          )}
+          {showNew && newVisitorPaths.linePath && (
+            <path
+              d={newVisitorPaths.linePath}
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth={activeCohort === 'new' ? '2.5' : '2'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={activeCohort === 'new' ? '1' : isAll ? '0.9' : '0.2'}
+            />
+          )}
+
+          {/* 3. Mountain Layer: Active Writers DAU (Front Ridge) */}
+          {showActive && activeWriterPaths.areaPath && (
+            <path d={activeWriterPaths.areaPath} fill="url(#emeraldMountainGrad)" />
+          )}
+          {showActive && activeWriterPaths.linePath && (
+            <path
+              d={activeWriterPaths.linePath}
+              fill="none"
+              stroke="#34d399"
+              strokeWidth={activeCohort === 'active' ? '2.8' : '2.2'}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={activeCohort === 'active' ? '1' : isAll ? '1' : '0.2'}
+            />
+          )}
+
+          {/* X-Axis Date Labels */}
+          {data.map((d, i) => {
+            const shouldShowLabel =
+              data.length <= 10 ||
+              i === 0 ||
+              i === data.length - 1 ||
+              i % Math.ceil(data.length / 7) === 0;
+
+            if (!shouldShowLabel) return null;
+            const x = getX(i);
+
+            return (
+              <text
+                key={d.date}
+                x={x}
+                y={height - 8}
+                textAnchor="middle"
+                className="fill-neutral-500 text-[10px] font-mono tracking-tight"
+              >
+                {formatShortDate(d.date)}
+              </text>
+            );
+          })}
+
+          {/* Active Inspection Crosshair */}
+          {hoverIndex !== null && activeRecord && (
+            <g className="transition-all duration-100">
+              <line
+                x1={getX(hoverIndex)}
+                y1={chartTopPadding - 6}
+                x2={getX(hoverIndex)}
+                y2={baselineY}
+                className="stroke-neutral-400 dark:stroke-neutral-600"
+                strokeDasharray="2 2"
+                strokeWidth="1"
+              />
+
+              {showReturning && (
+                <circle
+                  cx={returningPoints[hoverIndex]?.x}
+                  cy={returningPoints[hoverIndex]?.y}
+                  r="3.5"
+                  fill="#818cf8"
+                />
+              )}
+
+              {showNew && (
+                <circle
+                  cx={newVisitorPoints[hoverIndex]?.x}
+                  cy={newVisitorPoints[hoverIndex]?.y}
+                  r="4"
+                  fill="#38bdf8"
+                />
+              )}
+
+              {showActive && (
+                <circle
+                  cx={activeWriterPoints[hoverIndex]?.x}
+                  cy={activeWriterPoints[hoverIndex]?.y}
+                  r="4.5"
+                  fill="#34d399"
+                />
+              )}
+            </g>
+          )}
+        </svg>
+
+        {/* Zero-Icon Floating Crosshair Tooltip (Mimo Drawer HUD) */}
+        {hoverIndex !== null && activeRecord && (
+          <div
+            className="absolute z-20 pointer-events-none transition-all duration-75"
+            style={{
+              left: `${(getX(hoverIndex) / width) * 100}%`,
+              top: '0px',
+              transform: getX(hoverIndex) > width * 0.7 ? 'translateX(-105%)' : 'translateX(10px)',
+            }}
+          >
+            <div className="p-3 rounded-xl bg-white/95 dark:bg-neutral-950/95 border border-neutral-200/90 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xl backdrop-blur-md min-w-[175px] space-y-2">
+              <div className="flex items-center justify-between border-b border-neutral-200/80 dark:border-neutral-800/80 pb-1.5 font-mono">
+                <span className="text-xs font-semibold">
+                  {formatShortDate(activeRecord.date)}
                 </span>
-                <span className="font-bold tabular-nums">
-                  {activeRecord.newVisitors ?? Math.round(activeRecord.visitors * 0.45)}
+                <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                  {activeRecord.visitors} Total
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-indigo-300">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-indigo-400" />
-                  <span>Returning Users</span>
-                </span>
-                <span className="font-bold tabular-nums">
-                  {activeRecord.returningVisitors ?? Math.max(0, activeRecord.visitors - (activeRecord.newVisitors ?? Math.round(activeRecord.visitors * 0.45)))}
-                </span>
-              </div>
+              <div className="space-y-1 text-[11px] font-mono">
+                <div className="flex items-center justify-between text-sky-700 dark:text-sky-300">
+                  <span>NEW VISITORS</span>
+                  <span className="font-bold tabular-nums">
+                    {activeRecord.newVisitors ?? Math.round(activeRecord.visitors * 0.45)}
+                  </span>
+                </div>
 
-              <div className="flex items-center justify-between text-emerald-300 pt-0.5 border-t border-neutral-800/60">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span>Active Writers</span>
-                </span>
-                <span className="font-bold tabular-nums">
-                  {activeRecord.activeWriters}
-                </span>
+                <div className="flex items-center justify-between text-indigo-700 dark:text-indigo-300">
+                  <span>RETURNING</span>
+                  <span className="font-bold tabular-nums">
+                    {activeRecord.returningVisitors ?? Math.max(0, activeRecord.visitors - (activeRecord.newVisitors ?? Math.round(activeRecord.visitors * 0.45)))}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-300 pt-0.5 border-t border-neutral-200/70 dark:border-neutral-800/70">
+                  <span className="font-semibold">ACTIVE WRITERS</span>
+                  <span className="font-bold tabular-nums">
+                    {activeRecord.activeWriters}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
