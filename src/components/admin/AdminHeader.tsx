@@ -1,11 +1,5 @@
 import React, { useRef } from 'react';
 import { 
-  ShieldCheck, 
-  BookOpen, 
-  MessageSquare, 
-  Bug, 
-  BarChart3, 
-  Activity,
   RefreshCw, 
   ExternalLink,
 } from 'lucide-react';
@@ -38,6 +32,14 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const { user } = useAuthStore();
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  const tabs: { id: AdminTab; label: string; badge?: number }[] = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'analytics', label: 'Analytics & Telemetry' },
+    { id: 'blogs', label: 'Blog Moderation', badge: stats.pendingBlogs },
+    { id: 'reviews', label: 'Reviews Desk', badge: stats.pendingReviews },
+    { id: 'feedback', label: 'Feedback & Bugs', badge: stats.newFeedback },
+  ];
+
   const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
     let nextIndex: number | null = null;
     if (e.key === 'ArrowRight') {
@@ -57,126 +59,78 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     }
   };
 
-  const tabs: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string }[] = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      icon: BarChart3,
-    },
-    {
-      id: 'analytics',
-      label: 'User Analytics',
-      icon: Activity,
-    },
-    {
-      id: 'blogs',
-      label: 'Blog Moderation',
-      icon: BookOpen,
-      badge: stats.pendingBlogs,
-      badgeColor: 'bg-amber-500 text-black',
-    },
-    {
-      id: 'reviews',
-      label: 'Reviews Desk',
-      icon: MessageSquare,
-      badge: stats.pendingReviews,
-      badgeColor: 'bg-amber-500 text-black',
-    },
-    {
-      id: 'feedback',
-      label: 'Feedback & Bugs',
-      icon: Bug,
-      badge: stats.newFeedback,
-      badgeColor: 'bg-rose-500 text-white',
-    },
-  ];
-
   return (
-    <header className="bg-neutral-900 border-b border-neutral-800 text-neutral-100 sticky top-0 z-40 shadow-xl">
-      {/* Top Banner Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-800/80">
+    <header className="bg-neutral-950 border-b border-neutral-800/80 text-neutral-100 sticky top-0 z-40 font-sans">
+      {/* Top Bar (Mimo Drawer Header Standard) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-neutral-800/60">
         
-        {/* Brand & Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-neutral-950 flex items-center justify-center font-bold shadow-lg shadow-amber-500/20">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-white">MD Writer</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-800 text-amber-400 font-mono font-bold border border-neutral-700">
-                Admin Panel
-              </span>
-              {isDevBypass && (
-                <button
-                  onClick={onDisableDevBypass}
-                  title="Click to disable dev bypass"
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold cursor-pointer hover:bg-purple-500/30"
-                >
-                  Dev Mode Active ✕
-                </button>
-              )}
-            </div>
-            <p className="text-xs text-neutral-400">
-              Community Moderation Desk: Blogs, Reviews &amp; Feedback Tracker
-            </p>
-          </div>
+        {/* Brand & Context */}
+        <div className="flex items-center gap-2.5">
+          <span className="font-bold text-sm text-neutral-100 tracking-tight">MD Writer</span>
+          <span className="text-[10px] font-mono text-neutral-400 bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded">
+            Admin
+          </span>
+          {isDevBypass && (
+            <button
+              onClick={onDisableDevBypass}
+              title="Click to disable dev bypass"
+              className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950/70 text-purple-300 border border-purple-800/80 cursor-pointer hover:bg-purple-900/60 transition-colors"
+            >
+              Dev Active ✕
+            </button>
+          )}
+          <span className="text-neutral-600 text-xs hidden sm:inline">•</span>
+          <span className="text-xs text-neutral-400 hidden sm:inline tracking-tight">
+            Moderation desk and anonymous user telemetry
+          </span>
         </div>
 
         {/* Right Tools & User Info */}
-        <div className="flex items-center gap-2.5 self-end md:self-auto">
-          {/* Refresh Timestamp Feedback */}
+        <div className="flex items-center gap-2 self-end md:self-auto text-xs font-sans">
           {lastRefreshedAt && (
-            <span className="hidden lg:inline text-[11px] text-neutral-400 font-mono">
+            <span className="text-[11px] text-neutral-500 font-mono hidden lg:inline">
               Synced {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
 
-          {/* Refresh Button */}
           <button
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800/70 border border-neutral-800 transition-colors cursor-pointer disabled:opacity-50"
             title="Refresh database records"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-amber-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-neutral-200' : ''}`} />
           </button>
 
-          {/* View Website Button */}
           <button
             onClick={() => navigate('/')}
-            className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-neutral-200 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60"
+            className="px-2.5 py-1 rounded-lg text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800/70 border border-neutral-800 transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            <span>View Public Site</span>
-            <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+            <span>Public Site</span>
+            <ExternalLink className="w-3 h-3 text-neutral-500" />
           </button>
 
-          {/* User pill */}
           <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-neutral-800">
             <img
               src={user?.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=Admin'}
               alt={user?.displayName || 'Admin'}
-              className="w-7 h-7 rounded-full object-cover ring-1 ring-neutral-700"
+              className="w-6 h-6 rounded-full object-cover ring-1 ring-neutral-800"
             />
-            <div className="text-left text-xs leading-tight">
-              <div className="font-semibold text-white max-w-[120px] truncate">
-                {user?.displayName || 'Admin User'}
-              </div>
-              <div className="text-[10px] text-emerald-400 font-medium">Administrator</div>
-            </div>
+            <span className="text-xs font-medium text-neutral-300 max-w-[110px] truncate">
+              {user?.displayName || 'Admin'}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Tabs Navigation Bar */}
+      {/* Tabs Row (Mimo Segmented Minimalist Nav) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav
-          className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2 scrollbar-none"
+          className="flex space-x-1 overflow-x-auto py-2 scrollbar-none"
           role="tablist"
           aria-label="Admin Navigation Tabs"
         >
           {tabs.map((tab, index) => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -190,16 +144,15 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer border ${
                   isActive
-                    ? 'bg-neutral-800 text-white shadow-xs border border-neutral-700'
-                    : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50'
+                    ? 'bg-neutral-800/90 text-white border-neutral-700/80 shadow-2xs font-semibold'
+                    : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/60 border-transparent'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-neutral-500'}`} />
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${tab.badgeColor || 'bg-amber-500 text-black'}`}>
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold bg-neutral-900 text-neutral-300 border border-neutral-700/80">
                     {tab.badge}
                   </span>
                 )}

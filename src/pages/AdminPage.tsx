@@ -271,7 +271,7 @@ export const AdminPage: React.FC = () => {
           {activeTab === 'blogs' && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-black text-white tracking-tight mb-1">
+                <h2 className="text-base font-bold text-neutral-100 tracking-tight mb-0.5">
                   Blog Articles Moderation
                 </h2>
                 <p className="text-xs text-neutral-400">
@@ -299,7 +299,7 @@ export const AdminPage: React.FC = () => {
           {activeTab === 'reviews' && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-black text-white tracking-tight mb-1">
+                <h2 className="text-base font-bold text-neutral-100 tracking-tight mb-0.5">
                   Community Reviews Moderation
                 </h2>
                 <p className="text-xs text-neutral-400">
@@ -322,7 +322,7 @@ export const AdminPage: React.FC = () => {
           {activeTab === 'feedback' && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-black text-white tracking-tight mb-1">
+                <h2 className="text-base font-bold text-neutral-100 tracking-tight mb-0.5">
                   User Feedback &amp; Bug Tracker
                 </h2>
                 <p className="text-xs text-neutral-400">

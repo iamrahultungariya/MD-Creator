@@ -28,49 +28,49 @@ export const AdminAccessDenied: React.FC<AdminAccessDeniedProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 sm:p-6 text-neutral-100">
-      <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-6 mx-auto">
-          <ShieldAlert className="w-7 h-7" />
+    <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-4 sm:p-6 text-neutral-100 font-sans">
+      <div className="max-w-md w-full bg-neutral-900/60 border border-neutral-800/80 rounded-2xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-300 mb-4 mx-auto">
+          <ShieldAlert className="w-5 h-5 text-amber-400" />
         </div>
 
-        <h1 className="text-xl font-bold text-center text-white mb-2">
+        <h1 className="text-base font-bold text-center text-white mb-1.5 tracking-tight">
           Administrator Access Required
         </h1>
-        <p className="text-sm text-neutral-400 text-center mb-6">
+        <p className="text-xs text-neutral-400 text-center mb-5 leading-relaxed">
           This portal is reserved for MD Writer editors and administrators. You need verified role privileges to moderate blogs, reviews, and community feedback.
         </p>
 
         {user ? (
-          <div className="bg-neutral-950/70 border border-neutral-800 rounded-2xl p-4 mb-6 text-xs space-y-2">
+          <div className="bg-neutral-950/70 border border-neutral-800/80 rounded-xl p-3.5 mb-5 text-xs space-y-2 font-mono">
             <div className="flex items-center justify-between text-neutral-400">
-              <span>Signed In As:</span>
+              <span className="font-sans">Signed In As:</span>
               <span className="text-white font-medium">{user.email || user.displayName}</span>
             </div>
             <div className="flex items-center justify-between text-neutral-400">
-              <span>Role Assigned:</span>
-              <span className="text-amber-400 font-semibold uppercase font-mono">Contributor / User</span>
+              <span className="font-sans">Role Assigned:</span>
+              <span className="text-amber-400 font-semibold uppercase">Contributor</span>
             </div>
             {isLocalDev && (
-              <div className="pt-2 border-t border-neutral-800/80 text-[11px] text-neutral-500 flex items-start gap-1.5">
+              <div className="pt-2 border-t border-neutral-800/80 text-[11px] text-neutral-500 flex items-start gap-1.5 font-sans">
                 <Terminal className="w-3.5 h-3.5 shrink-0 mt-0.5 text-neutral-400" />
                 <span>
-                  Local Development: Admin privileges can be granted via Supabase Dashboard roles or by setting <code className="text-amber-300/90 font-mono text-[10px]">VITE_OWNER_EMAIL</code> in <code className="text-amber-300/90 font-mono text-[10px]">.env</code>.
+                  Local Development: Admin privileges can be granted via Supabase Dashboard roles or by setting <code className="text-neutral-300 font-mono text-[10px]">VITE_OWNER_EMAIL</code> in <code className="text-neutral-300 font-mono text-[10px]">.env</code>.
                 </span>
               </div>
             )}
           </div>
         ) : (
-          <div className="bg-neutral-950/70 border border-neutral-800 rounded-2xl p-4 mb-6 text-xs text-center text-neutral-400">
+          <div className="bg-neutral-950/70 border border-neutral-800/80 rounded-xl p-3.5 mb-5 text-xs text-center text-neutral-400">
             You are currently not signed in. Please sign in with an administrator account to continue.
           </div>
         )}
 
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {!user ? (
             <button
               onClick={() => navigate('/auth')}
-              className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-amber-500/10"
+              className="w-full py-2 px-4 rounded-lg bg-neutral-100 hover:bg-white text-neutral-950 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
               <span>Sign In to Admin Account</span>
@@ -81,16 +81,16 @@ export const AdminAccessDenied: React.FC<AdminAccessDeniedProps> = ({
           {isLocalDev && onEnableDevBypass && (
             <button
               onClick={onEnableDevBypass}
-              className="w-full py-2.5 px-4 rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-amber-400 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full py-2 px-4 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-neutral-200 font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
-              <KeyRound className="w-3.5 h-3.5" />
+              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
               <span>Enable Dev-Mode Test Session</span>
             </button>
           )}
 
           <button
             onClick={() => navigate('/')}
-            className="w-full py-2.5 px-4 rounded-xl bg-transparent hover:bg-neutral-800/50 text-neutral-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="w-full py-2 px-4 rounded-lg bg-transparent hover:bg-neutral-800/50 text-neutral-400 hover:text-white font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Homepage</span>

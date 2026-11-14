@@ -135,19 +135,19 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-sans">
       {/* Search and Filters Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-3xl bg-neutral-900 border border-neutral-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-3.5 rounded-xl bg-neutral-900/40 border border-neutral-800/80">
         
         {/* Left: Search Box */}
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-500" />
           <input
             type="text"
             placeholder="Search articles by title, author, or excerpt..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-2xl bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-hidden focus:border-amber-500/80 transition-colors"
+            className="w-full pl-9 pr-4 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs text-white placeholder-neutral-500 focus:outline-hidden focus:border-neutral-600 transition-colors"
           />
           {searchQuery && (
             <button
@@ -164,11 +164,11 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value as any)}
-            className="px-3 py-2 rounded-2xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-300 focus:outline-hidden focus:border-amber-500 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 text-xs text-neutral-300 focus:outline-hidden focus:border-neutral-600 cursor-pointer font-mono"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
-                Category: {cat}
+                {cat}
               </option>
             ))}
           </select>
@@ -176,9 +176,9 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
           {onOpenCreate && (
             <button
               onClick={onOpenCreate}
-              className="px-3.5 py-2 rounded-2xl bg-amber-500 hover:bg-amber-400 text-neutral-950 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-lg shadow-amber-500/10"
+              className="px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-white text-neutral-950 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Write Blog</span>
             </button>
           )}
@@ -186,13 +186,13 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
         <button
           onClick={() => setStatusFilter('all')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shrink-0 ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors shrink-0 ${
             statusFilter === 'all'
-              ? 'bg-white text-neutral-950 shadow-xs'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+              ? 'bg-neutral-800 text-white font-semibold border border-neutral-700'
+              : 'bg-neutral-950 text-neutral-400 hover:text-white border border-neutral-800'
           }`}
         >
           All Articles ({articles.length})
@@ -200,35 +200,35 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
 
         <button
           onClick={() => setStatusFilter('pending')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors flex items-center gap-1.5 shrink-0 ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 shrink-0 ${
             statusFilter === 'pending'
-              ? 'bg-amber-500 text-neutral-950 font-bold shadow-xs'
-              : 'bg-neutral-900 text-amber-400 hover:text-amber-300 border border-neutral-800'
+              ? 'bg-amber-950/80 text-amber-300 font-semibold border border-amber-800/80'
+              : 'bg-neutral-950 text-neutral-400 hover:text-amber-300 border border-neutral-800'
           }`}
         >
-          <span>Pending Approval ({pendingCount})</span>
+          <span>Pending ({pendingCount})</span>
           {pendingCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
           )}
         </button>
 
         <button
           onClick={() => setStatusFilter('published')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shrink-0 ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors shrink-0 ${
             statusFilter === 'published'
-              ? 'bg-emerald-500 text-neutral-950 font-bold shadow-xs'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+              ? 'bg-emerald-950/80 text-emerald-300 font-semibold border border-emerald-800/80'
+              : 'bg-neutral-950 text-neutral-400 hover:text-white border border-neutral-800'
           }`}
         >
-          Live Published ({publishedCount})
+          Live ({publishedCount})
         </button>
 
         <button
           onClick={() => setStatusFilter('rejected')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors shrink-0 ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors shrink-0 ${
             statusFilter === 'rejected'
-              ? 'bg-rose-500 text-white font-bold shadow-xs'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+              ? 'bg-rose-950/80 text-rose-300 font-semibold border border-rose-800/80'
+              : 'bg-neutral-950 text-neutral-400 hover:text-white border border-neutral-800'
           }`}
         >
           Rejected ({rejectedCount})
@@ -238,7 +238,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
           <button
             type="button"
             onClick={handleSelectAllVisible}
-            className="ml-auto px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors border border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white shrink-0"
+            className="ml-auto px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white shrink-0 font-mono"
           >
             {selectedIds.size === filteredArticles.length ? 'Deselect All' : 'Select All'}
           </button>
@@ -247,9 +247,9 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
 
       {/* Bulk Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="p-3.5 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-100">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-white">
+            <span className="text-xs font-semibold text-neutral-200 font-mono">
               {selectedIds.size} of {filteredArticles.length} selected
             </span>
             <button
@@ -257,7 +257,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
               onClick={() => setSelectedIds(new Set())}
               className="text-xs text-neutral-400 hover:text-white underline cursor-pointer ml-1"
             >
-              Clear selection
+              Clear
             </button>
           </div>
           <div className="flex items-center gap-2">
@@ -265,16 +265,16 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
               type="button"
               onClick={handleBulkApprove}
               disabled={isBulkProcessing}
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+              className="px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             >
               <Check className="w-3.5 h-3.5" />
-              <span>{isBulkProcessing ? 'Publishing...' : `Approve Selected (${selectedIds.size})`}</span>
+              <span>{isBulkProcessing ? 'Publishing...' : `Approve (${selectedIds.size})`}</span>
             </button>
             <button
               type="button"
               onClick={handleBulkReject}
               disabled={isBulkProcessing}
-              className="px-3.5 py-1.5 rounded-xl bg-neutral-800 hover:bg-rose-950/80 text-rose-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
+              className="px-3 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-neutral-700/60 disabled:opacity-50"
             >
               <X className="w-3.5 h-3.5" />
               <span>Reject Selected</span>
@@ -285,9 +285,9 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
 
       {/* Articles Feed */}
       {filteredArticles.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-neutral-900 border border-neutral-800 text-neutral-400">
-          <BookOpen className="w-10 h-10 mx-auto text-neutral-600 mb-3" />
-          <h3 className="text-base font-bold text-white mb-1">No articles found</h3>
+        <div className="p-10 text-center rounded-xl bg-neutral-900/40 border border-neutral-800/80 text-neutral-400">
+          <BookOpen className="w-8 h-8 mx-auto text-neutral-600 mb-2" />
+          <h3 className="text-sm font-semibold text-white mb-1">No articles found</h3>
           <p className="text-xs text-neutral-500">
             {statusFilter === 'pending'
               ? 'All blog submissions have been reviewed and published!'
@@ -295,7 +295,7 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredArticles.map((article) => {
             const isBusy = processingId === article.id;
             const isPending = article.status === 'pending';
@@ -306,12 +306,12 @@ export const AdminBlogsTab: React.FC<AdminBlogsTabProps> = ({
             return (
               <div
                 key={article.id}
-                className={`p-5 rounded-3xl border transition-all ${
+                className={`p-4 rounded-xl border transition-colors ${
                   isSelected
-                    ? 'bg-brand-950/20 border-brand-500 ring-1 ring-brand-500/50'
+                    ? 'bg-neutral-900 border-neutral-600 ring-1 ring-neutral-500'
                     : isPending
-                    ? 'bg-neutral-900/90 border-amber-500/40 shadow-lg shadow-amber-500/5'
-                    : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
+                    ? 'bg-neutral-900/60 border-amber-900/40'
+                    : 'bg-neutral-900/40 border-neutral-800/80 hover:border-neutral-700/80'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">

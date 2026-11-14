@@ -1,14 +1,5 @@
 import React from 'react';
-import { 
-  BookOpen, 
-  MessageSquare, 
-  Bug, 
-  CheckCircle2, 
-  ArrowRight,
-  Clock,
-  Sparkles,
-  AlertTriangle
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { AdminStats, AdminTab } from '../../types/admin';
 
 interface AdminStatsCardsProps {
@@ -32,189 +23,122 @@ function formatRelativeTime(dateStr?: string | null): string {
 export const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({
   stats,
   onNavigateTab,
-  onOpenCreateBlog,
 }) => {
   return (
-    <div className="space-y-6">
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-4 font-sans">
+      {/* KPI Cards Grid (Mimo Drawer Minimal Metric Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
         {/* Card 1: Pending Blogs */}
         <div 
           onClick={() => onNavigateTab('blogs')}
-          className={`p-5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${
-            stats.pendingBlogs > 0
-              ? 'bg-neutral-900 border-amber-500/50 hover:border-amber-500/80 shadow-xs'
-              : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
-          }`}
+          className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800/80 hover:border-neutral-700 transition-colors cursor-pointer group text-left space-y-2"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
-              <BookOpen className="w-5 h-5" />
-            </div>
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[11px] font-medium tracking-tight">Pending Blog Articles</span>
             {stats.pendingBlogs > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black">
-                Action Required
+              <span className="flex items-center gap-1 text-[10px] font-mono text-amber-300 bg-amber-950/60 border border-amber-800/70 px-1.5 py-0.5 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>Review</span>
               </span>
             ) : (
-              <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> All Clear
-              </span>
+              <span className="text-[10px] font-mono text-neutral-500">All clear</span>
             )}
           </div>
-          <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+          <div className="text-2xl font-bold font-mono text-white tracking-tight tabular-nums">
             {stats.pendingBlogs}
           </div>
-          <div className="text-xs font-semibold text-neutral-300">
-            Pending Blog Articles
-          </div>
-          <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
-            <span>
+          <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-[11px] text-neutral-400">
+            <span className="font-mono">
               {stats.pendingBlogs > 0 && stats.oldestPendingBlogAt
                 ? `Oldest: ${formatRelativeTime(stats.oldestPendingBlogAt)}`
-                : 'Awaiting live publishing'}
+                : 'Awaiting publish'}
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-amber-400 transition-all" />
-          </p>
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-200 transition-transform group-hover:translate-x-0.5" />
+          </div>
         </div>
 
         {/* Card 2: Pending Reviews */}
         <div 
           onClick={() => onNavigateTab('reviews')}
-          className={`p-5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${
-            stats.pendingReviews > 0
-              ? 'bg-neutral-900 border-brand-500/50 hover:border-brand-500/80 shadow-xs'
-              : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
-          }`}
+          className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800/80 hover:border-neutral-700 transition-colors cursor-pointer group text-left space-y-2"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
-              <MessageSquare className="w-5 h-5" />
-            </div>
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[11px] font-medium tracking-tight">Pending Reviews</span>
             {stats.pendingReviews > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-500 text-white">
-                {stats.pendingReviews} New
+              <span className="flex items-center gap-1 text-[10px] font-mono text-neutral-300 bg-neutral-800 border border-neutral-700 px-1.5 py-0.5 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-400" />
+                <span>Queue</span>
               </span>
             ) : (
-              <span className="text-xs text-neutral-500">Moderated</span>
+              <span className="text-[10px] font-mono text-neutral-500">Moderated</span>
             )}
           </div>
-          <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+          <div className="text-2xl font-bold font-mono text-white tracking-tight tabular-nums">
             {stats.pendingReviews}
           </div>
-          <div className="text-xs font-semibold text-neutral-300">
-            Pending Reviews
-          </div>
-          <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
-            <span>
+          <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-[11px] text-neutral-400">
+            <span className="font-mono">
               {stats.pendingReviews > 0 && stats.oldestPendingReviewAt
                 ? `Oldest: ${formatRelativeTime(stats.oldestPendingReviewAt)}`
-                : 'Awaiting homepage feature'}
+                : 'Verified submissions'}
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-brand-400 transition-all" />
-          </p>
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-200 transition-transform group-hover:translate-x-0.5" />
+          </div>
         </div>
 
         {/* Card 3: Feedback & Bugs */}
         <div 
           onClick={() => onNavigateTab('feedback')}
-          className={`p-5 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${
-            stats.newFeedback > 0
-              ? 'bg-neutral-900 border-rose-500/50 hover:border-rose-500/80 shadow-xs'
-              : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
-          }`}
+          className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800/80 hover:border-neutral-700 transition-colors cursor-pointer group text-left space-y-2"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/30">
-              <Bug className="w-5 h-5" />
-            </div>
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[11px] font-medium tracking-tight">Feedback &amp; Inquiries</span>
             {stats.criticalFeedback > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" /> {stats.criticalFeedback} Critical
+              <span className="flex items-center gap-1 text-[10px] font-mono text-rose-300 bg-rose-950/60 border border-rose-800/70 px-1.5 py-0.5 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                <span>{stats.criticalFeedback} Critical</span>
               </span>
             ) : stats.newFeedback > 0 ? (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
-                {stats.newFeedback} Unread
+              <span className="text-[10px] font-mono text-neutral-300 bg-neutral-800 px-1.5 py-0.5 rounded border border-neutral-700">
+                {stats.newFeedback} new
               </span>
             ) : (
-              <span className="text-xs text-neutral-500">Clean</span>
+              <span className="text-[10px] font-mono text-neutral-500">Inbox zero</span>
             )}
           </div>
-          <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+          <div className="text-2xl font-bold font-mono text-white tracking-tight tabular-nums">
             {stats.totalFeedback}
           </div>
-          <div className="text-xs font-semibold text-neutral-300">
-            User Feedback &amp; Bugs
+          <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-[11px] text-neutral-400">
+            <span className="font-mono">
+              {stats.newFeedback} unread issues
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-200 transition-transform group-hover:translate-x-0.5" />
           </div>
-          <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
-            <span>{stats.newFeedback} needing attention</span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-rose-400 transition-all" />
-          </p>
         </div>
 
-        {/* Card 4: Total Live Content */}
-        <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Active Live
+        {/* Card 4: Total Live Published */}
+        <div 
+          onClick={() => onNavigateTab('blogs')}
+          className="p-4 rounded-xl bg-neutral-900/40 border border-neutral-800/80 hover:border-neutral-700 transition-colors cursor-pointer group text-left space-y-2"
+        >
+          <div className="flex items-center justify-between text-neutral-400">
+            <span className="text-[11px] font-medium tracking-tight">Live Published Articles</span>
+            <span className="text-[10px] font-mono text-emerald-400">Active</span>
+          </div>
+          <div className="text-2xl font-bold font-mono text-white tracking-tight tabular-nums">
+            {stats.publishedBlogs}
+          </div>
+          <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-[11px] text-neutral-400">
+            <span className="font-mono">
+              {stats.totalBlogs} total submissions
             </span>
+            <ArrowRight className="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-200 transition-transform group-hover:translate-x-0.5" />
           </div>
-          <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
-            {stats.publishedBlogs + stats.approvedReviews}
-          </div>
-          <div className="text-xs font-semibold text-neutral-300">
-            Live Website Items
-          </div>
-          <p className="text-[11px] text-neutral-400 mt-1 flex items-center justify-between">
-            <span>{stats.publishedBlogs} blogs • {stats.approvedReviews} reviews</span>
-          </p>
         </div>
 
       </div>
-
-      {/* Quick Moderation Banner if items pending */}
-      {(stats.pendingBlogs > 0 || stats.pendingReviews > 0) && (
-        <div className="p-4 rounded-2xl bg-neutral-900/90 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5 text-amber-300">
-            <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>
-              Community writers have submitted <strong>{stats.pendingBlogs} blog article(s)</strong> and <strong>{stats.pendingReviews} review(s)</strong> waiting for your approval.
-            </span>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {stats.pendingBlogs > 0 && (
-              <button
-                onClick={() => onNavigateTab('blogs')}
-                className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
-              >
-                <span>Approve Blogs</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {stats.pendingReviews > 0 && (
-              <button
-                onClick={() => onNavigateTab('reviews')}
-                className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs flex items-center gap-1 transition-all cursor-pointer border border-neutral-700"
-              >
-                <span>Moderate Reviews</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {onOpenCreateBlog && (
-              <button
-                onClick={onOpenCreateBlog}
-                className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-amber-400 font-semibold text-xs flex items-center gap-1 transition-all cursor-pointer border border-neutral-700"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>New Blog</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
