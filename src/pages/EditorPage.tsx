@@ -18,6 +18,9 @@ import { writeLocalFile } from '../services/localFolderService';
 import { isCurrentUserAdmin } from '../utils/adminAuth';
 import { QuickAuthModal } from '../components/auth/QuickAuthModal';
 import { CloudSyncNudgeToast } from '../features/editor/components/CloudSyncNudgeToast';
+import { useFeedbackPrompt } from '../hooks/useFeedbackPrompt';
+import { FeedbackPromptToast } from '../components/feedback/FeedbackPromptToast';
+import { FeedbackPromptModal } from '../components/feedback/FeedbackPromptModal';
 import { EditorConflictBanner } from '../features/editor/components/EditorConflictBanner';
 import { telemetryService } from '../services/telemetryService';
 import {
@@ -73,6 +76,13 @@ export const EditorPage: React.FC = () => {
     routeDocId: id,
     onToast: showToast,
     editorRef,
+  });
+
+  // Discovery feedback prompt hook (30s dwell timer + at least 1 document)
+  const hasDocument = Boolean(doc.docId || (doc.content && doc.content.trim().length > 0));
+  const feedbackPrompt = useFeedbackPrompt({
+    hasDocument,
+    dwellMs: 30000,
   });
 
   // Focus sprint timer hook
@@ -569,6 +579,22 @@ export const EditorPage: React.FC = () => {
       <CloudSyncNudgeToast
         wordCount={stats.words}
         onOpenAuth={() => setIsAuthModalOpen(true)}
+      />
+
+      {/* Discovery Feedback Prompt Toast (Bottom-Left) & Success Banner */}
+      <FeedbackPromptToast
+        isVisible={feedbackPrompt.isToastVisible}
+        isSuccess={feedbackPrompt.isSuccessBannerVisible}
+        onOpenFeedback={feedbackPrompt.openModal}
+        onDismiss={feedbackPrompt.dismissToast}
+        onDismissSuccess={feedbackPrompt.dismissSuccessBanner}
+      />
+
+      {/* Discovery Feedback Survey Modal */}
+      <FeedbackPromptModal
+        isOpen={feedbackPrompt.isModalOpen}
+        onClose={feedbackPrompt.closeModal}
+        onSuccess={feedbackPrompt.markSubmitted}
       />
 
       {/* Mimo AI Markdown Companion Drawer (Lazy-loaded) */}
