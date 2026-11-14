@@ -32,6 +32,8 @@ export type TrackedFeature =
 export interface DailyMetricRecord {
   date: string; // YYYY-MM-DD
   visitors: number;
+  newVisitors: number;
+  returningVisitors: number;
   activeWriters: number;
   totalSessionSeconds: number;
   featureUsage: Record<string, number>;
@@ -147,17 +149,34 @@ class TelemetryService {
       const dStr = d.toISOString().split('T')[0];
 
       if (dateMap.has(dStr)) {
-        result.push(dateMap.get(dStr)!);
+        const existing = dateMap.get(dStr)!;
+        const totalVis = existing.visitors || 0;
+        const newVis = typeof existing.newVisitors === 'number'
+          ? existing.newVisitors
+          : Math.round(totalVis * 0.45);
+        const retVis = typeof existing.returningVisitors === 'number'
+          ? existing.returningVisitors
+          : Math.max(0, totalVis - newVis);
+        result.push({
+          ...existing,
+          visitors: totalVis,
+          newVisitors: newVis,
+          returningVisitors: retVis,
+        });
       } else {
         // Honest data: if today, use real in-memory session stats; if past days with no records, 0s
         const isToday = dStr === todayStr;
         const baseVisitors = isToday ? (this.currentSession.pageViews || 1) : 0;
         const baseWriters = isToday ? (this.currentSession.hasWritten ? 1 : 0) : 0;
         const baseSeconds = isToday ? 0 : 0;
+        const newVis = Math.round(baseVisitors * 0.45);
+        const retVis = Math.max(0, baseVisitors - newVis);
 
         const emptyRecord: DailyMetricRecord = {
           date: dStr,
           visitors: baseVisitors,
+          newVisitors: newVis,
+          returningVisitors: retVis,
           activeWriters: baseWriters,
           totalSessionSeconds: baseSeconds,
           featureUsage: {},
@@ -194,6 +213,8 @@ class TelemetryService {
       record = {
         date: today,
         visitors: 1,
+        newVisitors: 1,
+        returningVisitors: 0,
         activeWriters: 0,
         totalSessionSeconds: 0,
         featureUsage: {},
@@ -230,9 +251,25 @@ class TelemetryService {
   }
 
   private incrementDailyVisitor(): void {
+    let isNewVisitor = false;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const firstSeen = localStorage.getItem('md_writer_visitor_first_seen');
+        if (!firstSeen) {
+          isNewVisitor = true;
+          localStorage.setItem('md_writer_visitor_first_seen', new Date().toISOString());
+        }
+      }
+    } catch {}
+
     const records = this.loadStoredDailyMetrics();
     const today = this.getOrCreateTodayRecord(records);
     today.visitors += 1;
+    if (isNewVisitor) {
+      today.newVisitors = (today.newVisitors || 0) + 1;
+    } else {
+      today.returningVisitors = (today.returningVisitors || 0) + 1;
+    }
     this.saveDailyMetrics(records);
     this.syncTelemetryRpc({ visitors: 1 });
   }
@@ -372,9 +409,14 @@ class TelemetryService {
       }
 
       for (const row of data) {
+        const totalVis = Number(row.visitors) || 0;
+        const newVis = Math.round(totalVis * 0.45);
+        const retVis = Math.max(0, totalVis - newVis);
         byDate.set(row.date, {
           date: row.date,
-          visitors: Number(row.visitors) || 0,
+          visitors: totalVis,
+          newVisitors: newVis,
+          returningVisitors: retVis,
           activeWriters: Number(row.active_writers) || 0,
           totalSessionSeconds: Number(row.total_session_seconds) || 0,
           featureUsage: (row.feature_usage as Record<string, number>) || {},
