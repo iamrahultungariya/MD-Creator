@@ -1,5 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { telemetryService, DailyMetricRecord, ActivityEvent, TrackedFeature } from '../../../services/telemetryService';
+import { 
+  telemetryService, 
+  DailyMetricRecord, 
+  ActivityEvent, 
+  TrackedFeature,
+  RegisteredUserProfile 
+} from '../../../services/telemetryService';
 import { SmoothMountainChart } from './SmoothMountainChart';
 
 interface ActiveUserDashboardProps {
@@ -20,6 +26,7 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
   const [recentFeed, setRecentFeed] = useState<ActivityEvent[]>(() =>
     telemetryService.getRecentActivityFeed()
   );
+  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUserProfile[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -29,10 +36,12 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
     Promise.all([
       telemetryService.fetchCloudDailyMetrics(timeRange),
       telemetryService.fetchCloudActivityFeed(40),
-    ]).then(([cloudMetrics, cloudFeed]) => {
+      telemetryService.fetchRegisteredUsers(),
+    ]).then(([cloudMetrics, cloudFeed, users]) => {
       if (!active) return;
       setDailyMetrics(cloudMetrics);
       setRecentFeed(cloudFeed);
+      setRegisteredUsers(users);
     });
 
     return () => {
@@ -63,12 +72,12 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
   );
 
   const totalPeriodNewVisitors = useMemo(
-    () => dailyMetrics.reduce((sum, d) => sum + (d.newVisitors ?? Math.round(d.visitors * 0.45)), 0),
+    () => dailyMetrics.reduce((sum, d) => sum + (d.newVisitors ?? 0), 0),
     [dailyMetrics]
   );
 
   const totalPeriodReturning = useMemo(
-    () => dailyMetrics.reduce((sum, d) => sum + (d.returningVisitors ?? Math.max(0, d.visitors - (d.newVisitors ?? Math.round(d.visitors * 0.45)))), 0),
+    () => dailyMetrics.reduce((sum, d) => sum + (d.returningVisitors ?? Math.max(0, d.visitors - (d.newVisitors ?? 0))), 0),
     [dailyMetrics]
   );
 
@@ -231,7 +240,7 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
     <div className="space-y-6 font-sans animate-in fade-in duration-150">
       
       {/* ── Zero-Icon Top Command Dock ─────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/80 dark:border-neutral-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-neutral-200/80 dark:border-neutral-800/80">
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
@@ -276,58 +285,112 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
         </div>
       </div>
 
-      {/* ── Top 4 KPI Metric Cards (Zero Icons) ─────────────────────────────── */}
+      {/* ── Registered Accounts & Anonymous Telemetry Status ─────────────── */}
+      <div className="p-4 rounded-xl bg-white dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-200/60 dark:border-neutral-800/60 pb-2.5">
+          <div>
+            <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 tracking-tight">
+              Registered Accounts &amp; Traffic Overview
+            </h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Clear distinction between verified database user accounts and anonymous web browser sessions.
+            </p>
+          </div>
+          <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">
+            {registeredUsers.length} registered database accounts
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          {registeredUsers.length === 0 ? (
+            <div className="col-span-2 text-center py-3 text-neutral-500 font-mono text-xs">
+              Loading registered accounts from database...
+            </div>
+          ) : (
+            registeredUsers.map((u) => (
+              <div
+                key={u.id}
+                className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-200/70 dark:border-neutral-800/80 flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">{u.displayName}</span>
+                    <span className="text-[10px] font-mono text-neutral-400 truncate max-w-[170px]">{u.email}</span>
+                  </div>
+                  <div className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    {u.documentCount ?? 0} documents stored in cloud
+                  </div>
+                </div>
+
+                <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold shrink-0 ${
+                  u.isActive
+                    ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                    : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-500 border border-neutral-200 dark:border-neutral-800'
+                }`}>
+                  {u.isActive ? 'ACTIVE' : 'INACTIVE'}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* ── Top 4 KPI Metric Cards (Dynamic over {timeRange}D) ──────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         
         {/* Card 1: Visitors & Cohort Split */}
         <div className="p-4 rounded-xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 space-y-2">
-          <div className="text-[10px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
-            Total Audience
+          <div className="flex items-center justify-between text-[10px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+            <span>Total Audience ({timeRange}d)</span>
+            <span className="text-neutral-400 font-normal">Avg {(totalPeriodVisitors / timeRange).toFixed(1)}/d</span>
           </div>
           <div className="flex items-baseline justify-between">
             <div className="text-2xl font-bold font-mono tracking-tight tabular-nums text-neutral-900 dark:text-neutral-100">
-              {todayRecord.visitors}
+              {totalPeriodVisitors}
             </div>
             <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
-              {totalPeriodVisitors} in {timeRange}d
+              Today: {todayRecord.visitors}
             </span>
           </div>
           <div className="pt-2 border-t border-neutral-200/70 dark:border-neutral-800/60 flex items-center justify-between text-[11px] font-mono">
             <span className="text-sky-700 dark:text-sky-300">
-              NEW: <span className="font-bold tabular-nums">{todayRecord.newVisitors ?? Math.round(todayRecord.visitors * 0.45)}</span>
+              NEW: <span className="font-bold tabular-nums">{totalPeriodNewVisitors}</span>
             </span>
             <span className="text-neutral-300 dark:text-neutral-700">•</span>
             <span className="text-indigo-700 dark:text-indigo-300">
-              RETURNING: <span className="font-bold tabular-nums">{todayRecord.returningVisitors ?? Math.max(0, todayRecord.visitors - (todayRecord.newVisitors ?? Math.round(todayRecord.visitors * 0.45)))}</span>
+              RETURNING: <span className="font-bold tabular-nums">{totalPeriodReturning}</span>
             </span>
           </div>
         </div>
 
         {/* Card 2: Active Writers (DAU) */}
         <div className="p-4 rounded-xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 space-y-2">
-          <div className="text-[10px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
-            Active Writers (DAU)
+          <div className="flex items-center justify-between text-[10px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
+            <span>Writing Sessions ({timeRange}d)</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+              {totalPeriodVisitors > 0
+                ? `${Math.round((totalPeriodWriters / totalPeriodVisitors) * 100)}% CONVERSION`
+                : '0%'}
+            </span>
           </div>
           <div className="flex items-baseline justify-between">
             <div className="text-2xl font-bold font-mono tracking-tight tabular-nums text-emerald-600 dark:text-emerald-400">
-              {todayRecord.activeWriters}
+              {totalPeriodWriters}
             </div>
-            <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
-              {todayRecord.visitors > 0
-                ? `${Math.round((todayRecord.activeWriters / todayRecord.visitors) * 100)}% CONVERSION`
-                : 'ACTIVE TODAY'}
+            <span className="text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
+              Today: {todayRecord.activeWriters}
             </span>
           </div>
           <div className="pt-2 border-t border-neutral-200/70 dark:border-neutral-800/60 flex items-center justify-between text-[11px] font-mono text-neutral-500 dark:text-neutral-400">
-            <span>{totalPeriodWriters} total active sessions</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active</span>
+            <span>Avg {(totalPeriodWriters / timeRange).toFixed(1)} sessions/day</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Live</span>
           </div>
         </div>
 
         {/* Card 3: Avg Writing Time */}
         <div className="p-4 rounded-xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 space-y-2">
           <div className="text-[10px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
-            Avg Writing Dwell
+            Avg Writing Dwell ({timeRange}d)
           </div>
           <div className="flex items-baseline justify-between">
             <div className="text-2xl font-bold font-mono tracking-tight tabular-nums text-neutral-900 dark:text-neutral-100">
@@ -345,7 +408,7 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
         {/* Card 4: Top Feature Adoption */}
         <div className="p-4 rounded-xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200/80 dark:border-neutral-800/80 space-y-2">
           <div className="text-[10px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
-            Lead Capability
+            Lead Capability ({timeRange}d)
           </div>
           <div className="flex items-baseline justify-between">
             <div className="text-base font-bold font-sans tracking-tight text-neutral-900 dark:text-neutral-100 truncate">
@@ -371,26 +434,26 @@ export const ActiveUserDashboard: React.FC<ActiveUserDashboardProps> = ({ onRefr
               Audience Velocity &amp; Retention Spline
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Catmull-Rom cubic Bezier curves comparing New Visitors, Returning Users, and Active Writers.
+              Flowing Catmull-Rom cubic Bezier curves comparing New Visitors, Returning Users, and Active Writers across {timeRange} days.
             </p>
           </div>
 
           {/* Monospace Legend Summary */}
           <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-            <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800">
+            <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-950 text-sky-700 dark:text-sky-300 border border-neutral-200 dark:border-neutral-800 font-medium">
               NEW: {totalPeriodNewVisitors}
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800">
+            <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-950 text-indigo-700 dark:text-indigo-300 border border-neutral-200 dark:border-neutral-800 font-medium">
               RETURNING: {totalPeriodReturning}
             </span>
-            <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800 font-semibold">
-              ACTIVE: {totalPeriodWriters}
+            <span className="px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-neutral-950 text-emerald-700 dark:text-emerald-300 border border-neutral-200 dark:border-neutral-800 font-semibold">
+              ACTIVE WRITERS: {totalPeriodWriters}
             </span>
           </div>
         </div>
 
         {/* SVG Smooth Mountain Chart Component */}
-        <SmoothMountainChart data={dailyMetrics} height={200} />
+        <SmoothMountainChart data={dailyMetrics} height={240} />
       </div>
 
       {/* ── Export Distribution & Mimo AI Velocity (Zero Icons) ─────────────── */}

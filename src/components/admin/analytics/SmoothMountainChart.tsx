@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DailyMetricRecord } from '../../../services/telemetryService';
 
 export interface Point {
@@ -61,22 +61,38 @@ export interface SmoothMountainChartProps {
 
 export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
   data,
-  height = 200,
-  width = 720,
+  height = 240,
+  width = 1000,
   onHoverRecord,
 }) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [activeCohort, setActiveCohort] = useState<CohortFilterMode>('all');
 
-  const baselineY = height - 28;
+  const baselineY = height - 32;
   const chartTopPadding = 24;
-  const horizontalPadding = 36;
+  const horizontalPadding = 56;
 
-  // Maximum metric value across new, returning, and active
-  const maxMetricValue = Math.max(
-    ...data.map((d) => Math.max(d.visitors, d.newVisitors || 0, d.returningVisitors || 0, d.activeWriters)),
-    8
-  );
+  // Cohort visibility
+  const isAll = activeCohort === 'all';
+  const showNew = isAll || activeCohort === 'new';
+  const showReturning = isAll || activeCohort === 'returning';
+  const showActive = isAll || activeCohort === 'active';
+
+  // Dynamic Y-axis scale based on the visible cohort(s)
+  const activeMax = useMemo(() => {
+    let highest = 4;
+    data.forEach((d) => {
+      const newV = d.newVisitors ?? Math.round(d.visitors * 0.45);
+      const retV = d.returningVisitors ?? Math.max(0, d.visitors - newV);
+      const actV = d.activeWriters;
+
+      if (activeCohort === 'new') highest = Math.max(highest, newV);
+      else if (activeCohort === 'returning') highest = Math.max(highest, retV);
+      else if (activeCohort === 'active') highest = Math.max(highest, actV);
+      else highest = Math.max(highest, d.visitors, newV, retV, actV);
+    });
+    return Math.ceil(highest * 1.2);
+  }, [data, activeCohort]);
 
   const getX = (idx: number) => {
     if (data.length <= 1) return width / 2;
@@ -86,7 +102,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
   const getY = (val: number) => {
     const usableHeight = baselineY - chartTopPadding;
     const clampedVal = Math.max(0, val);
-    return baselineY - (clampedVal / (maxMetricValue * 1.18)) * usableHeight;
+    return baselineY - (clampedVal / activeMax) * usableHeight;
   };
 
   // Build coordinate arrays for the 3 ridges
@@ -142,18 +158,20 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
     return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Cohort visibility and opacity factors
-  const isAll = activeCohort === 'all';
-  const showNew = isAll || activeCohort === 'new';
-  const showReturning = isAll || activeCohort === 'returning';
-  const showActive = isAll || activeCohort === 'active';
+  // 4 Y-Axis Horizontal Scale Grid Markers
+  const yTicks = [
+    { pct: 1.0, val: activeMax },
+    { pct: 0.66, val: Math.round(activeMax * 0.66) },
+    { pct: 0.33, val: Math.round(activeMax * 0.33) },
+    { pct: 0.0, val: 0 },
+  ];
 
   return (
     <div className="space-y-3 font-sans">
       {/* Zero-Icon Cohort Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="text-[11px] font-mono tracking-wider uppercase text-neutral-500 dark:text-neutral-400">
-          Cohort Spline Filter:
+          Cohort Spline Isolation:
         </div>
 
         <div className="flex items-center gap-1.5 p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800/80 text-[11px] font-mono">
@@ -204,50 +222,59 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
         </div>
       </div>
 
-      <div className="relative w-full select-none">
+      <div className="relative w-full select-none overflow-hidden rounded-xl bg-neutral-950/30 p-1">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-56 sm:h-64 overflow-visible"
+          className="w-full h-60 sm:h-72 overflow-visible"
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
         >
           <defs>
             {/* Sky Gradient for New Visitors */}
             <linearGradient id="skyMountainGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity={activeCohort === 'new' ? '0.45' : '0.24'} />
-              <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.06" />
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity={activeCohort === 'new' ? '0.55' : '0.28'} />
+              <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.08" />
               <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
             </linearGradient>
 
             {/* Indigo Gradient for Returning Users */}
             <linearGradient id="indigoMountainGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#818cf8" stopOpacity={activeCohort === 'returning' ? '0.42' : '0.22'} />
-              <stop offset="60%" stopColor="#818cf8" stopOpacity="0.05" />
+              <stop offset="0%" stopColor="#818cf8" stopOpacity={activeCohort === 'returning' ? '0.52' : '0.26'} />
+              <stop offset="60%" stopColor="#818cf8" stopOpacity="0.07" />
               <stop offset="100%" stopColor="#818cf8" stopOpacity="0.0" />
             </linearGradient>
 
             {/* Emerald Gradient for Active Writers */}
             <linearGradient id="emeraldMountainGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#34d399" stopOpacity={activeCohort === 'active' ? '0.5' : '0.35'} />
-              <stop offset="65%" stopColor="#34d399" stopOpacity="0.09" />
+              <stop offset="0%" stopColor="#34d399" stopOpacity={activeCohort === 'active' ? '0.62' : '0.38'} />
+              <stop offset="65%" stopColor="#34d399" stopOpacity="0.10" />
               <stop offset="100%" stopColor="#34d399" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
-          {/* Horizontal Baseline & Subdued Grid lines */}
-          {[0, 0.33, 0.66, 1].map((pct, i) => {
-            const y = baselineY - pct * (baselineY - chartTopPadding);
+          {/* Horizontal Baseline & Y-Axis Scale Grid Lines */}
+          {yTicks.map((tick, i) => {
+            const y = baselineY - tick.pct * (baselineY - chartTopPadding);
             return (
-              <line
-                key={i}
-                x1={horizontalPadding - 10}
-                y1={y}
-                x2={width - horizontalPadding + 10}
-                y2={y}
-                className="stroke-neutral-200 dark:stroke-neutral-800"
-                strokeDasharray="3 3"
-                strokeWidth="0.8"
-              />
+              <g key={i}>
+                <line
+                  x1={horizontalPadding}
+                  y1={y}
+                  x2={width - horizontalPadding + 14}
+                  y2={y}
+                  className="stroke-neutral-200/60 dark:stroke-neutral-800/80"
+                  strokeDasharray="4 4"
+                  strokeWidth="0.8"
+                />
+                <text
+                  x={horizontalPadding - 12}
+                  y={y + 3}
+                  textAnchor="end"
+                  className="fill-neutral-400 dark:fill-neutral-600 text-[10px] font-mono tabular-nums select-none"
+                >
+                  {tick.val}
+                </text>
+              </g>
             );
           })}
 
@@ -260,7 +287,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
               d={returningPaths.linePath}
               fill="none"
               stroke="#818cf8"
-              strokeWidth={activeCohort === 'returning' ? '2.4' : '1.8'}
+              strokeWidth={activeCohort === 'returning' ? '2.8' : '2'}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={activeCohort === 'returning' ? '1' : isAll ? '0.85' : '0.2'}
@@ -276,7 +303,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
               d={newVisitorPaths.linePath}
               fill="none"
               stroke="#38bdf8"
-              strokeWidth={activeCohort === 'new' ? '2.5' : '2'}
+              strokeWidth={activeCohort === 'new' ? '3' : '2.2'}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={activeCohort === 'new' ? '1' : isAll ? '0.9' : '0.2'}
@@ -292,7 +319,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
               d={activeWriterPaths.linePath}
               fill="none"
               stroke="#34d399"
-              strokeWidth={activeCohort === 'active' ? '2.8' : '2.2'}
+              strokeWidth={activeCohort === 'active' ? '3.2' : '2.5'}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity={activeCohort === 'active' ? '1' : isAll ? '1' : '0.2'}
@@ -331,16 +358,16 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
                 y1={chartTopPadding - 6}
                 x2={getX(hoverIndex)}
                 y2={baselineY}
-                className="stroke-neutral-400 dark:stroke-neutral-600"
+                className="stroke-neutral-400 dark:stroke-neutral-500"
                 strokeDasharray="2 2"
-                strokeWidth="1"
+                strokeWidth="1.2"
               />
 
               {showReturning && (
                 <circle
                   cx={returningPoints[hoverIndex]?.x}
                   cy={returningPoints[hoverIndex]?.y}
-                  r="3.5"
+                  r="4"
                   fill="#818cf8"
                 />
               )}
@@ -349,7 +376,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
                 <circle
                   cx={newVisitorPoints[hoverIndex]?.x}
                   cy={newVisitorPoints[hoverIndex]?.y}
-                  r="4"
+                  r="4.5"
                   fill="#38bdf8"
                 />
               )}
@@ -358,7 +385,7 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
                 <circle
                   cx={activeWriterPoints[hoverIndex]?.x}
                   cy={activeWriterPoints[hoverIndex]?.y}
-                  r="4.5"
+                  r="5"
                   fill="#34d399"
                 />
               )}
@@ -372,17 +399,17 @@ export const SmoothMountainChart: React.FC<SmoothMountainChartProps> = ({
             className="absolute z-20 pointer-events-none transition-all duration-75"
             style={{
               left: `${(getX(hoverIndex) / width) * 100}%`,
-              top: '0px',
+              top: '8px',
               transform: getX(hoverIndex) > width * 0.7 ? 'translateX(-105%)' : 'translateX(10px)',
             }}
           >
-            <div className="p-3 rounded-xl bg-white/95 dark:bg-neutral-950/95 border border-neutral-200/90 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xl backdrop-blur-md min-w-[175px] space-y-2">
+            <div className="p-3 rounded-xl bg-white/95 dark:bg-neutral-950/95 border border-neutral-200/90 dark:border-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xl backdrop-blur-md min-w-[185px] space-y-2">
               <div className="flex items-center justify-between border-b border-neutral-200/80 dark:border-neutral-800/80 pb-1.5 font-mono">
                 <span className="text-xs font-semibold">
                   {formatShortDate(activeRecord.date)}
                 </span>
                 <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                  {activeRecord.visitors} Total
+                  {activeRecord.visitors} Total Visits
                 </span>
               </div>
 

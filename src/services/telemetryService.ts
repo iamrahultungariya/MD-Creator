@@ -39,6 +39,16 @@ export interface DailyMetricRecord {
   featureUsage: Record<string, number>;
 }
 
+export interface RegisteredUserProfile {
+  id: string;
+  email: string | null;
+  displayName: string | null;
+  createdAt: string;
+  updatedAt: string;
+  documentCount?: number;
+  isActive: boolean;
+}
+
 export interface ActivityEvent {
   id: string;
   timestamp: string;
@@ -234,6 +244,8 @@ class TelemetryService {
 
   private syncTelemetryRpc(payload: {
     visitors?: number;
+    newVisitors?: number;
+    returningVisitors?: number;
     activeWriters?: number;
     sessionSeconds?: number;
     feature?: TrackedFeature;
@@ -243,6 +255,8 @@ class TelemetryService {
       supabase.rpc('record_daily_telemetry', {
         p_date: getTodayDateString(),
         p_visitors: payload.visitors || 0,
+        p_new_visitors: payload.newVisitors || 0,
+        p_returning_visitors: payload.returningVisitors || 0,
         p_active_writers: payload.activeWriters || 0,
         p_session_seconds: payload.sessionSeconds || 0,
         p_feature: payload.feature || null,
@@ -267,11 +281,13 @@ class TelemetryService {
     today.visitors += 1;
     if (isNewVisitor) {
       today.newVisitors = (today.newVisitors || 0) + 1;
+      this.saveDailyMetrics(records);
+      this.syncTelemetryRpc({ visitors: 1, newVisitors: 1 });
     } else {
       today.returningVisitors = (today.returningVisitors || 0) + 1;
+      this.saveDailyMetrics(records);
+      this.syncTelemetryRpc({ visitors: 1, returningVisitors: 1 });
     }
-    this.saveDailyMetrics(records);
-    this.syncTelemetryRpc({ visitors: 1 });
   }
 
   /**
@@ -395,7 +411,7 @@ class TelemetryService {
 
       const { data, error } = await supabase
         .from('daily_analytics')
-        .select('date, visitors, active_writers, total_session_seconds, feature_usage')
+        .select('date, visitors, new_visitors, returning_visitors, active_writers, total_session_seconds, feature_usage')
         .gte('date', startIso)
         .order('date', { ascending: true });
 
@@ -408,10 +424,14 @@ class TelemetryService {
         byDate.set(item.date, item);
       }
 
-      for (const row of data) {
+      for (const row of data as any[]) {
         const totalVis = Number(row.visitors) || 0;
-        const newVis = Math.round(totalVis * 0.45);
-        const retVis = Math.max(0, totalVis - newVis);
+        const newVis = typeof row.new_visitors === 'number' && row.new_visitors >= 0
+          ? Number(row.new_visitors)
+          : Math.floor(totalVis * 0.4);
+        const retVis = typeof row.returning_visitors === 'number' && row.returning_visitors >= 0
+          ? Number(row.returning_visitors)
+          : Math.max(0, totalVis - newVis);
         byDate.set(row.date, {
           date: row.date,
           visitors: totalVis,
@@ -426,6 +446,43 @@ class TelemetryService {
       return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date)).slice(-days);
     } catch {
       return localFallback;
+    }
+  }
+
+  /**
+   * Fetches real registered user accounts from Supabase `profiles` & `documents`
+   */
+  public async fetchRegisteredUsers(): Promise<RegisteredUserProfile[]> {
+    if (!isSupabaseConfigured() || !supabase) return [];
+    try {
+      const [profilesRes, docsRes] = await Promise.all([
+        supabase.from('profiles').select('id, email, display_name, created_at, updated_at'),
+        supabase.from('documents').select('user_id'),
+      ]);
+
+      const docCountByUser: Record<string, number> = {};
+      (docsRes.data || []).forEach((d: any) => {
+        if (d.user_id) {
+          docCountByUser[d.user_id] = (docCountByUser[d.user_id] || 0) + 1;
+        }
+      });
+
+      return (profilesRes.data || []).map((p: any) => {
+        const docCount = docCountByUser[p.id] || 0;
+        const lastUpdated = p.updated_at ? new Date(p.updated_at).getTime() : 0;
+        const isRecent = Date.now() - lastUpdated < 14 * 24 * 60 * 60 * 1000;
+        return {
+          id: p.id,
+          email: p.email || 'Anonymous',
+          displayName: p.display_name || 'Writer',
+          createdAt: p.created_at,
+          updatedAt: p.updated_at,
+          documentCount: docCount,
+          isActive: isRecent || docCount > 0,
+        };
+      });
+    } catch {
+      return [];
     }
   }
 
