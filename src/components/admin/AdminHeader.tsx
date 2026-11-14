@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   ShieldCheck, 
   BookOpen, 
@@ -36,6 +36,26 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
+    let nextIndex: number | null = null;
+    if (e.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % tabs.length;
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+    } else if (e.key === 'Home') {
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      nextIndex = tabs.length - 1;
+    }
+
+    if (nextIndex !== null) {
+      e.preventDefault();
+      setActiveTab(tabs[nextIndex].id);
+      tabRefs.current[nextIndex]?.focus();
+    }
+  };
 
   const tabs: { id: AdminTab; label: string; icon: React.ElementType; badge?: number; badgeColor?: string }[] = [
     {
@@ -150,15 +170,27 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
       {/* Tabs Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2 scrollbar-none" aria-label="Admin Tabs">
-          {tabs.map((tab) => {
+        <nav
+          className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2 scrollbar-none"
+          role="tablist"
+          aria-label="Admin Navigation Tabs"
+        >
+          {tabs.map((tab, index) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
+                ref={(el) => {
+                  tabRefs.current[index] = el;
+                }}
+                role="tab"
+                id={`admin-tab-${tab.id}`}
+                aria-selected={isActive}
+                tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                onKeyDown={(e) => handleKeyDown(e, index)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                   isActive
                     ? 'bg-neutral-800 text-white shadow-xs border border-neutral-700'
                     : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50'
